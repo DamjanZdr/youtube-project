@@ -243,9 +243,11 @@ export interface WikiDocument {
   folder_id: string | null;
   organization_id: string;
   title: string;
-  content: string;                    // Rich text content
+  content: string;                    // Rich text content (HTML from Tiptap)
   position: number;
   created_by: string | null;
+  font_family: string;                // User-selected font family
+  font_size: string;                  // User-selected font size
   created_at: string;
   updated_at: string;
 }

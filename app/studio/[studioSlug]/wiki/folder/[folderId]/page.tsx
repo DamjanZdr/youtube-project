@@ -37,6 +37,8 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
   const [showCreateDoc, setShowCreateDoc] = useState(false);
   const [newDocTitle, setNewDocTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadFolderData();
@@ -96,21 +98,24 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
         .single();
 
       if (data) {
-        router.push(\/studio/\/wiki/doc/\\);
+        router.push(`/studio/${studioSlug}/wiki/doc/${data.id}`);
       }
     }
     setCreating(false);
   };
 
-  const deleteDocument = async (docId: string) => {
-    if (!confirm("Delete this document?")) return;
+  const deleteDocument = async () => {
+    if (!deleteDocId) return;
 
+    setDeleting(true);
     await supabase
       .from("wiki_documents")
       .delete()
-      .eq("id", docId);
+      .eq("id", deleteDocId);
 
-    setDocuments(documents.filter(d => d.id !== docId));
+    setDocuments(documents.filter(d => d.id !== deleteDocId));
+    setDeleteDocId(null);
+    setDeleting(false);
   };
 
   if (loading) {
@@ -127,7 +132,7 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <Link
-            href={\/studio/\/wiki\}
+            href={`/studio/${studioSlug}/wiki`}
             className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -150,7 +155,7 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
           {documents.map((doc) => (
             <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
               <Link
-                href={\/studio/\/wiki/doc/\\}
+                href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
                 className="flex items-center gap-4 flex-1 min-w-0"
               >
                 <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -169,7 +174,7 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => deleteDocument(doc.id)}
+                onClick={() => setDeleteDocId(doc.id)}
               >
                 <Trash2 className="w-4 h-4 text-red-400" />
               </Button>
@@ -208,6 +213,26 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
             </Button>
             <Button onClick={createDocument} disabled={!newDocTitle.trim() || creating}>
               {creating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Document Confirmation */}
+      <Dialog open={!!deleteDocId} onOpenChange={(open) => !open && setDeleteDocId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Document</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground py-4">
+            Are you sure you want to delete this document? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDocId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteDocument} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

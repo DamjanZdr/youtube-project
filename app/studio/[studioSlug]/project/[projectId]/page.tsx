@@ -175,6 +175,7 @@ export default function PackagingPage() {
 
     if (error) {
       console.error("Failed to create set:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return null;
     }
     return data;

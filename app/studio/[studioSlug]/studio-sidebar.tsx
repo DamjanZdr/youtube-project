@@ -54,11 +54,10 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
               )}
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <button className="flex items-center gap-1 hover:bg-white/5 rounded-lg px-2 py-1 -ml-2 transition-colors w-full">
-                  <span className="font-semibold truncate">{studio.name}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-                </button>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="px-2 py-1">
+                  <span className="font-semibold line-clamp-2 break-words">{studio.name}</span>
+                </div>
               </div>
             )}
           </div>
@@ -129,22 +128,22 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                   <Avatar className="w-8 h-8 border border-white/10 cursor-pointer">
                     <AvatarImage src={user?.avatar_url} />
                     <AvatarFallback className="bg-primary/20 text-xs">
-                      {user?.email?.[0]?.toUpperCase() || "U"}
+                      {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
-                <TooltipContent side="right">{user?.email}</TooltipContent>
+                <TooltipContent side="right">{user?.full_name || user?.email}</TooltipContent>
               </Tooltip>
             ) : (
               <>
                 <Avatar className="w-8 h-8 border border-white/10">
                   <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback className="bg-primary/20 text-xs">
-                    {user?.email?.[0]?.toUpperCase() || "U"}
+                    {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.email || "user@example.com"}</p>
+                  <p className="text-sm font-medium truncate">{user?.full_name || user?.email || "user@example.com"}</p>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>

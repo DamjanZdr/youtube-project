@@ -66,6 +66,9 @@ export default function WikiPage({ params }: WikiPageProps) {
   const [newFolderName, setNewFolderName] = useState("");
   const [newDocTitle, setNewDocTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleteFolderId, setDeleteFolderId] = useState<string | null>(null);
+  const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadWikiData();
@@ -186,26 +189,32 @@ export default function WikiPage({ params }: WikiPageProps) {
     setCreating(false);
   };
 
-  const deleteFolder = async (folderId: string) => {
-    if (!confirm("Delete this folder and all its documents?")) return;
+  const deleteFolder = async () => {
+    if (!deleteFolderId) return;
 
+    setDeleting(true);
     await supabase
       .from("wiki_folders")
       .delete()
-      .eq("id", folderId);
+      .eq("id", deleteFolderId);
 
-    setFolders(folders.filter(f => f.id !== folderId));
+    setFolders(folders.filter(f => f.id !== deleteFolderId));
+    setDeleteFolderId(null);
+    setDeleting(false);
   };
 
-  const deleteDocument = async (docId: string) => {
-    if (!confirm("Delete this document?")) return;
+  const deleteDocument = async () => {
+    if (!deleteDocId) return;
 
+    setDeleting(true);
     await supabase
       .from("wiki_documents")
       .delete()
-      .eq("id", docId);
+      .eq("id", deleteDocId);
 
-    setRecentDocuments(recentDocuments.filter(d => d.id !== docId));
+    setRecentDocuments(recentDocuments.filter(d => d.id !== deleteDocId));
+    setDeleteDocId(null);
+    setDeleting(false);
   };
 
   // Filter documents by search
@@ -287,7 +296,7 @@ export default function WikiPage({ params }: WikiPageProps) {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => deleteFolder(folder.id)}
+                      onClick={() => setDeleteFolderId(folder.id)}
                     >
                       <Trash2 className="w-4 h-4 text-red-400" />
                     </Button>
@@ -332,7 +341,7 @@ export default function WikiPage({ params }: WikiPageProps) {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => deleteDocument(doc.id)}
+                      onClick={() => setDeleteDocId(doc.id)}
                     >
                       <Trash2 className="w-4 h-4 text-red-400" />
                     </Button>
@@ -411,6 +420,46 @@ export default function WikiPage({ params }: WikiPageProps) {
             </Button>
             <Button onClick={createDocument} disabled={!newDocTitle.trim() || creating}>
               {creating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Folder Confirmation */}
+      <Dialog open={!!deleteFolderId} onOpenChange={(open) => !open && setDeleteFolderId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Folder</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground py-4">
+            Are you sure you want to delete this folder and all its documents? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteFolderId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteFolder} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Document Confirmation */}
+      <Dialog open={!!deleteDocId} onOpenChange={(open) => !open && setDeleteDocId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Document</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground py-4">
+            Are you sure you want to delete this document? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDocId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteDocument} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

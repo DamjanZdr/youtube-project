@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,7 @@ import {
 } from "lucide-react";
 
 type ViewMode = "landscape" | "portrait" | "tv";
-type EditDialog = "banner" | "icon" | "name" | "handle" | "description" | "links" | null;
+type EditDialog = "banner" | "icon" | "name" | "handle" | "description" | "links" | "subs" | "videos" | null;
 
 interface ChannelLink {
   id: string;
@@ -82,6 +83,25 @@ export default function ChannelPage() {
     description: "Welcome to my channel!",
     links: [] as ChannelLink[]
   });
+
+  // Preview controls
+  const [subCount, setSubCount] = useState(0);
+  const [videoCount, setVideoCount] = useState(0);
+
+  // Update display when counts change
+  useEffect(() => {
+    setChannel(prev => ({
+      ...prev,
+      subs: formatCount(subCount) + " subscriber" + (subCount !== 1 ? "s" : ""),
+      videos: formatCount(videoCount) + " video" + (videoCount !== 1 ? "s" : "")
+    }));
+  }, [subCount, videoCount]);
+
+  const formatCount = (num: number): string => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+  };
 
   const supabase = createClient();
 
@@ -171,6 +191,8 @@ export default function ChannelPage() {
   const [tempHandle, setTempHandle] = useState(channel.handle);
   const [tempDescription, setTempDescription] = useState(channel.description);
   const [tempLinks, setTempLinks] = useState(channel.links);
+  const [tempSubCount, setTempSubCount] = useState("");
+  const [tempVideoCount, setTempVideoCount] = useState("");
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
@@ -264,6 +286,8 @@ export default function ChannelPage() {
     if (type === "handle") setTempHandle(channel.handle);
     if (type === "description") setTempDescription(channel.description);
     if (type === "links") setTempLinks([...channel.links]);
+    if (type === "subs") setTempSubCount(subCount.toString());
+    if (type === "videos") setTempVideoCount(videoCount.toString());
     setEditDialog(type);
   };
 
@@ -273,6 +297,8 @@ export default function ChannelPage() {
     { id: "icon" as const, icon: User, label: "Icon" },
     { id: "name" as const, icon: Type, label: "Name" },
     { id: "handle" as const, icon: AtSign, label: "Handle" },
+    { id: "subs" as const, icon: User, label: "Subscribers" },
+    { id: "videos" as const, icon: FileText, label: "Videos" },
     { id: "description" as const, icon: FileText, label: "Description" },
     { id: "links" as const, icon: Link2, label: "Links" },
   ];
@@ -373,11 +399,11 @@ export default function ChannelPage() {
       {/* Preview Container */}
       <div className="glass-card overflow-hidden">
         {viewMode === "tv" ? (
-          <TVPreview channel={channel} />
+          <TVPreview channel={channel} openDialog={openDialog} />
         ) : viewMode === "landscape" ? (
-          <DesktopPreview channel={channel} />
+          <DesktopPreview channel={channel} openDialog={openDialog} />
         ) : (
-          <MobilePreview channel={channel} />
+          <MobilePreview channel={channel} openDialog={openDialog} />
         )}
       </div>
 
@@ -608,6 +634,60 @@ export default function ChannelPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Subscribers Dialog */}
+      <Dialog open={editDialog === "subs"} onOpenChange={(open) => !open && setEditDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Subscriber Count</DialogTitle>
+            <DialogDescription>
+              Enter the number of subscribers for preview purposes.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            placeholder="0"
+            value={tempSubCount}
+            onChange={(e) => setTempSubCount(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
+            <Button onClick={() => {
+              setSubCount(parseInt(tempSubCount) || 0);
+              setEditDialog(null);
+            }}>
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Videos Dialog */}
+      <Dialog open={editDialog === "videos"} onOpenChange={(open) => !open && setEditDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Video Count</DialogTitle>
+            <DialogDescription>
+              Enter the number of videos for preview purposes.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            placeholder="0"
+            value={tempVideoCount}
+            onChange={(e) => setTempVideoCount(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
+            <Button onClick={() => {
+              setVideoCount(parseInt(tempVideoCount) || 0);
+              setEditDialog(null);
+            }}>
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -625,9 +705,10 @@ interface PreviewProps {
     description: string;
     links: ChannelLink[];
   };
+  openDialog: (type: EditDialog) => void;
 }
 
-function TVPreview({ channel }: PreviewProps) {
+function TVPreview({ channel, openDialog }: PreviewProps) {
   return (
     <div className="bg-[#0f0f0f] aspect-video max-h-[600px] overflow-hidden">
       <div className="h-full flex">
@@ -712,23 +793,25 @@ function TVPreview({ channel }: PreviewProps) {
   );
 }
 
-function DesktopPreview({ channel }: PreviewProps) {
+function DesktopPreview({ channel, openDialog }: PreviewProps) {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full px-8">
       {/* Banner */}
-      <div className="w-full h-[200px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
-        {channel.banner ? (
-          <img src={channel.banner} alt="Banner" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-muted-foreground/50">Channel Banner</span>
-        )}
+      <div className="px-6">
+        <div className="w-full h-[200px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl">
+          {channel.banner ? (
+            <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-xl" />
+          ) : (
+            <span className="text-muted-foreground/50">Channel Banner</span>
+          )}
+        </div>
       </div>
 
       {/* Channel Info */}
-      <div className="p-6">
-        <div className="flex gap-6">
+      <div className="px-6">
+        <div className="flex gap-6 items-center pt-6">
           {/* Icon */}
-          <div className="w-[160px] h-[160px] rounded-full bg-gradient-to-br from-white/20 to-white/5 border-4 border-background -mt-16 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-[180px] h-[180px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center shrink-0 overflow-hidden">
             {channel.icon ? (
               <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
             ) : (
@@ -738,37 +821,38 @@ function DesktopPreview({ channel }: PreviewProps) {
 
           {/* Info */}
           <div className="flex-1 pt-2">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">{channel.name}</h1>
-                
-                <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                  <span>{channel.handle}</span>
-                  <span>•</span>
-                  <span>{channel.subs}</span>
-                  <span>•</span>
-                  <span>{channel.videos}</span>
-                </div>
-
-                <p className="text-muted-foreground max-w-2xl mt-3">
-                  {channel.description.slice(0, 150)}...
-                  <button className="text-blue-400 ml-1">more</button>
-                </p>
-
-                <div className="flex items-center gap-3 mt-3">
-                  {channel.links.map((link) => (
-                    <a key={link.id} href={link.url} className="flex items-center gap-1 text-sm text-blue-400 hover:underline">
-                      <link.icon className="w-4 h-4" />
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              <Button className="bg-white text-black hover:bg-white/90 rounded-full px-6">
-                Subscribe
-              </Button>
+            <h1 className="text-4xl font-bold">{channel.name}</h1>
+            
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
+              <span>{channel.handle}</span>
+              <span>•</span>
+              <span>{channel.subs}</span>
+              <span>•</span>
+              <span>{channel.videos}</span>
             </div>
+
+            <p className="text-sm text-muted-foreground mt-3">
+              {channel.description || "Welcome to my channel!"}
+              {channel.description && channel.description.length > 150 && (
+                <button className="text-blue-400 ml-1">...more</button>
+              )}
+            </p>
+
+            <div className="flex items-center gap-3 mt-3">
+              {channel.links.length > 0 ? (
+                channel.links.map((link) => (
+                  <a key={link.id} href={link.url} className="text-sm text-blue-400 hover:underline truncate">
+                    {link.url}
+                  </a>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">No links added</span>
+              )}
+            </div>
+
+            <Button className="bg-white text-black hover:bg-white/90 rounded-full px-6 mt-3">
+              Subscribe
+            </Button>
           </div>
         </div>
 
@@ -785,7 +869,7 @@ function DesktopPreview({ channel }: PreviewProps) {
         </div>
 
         {/* Video Section */}
-        <div className="mt-6">
+        <div className="mt-6 pb-6">
           <h2 className="text-lg font-semibold mb-4">Videos</h2>
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
@@ -802,47 +886,63 @@ function DesktopPreview({ channel }: PreviewProps) {
   );
 }
 
-function MobilePreview({ channel }: PreviewProps) {
+function MobilePreview({ channel, openDialog }: PreviewProps) {
   return (
-    <div className="max-w-[375px] mx-auto bg-[#0f0f0f] min-h-[700px]">
+    <div className="w-[375px] mx-auto bg-[#0f0f0f] min-h-[700px]">
       {/* Banner */}
-      <div className="w-full h-[100px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
-        {channel.banner ? (
-          <img src={channel.banner} alt="Banner" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-xs text-muted-foreground/50">Banner</span>
-        )}
+      <div className="px-4 pt-4">
+        <div className="w-full h-[100px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg">
+          {channel.banner ? (
+            <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-lg" />
+          ) : (
+            <span className="text-xs text-muted-foreground/50">Banner</span>
+          )}
+        </div>
       </div>
 
       {/* Channel Info */}
-      <div className="p-4 text-center">
-        {/* Icon */}
-        <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-white/20 to-white/5 border-2 border-background -mt-10 mx-auto flex items-center justify-center overflow-hidden">
-          {channel.icon ? (
-            <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
+      <div className="px-4">
+        {/* Profile Image and Stats Row */}
+        <div className="flex gap-3 pt-4">
+          {/* Icon */}
+          <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center overflow-hidden shrink-0">
+            {channel.icon ? (
+              <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-muted-foreground/50">C</span>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold truncate">{channel.name}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{channel.handle}</p>
+            <p className="text-sm text-muted-foreground mt-1">{channel.subs} • {channel.videos}</p>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground mt-4">
+          {channel.description || "Welcome to my channel!"}
+          {channel.description && channel.description.length > 80 && (
+            <button className="text-blue-400 ml-1">...more</button>
+          )}
+        </p>
+
+        {/* Links */}
+        <div className="flex flex-col gap-1 mt-3">
+          {channel.links.length > 0 ? (
+            channel.links.map((link) => (
+              <a key={link.id} href={link.url} className="text-sm text-blue-400 hover:underline truncate">
+                {link.url}
+              </a>
+            ))
           ) : (
-            <span className="text-2xl font-bold text-muted-foreground/50">C</span>
+            <span className="text-sm text-muted-foreground">No links added</span>
           )}
         </div>
 
-        <h1 className="text-xl font-bold mt-3">{channel.name}</h1>
-        <p className="text-sm text-muted-foreground">{channel.handle}</p>
-        <p className="text-sm text-muted-foreground mt-1">{channel.subs} • {channel.videos}</p>
-
-        <p className="text-sm text-muted-foreground mt-3">
-          {channel.description.slice(0, 80)}...
-          <button className="text-blue-400 ml-1">more</button>
-        </p>
-
-        <div className="flex items-center justify-center gap-3 mt-3">
-          {channel.links.map((link) => (
-            <a key={link.id} href={link.url} className="text-blue-400">
-              <link.icon className="w-5 h-5" />
-            </a>
-          ))}
-        </div>
-
-        <Button className="bg-white text-black hover:bg-white/90 rounded-full px-8 w-full mt-4">
+        <Button className="bg-white text-black hover:bg-white/90 rounded-full w-full mt-4">
           Subscribe
         </Button>
       </div>
