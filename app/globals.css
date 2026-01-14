@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  /* Scale UI based on screen width for better display across different monitors */
+  html {
+    /* Base: 16px at 1920px width, scales proportionally */
+    /* 2K (2560px): ~21px, 1080p (1920px): 16px */
+    font-size: clamp(14px, calc(12px + 0.21vw), 18px);
+  }
+
+  /* Light mode - we won't use this much, but keeping for completeness */
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
@@ -23,38 +31,64 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
+
+  /* Dark mode - YouTube inspired with Apple polish */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* YouTube dark background: #0f0f0f */
+    --background: 0 0% 6%;
+    /* Slightly lighter for elevated surfaces: #1a1a1a */
+    --background-elevated: 0 0% 10%;
+    /* Text colors */
+    --foreground: 0 0% 95%;
+    --foreground-muted: 0 0% 65%;
+    
+    /* Cards - slightly elevated with subtle transparency for glass */
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+    
+    /* Popover/dropdown menus */
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Primary action color - YouTube red accent */
+    --primary: 0 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - subtle gray */
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 95%;
+    
+    /* Muted - for subtle backgrounds */
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 55%;
+    
+    /* Accent - for hover states */
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 95%;
+    
+    /* Destructive - red for delete actions */
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders - very subtle */
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 90% 55%;
+    
+    /* Status colors for Kanban */
+    --status-idea: 220 15% 50%;
+    --status-script: 210 90% 55%;
+    --status-recording: 30 95% 55%;
+    --status-editing: 270 70% 60%;
+    --status-scheduled: 45 95% 55%;
+    --status-published: 140 70% 45%;
+    
+    /* Success/warning/info */
+    --success: 140 70% 45%;
+    --warning: 45 95% 55%;
+    --info: 210 90% 55%;
   }
 }
 
@@ -62,7 +96,112 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    /* Force dark mode */
+    color-scheme: dark;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Apple-style glass effect */
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-hover {
+    @apply hover:bg-white/10 transition-colors duration-200;
+  }
+  
+  /* Stronger glass for modals/popovers */
+  .glass-strong {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10;
+  }
+  
+  /* Subtle glass for cards */
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.06] rounded-xl;
+  }
+  
+  /* Glass sidebar */
+  .glass-sidebar {
+    @apply bg-black/20 backdrop-blur-xl border-r border-white/[0.06];
+  }
+  
+  /* Glow effects for emphasis */
+  .glow-primary {
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4);
+  }
+  
+  .glow-sm {
+    box-shadow: 0 0 10px -3px hsl(var(--primary) / 0.3);
+  }
+  
+  /* Status badges */
+  .badge-idea {
+    @apply bg-gray-500/20 text-gray-300 border-gray-500/30;
+  }
+  .badge-script {
+    @apply bg-blue-500/20 text-blue-300 border-blue-500/30;
+  }
+  .badge-recording {
+    @apply bg-orange-500/20 text-orange-300 border-orange-500/30;
+  }
+  .badge-editing {
+    @apply bg-purple-500/20 text-purple-300 border-purple-500/30;
+  }
+  .badge-scheduled {
+    @apply bg-yellow-500/20 text-yellow-300 border-yellow-500/30;
+  }
+  .badge-published {
+    @apply bg-green-500/20 text-green-300 border-green-500/30;
+  }
+  
+  /* Smooth scrollbar for dark mode */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/20;
+  }
+}
+
+@layer utilities {
+  /* Text gradient for fancy headings */
+  .text-gradient {
+    @apply bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent;
+  }
+  
+  /* Animate in */
+  .animate-in {
+    animation: animateIn 0.3s ease-out;
+  }
+  
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Subtle hover lift */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
   }
 }

@@ -1,58 +1,130 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
 import { AuthButton } from "@/components/auth-button";
-import { Hero } from "@/components/hero";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-steps";
-import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
+import { Button } from "@/components/ui/button";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Play, Sparkles, Layout, Eye } from "lucide-react";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
+    <main className="min-h-screen flex flex-col">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Play className="w-4 h-4 text-white fill-white" />
             </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
+            <span className="font-semibold text-lg">YouTuber Studio</span>
+          </Link>
+          
+          <div className="flex items-center gap-4">
+            {hasEnvVars && (
+              <Suspense fallback={<div className="w-20 h-9" />}>
                 <AuthButton />
               </Suspense>
             )}
           </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          <Hero />
-          <main className="flex-1 flex flex-col gap-6 px-4">
-            <h2 className="font-medium text-xl mb-4">Next steps</h2>
-            {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-          </main>
         </div>
+      </nav>
 
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
+      {/* Hero Section */}
+      <section className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-20">
+        {/* Background gradient */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">The all-in-one creator OS</span>
+          </div>
+          
+          {/* Headline */}
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+            Plan, Script, and<br />
+            <span className="text-gradient">Ship Videos Faster</span>
+          </h1>
+          
+          {/* Subheadline */}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            The operating system for YouTube creators. Manage projects with Kanban boards, 
+            write scripts with storyboards, and preview how your videos will look before publishing.
           </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
+          
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth/sign-up">
+              <Button size="lg" className="glow-primary text-base px-8">
+                Get Started Free
+              </Button>
+            </Link>
+            <Link href="/auth/login">
+              <Button size="lg" variant="outline" className="text-base px-8 glass">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Everything you need to create
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Feature Card 1 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+                <Layout className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Kanban Board</h3>
+              <p className="text-muted-foreground">
+                Track your videos from idea to published. Drag and drop projects between stages.
+              </p>
+            </div>
+            
+            {/* Feature Card 2 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Storyboard Editor</h3>
+              <p className="text-muted-foreground">
+                Write your script and plan visuals side-by-side. Know exactly what to film.
+              </p>
+            </div>
+            
+            {/* Feature Card 3 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-4">
+                <Eye className="w-6 h-6 text-orange-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Thumbnail Preview</h3>
+              <p className="text-muted-foreground">
+                See how your video will look in the YouTube feed before you publish.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 border-t border-white/5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
+          <p>© 2026 YouTuber Studio</p>
+          <div className="flex items-center gap-6">
+            <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

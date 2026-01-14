@@ -1,53 +1,153 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# YouTuber Studio 🎬
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+> The all-in-one creator operating system for YouTubers and content studios.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Built with Next.js 15, Supabase, Tailwind CSS, and Stripe.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **Channel Branding Preview** - See your logo, banner, thumbnails in real YouTube layouts
+- **Script Writing System** - Scripts with structure, notes, visual cues, and pacing
+- **Project Management** - Videos grouped into projects, series, and playlists
+- **Kanban Workflow** - Idea → Script → Recording → Editing → Scheduled → Published
+- **Asset Storage** - Thumbnails, exports, shorts, raw files
+- **Multi-Studio Support** - Creator, editor, and manager roles
+- **Monetization** - Stripe subscriptions (Creator vs Studio plans)
 
-## Demo
+## Tech Stack
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Payments**: [Stripe](https://stripe.com/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **Data Fetching**: [TanStack Query](https://tanstack.com/query)
+- **Forms**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **Deployment**: [Vercel](https://vercel.com/)
 
-## Deploy to Vercel
+## Project Structure
 
-Vercel deployment will guide you through creating a Supabase account and project.
+```
+├── app/
+│   ├── (auth)/              # Auth routes (sign-in, sign-up)
+│   ├── (dashboard)/         # Protected dashboard routes
+│   │   └── dashboard/       # Main dashboard
+│   ├── api/
+│   │   └── webhooks/        # Stripe & Supabase webhooks
+│   ├── auth/                # Auth callback routes
+│   └── protected/           # Protected pages
+├── components/
+│   ├── forms/               # Form components
+│   ├── layouts/             # Layout components (sidebar, dashboard)
+│   ├── providers/           # Context providers
+│   ├── shared/              # Shared components
+│   └── ui/                  # shadcn/ui components
+├── config/
+│   ├── navigation.ts        # Dashboard navigation config
+│   ├── site.ts              # Site-wide config
+│   └── subscriptions.ts     # Stripe plans config
+├── lib/
+│   ├── actions/             # Server actions
+│   ├── hooks/               # Custom React hooks
+│   ├── stores/              # Zustand stores
+│   ├── stripe/              # Stripe utilities
+│   ├── supabase/            # Supabase clients
+│   └── validators/          # Zod schemas
+├── supabase/
+│   └── migrations/          # Database migrations
+└── types/
+    ├── database.ts          # Database entity types
+    ├── index.ts             # Type exports
+    └── supabase.ts          # Supabase generated types
+```
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+## Getting Started
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### 1. Clone and Install
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+```bash
+git clone <your-repo-url>
+cd youtube-project
+npm install
+```
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+### 2. Set Up Supabase
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run the migration in `supabase/migrations/00001_initial_schema.sql`
+3. Copy your project URL and keys
+
+### 3. Set Up Stripe
+
+1. Create an account at [stripe.com](https://stripe.com)
+2. Create products and prices for your subscription plans
+3. Set up webhook endpoint: `https://your-domain.com/api/webhooks/stripe`
+4. Copy your API keys and webhook secret
+
+### 4. Configure Environment Variables
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your values:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- etc.
+
+### 5. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import to Vercel
+3. Add environment variables
+4. Deploy!
+
+### Environment Variables for Production
+
+Make sure to set all variables from `.env.example` in your production environment.
+
+## Database Schema
+
+The app uses the following main tables:
+
+- `profiles` - User profiles (extends Supabase auth)
+- `organizations` - Studios/workspaces
+- `organization_members` - Team members with roles
+- `channels` - YouTube channels
+- `channel_brandings` - Channel branding assets
+- `projects` - Video projects
+- `playlists` - Video playlists
+- `scripts` - Video scripts
+- `script_sections` - Script sections (intro, hook, CTA, etc.)
+- `assets` - Media files
+- `subscriptions` - Stripe subscriptions
+
+## Scripts
+
+```bash
+npm run dev        # Start development server
+npm run build      # Build for production
+npm run start      # Start production server
+npm run lint       # Run ESLint
+```
+
+## License
+
+MIT
+
 
 ## Clone and run locally
 
