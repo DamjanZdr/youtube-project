@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -103,20 +103,220 @@ async function createPlaylist(studioSlug: string, name: string, description: str
 export default function PackagingPage({ params }: PackagingPageProps) {
   const { studioSlug, projectId } = use(params);
   const queryClient = useQueryClient();
+  const supabase = createClient();
   
-  const [sets, setSets] = useState<PackagingSet[]>([
-    { id: "1", title: "10 Tips That Changed My Life", thumbnail: null, selected: true },
-    { id: "2", title: "You Wont Believe What Happened", thumbnail: null, selected: false },
-    { id: "3", title: "The Ultimate Guide to Productivity", thumbnail: null, selected: false },
-  ]);
-  
-  const [tags, setTags] = useState(["productivity", "tips", "lifestyle"]);
+  const [loading, setLoading] = useState(true);
+  const [sets, setSets] = useState<PackagingSet[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+  const [videoType, setVideoType] = useState<string>("long");
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
 
+  useEffect(() => {
+    loadPackagingData();
+  }, [projectId]);
+
+  const loadPackagingData = async () => {
+    setLoading(true);
+
+    // Load project data
+    const { data: project } = await supabase
+      .from("projects")
+      .select("description, video_type")
+      .eq("id", projectId)
+      .single();
+
+    if (project) {
+      setDescription(project.description || "");
+      setVideoType(project.video_type || "long");
+    }
+
+    // Load packaging sets
+    const { data: setsData } = await supabase
+      .from("packaging_sets")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("position");
+
+    if (setsData && setsData.length > 0) {
+      setSets(setsData.map(s => ({
+        id: s.id,
+        title: s.title,
+        thumbnail: s.thumbnail_url,
+        selected: s.is_selected,
+      })));
+    } else {
+      // Create first set if none exist
+      const { data: newSet } = await supabase
+        .from("packaging_sets")
+        .insert({
+          project_id: projectId,
+          title: "",
+          is_selected: true,
+          position: 0,
+        })
+        .select()
+        .single();
+
+      if (newSet) {
+        setSets([{
+          id: newSet.id,
+          title: newSet.title,
+          thumbnail: newSet.thumbnail_url,
+          selected: newSet.is_selected,
+        }]);
+      }
+    }
+
+    // Load tags
+    const { data: tagsData } = await supabase
+      .from("project_tags")
+      .select("tag")
+      .eq("project_id", projectId);
+
+    if (tagsData) {
+      setTags(tagsData.map(t => t.tag));
+    }
+
+    // Load playlist assignment
+    const { data: playlistData } = await supabase
+      .from("project_playlists")
+      .select("playlist_id")
+      .eq("project_id", projectId)
+      .single();
+
+    if (playlistData) {
+      setSelectedPlaylist(playlistData.playlist_id);
+    }
+
+    setLoading(false);
+  };
+
+  const saveDescription = async (value: string) => {
+    setDescription(value);
+    await supabase
+      .from("projects")
+      .update({ description: value })
+      .eq("id", projectId);
+  };
+
+  const saveVideoType = async (value: string) => {
+    setVideoType(value);
+    await supabase
+      .from("projects")
+      .update({ video_type: value })
+      .eq("id", projectId);
+  };
+
+  const selectSet = async (id: string) => {
+    // Update locally
+    setSets(sets.map(s => ({ ...s, selected: s.id === id })));
+
+    // Update in DB - first unselect all
+    await supabase
+      .from("packaging_sets")
+      .update({ is_selected: false })
+      .eq("project_id", projectId);
+
+    // Then select the chosen one
+    await supabase
+      .from("packaging_sets")
+      .update({ is_selected: true })
+      .eq("id", id);
+  };
+
+  const addSet = async () => {
+    if (sets.length < 5) {
+      const { data: newSet } = await supabase
+        .from("packaging_sets")
+        .insert({
+          project_id: projectId,
+          title: "",
+          is_selected: false,
+          position: sets.length,
+        })
+        .select()
+        .single();
+
+      if (newSet) {
+        setSets([...sets, {
+          id: newSet.id,
+          title: newSet.title,
+          thumbnail: newSet.thumbnail_url,
+          selected: newSet.is_selected,
+        }]);
+      }
+    }
+  };
+
+  const removeSet = async (id: string) => {
+    const removingSelected = sets.find(s => s.id === id)?.selected;
+    const newSets = sets.filter(s => s.id !== id);
+    
+    // Delete from DB
+    await supabase
+      .from("packaging_sets")
+      .delete()
+      .eq("id", id);
+
+    // If we removed the selected set, select the first remaining
+    if (removingSelected && newSets.length > 0) {
+      newSets[0].selected = true;
+      await supabase
+        .from("packaging_sets")
+        .update({ is_selected: true })
+        .eq("id", newSets[0].id);
+    }
+    
+    setSets(newSets);
+  };
+
+  const updateSetTitle = async (id: string, title: string) => {
+    setSets(sets.map(s => s.id === id ? { ...s, title } : s));
+    
+    // Debounced save to DB
+    await supabase
+      .from("packaging_sets")
+      .update({ title })
+      .eq("id", id);
+  };
+
+  const saveTags = async (newTags: string[]) => {
+    setTags(newTags);
+
+    // Delete all existing tags
+    await supabase
+      .from("project_tags")
+      .delete()
+      .eq("project_id", projectId);
+
+    // Insert new tags
+    if (newTags.length > 0) {
+      await supabase
+        .from("project_tags")
+        .insert(newTags.map(tag => ({ project_id: projectId, tag })));
+    }
+  };
+
+  const savePlaylist = async (playlistId: string | null) => {
+    setSelectedPlaylist(playlistId);
+
+    // Delete existing playlist assignment
+    await supabase
+      .from("project_playlists")
+      .delete()
+      .eq("project_id", projectId);
+
+    // Add new assignment if selected
+    if (playlistId) {
+      await supabase
+        .from("project_playlists")
+        .insert({ project_id: projectId, playlist_id: playlistId });
+    }
+  };
   const { data: playlists = [] } = useQuery({
     queryKey: ["playlists", studioSlug],
     queryFn: () => fetchPlaylists(studioSlug),
@@ -126,34 +326,20 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     mutationFn: () => createPlaylist(studioSlug, newPlaylistName, newPlaylistDescription),
     onSuccess: (newPlaylist) => {
       queryClient.invalidateQueries({ queryKey: ["playlists", studioSlug] });
-      setSelectedPlaylist(newPlaylist.id);
+      savePlaylist(newPlaylist.id);
       setShowCreatePlaylist(false);
       setNewPlaylistName("");
       setNewPlaylistDescription("");
     },
   });
 
-  const selectSet = (id: string) => {
-    setSets(sets.map(s => ({ ...s, selected: s.id === id })));
-  };
-
-  const addSet = () => {
-    if (sets.length < 5) {
-      setSets([...sets, { id: Date.now().toString(), title: "", thumbnail: null, selected: false }]);
-    }
-  };
-
-  const removeSet = (id: string) => {
-    const newSets = sets.filter(s => s.id !== id);
-    if (newSets.length > 0 && !newSets.some(s => s.selected)) {
-      newSets[0].selected = true;
-    }
-    setSets(newSets);
-  };
-
-  const updateSetTitle = (id: string, title: string) => {
-    setSets(sets.map(s => s.id === id ? { ...s, title } : s));
-  };
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -268,23 +454,40 @@ export default function PackagingPage({ params }: PackagingPageProps) {
         )}
       </div>
 
-      {/* Description & Tags */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Description */}
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold mb-4">Description</h2>
-          <Textarea 
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Write your video description..."
-            className="glass border-white/10 min-h-[180px]"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            {description.length} characters
-          </p>
+      {/* Description, Video Type & Other Fields */}
+      <div className="grid grid-cols-1 lg:grid-cols-[0.7fr_1fr] gap-6">
+        {/* Left Column: Description & Video Type */}
+        <div className="space-y-6">
+          {/* Description */}
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold mb-4">Description</h2>
+            <Textarea 
+              value={description}
+              onChange={(e) => saveDescription(e.target.value)}
+              placeholder="Write your video description..."
+              className="glass border-white/10 min-h-[180px]"
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              {description.length} characters
+            </p>
+          </div>
+          
+          {/* Video Type */}
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold mb-4">Video Type</h2>
+            <Select value={videoType} onValueChange={saveVideoType}>
+              <SelectTrigger className="glass border-white/10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="long">Long Form</SelectItem>
+                <SelectItem value="short">Short Form</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Tags & Playlist */}
+        {/* Right Column: Tags & Playlist */}
         <div className="space-y-6">
           {/* Playlist */}
           <div className="glass-card p-6">
@@ -295,7 +498,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
             <div className="flex gap-2">
               <Select 
                 value={selectedPlaylist || ""} 
-                onValueChange={(v) => setSelectedPlaylist(v || null)}
+                onValueChange={(v) => savePlaylist(v || null)}
               >
                 <SelectTrigger className="glass border-white/10">
                   <SelectValue placeholder="Select a playlist..." />
@@ -318,7 +521,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
             </div>
             {selectedPlaylist && (
               <button 
-                onClick={() => setSelectedPlaylist(null)}
+                onClick={() => savePlaylist(null)}
                 className="text-xs text-muted-foreground hover:text-white mt-2"
               >
                 Remove from playlist
@@ -337,7 +540,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                 >
                   #{tag}
                   <button 
-                    onClick={() => setTags(tags.filter((_, idx) => idx !== i))}
+                    onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
                     className="opacity-50 hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -351,12 +554,23 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                 className="glass border-white/10"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value) {
-                    setTags([...tags, e.currentTarget.value]);
+                    saveTags([...tags, e.currentTarget.value]);
                     e.currentTarget.value = "";
                   }
                 }}
               />
-              <Button variant="outline">Add</Button>
+              <Button 
+                variant="outline"
+                onClick={(e) => {
+                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  if (input && input.value) {
+                    saveTags([...tags, input.value]);
+                    input.value = "";
+                  }
+                }}
+              >
+                Add
+              </Button>
             </div>
           </div>
         </div>

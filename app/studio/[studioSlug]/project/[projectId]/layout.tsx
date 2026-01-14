@@ -12,13 +12,6 @@ import {
   Settings,
   MoreHorizontal,
   Calendar,
-  ChevronDown,
-  Lightbulb,
-  FileText,
-  Video,
-  Scissors,
-  Clock,
-  CheckCircle2,
   Trash2,
   Copy,
   ExternalLink,
@@ -34,27 +27,20 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const STATUS_CONFIG = {
-  idea: { label: "Idea", color: "bg-purple-500", icon: Lightbulb },
-  script: { label: "Script", color: "bg-blue-500", icon: FileText },
-  recording: { label: "Recording", color: "bg-yellow-500", icon: Video },
-  editing: { label: "Editing", color: "bg-orange-500", icon: Scissors },
-  scheduled: { label: "Scheduled", color: "bg-cyan-500", icon: Clock },
-  published: { label: "Published", color: "bg-green-500", icon: CheckCircle2 },
-};
-
-type ProjectStatus = keyof typeof STATUS_CONFIG;
-
 interface Project {
   id: string;
-  title: string;
   description: string | null;
-  status: ProjectStatus;
   video_type: "long" | "short";
-  thumbnail_url: string | null;
   due_date: string | null;
   scheduled_for: string | null;
   youtube_video_id: string | null;
+}
+
+interface PackagingSet {
+  id: string;
+  title: string;
+  thumbnail_url: string | null;
+  is_selected: boolean;
 }
 
 export default function ProjectLayout({ children }: { children: React.ReactNode }) {
@@ -64,8 +50,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const projectId = params.projectId as string;
 
   const [project, setProject] = useState<Project | null>(null);
+  const [activeSet, setActiveSet] = useState<PackagingSet | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -75,31 +61,31 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
   const fetchProject = async () => {
     const supabase = createClient();
-    const { data, error } = await supabase
+    
+    // Fetch project details
+    const { data: projectData } = await supabase
       .from("projects")
       .select("*")
       .eq("id", projectId)
       .single();
 
-    if (data) {
-      setProject(data);
-    }
-    setLoading(false);
-  };
+    // Fetch active packaging set
+    const { data: setData } = await supabase
+      .from("packaging_sets")
+      .select("id, title, thumbnail_url, is_selected")
+      .eq("project_id", projectId)
+      .eq("is_selected", true)
+      .single();
 
-  const updateStatus = async (newStatus: ProjectStatus) => {
-    if (!project) return;
+    if (projectData) {
+      setProject(projectData);
+    }
     
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("projects")
-      .update({ status: newStatus })
-      .eq("id", projectId);
-
-    if (!error) {
-      setProject({ ...project, status: newStatus });
+    if (setData) {
+      setActiveSet(setData);
     }
-    setShowStatusMenu(false);
+    
+    setLoading(false);
   };
 
   const tabs = [
@@ -137,8 +123,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     );
   }
 
-  const statusConfig = STATUS_CONFIG[project.status] || STATUS_CONFIG.idea;
-  const StatusIcon = statusConfig.icon;
+  const projectTitle = activeSet?.title || "Untitled Project";
+  const projectThumbnail = activeSet?.thumbnail_url;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -156,47 +142,14 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
             {/* Thumbnail Preview */}
             <div className="w-16 h-10 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 overflow-hidden">
-              {project.thumbnail_url ? (
-                <img src={project.thumbnail_url} alt="" className="w-full h-full object-cover" />
+              {projectThumbnail ? (
+                <img src={projectThumbnail} alt="" className="w-full h-full object-cover" />
               ) : null}
             </div>
 
             <div>
-              <h1 className="text-xl font-semibold">{project.title}</h1>
+              <h1 className="text-xl font-semibold">{projectTitle}</h1>
               <div className="flex items-center gap-3 mt-1">
-                {/* Status Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowStatusMenu(!showStatusMenu)}
-                    className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${statusConfig.color} bg-opacity-20 hover:bg-opacity-30 transition-all`}
-                  >
-                    <StatusIcon className="w-3 h-3" />
-                    <span>{statusConfig.label}</span>
-                    <ChevronDown className="w-3 h-3" />
-                  </button>
-
-                  {showStatusMenu && (
-                    <div className="absolute top-full left-0 mt-1 w-44 glass-card p-2 z-50">
-                      {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-                        const Icon = config.icon;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => updateStatus(key as ProjectStatus)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${
-                              project.status === key ? "bg-white/10" : "hover:bg-white/5"
-                            }`}
-                          >
-                            <span className={`w-2 h-2 rounded-full ${config.color}`} />
-                            <Icon className="w-4 h-4" />
-                            {config.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
                 {/* Type Badge */}
                 <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-white/5 capitalize">
                   {project.video_type} form
@@ -286,7 +239,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           <DialogHeader>
             <DialogTitle>Delete Project</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{project.title}"? This action cannot be undone.
+              Are you sure you want to delete "{projectTitle}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -299,11 +252,10 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       </Dialog>
 
       {/* Click outside to close menus */}
-      {(showStatusMenu || showMoreMenu) && (
+      {showMoreMenu && (
         <div
           className="fixed inset-0 z-40"
           onClick={() => {
-            setShowStatusMenu(false);
             setShowMoreMenu(false);
           }}
         />

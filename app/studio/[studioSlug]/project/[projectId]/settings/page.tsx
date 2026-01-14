@@ -1,55 +1,90 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Settings,
-  Calendar,
-  Users,
   Trash2,
   Copy
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface ProjectSettingsPageProps {
   params: Promise<{ studioSlug: string; projectId: string }>;
 }
 
-export default async function ProjectSettingsPage({ params }: ProjectSettingsPageProps) {
-  const { studioSlug, projectId } = await params;
-  const supabase = await createClient();
+export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps) {
+  const { studioSlug, projectId } = use(params);
+  const router = useRouter();
+  const supabase = createClient();
 
-  // TODO: Fetch project data
-  const project = {
-    id: projectId,
-    title: "Sample Project",
-    status: "scripting",
-    type: "long",
-    due_date: null,
-    notes: "",
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    loadProject();
+  }, [projectId]);
+
+  const loadProject = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("projects")
+      .select("notes")
+      .eq("id", projectId)
+      .single();
+
+    if (data) {
+      setNotes(data.notes || "");
+    }
+    setLoading(false);
   };
 
-  const statuses = [
-    { value: "idea", label: "Idea" },
-    { value: "planning", label: "Planning" },
-    { value: "scripting", label: "Scripting" },
-    { value: "filming", label: "Filming" },
-    { value: "editing", label: "Editing" },
-    { value: "review", label: "Review" },
-    { value: "scheduled", label: "Scheduled" },
-    { value: "published", label: "Published" },
-  ];
+  const saveNotes = async () => {
+    setSaving(true);
+    await supabase
+      .from("projects")
+      .update({ notes })
+      .eq("id", projectId);
+    setSaving(false);
+  };
 
-  const types = [
-    { value: "long", label: "Long Form" },
-    { value: "short", label: "Short Form" },
-  ];
+  const duplicateProject = async () => {
+    // TODO: Implement project duplication
+    console.log("Duplicate project not yet implemented");
+  };
+
+  const deleteProject = async () => {
+    setDeleting(true);
+    await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+    
+    // Navigate back to projects list
+    router.push(`/studio/${studioSlug}/projects`);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-8">
@@ -60,85 +95,20 @@ export default async function ProjectSettingsPage({ params }: ProjectSettingsPag
           Project Settings
         </h2>
 
-        {/* Title */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Project Title</label>
-          <Input 
-            defaultValue={project.title}
-            className="glass"
-          />
-        </div>
-
-        {/* Status */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Status</label>
-          <Select defaultValue={project.status}>
-            <SelectTrigger className="glass">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statuses.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Type */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Video Type</label>
-          <Select defaultValue={project.type}>
-            <SelectTrigger className="glass">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {types.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Due Date */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Due Date
-          </label>
-          <Input 
-            type="date"
-            defaultValue={project.due_date || ""}
-            className="glass"
-          />
-        </div>
-
         {/* Notes */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Internal Notes</label>
           <Textarea 
-            defaultValue={project.notes}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any notes about this project..."
             className="glass min-h-[100px]"
           />
         </div>
 
-        <Button className="glow-sm">Save Changes</Button>
-      </div>
-
-      {/* Assignees */}
-      <div className="glass-card p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Assignees
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Assign team members to this project
-        </p>
-        <Button variant="outline">Add Assignee</Button>
+        <Button onClick={saveNotes} disabled={saving} className="glow-sm">
+          {saving ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
 
       {/* Actions */}
@@ -152,7 +122,7 @@ export default async function ProjectSettingsPage({ params }: ProjectSettingsPag
               Create a copy of this project
             </p>
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" onClick={duplicateProject} className="gap-2">
             <Copy className="w-4 h-4" />
             Duplicate
           </Button>
@@ -170,12 +140,40 @@ export default async function ProjectSettingsPage({ params }: ProjectSettingsPag
               Permanently delete this project and all its data
             </p>
           </div>
-          <Button variant="destructive" className="gap-2">
+          <Button 
+            variant="destructive" 
+            onClick={() => setShowDeleteDialog(true)}
+            className="gap-2"
+          >
             <Trash2 className="w-4 h-4" />
             Delete
           </Button>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this project? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={deleteProject}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete Project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

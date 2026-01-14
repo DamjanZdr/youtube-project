@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,25 +43,128 @@ interface ChannelLink {
   url: string;
 }
 
+interface DBChannel {
+  id: string;
+  organization_id: string;
+  name: string;
+  handle: string | null;
+  description: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+}
+
+interface DBChannelLink {
+  id: string;
+  channel_id: string;
+  title: string;
+  url: string;
+  position: number;
+}
+
 export default function ChannelPage() {
+  const params = useParams();
+  const studioSlug = params.studioSlug as string;
+  
   const [viewMode, setViewMode] = useState<ViewMode>("landscape");
   const [editDialog, setEditDialog] = useState<EditDialog>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [channelId, setChannelId] = useState<string | null>(null);
   
-  // Channel data state (will be fetched from DB later)
+  // Channel data state
   const [channel, setChannel] = useState({
     banner: null as string | null,
     icon: null as string | null,
     name: "Creator Name",
     handle: "@creatorhandle",
-    subs: "1.2M subscribers",
-    videos: "342 videos",
-    description: "Welcome to my channel! I create content about productivity, tech, and lifestyle. New videos every week. Join the community and let's grow together!",
-    links: [
-      { id: "1", icon: Twitter, label: "Twitter", url: "https://twitter.com/creator" },
-      { id: "2", icon: Instagram, label: "Instagram", url: "https://instagram.com/creator" },
-      { id: "3", icon: Globe, label: "Website", url: "https://creator.com" },
-    ] as ChannelLink[]
+    subs: "0 subscribers",
+    videos: "0 videos",
+    description: "Welcome to my channel!",
+    links: [] as ChannelLink[]
   });
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    loadChannelData();
+  }, [studioSlug]);
+
+  const loadChannelData = async () => {
+    setLoading(true);
+
+    // Get organization from slug
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", studioSlug)
+      .single();
+
+    if (!org) {
+      setLoading(false);
+      return;
+    }
+
+    // Get or create channel
+    let { data: channelData } = await supabase
+      .from("channels")
+      .select("*")
+      .eq("organization_id", org.id)
+      .single();
+
+    // If no channel exists, create one
+    if (!channelData) {
+      const { data: newChannel } = await supabase
+        .from("channels")
+        .insert({ 
+          organization_id: org.id, 
+          name: "My Channel",
+          handle: "@mychannel"
+        })
+        .select()
+        .single();
+      channelData = newChannel;
+    }
+
+    if (channelData) {
+      setChannelId(channelData.id);
+
+      // Load channel links
+      const { data: linksData } = await supabase
+        .from("channel_links")
+        .select("*")
+        .eq("channel_id", channelData.id)
+        .order("position");
+
+      const mappedLinks: ChannelLink[] = (linksData || []).map(link => ({
+        id: link.id,
+        icon: Globe, // Default icon, could be improved with icon mapping
+        label: link.title,
+        url: link.url,
+      }));
+
+      setChannel({
+        banner: channelData.banner_url,
+        icon: channelData.avatar_url,
+        name: channelData.name,
+        handle: channelData.handle || "@channel",
+        subs: "0 subscribers", // From YouTube API eventually
+        videos: "0 videos", // From YouTube API eventually
+        description: channelData.description || "",
+        links: mappedLinks,
+      });
+    }
+
+    setLoading(false);
+  };
+
+  const saveChannelField = async (field: keyof DBChannel, value: string | null) => {
+    if (!channelId) return;
+
+    await supabase
+      .from("channels")
+      .update({ [field]: value })
+      .eq("id", channelId);
+  };
 
   // Temporary edit states
   const [tempName, setTempName] = useState(channel.name);
@@ -71,49 +176,74 @@ export default function ChannelPage() {
   const iconInputRef = useRef<HTMLInputElement>(null);
 
   // File upload handlers
-  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && channelId) {
+      // TODO: Upload to Supabase storage
       const url = URL.createObjectURL(file);
       setChannel(prev => ({ ...prev, banner: url }));
+      await saveChannelField("banner_url", url);
       setEditDialog(null);
     }
   };
 
-  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && channelId) {
+      // TODO: Upload to Supabase storage
       const url = URL.createObjectURL(file);
       setChannel(prev => ({ ...prev, icon: url }));
+      await saveChannelField("avatar_url", url);
       setEditDialog(null);
     }
   };
 
   // Save handlers
-  const saveName = () => {
+  const saveName = async () => {
     setChannel(prev => ({ ...prev, name: tempName }));
+    await saveChannelField("name", tempName);
     setEditDialog(null);
   };
 
-  const saveHandle = () => {
+  const saveHandle = async () => {
     setChannel(prev => ({ ...prev, handle: tempHandle }));
+    await saveChannelField("handle", tempHandle);
     setEditDialog(null);
   };
 
-  const saveDescription = () => {
+  const saveDescription = async () => {
     setChannel(prev => ({ ...prev, description: tempDescription }));
+    await saveChannelField("description", tempDescription);
     setEditDialog(null);
   };
 
-  const saveLinks = () => {
+  const saveLinks = async () => {
+    if (!channelId) return;
+
+    setSaving(true);
+
+    // Delete all existing links
+    await supabase.from("channel_links").delete().eq("channel_id", channelId);
+
+    // Insert new links
+    const linksToInsert = tempLinks.map((link, index) => ({
+      channel_id: channelId,
+      title: link.label,
+      url: link.url,
+      position: index,
+    }));
+
+    await supabase.from("channel_links").insert(linksToInsert);
+
     setChannel(prev => ({ ...prev, links: tempLinks }));
+    setSaving(false);
     setEditDialog(null);
   };
 
   // Link management
   const addLink = () => {
     setTempLinks(prev => [...prev, { 
-      id: Date.now().toString(), 
+      id: `temp-${Date.now()}`, 
       icon: Globe, 
       label: "New Link", 
       url: "https://" 
@@ -146,6 +276,14 @@ export default function ChannelPage() {
     { id: "description" as const, icon: FileText, label: "Description" },
     { id: "links" as const, icon: Link2, label: "Links" },
   ];
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -464,7 +602,9 @@ export default function ChannelPage() {
           </Button>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
-            <Button onClick={saveLinks}>Save</Button>
+            <Button onClick={saveLinks} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
