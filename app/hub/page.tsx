@@ -245,7 +245,10 @@ export default function HubPage() {
               <Badge variant="secondary">{pendingInvites.length}</Badge>
             </div>
             <div className="space-y-3">
-              {pendingInvites.map((invite) => (
+              {pendingInvites.map((invite) => {
+                if (!invite.organization) return null;
+                
+                return (
                 <div key={invite.id} className="glass-card p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {invite.organization.logo_url ? (
@@ -284,7 +287,8 @@ export default function HubPage() {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
