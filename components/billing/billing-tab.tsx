@@ -24,7 +24,9 @@ interface BillingTabProps {
 
 export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [loading, setLoading] = useState<string | null>(null);
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  // Default to current subscription's interval, or monthly if no subscription
+  const currentInterval = subscription?.interval === "year" ? "yearly" : "monthly";
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(currentInterval);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     plan: Plan | null;
