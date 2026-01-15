@@ -4,6 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { plans, type Plan } from "@/config/subscriptions";
 import { Check, AlertCircle, CreditCard, Calendar, Download, X } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +25,17 @@ interface BillingTabProps {
 export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    plan: Plan | null;
+    action: string;
+    message: string;
+  }>({
+    open: false,
+    plan: null,
+    action: "",
+    message: "",
+  });
 
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
@@ -44,6 +63,59 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     } finally {
       setLoading(null);
     }
+  };
+
+  const showConfirmation = (plan: Plan) => {
+    const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
+    const newPlanIndex = plans.findIndex(p => p.id === plan.id);
+    const isSamePlan = plan.id === (subscription?.plan || "free");
+    const currentInterval = subscription?.interval === "month" ? "monthly" : 
+                           subscription?.interval === "year" ? "yearly" : 
+                           "monthly";
+    const isSameInterval = currentInterval === billingInterval;
+    const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
+    
+    let action = "";
+    let message = "";
+    
+    if (plan.id === "free") {
+      action = "Downgrade to Free";
+      message = `Are you sure you want to cancel your ${currentPlan?.name} subscription? You'll continue to have access until the end of your current billing period.`;
+    } else if (isSamePlan && !isSameInterval) {
+      // Interval change
+      const newInterval = billingInterval === "monthly" ? "monthly" : "yearly";
+      const oldInterval = currentInterval === "monthly" ? "monthly" : "yearly";
+      
+      if (newInterval === "yearly") {
+        action = `Switch to Yearly`;
+        message = `Switch to ${plan.name} Yearly for $${price}/year? You'll be charged immediately with proration for the remaining time on your current plan.`;
+      } else {
+        action = `Switch to Monthly`;
+        message = `Switch to ${plan.name} Monthly for $${price}/month? This change will take effect at the end of your current billing period.`;
+      }
+    } else if (newPlanIndex > currentPlanIndex) {
+      // Upgrade
+      action = `Upgrade to ${plan.name}`;
+      message = `Upgrade to ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} for $${price}/${billingInterval === "monthly" ? "month" : "year"}? You'll be charged immediately with proration for the remaining time on your current plan.`;
+    } else {
+      // Downgrade
+      action = `Downgrade to ${plan.name}`;
+      message = `Downgrade to ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} for $${price}/${billingInterval === "monthly" ? "month" : "year"}? This change will take effect at the end of your current billing period.`;
+    }
+    
+    setConfirmDialog({
+      open: true,
+      plan,
+      action,
+      message,
+    });
+  };
+
+  const confirmPlanChange = async () => {
+    if (!confirmDialog.plan) return;
+    
+    setConfirmDialog({ ...confirmDialog, open: false });
+    await handleUpgrade(confirmDialog.plan);
   };
 
   const handleManageBilling = async () => {
@@ -395,7 +467,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                       : "outline"
                 }
                 disabled={isCurrent || loading === plan.id}
-                onClick={() => handleUpgrade(plan)}
+                onClick={() => showConfirmation(plan)}
               >
                 {buttonText}
               </Button>
@@ -424,6 +496,32 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           </div>
         </Card>
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirmDialog.action}</DialogTitle>
+            <DialogDescription className="pt-4">
+              {confirmDialog.message}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmPlanChange}
+              disabled={loading !== null}
+            >
+              {loading ? "Processing..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
