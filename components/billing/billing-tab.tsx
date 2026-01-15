@@ -206,12 +206,6 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                   <Badge className="bg-primary text-primary-foreground px-3 py-1">Most Popular</Badge>
                 </div>
               )}
-              
-              {isCurrent && (
-                <div className="absolute -top-4 right-6">
-                  <Badge variant="outline" className="bg-background px-3 py-1">Current Plan</Badge>
-                </div>
-              )}
 
               <div className="mb-6">
                 <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
