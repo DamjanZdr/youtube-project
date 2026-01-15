@@ -18,9 +18,6 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
-  console.log('Subscription data:', subscription);
-  console.log('Current interval from DB:', subscription?.interval);
-
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const isFreePlan = !subscription || subscription.plan === "free";
   const isPastDue = subscription?.status === "past_due";
@@ -195,7 +192,11 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
         {plans.map((plan) => {
           const isSamePlan = plan.id === (subscription?.plan || "free");
-          const isSameInterval = (subscription?.interval || "monthly") === billingInterval;
+          // Normalize interval - Stripe uses "month"/"year", we use "monthly"/"yearly"
+          const currentInterval = subscription?.interval === "month" ? "monthly" : 
+                                 subscription?.interval === "year" ? "yearly" : 
+                                 "monthly";
+          const isSameInterval = currentInterval === billingInterval;
           const isCurrent = isSamePlan && isSameInterval;
           const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
           const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
