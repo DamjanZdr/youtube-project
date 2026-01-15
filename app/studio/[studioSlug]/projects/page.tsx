@@ -184,6 +184,15 @@ export default function ProjectsPage() {
       return;
     }
 
+    // Get the first board status (default to first status column)
+    const { data: firstStatus } = await supabase
+      .from("board_statuses")
+      .select("id")
+      .eq("organization_id", org.id)
+      .order("position")
+      .limit(1)
+      .single();
+
     // Create project
     const { data: project, error } = await supabase
       .from("projects")
@@ -194,6 +203,7 @@ export default function ProjectsPage() {
         description: newProject.description || null,
         video_type: newProject.video_type,
         status: newProject.status,
+        board_status_id: firstStatus?.id || null, // Set board status to trigger default tasks
       })
       .select()
       .single();
