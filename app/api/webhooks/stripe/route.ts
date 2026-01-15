@@ -6,7 +6,7 @@
 
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { stripe, constructWebhookEvent } from '@/lib/stripe';
+import { getStripe, constructWebhookEvent } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import type Stripe from 'stripe';
 import type { SubscriptionPlan } from '@/types';
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         const session = event.data.object as any;
         
         if (session.mode === 'subscription' && session.subscription) {
+          const stripe = getStripe();
           const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string);
           const subscription = subscriptionResponse as any;
           const organizationId = session.metadata?.organizationId;
@@ -157,6 +158,7 @@ export async function POST(request: Request) {
         const invoice = event.data.object as any;
         
         if (invoice.subscription) {
+          const stripe = getStripe();
           const subscriptionResponse = await stripe.subscriptions.retrieve(invoice.subscription as string);
           const subscription = subscriptionResponse as any;
           const organizationId = subscription.metadata?.organizationId;
@@ -186,6 +188,7 @@ export async function POST(request: Request) {
         const invoice = event.data.object as any;
         
         if (invoice.subscription) {
+          const stripe = getStripe();
           const subscriptionResponse = await stripe.subscriptions.retrieve(invoice.subscription as string);
           const subscription = subscriptionResponse as any;
           const organizationId = subscription.metadata?.organizationId;

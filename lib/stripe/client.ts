@@ -23,13 +23,8 @@ export const getStripe = () => {
   return _stripe;
 };
 
-// Backwards compatibility - use lazy getter
-export const stripe = new Proxy({} as Stripe, {
-  get: (target, prop) => {
-    const stripeInstance = getStripe();
-    return (stripeInstance as any)[prop];
-  }
-});
+// Export for backwards compatibility - but this should not be used at module level
+export const stripe = getStripe;
 
 /**
  * Create a Stripe Checkout Session for subscription
@@ -49,6 +44,7 @@ export async function createCheckoutSession({
   cancelUrl: string;
   metadata?: Record<string, string>;
 }) {
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -80,6 +76,7 @@ export async function createPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
+  const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
@@ -99,8 +96,7 @@ export async function getOrCreateCustomer({
   email: string;
   name?: string;
   metadata?: Record<string, string>;
-}) {
-  // Check if customer exists
+}) {  const stripe = getStripe();  // Check if customer exists
   const existingCustomers = await stripe.customers.list({
     email,
     limit: 1,
@@ -128,5 +124,6 @@ export function constructWebhookEvent(
   signature: string,
   webhookSecret: string
 ) {
+  const stripe = getStripe();
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
