@@ -193,15 +193,18 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
         {plans.map((plan) => {
           const isCurrent = plan.id === (subscription?.plan || "free");
           const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
+          const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
+          const thisPlanIndex = plans.findIndex(p => p.id === plan.id);
+          const userHasHigherPlan = currentPlanIndex > thisPlanIndex;
           
           return (
             <Card
               key={plan.id}
               className={`glass-card p-6 relative flex flex-col ${
-                plan.popular ? "ring-2 ring-primary" : ""
+                plan.popular && !userHasHigherPlan ? "ring-2 ring-primary" : ""
               } ${isCurrent ? "bg-primary/5" : ""}`}
             >
-              {plan.popular && (
+              {plan.popular && !userHasHigherPlan && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground px-3 py-1">Most Popular</Badge>
                 </div>

@@ -35,10 +35,28 @@ export async function createCheckoutSession(organizationId: string, priceId: str
   // Check if subscription exists
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, stripe_subscription_id, status')
     .eq('organization_id', organizationId)
     .maybeSingle();
 
+  // If they have an active subscription, update it instead of creating a new one
+  if (subscription?.stripe_subscription_id && subscription.status === 'active') {
+    const stripe = (await import('@/lib/stripe')).getStripe();
+    
+    // Update the existing subscription to the new price
+    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+      items: [{
+        id: (await stripe.subscriptions.retrieve(subscription.stripe_subscription_id)).items.data[0].id,
+        price: priceId,
+      }],
+      proration_behavior: 'always_invoice', // Charge/credit the difference immediately
+    });
+
+    // Redirect back to settings
+    return { url: `${baseUrl}/studio/${org.slug}/settings?upgraded=true` };
+  }
+
+  // No active subscription - create new checkout session
   const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl, org.slug);
   
   const session = await createStripeCheckout({
