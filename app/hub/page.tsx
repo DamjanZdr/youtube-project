@@ -22,11 +22,16 @@ interface Studio {
 interface PendingInvite {
   id: string;
   organization_id: string;
-  organization: {
+  organization?: {
     name: string;
     slug: string;
     logo_url?: string;
   };
+  organizations?: Array<{
+    name: string;
+    slug: string;
+    logo_url?: string;
+  }>;
   invited_by_profile?: {
     full_name?: string;
     email: string;
