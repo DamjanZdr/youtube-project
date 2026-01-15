@@ -74,7 +74,7 @@ export default async function HubPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {studios.map((studio) => (
+            {studios.map((studio: any) => (
               <Link
                 key={studio.id}
                 href={`/studio/${studio.slug}/projects`}

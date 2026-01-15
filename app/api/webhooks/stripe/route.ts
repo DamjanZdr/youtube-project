@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object as any;
         
         if (session.mode === 'subscription' && session.subscription) {
           const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string);
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         
         const organizationId = subscription.metadata?.organizationId;
         if (!organizationId) {
