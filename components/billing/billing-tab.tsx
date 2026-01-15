@@ -373,8 +373,14 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               <ul className="space-y-2.5 mb-6 flex-1">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
-                    <span className="text-sm">{feature.name}</span>
+                    {feature.included ? (
+                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
+                    ) : (
+                      <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                    )}
+                    <span className={`text-sm ${!feature.included ? 'text-muted-foreground' : ''}`}>
+                      {feature.name}
+                    </span>
                   </li>
                 ))}
               </ul>

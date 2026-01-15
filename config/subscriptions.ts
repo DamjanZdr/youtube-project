@@ -47,8 +47,11 @@ export const plans: Plan[] = [
       yearly: '',
     },
     features: [
-      { name: '1 project', included: true },
+      { name: 'One project', included: true },
       { name: 'Up to 3 wiki documents', included: true },
+      { name: 'Email support', included: false },
+      { name: 'Collaboration', included: false },
+      { name: 'Feature suggestions', included: false },
     ],
     limits: {
       projects: 1,
@@ -73,6 +76,8 @@ export const plans: Plan[] = [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
       { name: 'Email support', included: true },
+      { name: 'Collaboration', included: false },
+      { name: 'Feature suggestions', included: false },
     ],
     limits: {
       projects: -1, // unlimited
@@ -96,9 +101,9 @@ export const plans: Plan[] = [
     features: [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
+      { name: 'Priority email support', included: true },
       { name: 'Collaboration (4 members)', included: true },
-      { name: 'Email support', included: true },
-      { name: 'Feature request suggestions', included: true },
+      { name: 'Feature suggestions', included: true },
     ],
     limits: {
       projects: -1,
@@ -121,11 +126,9 @@ export const plans: Plan[] = [
     features: [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
+      { name: 'Instant email support', included: true },
       { name: 'Collaboration (unlimited members)', included: true },
-      { name: 'Priority email support', included: true },
-      { name: 'Feature request suggestions', included: true },
-      { name: 'Priority feature requests', included: true },
-      { name: 'Instant support', included: true },
+      { name: 'Feature suggestions priority', included: true },
     ],
     limits: {
       projects: -1,
