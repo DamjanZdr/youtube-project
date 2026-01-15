@@ -20,6 +20,11 @@ END $$;
 ALTER TABLE organization_members 
 ADD COLUMN IF NOT EXISTS status member_status DEFAULT 'active' NOT NULL;
 
+-- Update all existing members to have active status
+UPDATE organization_members 
+SET status = 'active' 
+WHERE status IS NULL;
+
 -- Create index for pending invites
 CREATE INDEX IF NOT EXISTS idx_organization_members_status 
 ON organization_members(status) WHERE status = 'pending';
