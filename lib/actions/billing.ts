@@ -66,6 +66,13 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     const stripe = (await import('@/lib/stripe')).getStripe();
     const plans = (await import('@/config/subscriptions')).plans;
     
+    // If they had scheduled a cancellation, un-cancel it by selecting a new plan
+    if (subscription.cancel_at_period_end) {
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        cancel_at_period_end: false,
+      });
+    }
+    
     // Get current and new plan details
     const currentPlan = plans.find(p => p.id === subscription.plan);
     const currentPlanTier = plans.findIndex(p => p.id === subscription.plan);
@@ -116,6 +123,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
       await supabase
         .from('subscriptions')
         .update({
+          cancel_at_period_end: false,
           pending_plan: null,
           pending_price_id: null,
           pending_interval: null,
@@ -129,6 +137,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
       await supabase
         .from('subscriptions')
         .update({
+          cancel_at_period_end: false, // Cancel any pending cancellation
           pending_plan: newPlan.id,
           pending_price_id: priceId,
           pending_interval: newInterval,

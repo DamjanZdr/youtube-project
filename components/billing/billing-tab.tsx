@@ -119,7 +119,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           {/* Current Period */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Period</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Billing Cycle</h3>
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -136,22 +136,29 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
 
                 {!isFreePlan && subscription && (
                   <>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CreditCard className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        ${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
-                        /{subscription.interval === "month" ? "month" : "year"}
-                      </span>
-                      <Badge variant="outline" className="ml-auto">
-                        {subscription.status === "active" && !isPastDue ? "Paid" : subscription.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        Period ends {formatDate(subscription.current_period_end)}
-                      </span>
+                    {/* Cycle Date Range */}
+                    <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Cycle Period</span>
+                        <span className="font-medium">
+                          {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Payment Date</span>
+                        <span className="font-medium">{formatDate(subscription.current_period_start)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Amount Paid</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            ${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {subscription.status === "active" && !isPastDue ? "Paid" : subscription.status}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -163,47 +170,72 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             </div>
           </div>
 
-          {/* Next Period (only show if there's a change) */}
-          {hasPendingChange && (
+          {/* Next Period - Always show */}
+          {!isFreePlan && subscription && (
             <div className="space-y-4 border-l pl-6">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Next Period</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Next Billing Cycle</h3>
                 <div className="space-y-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-2xl font-bold capitalize">{pendingPlan?.name || "Free"}</p>
-                      <Badge variant="outline">
-                        {isCanceling ? "Cancellation Scheduled" : "Change Scheduled"}
-                      </Badge>
+                      <p className="text-2xl font-bold capitalize">
+                        {pendingPlan?.name || (isCanceling ? "Free" : currentPlan?.name)}
+                      </p>
+                      {hasPendingChange && (
+                        <Badge variant="outline">
+                          {isCanceling ? "Cancellation Scheduled" : "Change Scheduled"}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {pendingPlan?.description || "For hobbyists and side projects"}
+                      {pendingPlan?.description || (isCanceling ? "For hobbyists and side projects" : currentPlan?.description)}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
-                    <CreditCard className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">
-                      {pendingPlan && subscription?.pending_interval ? (
-                        `$${subscription.pending_interval === "month" ? pendingPlan.price.monthly : pendingPlan.price.yearly}/${subscription.pending_interval === "month" ? "month" : "year"}`
-                      ) : (
-                        "$0/month"
-                      )}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
-                    <span>
-                      Starts {formatDate(subscription.current_period_end)}
-                    </span>
+                  {/* Next Cycle Details */}
+                  <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Cycle Starts</span>
+                      <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
+                    </div>
+                    
+                    {!isCanceling && (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Next Payment</span>
+                          <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Amount Due</span>
+                          <span className="font-medium">
+                            {pendingPlan && subscription.pending_interval ? (
+                              `$${subscription.pending_interval === "month" ? pendingPlan.price.monthly : pendingPlan.price.yearly}`
+                            ) : (
+                              `$${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}`
+                            )}
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    {isCanceling && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Amount Due</span>
+                        <span className="font-medium">$0</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
-                      You'll retain {currentPlan?.name} features until {formatDate(subscription.current_period_end)}
-                    </p>
-                  </div>
+                  {hasPendingChange && (
+                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <p className="text-sm text-amber-600 dark:text-amber-400">
+                        {isCanceling 
+                          ? `You'll retain ${currentPlan?.name} features until ${formatDate(subscription.current_period_end)}`
+                          : `Your plan will change to ${pendingPlan?.name} on ${formatDate(subscription.current_period_end)}`
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
