@@ -224,9 +224,11 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     </span>
                   )}
                 </div>
-                {isPastDue && (
-                  <Badge variant="destructive" className="text-xs mb-2">Past Due</Badge>
-                )}
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  {isPastDue && (
+                    <Badge variant="destructive" className="text-xs">Past Due</Badge>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">{currentPlan?.description}</p>
               </div>
 
