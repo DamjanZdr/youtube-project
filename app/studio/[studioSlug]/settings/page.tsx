@@ -461,31 +461,59 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
-    // Check if already a member or has pending invite
+    // Check if there's already a pending transfer for this user
     const { data: existingMembership } = await supabase
       .from('organization_members')
-      .select('status, is_transfer')
+      .select('id, status, is_transfer, role')
       .eq('organization_id', studio.id)
       .eq('user_id', existingUser.id)
       .single();
 
     if (existingMembership) {
+      // If they're already a member (active), delete their membership and send transfer
       if (existingMembership.status === 'active') {
-        toast.error('This user is already a member. Remove them first, then send a transfer invite.');
-        setTransferring(false);
-        return;
-      }
-      if (existingMembership.is_transfer) {
+        // Delete existing membership
+        const { error: deleteError } = await supabase
+          .from('organization_members')
+          .delete()
+          .eq('id', existingMembership.id);
+
+        if (deleteError) {
+          console.error('Error removing existing membership:', deleteError);
+          toast.error('Failed to process transfer');
+          setTransferring(false);
+          return;
+        }
+      } else if (existingMembership.is_transfer) {
+        // Already has a pending transfer
         toast.error('A transfer request is already pending for this user.');
         setTransferring(false);
         return;
+      } else {
+        // Has a regular pending invite - update it to be a transfer
+        const { error: updateError } = await supabase
+          .from('organization_members')
+          .update({ 
+            is_transfer: true,
+            role: 'owner',
+            invited_by: user.id
+          })
+          .eq('id', existingMembership.id);
+
+        if (updateError) {
+          console.error('Error updating invite to transfer:', updateError);
+          toast.error('Failed to send transfer invite');
+        } else {
+          toast.success(`Transfer invite sent to ${existingUser.email}`);
+          setShowTransferDialog(false);
+          setTransferEmail("");
+        }
+        setTransferring(false);
+        return;
       }
-      toast.error('This user already has a pending invite.');
-      setTransferring(false);
-      return;
     }
 
-    // Create transfer invite
+    // Create new transfer invite
     const { error } = await supabase
       .from('organization_members')
       .insert({

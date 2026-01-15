@@ -406,7 +406,7 @@ export default function HubPage() {
                       </h3>
                       {isTransfer ? (
                         <p className="text-sm text-amber-600 font-medium mt-1">
-                          🔄 Ownership Transfer Request
+                          Ownership Transfer Request
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground mt-1">
