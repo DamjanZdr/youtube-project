@@ -106,14 +106,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       setName(studioData.name);
       setSlug(studioData.slug);
 
-      // Fetch owner profile
-      const { data: ownerProfile } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url")
-        .eq("id", studioData.owner_id)
-        .single();
-
-      // Fetch members (show all members for debugging, we'll filter display later)
+      // Fetch all members including owner from organization_members table only
       const { data: membersData, error: membersError } = await supabase
         .from("organization_members")
         .select(`
@@ -123,30 +116,15 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           status,
           user:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
         `)
-        .eq("organization_id", studioData.id);
+        .eq("organization_id", studioData.id)
+        .eq("status", "active")
+        .order("joined_at", { ascending: true });
 
-      console.log("Members data:", membersData);
-      console.log("Members error:", membersError);
-
-      // Combine owner + members
-      const allMembers = [];
-      
-      // Add owner first
-      if (ownerProfile) {
-        allMembers.push({
-          id: 'owner',
-          role: 'owner',
-          joined_at: studioData.created_at,
-          user: ownerProfile
-        });
-      }
-      
-      // Add other members
       if (!membersError && membersData) {
-        allMembers.push(...membersData);
+        setMembers(membersData);
+      } else {
+        console.error("Members error:", membersError);
       }
-
-      setMembers(allMembers);
 
       // Fetch subscription (may not exist - that's ok)
       const { data: subData } = await supabase
