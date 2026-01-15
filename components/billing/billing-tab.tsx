@@ -134,7 +134,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           {/* Current Billing Cycle */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-1 h-6 bg-primary rounded-full" />
+              <div className="w-1 h-6 bg-green-500 rounded-full" />
               <h3 className="font-semibold">Current Billing Cycle</h3>
             </div>
             
@@ -150,14 +150,9 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  {subscription?.status === "active" && !isFreePlan && (
-                    <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30 text-xs">Active</Badge>
-                  )}
-                  {isPastDue && (
-                    <Badge variant="destructive" className="text-xs">Past Due</Badge>
-                  )}
-                </div>
+                {isPastDue && (
+                  <Badge variant="destructive" className="text-xs mb-2">Past Due</Badge>
+                )}
                 <p className="text-xs text-muted-foreground">{currentPlan?.description}</p>
               </div>
 
@@ -199,7 +194,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           {!isFreePlan && subscription && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-muted rounded-full" />
+                <div className="w-1 h-6 bg-amber-500 rounded-full" />
                 <h3 className="font-semibold">Next Billing Cycle</h3>
               </div>
               
