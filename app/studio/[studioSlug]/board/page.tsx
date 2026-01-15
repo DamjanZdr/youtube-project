@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
 import {
   Dialog,
   DialogContent,
@@ -145,10 +146,6 @@ export default function BoardPage() {
   
   // Create project dialog state
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newProjectTitle, setNewProjectTitle] = useState("");
-  const [newProjectDescription, setNewProjectDescription] = useState("");
-  const [newProjectType, setNewProjectType] = useState<"long" | "short">("long");
-  const [creating, setCreating] = useState(false);
 
   const supabase = createClient();
 
@@ -416,10 +413,8 @@ export default function BoardPage() {
     setDefaultTasks(defaultTasks.filter(t => t.id !== taskId));
   };
 
-  const createProject = async () => {
-    if (!newProjectTitle.trim() || !organizationId) return;
-
-    setCreating(true);
+  const createProject = async (data: { title: string; description: string; videoType: "long" | "short" }) => {
+    if (!organizationId) return;
 
     // Get or create default channel
     let { data: channel } = await supabase
@@ -438,7 +433,6 @@ export default function BoardPage() {
     }
 
     if (!channel) {
-      setCreating(false);
       return;
     }
 
@@ -451,9 +445,9 @@ export default function BoardPage() {
       .insert({
         organization_id: organizationId,
         channel_id: channel.id,
-        title: newProjectTitle,
-        description: newProjectDescription || null,
-        video_type: newProjectType,
+        title: data.title,
+        description: data.description || null,
+        video_type: data.videoType,
         status: "idea",
         board_status_id: firstStatus?.id || null,
       })
@@ -461,16 +455,11 @@ export default function BoardPage() {
       .single();
 
     if (error) {
-      console.error("Error creating project:", error);
+      throw error;
     } else if (project) {
-      setShowCreateDialog(false);
-      setNewProjectTitle("");
-      setNewProjectDescription("");
-      setNewProjectType("long");
       // Navigate to the new project
       router.push(`/studio/${studioSlug}/project/${project.id}`);
     }
-    setCreating(false);
   };
 
   const moveProject = async (projectId: string, newStatusId: string) => {
@@ -1236,63 +1225,11 @@ export default function BoardPage() {
       </Dialog>
 
       {/* Create Project Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogTitle>Create New Project</DialogTitle>
-          <div className="space-y-4 mt-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Project Title</label>
-              <Input
-                value={newProjectTitle}
-                onChange={(e) => setNewProjectTitle(e.target.value)}
-                placeholder="My Awesome Video"
-                autoFocus
-                onKeyDown={(e) => e.key === "Enter" && createProject()}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
-              <Input
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder="What's this video about?"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Video Type</label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={newProjectType === "long" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setNewProjectType("long")}
-                >
-                  Long Form
-                </Button>
-                <Button
-                  type="button"
-                  variant={newProjectType === "short" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setNewProjectType("short")}
-                >
-                  Short
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={createProject} disabled={!newProjectTitle.trim() || creating}>
-                {creating ? "Creating..." : "Create Project"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CreateProjectDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreateProject={createProject}
+      />
     </div>
   );
 }

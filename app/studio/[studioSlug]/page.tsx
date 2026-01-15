@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
 import { Plus, Video, Clock, TrendingUp, Calendar } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -25,10 +24,6 @@ export default function StudioHomePage() {
   const [studio, setStudio] = useState<{ id: string; name: string } | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newProjectTitle, setNewProjectTitle] = useState("");
-  const [newProjectDescription, setNewProjectDescription] = useState("");
-  const [newProjectType, setNewProjectType] = useState<"long" | "short">("long");
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -55,75 +50,61 @@ export default function StudioHomePage() {
     loadData();
   }, [studioSlug]);
 
-  async function createProject() {
-    if (!newProjectTitle.trim() || !studio) return;
+  async function createProject(data: { title: string; description: string; videoType: "long" | "short" }) {
+    if (!studio) return;
 
-    setCreating(true);
-    try {
-      // Get or create default channel
-      let { data: channel } = await supabase
+    // Get or create default channel
+    let { data: channel } = await supabase
+      .from("channels")
+      .select("id")
+      .eq("organization_id", studio.id)
+      .eq("is_default", true)
+      .single();
+
+    if (!channel) {
+      const { data: newChannel, error: channelError } = await supabase
         .from("channels")
-        .select("id")
-        .eq("organization_id", studio.id)
-        .eq("is_default", true)
-        .single();
-
-      if (!channel) {
-        const { data: newChannel, error: channelError } = await supabase
-          .from("channels")
-          .insert({
-            organization_id: studio.id,
-            name: "Main Channel",
-            is_default: true,
-          })
-          .select("id")
-          .single();
-
-        if (channelError) throw channelError;
-        channel = newChannel;
-      }
-
-      // Get the first board status to assign
-      const { data: firstStatus } = await supabase
-        .from("board_statuses")
-        .select("id")
-        .eq("organization_id", studio.id)
-        .order("position", { ascending: true })
-        .limit(1)
-        .single();
-
-      // Create the project
-      const { data: newProject, error } = await supabase
-        .from("projects")
         .insert({
-          title: newProjectTitle,
-          description: newProjectDescription || null,
           organization_id: studio.id,
-          channel_id: channel.id,
-          video_type: newProjectType,
-          board_status_id: firstStatus?.id,
+          name: "Main Channel",
+          is_default: true,
         })
         .select("id")
         .single();
 
-      if (error) throw error;
-
-      // Reset form and close dialog
-      setShowCreateDialog(false);
-      setNewProjectTitle("");
-      setNewProjectDescription("");
-      setNewProjectType("long");
-
-      toast.success("Project created successfully!");
-      
-      // Navigate to the project
-      router.push(`/studio/${studioSlug}/project/${newProject.id}`);
-    } catch (error) {
-      console.error("Error creating project:", error);
-      toast.error("Failed to create project");
-    } finally {
-      setCreating(false);
+      if (channelError) throw channelError;
+      channel = newChannel;
     }
+
+    // Get the first board status to assign
+    const { data: firstStatus } = await supabase
+      .from("board_statuses")
+      .select("id")
+      .eq("organization_id", studio.id)
+      .order("position", { ascending: true })
+      .limit(1)
+      .single();
+
+    // Create the project
+    const { data: newProject, error } = await supabase
+      .from("projects")
+      .insert({
+        title: data.title,
+        description: data.description || null,
+        organization_id: studio.id,
+        channel_id: channel.id,
+        video_type: data.videoType,
+        board_status_id: firstStatus?.id,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+
+    toast.success("Project created successfully!");
+    
+    // Navigate to the project
+    router.push(`/studio/${studioSlug}/project/${newProject.id}`);
   }
 
   const statusCounts = {
@@ -270,63 +251,11 @@ export default function StudioHomePage() {
       </div>
 
       {/* Create Project Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogTitle>Create New Project</DialogTitle>
-          <div className="space-y-4 mt-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Project Title</label>
-              <Input
-                value={newProjectTitle}
-                onChange={(e) => setNewProjectTitle(e.target.value)}
-                placeholder="My Awesome Video"
-                autoFocus
-                onKeyDown={(e) => e.key === "Enter" && createProject()}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
-              <Input
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder="What's this video about?"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Video Type</label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={newProjectType === "long" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setNewProjectType("long")}
-                >
-                  Long Form
-                </Button>
-                <Button
-                  type="button"
-                  variant={newProjectType === "short" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setNewProjectType("short")}
-                >
-                  Short
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={createProject} disabled={!newProjectTitle.trim() || creating}>
-                {creating ? "Creating..." : "Create Project"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CreateProjectDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreateProject={createProject}
+      />
     </div>
   );
 }

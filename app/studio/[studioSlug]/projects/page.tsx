@@ -4,14 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
 import Link from "next/link";
 import {
   Plus,
@@ -82,15 +75,6 @@ export default function ProjectsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // New project form state
-  const [newProject, setNewProject] = useState({
-    title: "",
-    description: "",
-    video_type: "long" as "long" | "short",
-    status: "idea" as ProjectStatus,
-  });
-  const [creating, setCreating] = useState(false);
-
   // Fetch projects
   useEffect(() => {
     fetchProjects();
@@ -145,10 +129,7 @@ export default function ProjectsPage() {
   };
 
   // Create new project
-  const handleCreateProject = async () => {
-    if (!newProject.title.trim()) return;
-
-    setCreating(true);
+  const handleCreateProject = async (data: { title: string; description: string; videoType: "long" | "short" }) => {
     const supabase = createClient();
 
     // Get org and channel
@@ -159,7 +140,6 @@ export default function ProjectsPage() {
       .single();
 
     if (!org) {
-      setCreating(false);
       return;
     }
 
@@ -180,7 +160,6 @@ export default function ProjectsPage() {
     }
 
     if (!channel) {
-      setCreating(false);
       return;
     }
 
@@ -199,25 +178,22 @@ export default function ProjectsPage() {
       .insert({
         organization_id: org.id,
         channel_id: channel.id,
-        title: newProject.title,
-        description: newProject.description || null,
-        video_type: newProject.video_type,
-        status: newProject.status,
+        title: data.title,
+        description: data.description || null,
+        video_type: data.videoType,
+        status: "idea",
         board_status_id: firstStatus?.id || null, // Set board status to trigger default tasks
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Error creating project:", error);
+      throw error;
     } else if (project) {
       setProjects([project, ...projects]);
-      setShowCreateDialog(false);
-      setNewProject({ title: "", description: "", video_type: "long", status: "idea" });
       // Navigate to the new project
       router.push(`/studio/${studioSlug}/project/${project.id}`);
     }
-    setCreating(false);
   };
 
   // Filter projects
@@ -445,105 +421,11 @@ export default function ProjectsPage() {
       )}
 
       {/* Create Project Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>Start a new video project. You can add more details later.</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Title */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Project Title</label>
-              <input
-                type="text"
-                value={newProject.title}
-                onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                placeholder="My Awesome Video"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none"
-                autoFocus
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description (optional)</label>
-              <textarea
-                value={newProject.description}
-                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                placeholder="What's this video about?"
-                rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none resize-none"
-              />
-            </div>
-
-            {/* Video Type */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Video Type</label>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setNewProject({ ...newProject, video_type: "long" })}
-                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${
-                    newProject.video_type === "long"
-                      ? "border-primary bg-primary/10"
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <Tv className="w-6 h-6 mx-auto mb-2" />
-                  <p className="font-medium">Long Form</p>
-                  <p className="text-xs text-muted-foreground">Regular videos</p>
-                </button>
-                <button
-                  onClick={() => setNewProject({ ...newProject, video_type: "short" })}
-                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${
-                    newProject.video_type === "short"
-                      ? "border-primary bg-primary/10"
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <Film className="w-6 h-6 mx-auto mb-2" />
-                  <p className="font-medium">Short</p>
-                  <p className="text-xs text-muted-foreground">YouTube Shorts</p>
-                </button>
-              </div>
-            </div>
-
-            {/* Starting Status */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Starting Stage</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["idea", "script", "recording"] as const).map((status) => {
-                  const config = STATUS_CONFIG[status];
-                  return (
-                    <button
-                      key={status}
-                      onClick={() => setNewProject({ ...newProject, status })}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        newProject.status === status
-                          ? "border-primary bg-primary/10"
-                          : "border-white/10 hover:border-white/20"
-                      }`}
-                    >
-                      <config.icon className="w-5 h-5 mx-auto mb-1" />
-                      <p className="text-sm font-medium">{config.label}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateProject} disabled={!newProject.title.trim() || creating}>
-              {creating ? "Creating..." : "Create Project"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateProjectDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreateProject={handleCreateProject}
+      />
     </div>
   );
 }
