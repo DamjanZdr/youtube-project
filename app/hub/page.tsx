@@ -22,6 +22,7 @@ interface Studio {
 interface PendingInvite {
   id: string;
   organization_id: string;
+  is_transfer?: boolean;
   organization?: {
     name: string;
     slug: string;
@@ -127,6 +128,7 @@ export default function HubPage() {
         id,
         organization_id,
         joined_at,
+        is_transfer,
         organizations!organization_members_organization_id_fkey (
           name,
           slug,
@@ -166,20 +168,77 @@ export default function HubPage() {
     }
   }
 
-  async function handleInviteResponse(inviteId: string, accept: boolean) {
+  async function handleInviteResponse(inviteId: string, accept: boolean, isTransfer: boolean = false) {
     if (accept) {
-      const { error } = await supabase
-        .from("organization_members")
-        .update({ status: "active" })
-        .eq("id", inviteId);
+      if (isTransfer) {
+        // For transfer invites, we need to:
+        // 1. Accept this invite (update status to active, keep role as owner)
+        // 2. Demote the current owner to editor
+        
+        const invite = pendingInvites.find(i => i.id === inviteId);
+        if (!invite) {
+          toast.error("Invite not found");
+          return;
+        }
 
-      if (error) {
-        toast.error("Failed to accept invite");
+        // First, find the current owner
+        const { data: currentOwner } = await supabase
+          .from("organization_members")
+          .select("id")
+          .eq("organization_id", invite.organization_id)
+          .eq("role", "owner")
+          .eq("status", "active")
+          .single();
+
+        if (!currentOwner) {
+          toast.error("Current owner not found");
+          return;
+        }
+
+        // Demote current owner to editor
+        const { error: demoteError } = await supabase
+          .from("organization_members")
+          .update({ role: "editor" })
+          .eq("id", currentOwner.id);
+
+        if (demoteError) {
+          toast.error("Failed to transfer ownership");
+          return;
+        }
+
+        // Accept transfer invite (becomes owner)
+        const { error: acceptError } = await supabase
+          .from("organization_members")
+          .update({ status: "active" })
+          .eq("id", inviteId);
+
+        if (acceptError) {
+          toast.error("Failed to accept transfer");
+          // Rollback demote
+          await supabase
+            .from("organization_members")
+            .update({ role: "owner" })
+            .eq("id", currentOwner.id);
+        } else {
+          toast.success("Ownership transferred successfully!");
+          loadData();
+        }
       } else {
-        toast.success("Invite accepted!");
-        loadData();
+        // Regular invite acceptance
+        const { error } = await supabase
+          .from("organization_members")
+          .update({ status: "active" })
+          .eq("id", inviteId);
+
+        if (error) {
+          toast.error("Failed to accept invite");
+        } else {
+          toast.success("Invite accepted!");
+          loadData();
+        }
       }
     } else {
+      // Decline invite (same for both regular and transfer)
       const { error } = await supabase
         .from("organization_members")
         .delete()
@@ -188,7 +247,7 @@ export default function HubPage() {
       if (error) {
         toast.error("Failed to decline invite");
       } else {
-        toast.success("Invite declined");
+        toast.success(isTransfer ? "Transfer declined" : "Invite declined");
         loadData();
       }
     }
@@ -320,12 +379,14 @@ export default function HubPage() {
                 : invite.organizations;
               
               if (!org) return null;
+
+              const isTransfer = invite.is_transfer === true;
               
               return (
-                <div key={invite.id} className="glass-card p-6 relative border-2 border-amber-500/30">
-                  <Badge className="absolute top-3 right-3 bg-amber-500/20 text-amber-600 border-amber-500/30">
+                <div key={invite.id} className={`glass-card p-6 relative border-2 ${isTransfer ? 'border-amber-500/50' : 'border-amber-500/30'}`}>
+                  <Badge className={`absolute top-3 right-3 ${isTransfer ? 'bg-amber-500/30 text-amber-600 border-amber-500/50' : 'bg-amber-500/20 text-amber-600 border-amber-500/30'}`}>
                     <Bell className="w-3 h-3 mr-1" />
-                    Pending
+                    {isTransfer ? 'Transfer' : 'Pending'}
                   </Badge>
                   <div className="flex items-start gap-4 mb-4">
                     {org.logo_url ? (
@@ -343,15 +404,26 @@ export default function HubPage() {
                       <h3 className="font-semibold text-lg truncate">
                         {org.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
-                      </p>
+                      {isTransfer ? (
+                        <p className="text-sm text-amber-600 font-medium mt-1">
+                          🔄 Ownership Transfer Request
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
+                        </p>
+                      )}
+                      {isTransfer && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          From {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "current owner"}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       className="flex-1"
-                      onClick={() => handleInviteResponse(invite.id, true)}
+                      onClick={() => handleInviteResponse(invite.id, true, isTransfer)}
                     >
                       <Check className="w-4 h-4 mr-1" />
                       Accept
@@ -359,7 +431,7 @@ export default function HubPage() {
                     <Button
                       variant="outline"
                       className="flex-1"
-                      onClick={() => handleInviteResponse(invite.id, false)}
+                      onClick={() => handleInviteResponse(invite.id, false, isTransfer)}
                     >
                       <X className="w-4 h-4 mr-1" />
                       Decline

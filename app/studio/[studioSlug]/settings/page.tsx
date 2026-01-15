@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { BillingTab } from "@/components/billing/billing-tab";
 
@@ -62,7 +61,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
-  const [selectedNewOwner, setSelectedNewOwner] = useState("");
+  const [transferEmail, setTransferEmail] = useState("");
   const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
@@ -437,53 +436,77 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     return membership?.role === 'owner';
   };
 
-  const getActiveMembers = () => {
-    return members.filter((m: any) => m.status === 'active' && m.role !== 'owner');
-  };
-
-  const handleTransferOwnership = async () => {
-    if (!selectedNewOwner || !studio || !user) return;
-
+  const handleInitiateTransfer = async () => {
+    if (!transferEmail || !studio || !user) return;
+    
     setTransferring(true);
-    try {
-      // Find current owner membership
-      const currentOwnerMembership = getCurrentUserMembership();
-      if (!currentOwnerMembership) throw new Error("Current user membership not found");
+    
+    // Check if user exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('email', transferEmail)
+      .single();
 
-      // Find new owner membership
-      const newOwnerMembership = members.find((m: any) => m.id === selectedNewOwner);
-      if (!newOwnerMembership) throw new Error("New owner membership not found");
-
-      // Update current owner to editor
-      const { error: demoteError } = await supabase
-        .from("organization_members")
-        .update({ role: 'editor' })
-        .eq("id", currentOwnerMembership.id);
-
-      if (demoteError) throw demoteError;
-
-      // Update new member to owner
-      const { error: promoteError } = await supabase
-        .from("organization_members")
-        .update({ role: 'owner' })
-        .eq("id", selectedNewOwner);
-
-      if (promoteError) throw promoteError;
-
-      toast.success("Ownership transferred successfully!");
-      
-      // Reload data to reflect changes
-      await loadData();
-      
-      // Close dialog
-      setShowTransferDialog(false);
-      setSelectedNewOwner("");
-    } catch (error: any) {
-      console.error("Error transferring ownership:", error);
-      toast.error("Failed to transfer ownership");
-    } finally {
+    if (!existingUser) {
+      toast.error('User not found. They need to sign up first.');
       setTransferring(false);
+      return;
     }
+
+    // Check if trying to transfer to self
+    if (existingUser.id === user.id) {
+      toast.error('You cannot transfer ownership to yourself.');
+      setTransferring(false);
+      return;
+    }
+
+    // Check if already a member or has pending invite
+    const { data: existingMembership } = await supabase
+      .from('organization_members')
+      .select('status, is_transfer')
+      .eq('organization_id', studio.id)
+      .eq('user_id', existingUser.id)
+      .single();
+
+    if (existingMembership) {
+      if (existingMembership.status === 'active') {
+        toast.error('This user is already a member. Remove them first, then send a transfer invite.');
+        setTransferring(false);
+        return;
+      }
+      if (existingMembership.is_transfer) {
+        toast.error('A transfer request is already pending for this user.');
+        setTransferring(false);
+        return;
+      }
+      toast.error('This user already has a pending invite.');
+      setTransferring(false);
+      return;
+    }
+
+    // Create transfer invite
+    const { error } = await supabase
+      .from('organization_members')
+      .insert({
+        organization_id: studio.id,
+        user_id: existingUser.id,
+        role: 'owner', // They will become owner when they accept
+        status: 'pending',
+        is_transfer: true,
+        invited_by: user.id
+      });
+
+    if (error) {
+      console.error('Error creating transfer invite:', error);
+      toast.error('Failed to send transfer invite');
+    } else {
+      toast.success(`Transfer invite sent to ${existingUser.email}`);
+      setShowTransferDialog(false);
+      setTransferEmail("");
+    }
+    
+    setTransferring(false);
   };
 
   if (loading) {
@@ -599,6 +622,37 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </Button>
             </div>
           </div>
+
+          {/* Transfer Ownership Section - Only visible to owner */}
+          {isCurrentUserOwner() && (
+            <div className="glass-card p-6 border-amber-500/20">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-amber-500">Transfer Ownership</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Send an ownership transfer invite to another user. They can accept or decline the transfer.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Enter the email address of the user you want to transfer ownership to. They must have an account.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                  onClick={() => setShowTransferDialog(true)}
+                >
+                  <Crown className="w-4 h-4" />
+                  Initiate Transfer
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Danger Zone */}
           <div className="glass-card p-6 border-red-500/20">
@@ -780,40 +834,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </div>
             )}
           </div>
-
-          {/* Transfer Ownership Section - Only visible to owner */}
-          {isCurrentUserOwner() && (
-            <div className="glass-card p-6 border-amber-500/20">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
-                  <Crown className="w-5 h-5 text-amber-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-amber-500">Transfer Ownership</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Transfer ownership of this studio to another active member. You will become a regular member after the transfer.
-                  </p>
-                </div>
-              </div>
-
-              {getActiveMembers().length > 0 ? (
-                <Button 
-                  variant="outline" 
-                  className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
-                  onClick={() => setShowTransferDialog(true)}
-                >
-                  <Crown className="w-4 h-4" />
-                  Transfer Ownership
-                </Button>
-              ) : (
-                <div className="p-3 rounded-lg bg-muted/50 border border-white/5">
-                  <p className="text-sm text-muted-foreground">
-                    You need at least one other active member to transfer ownership.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </TabsContent>
 
         {/* Billing Tab */}
@@ -940,48 +960,43 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-muted-foreground">
-              You are about to transfer ownership of <span className="font-semibold">{studio?.name}</span> to another member.
+              Send an ownership transfer invite for <span className="font-semibold">{studio?.name}</span>.
             </p>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-sm text-amber-600 font-medium">
                 ⚠️ Important
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                After transferring ownership, you will become a regular member. The new owner will have full control of the studio, including the ability to remove you.
+                The recipient can accept or decline this transfer. If they accept, you will become a regular member and they will have full control of the studio, including the ability to remove you.
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select New Owner</label>
-              <Select value={selectedNewOwner} onValueChange={setSelectedNewOwner}>
-                <SelectTrigger className="glass">
-                  <SelectValue placeholder="Choose a member..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {getActiveMembers().map((member: any) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{(member.user as any)?.full_name || (member.user as any)?.email}</span>
-                        <span className="text-xs text-muted-foreground">({(member.user as any)?.email})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Email Address</label>
+              <Input
+                type="email"
+                placeholder="newowner@example.com"
+                value={transferEmail}
+                onChange={(e) => setTransferEmail(e.target.value)}
+                className="glass"
+              />
+              <p className="text-xs text-muted-foreground">
+                The user must already have an account to receive the transfer.
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setShowTransferDialog(false);
-              setSelectedNewOwner("");
+              setTransferEmail("");
             }}>
               Cancel
             </Button>
             <Button 
-              onClick={handleTransferOwnership} 
-              disabled={!selectedNewOwner || transferring}
+              onClick={handleInitiateTransfer} 
+              disabled={!transferEmail || transferring}
               className="bg-amber-500 hover:bg-amber-600"
             >
-              {transferring ? 'Transferring...' : 'Transfer Ownership'}
+              {transferring ? 'Sending...' : 'Send Transfer Invite'}
             </Button>
           </DialogFooter>
         </DialogContent>
