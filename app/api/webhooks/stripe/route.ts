@@ -98,9 +98,21 @@ export async function POST(request: Request) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as any;
         
-        const organizationId = subscription.metadata?.organizationId;
+        let organizationId = subscription.metadata?.organizationId;
+        
+        // If no organizationId in metadata, try to find it by stripe_subscription_id
         if (!organizationId) {
-          console.error('No organizationId in subscription metadata');
+          const { data: existingSub } = await supabase
+            .from('subscriptions')
+            .select('organization_id')
+            .eq('stripe_subscription_id', subscription.id)
+            .single();
+          
+          organizationId = existingSub?.organization_id;
+        }
+        
+        if (!organizationId) {
+          console.error('No organizationId found for subscription:', subscription.id);
           break;
         }
 

@@ -39,8 +39,21 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     .eq('organization_id', organizationId)
     .maybeSingle();
 
-  // If they have an active subscription, update it instead of creating a new one
-  if (subscription?.stripe_subscription_id && subscription.status === 'active') {
+  // If downgrading to free plan (empty priceId), cancel the subscription
+  if (!priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
+    const stripe = (await import('@/lib/stripe')).getStripe();
+    
+    // Cancel the subscription at period end
+    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+      cancel_at_period_end: true,
+    });
+
+    // Redirect back to settings
+    return { url: `${baseUrl}/studio/${org.slug}/settings?downgraded=true` };
+  }
+
+  // If they have an active subscription, update it to the new price
+  if (priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
     const stripe = (await import('@/lib/stripe')).getStripe();
     
     // Update the existing subscription to the new price
