@@ -127,7 +127,7 @@ export const plans: Plan[] = [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
       { name: 'Instant email support', included: true },
-      { name: 'Collaboration (unlimited members)', included: true },
+      { name: 'Collaboration (unlimited)', included: true },
       { name: 'Feature suggestions priority', included: true },
     ],
     limits: {

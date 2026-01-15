@@ -367,7 +367,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     /{billingInterval === "monthly" ? "mo" : "yr"}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">{plan.description}</p>
+                <p className="text-xs text-muted-foreground leading-tight min-h-[32px]">{plan.description}</p>
               </div>
 
               <ul className="space-y-2.5 mb-6 flex-1">
@@ -378,7 +378,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     ) : (
                       <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                     )}
-                    <span className={`text-sm ${!feature.included ? 'text-muted-foreground' : ''}`}>
+                    <span className={`text-xs leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
                       {feature.name}
                     </span>
                   </li>
