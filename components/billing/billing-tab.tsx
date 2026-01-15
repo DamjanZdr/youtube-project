@@ -67,14 +67,6 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     });
   };
 
-  const getDaysUntilRenewal = () => {
-    if (!subscription?.current_period_end) return 0;
-    const end = new Date(subscription.current_period_end);
-    const now = new Date();
-    const days = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, days);
-  };
-
   return (
     <div className="space-y-6">
       {/* Payment Issue Banner */}
@@ -106,49 +98,10 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
         </div>
       )}
 
-      {/* Current Plan Card */}
+      {/* Billing Overview Card */}
       <Card className="glass-card p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-2xl font-bold capitalize">{currentPlan?.name || "Free"}</h3>
-              {isCanceling && (
-                <Badge variant="destructive">Canceling</Badge>
-              )}
-              {isPastDue && (
-                <Badge variant="destructive">Past Due</Badge>
-              )}
-              {subscription?.status === "active" && !isFreePlan && (
-                <Badge variant="default">Active</Badge>
-              )}
-            </div>
-            
-            <p className="text-muted-foreground mb-4">
-              {currentPlan?.description}
-            </p>
-
-            {!isFreePlan && subscription && (
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <CreditCard className="w-4 h-4" />
-                  <span>
-                    ${billingInterval === "monthly" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
-                    /{subscription.interval || "month"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {isCanceling 
-                      ? `Cancels on ${formatDate(subscription.current_period_end)}`
-                      : `Renews on ${formatDate(subscription.current_period_end)} (${getDaysUntilRenewal()} days)`
-                    }
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
+        <div className="flex items-start justify-between mb-6">
+          <h2 className="text-xl font-semibold">Billing Overview</h2>
           {!isFreePlan && (
             <Button
               variant="outline"
@@ -157,6 +110,91 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             >
               {loading === "portal" ? "Loading..." : "Manage Billing"}
             </Button>
+          )}
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Current Period */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Period</h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-2xl font-bold capitalize">{currentPlan?.name || "Free"}</p>
+                    {subscription?.status === "active" && !isFreePlan && (
+                      <Badge variant="default">Active</Badge>
+                    )}
+                    {isPastDue && (
+                      <Badge variant="destructive">Past Due</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{currentPlan?.description}</p>
+                </div>
+
+                {!isFreePlan && subscription && (
+                  <>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">
+                        ${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
+                        /{subscription.interval === "month" ? "month" : "year"}
+                      </span>
+                      <Badge variant="outline" className="ml-auto">
+                        {subscription.status === "active" && !isPastDue ? "Paid" : subscription.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        Period ends {formatDate(subscription.current_period_end)}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {isFreePlan && (
+                  <p className="text-sm text-muted-foreground">No active subscription</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Next Period (only show if there's a change) */}
+          {isCanceling && (
+            <div className="space-y-4 border-l pl-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Next Period</h3>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-2xl font-bold">Free</p>
+                      <Badge variant="outline">Downgrade Scheduled</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">For hobbyists and side projects</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">$0/month</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>
+                      Starts {formatDate(subscription.current_period_end)}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      You'll retain {currentPlan?.name} features until {formatDate(subscription.current_period_end)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </Card>
