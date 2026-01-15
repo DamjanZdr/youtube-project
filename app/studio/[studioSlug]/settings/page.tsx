@@ -682,7 +682,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground capitalize px-3 py-1 rounded-full bg-white/5">
-                        {member.role}
+                        {member.role === 'owner' ? 'Owner' : 'Member'}
                       </span>
                       {member.role !== 'owner' && (
                         <Button 
