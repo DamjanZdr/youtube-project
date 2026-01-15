@@ -116,13 +116,13 @@ export default function HubPage() {
     }
 
     // Get pending invites
-    const { data: pendingData } = await supabase
+    const { data: pendingData, error: pendingError } = await supabase
       .from("organization_members")
       .select(`
         id,
         organization_id,
         joined_at,
-        organizations!inner (
+        organizations!organization_members_organization_id_fkey (
           name,
           slug,
           logo_url
@@ -134,6 +134,9 @@ export default function HubPage() {
       `)
       .eq("user_id", currentUser.id)
       .eq("status", "pending");
+
+    console.log("Pending invites data:", pendingData);
+    console.log("Pending invites error:", pendingError);
 
     if (pendingData) {
       setPendingInvites(pendingData as any);
