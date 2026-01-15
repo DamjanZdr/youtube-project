@@ -63,7 +63,7 @@ export const plans: Plan[] = [
   {
     id: 'creator',
     name: 'Creator',
-    description: 'For individual creators who want more',
+    description: 'For serious individual creators',
     price: {
       monthly: 12,
       yearly: 120, // 2 months free
