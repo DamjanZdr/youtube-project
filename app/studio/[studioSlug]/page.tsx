@@ -1,29 +1,134 @@
-import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Plus, Video, Clock, TrendingUp, Calendar } from "lucide-react";
+"use client";
 
-interface StudioPageProps {
-  params: Promise<{ studioSlug: string }>;
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Plus, Video, Clock, TrendingUp, Calendar } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+interface Project {
+  id: string;
+  status: string;
+  title: string;
+  updated_at: string;
 }
 
-export default async function StudioHomePage({ params }: StudioPageProps) {
-  const { studioSlug } = await params;
-  const supabase = await createClient();
+export default function StudioHomePage() {
+  const params = useParams();
+  const router = useRouter();
+  const studioSlug = params.studioSlug as string;
+  const supabase = createClient();
 
-  // Fetch studio data
-  const { data: studio } = await supabase
-    .from("organizations")
-    .select("id, name")
-    .eq("slug", studioSlug)
-    .single();
+  const supabase = createClient();
 
-  // Fetch project counts by status
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("id, status, title, updated_at")
-    .eq("organization_id", studio?.id)
-    .order("updated_at", { ascending: false })
-    .limit(5);
+  const [studio, setStudio] = useState<{ id: string; name: string } | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [newProjectType, setNewProjectType] = useState<"long" | "short">("long");
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      // Fetch studio data
+      const { data: studioData } = await supabase
+        .from("organizations")
+        .select("id, name")
+        .eq("slug", studioSlug)
+        .single();
+
+      setStudio(studioData);
+
+      // Fetch project data
+      const { data: projectData } = await supabase
+        .from("projects")
+        .select("id, status, title, updated_at")
+        .eq("organization_id", studioData?.id)
+        .order("updated_at", { ascending: false })
+        .limit(5);
+
+      setProjects(projectData || []);
+    }
+
+    loadData();
+  }, [studioSlug]);
+
+  async function createProject() {
+    if (!newProjectTitle.trim() || !studio) return;
+
+    setCreating(true);
+    try {
+      // Get or create default channel
+      let { data: channel } = await supabase
+        .from("channels")
+        .select("id")
+        .eq("organization_id", studio.id)
+        .eq("is_default", true)
+        .single();
+
+      if (!channel) {
+        const { data: newChannel, error: channelError } = await supabase
+          .from("channels")
+          .insert({
+            organization_id: studio.id,
+            name: "Main Channel",
+            is_default: true,
+          })
+          .select("id")
+          .single();
+
+        if (channelError) throw channelError;
+        channel = newChannel;
+      }
+
+      // Get the first board status to assign
+      const { data: firstStatus } = await supabase
+        .from("board_statuses")
+        .select("id")
+        .eq("organization_id", studio.id)
+        .order("position", { ascending: true })
+        .limit(1)
+        .single();
+
+      // Create the project
+      const { data: newProject, error } = await supabase
+        .from("projects")
+        .insert({
+          title: newProjectTitle,
+          description: newProjectDescription || null,
+          organization_id: studio.id,
+          channel_id: channel.id,
+          video_type: newProjectType,
+          board_status_id: firstStatus?.id,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+
+      // Reset form and close dialog
+      setShowCreateDialog(false);
+      setNewProjectTitle("");
+      setNewProjectDescription("");
+      setNewProjectType("long");
+
+      toast.success("Project created successfully!");
+      
+      // Navigate to the project
+      router.push(`/studio/${studioSlug}/project/${newProject.id}`);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  }
 
   const statusCounts = {
     idea: projects?.filter(p => p.status === "idea").length || 0,
@@ -44,7 +149,7 @@ export default async function StudioHomePage({ params }: StudioPageProps) {
           <h1 className="text-2xl font-bold">Welcome back!</h1>
           <p className="text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Project
         </Button>
@@ -160,13 +265,72 @@ export default async function StudioHomePage({ params }: StudioPageProps) {
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">No projects yet. Start creating!</p>
-            <Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Create First Project
             </Button>
           </div>
         )}
       </div>
+
+      {/* Create Project Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogTitle>Create New Project</DialogTitle>
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Project Title</label>
+              <Input
+                value={newProjectTitle}
+                onChange={(e) => setNewProjectTitle(e.target.value)}
+                placeholder="My Awesome Video"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && createProject()}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
+              <Input
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                placeholder="What's this video about?"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Video Type</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={newProjectType === "long" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setNewProjectType("long")}
+                >
+                  Long Form
+                </Button>
+                <Button
+                  type="button"
+                  variant={newProjectType === "short" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setNewProjectType("short")}
+                >
+                  Short
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={createProject} disabled={!newProjectTitle.trim() || creating}>
+                {creating ? "Creating..." : "Create Project"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

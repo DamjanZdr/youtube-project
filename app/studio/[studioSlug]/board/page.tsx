@@ -142,6 +142,13 @@ export default function BoardPage() {
   const [showTaskPopup, setShowTaskPopup] = useState(false);
   const [collapsedStatuses, setCollapsedStatuses] = useState<Set<string>>(new Set());
   const [dragOverStatusId, setDragOverStatusId] = useState<string | null>(null);
+  
+  // Create project dialog state
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [newProjectType, setNewProjectType] = useState<"long" | "short">("long");
+  const [creating, setCreating] = useState(false);
 
   const supabase = createClient();
 
@@ -407,6 +414,63 @@ export default function BoardPage() {
   const deleteDefaultTask = async (taskId: string) => {
     await supabase.from("status_default_tasks").delete().eq("id", taskId);
     setDefaultTasks(defaultTasks.filter(t => t.id !== taskId));
+  };
+
+  const createProject = async () => {
+    if (!newProjectTitle.trim() || !organizationId) return;
+
+    setCreating(true);
+
+    // Get or create default channel
+    let { data: channel } = await supabase
+      .from("channels")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .single();
+
+    if (!channel) {
+      const { data: newChannel } = await supabase
+        .from("channels")
+        .insert({ organization_id: organizationId, name: "Main Channel" })
+        .select("id")
+        .single();
+      channel = newChannel;
+    }
+
+    if (!channel) {
+      setCreating(false);
+      return;
+    }
+
+    // Get first status
+    const firstStatus = statuses[0];
+
+    // Create project
+    const { data: project, error } = await supabase
+      .from("projects")
+      .insert({
+        organization_id: organizationId,
+        channel_id: channel.id,
+        title: newProjectTitle,
+        description: newProjectDescription || null,
+        video_type: newProjectType,
+        status: "idea",
+        board_status_id: firstStatus?.id || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating project:", error);
+    } else if (project) {
+      setShowCreateDialog(false);
+      setNewProjectTitle("");
+      setNewProjectDescription("");
+      setNewProjectType("long");
+      // Navigate to the new project
+      router.push(`/studio/${studioSlug}/project/${project.id}`);
+    }
+    setCreating(false);
   };
 
   const moveProject = async (projectId: string, newStatusId: string) => {
@@ -1168,6 +1232,65 @@ export default function BoardPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Project Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogTitle>Create New Project</DialogTitle>
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Project Title</label>
+              <Input
+                value={newProjectTitle}
+                onChange={(e) => setNewProjectTitle(e.target.value)}
+                placeholder="My Awesome Video"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && createProject()}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
+              <Input
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                placeholder="What's this video about?"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Video Type</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={newProjectType === "long" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setNewProjectType("long")}
+                >
+                  Long Form
+                </Button>
+                <Button
+                  type="button"
+                  variant={newProjectType === "short" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setNewProjectType("short")}
+                >
+                  Short
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={createProject} disabled={!newProjectTitle.trim() || creating}>
+                {creating ? "Creating..." : "Create Project"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
