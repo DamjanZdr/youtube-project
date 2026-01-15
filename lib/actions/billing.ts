@@ -99,7 +99,7 @@ export async function createCheckout(priceId: string): Promise<ApiResponse<{ url
   try {
     const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl);
     
-    const session = await createCheckoutSession({
+    const session = await createStripeCheckout({
       priceId,
       customerEmail: user.email,
       successUrl,
@@ -153,7 +153,7 @@ export async function createBillingPortal(): Promise<ApiResponse<{ url: string }
 
     const returnUrl = stripeConfig.getPortalReturnUrl(baseUrl);
     
-    const session = await createPortalSession({
+    const session = await createStripePortal({
       customerId,
       returnUrl,
     });

@@ -23,10 +23,7 @@ interface StudioSidebarProps {
     name: string;
     logo_url: string | null;
   };
-  user: {
-    email: string | null;
-    avatar_url?: string;
-  };
+  user: any;
   studioSlug: string;
 }
 

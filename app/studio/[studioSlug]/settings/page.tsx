@@ -618,17 +618,17 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        {member.user?.avatar_url ? (
-                          <img src={member.user.avatar_url} alt={member.user.full_name || member.user.email} className="w-full h-full object-cover rounded-full" />
+                        {(member.user as any)?.avatar_url ? (
+                          <img src={(member.user as any).avatar_url} alt={(member.user as any).full_name || (member.user as any).email} className="w-full h-full object-cover rounded-full" />
                         ) : (
                           <span className="text-sm font-medium">
-                            {member.user?.email?.[0]?.toUpperCase()}
+                            {(member.user as any)?.email?.[0]?.toUpperCase()}
                           </span>
                         )}
                       </div>
                       <div>
-                        <p className="font-medium">{member.user?.full_name || member.user?.email}</p>
-                        <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                        <p className="font-medium">{(member.user as any)?.full_name || (member.user as any)?.email}</p>
+                        <p className="text-sm text-muted-foreground">{(member.user as any)?.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -639,7 +639,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleRemoveMember(member.id, member.user?.full_name || member.user?.email)}
+                          onClick={() => handleRemoveMember(member.id, (member.user as any)?.full_name || (member.user as any)?.email)}
                           disabled={removing === member.id}
                         >
                           {removing === member.id ? 'Removing...' : 'Remove'}
