@@ -113,7 +113,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         .eq("id", studioData.owner_id)
         .single();
 
-      // Fetch members (only active members)
+      // Fetch members (show all members for debugging, we'll filter display later)
       const { data: membersData, error: membersError } = await supabase
         .from("organization_members")
         .select(`
@@ -123,8 +123,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           status,
           user:profiles(id, email, full_name, avatar_url)
         `)
-        .eq("organization_id", studioData.id)
-        .eq("status", "active");
+        .eq("organization_id", studioData.id);
+
+      console.log("Members data:", membersData);
+      console.log("Members error:", membersError);
 
       // Combine owner + members
       const allMembers = [];

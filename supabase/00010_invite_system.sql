@@ -16,14 +16,21 @@ EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
 
--- Add status column to organization_members table
+-- Add status column to organization_members table (nullable first)
 ALTER TABLE organization_members 
-ADD COLUMN IF NOT EXISTS status member_status DEFAULT 'active' NOT NULL;
+ADD COLUMN IF NOT EXISTS status member_status;
 
 -- Update all existing members to have active status
 UPDATE organization_members 
 SET status = 'active' 
 WHERE status IS NULL;
+
+-- Now make it NOT NULL with default
+ALTER TABLE organization_members 
+ALTER COLUMN status SET DEFAULT 'active';
+
+ALTER TABLE organization_members 
+ALTER COLUMN status SET NOT NULL;
 
 -- Create index for pending invites
 CREATE INDEX IF NOT EXISTS idx_organization_members_status 
