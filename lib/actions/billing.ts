@@ -6,7 +6,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { createCheckoutSession as createStripeCheckout, createPortalSession as createStripePortal, stripe } from '@/lib/stripe';
+import { createCheckoutSession as createStripeCheckout, createPortalSession as createStripePortal } from '@/lib/stripe';
 import { stripeConfig } from '@/lib/stripe/config';
 import type { ApiResponse } from '@/types';
 
