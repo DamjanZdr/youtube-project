@@ -6,10 +6,29 @@
 import Stripe from 'stripe';
 import { stripeConfig } from './config';
 
-// Server-side Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: stripeConfig.apiVersion,
-  typescript: true,
+// Server-side Stripe client - lazy initialization to avoid build-time errors
+let _stripe: Stripe | null = null;
+
+export const getStripe = () => {
+  if (!_stripe) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    _stripe = new Stripe(secretKey, {
+      apiVersion: stripeConfig.apiVersion,
+      typescript: true,
+    });
+  }
+  return _stripe;
+};
+
+// Backwards compatibility - use lazy getter
+export const stripe = new Proxy({} as Stripe, {
+  get: (target, prop) => {
+    const stripeInstance = getStripe();
+    return (stripeInstance as any)[prop];
+  }
 });
 
 /**
