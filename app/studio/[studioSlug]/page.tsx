@@ -22,8 +22,6 @@ export default function StudioHomePage() {
   const studioSlug = params.studioSlug as string;
   const supabase = createClient();
 
-  const supabase = createClient();
-
   const [studio, setStudio] = useState<{ id: string; name: string } | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -126,8 +124,6 @@ export default function StudioHomePage() {
     } finally {
       setCreating(false);
     }
-  }
-
   }
 
   const statusCounts = {
