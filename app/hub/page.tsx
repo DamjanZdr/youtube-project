@@ -309,7 +309,12 @@ export default function HubPage() {
             
             {/* Pending Invites */}
             {pendingInvites.map((invite) => {
-              if (!invite.organization) return null;
+              // Handle both array and object formats from Supabase
+              const org = Array.isArray(invite.organizations) 
+                ? invite.organizations[0] 
+                : invite.organizations;
+              
+              if (!org) return null;
               
               return (
                 <div key={invite.id} className="glass-card p-6 relative border-2 border-amber-500/30">
@@ -318,20 +323,20 @@ export default function HubPage() {
                     Pending
                   </Badge>
                   <div className="flex items-start gap-4 mb-4">
-                    {invite.organization.logo_url ? (
+                    {org.logo_url ? (
                       <img
-                        src={invite.organization.logo_url}
-                        alt={invite.organization.name}
+                        src={org.logo_url}
+                        alt={org.name}
                         className="w-12 h-12 rounded-xl object-cover"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="text-lg font-bold">{invite.organization.name[0]}</span>
+                        <span className="text-lg font-bold">{org.name[0]}</span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg truncate">
-                        {invite.organization.name}
+                        {org.name}
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">
                         Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
