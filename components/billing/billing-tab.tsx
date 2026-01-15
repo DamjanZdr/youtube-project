@@ -18,6 +18,9 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
+  console.log('Subscription data:', subscription);
+  console.log('Current interval from DB:', subscription?.interval);
+
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const isFreePlan = !subscription || subscription.plan === "free";
   const isPastDue = subscription?.status === "past_due";
