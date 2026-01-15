@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ interface SettingsPageProps {
 export default function SettingsPage({ params }: SettingsPageProps) {
   const { studioSlug } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,13 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [removing, setRemoving] = useState<string | null>(null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState("studio");
+
+  useEffect(() => {
+    // Get tab from URL or default to studio
+    const tab = searchParams.get('tab') || 'studio';
+    setActiveTab(tab);
+  }, [searchParams]);
 
   useEffect(() => {
     loadData();
@@ -395,7 +403,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           </p>
         </div>
 
-      <Tabs defaultValue="studio" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(value) => {
+        setActiveTab(value);
+        router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
+      }} className="space-y-6">
         <TabsList className="glass">
           <TabsTrigger value="studio" className="gap-2">
             <SettingsIcon className="w-4 h-4" />

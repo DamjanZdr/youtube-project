@@ -123,7 +123,14 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-2xl font-bold capitalize">{currentPlan?.name || "Free"}</p>
+                    <p className="text-2xl font-bold capitalize">
+                      {currentPlan?.name || "Free"}
+                      {!isFreePlan && subscription && (
+                        <span className="text-base font-normal text-muted-foreground ml-2">
+                          ({subscription.interval === "month" ? "Monthly" : "Yearly"})
+                        </span>
+                      )}
+                    </p>
                     {subscription?.status === "active" && !isFreePlan && (
                       <Badge variant="default">Active</Badge>
                     )}
@@ -180,6 +187,14 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-2xl font-bold capitalize">
                         {pendingPlan?.name || (isCanceling ? "Free" : currentPlan?.name)}
+                        {!isCanceling && (
+                          <span className="text-base font-normal text-muted-foreground ml-2">
+                            ({pendingPlan && subscription?.pending_interval 
+                              ? (subscription.pending_interval === "month" ? "Monthly" : "Yearly")
+                              : subscription?.interval === "month" ? "Monthly" : "Yearly"
+                            })
+                          </span>
+                        )}
                       </p>
                       {hasPendingChange && (
                         <Badge variant="outline">
