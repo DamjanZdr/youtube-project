@@ -14,6 +14,12 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can upload studio assets" ON storage.objects;
+DROP POLICY IF EXISTS "Public studio assets access" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update studio assets" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete studio assets" ON storage.objects;
+
 -- Allow authenticated users to upload studio assets
 CREATE POLICY "Users can upload studio assets"
 ON storage.objects FOR INSERT

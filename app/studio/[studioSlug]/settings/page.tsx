@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { BillingTab } from "@/components/billing/billing-tab";
 
 interface SettingsPageProps {
   params: Promise<{ studioSlug: string }>;
@@ -661,24 +662,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         </TabsContent>
 
         {/* Billing Tab */}
-        <TabsContent value="billing" className="space-y-6">
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold mb-4">Current Plan</h3>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
-              <div>
-                <p className="font-semibold text-lg capitalize">{subscription?.plan || 'Free'} Plan</p>
-                <p className="text-sm text-muted-foreground">
-                  {subscription?.plan === 'free' ? 'Basic features for getting started' : 
-                   subscription?.plan === 'creator' ? 'Advanced features for content creators' :
-                   subscription?.plan === 'studio' ? 'Full studio features and collaboration' :
-                   'Basic features for getting started'}
-                </p>
-              </div>
-              {(!subscription || subscription.plan === 'free') && (
-                <Button className="glow-primary">Upgrade</Button>
-              )}
-            </div>
-          </div>
+        <TabsContent value="billing">
+          <BillingTab subscription={subscription} studioId={studio?.id} />
         </TabsContent>
       </Tabs>
       </div>

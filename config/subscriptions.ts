@@ -47,17 +47,11 @@ export const plans: Plan[] = [
       yearly: '',
     },
     features: [
-      { name: 'Up to 3 projects', included: true },
-      { name: '1 channel', included: true },
-      { name: 'Basic script editor', included: true },
-      { name: 'Kanban workflow', included: true },
-      { name: '1GB storage', included: true },
-      { name: 'Team collaboration', included: false },
-      { name: 'Advanced analytics', included: false },
-      { name: 'Priority support', included: false },
+      { name: '1 project', included: true },
+      { name: 'Up to 3 wiki documents', included: true },
     ],
     limits: {
-      projects: 3,
+      projects: 1,
       channels: 1,
       teamMembers: 1,
       storageGb: 1,
@@ -77,12 +71,7 @@ export const plans: Plan[] = [
     },
     features: [
       { name: 'Unlimited projects', included: true },
-      { name: 'Up to 3 channels', included: true },
-      { name: 'Advanced script editor', included: true },
-      { name: 'Kanban workflow', included: true },
-      { name: '25GB storage', included: true },
-      { name: 'Channel branding preview', included: true },
-      { name: 'Basic analytics', included: true },
+      { name: 'Unlimited wiki documents', included: true },
       { name: 'Email support', included: true },
     ],
     limits: {
@@ -94,35 +83,57 @@ export const plans: Plan[] = [
     popular: true,
   },
   {
-    id: 'studio',
-    name: 'Studio',
-    description: 'For teams and multi-channel creators',
+    id: 'team',
+    name: 'Team',
+    description: 'For small teams and collaboration',
     price: {
-      monthly: 39,
-      yearly: 390, // 2 months free
+      monthly: 29,
+      yearly: 290, // 2 months free
     },
     stripePriceId: {
-      monthly: process.env.STRIPE_STUDIO_MONTHLY_PRICE_ID || 'price_studio_monthly',
-      yearly: process.env.STRIPE_STUDIO_YEARLY_PRICE_ID || 'price_studio_yearly',
+      monthly: process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly',
+      yearly: process.env.STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly',
     },
     features: [
       { name: 'Unlimited projects', included: true },
-      { name: 'Unlimited channels', included: true },
-      { name: 'Advanced script editor', included: true },
-      { name: 'Kanban workflow', included: true },
-      { name: '100GB storage', included: true },
-      { name: 'Channel branding preview', included: true },
-      { name: 'Advanced analytics', included: true },
-      { name: 'Team collaboration (up to 10)', included: true },
-      { name: 'Role-based permissions', included: true },
-      { name: 'Priority support', included: true },
-      { name: 'API access', included: true },
+      { name: 'Unlimited wiki documents', included: true },
+      { name: 'Collaboration (4 members)', included: true },
+      { name: 'Email support', included: true },
+      { name: 'Feature request suggestions', included: true },
     ],
     limits: {
       projects: -1,
       channels: -1,
-      teamMembers: 10,
-      storageGb: 100,
+      teamMembers: 4,
+      storageGb: 50,
+    },
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For large teams with advanced needs',
+    price: {
+      monthly: 99,
+      yearly: 990, // 2 months free
+    },
+    stripePriceId: {
+      monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly',
+      yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly',
+    },
+    features: [
+      { name: 'Unlimited projects', included: true },
+      { name: 'Unlimited wiki documents', included: true },
+      { name: 'Collaboration (unlimited members)', included: true },
+      { name: 'Priority email support', included: true },
+      { name: 'Feature request suggestions', included: true },
+      { name: 'Priority feature requests', included: true },
+      { name: 'Instant support', included: true },
+    ],
+    limits: {
+      projects: -1,
+      channels: -1,
+      teamMembers: -1, // unlimited
+      storageGb: -1, // unlimited
     },
   },
 ];

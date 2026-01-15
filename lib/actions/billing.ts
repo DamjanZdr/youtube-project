@@ -6,11 +6,86 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { createCheckoutSession, createPortalSession, stripe } from '@/lib/stripe';
+import { createCheckoutSession as createStripeCheckout, createPortalSession as createStripePortal, stripe } from '@/lib/stripe';
 import { stripeConfig } from '@/lib/stripe/config';
 import type { ApiResponse } from '@/types';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+export async function createCheckoutSession(organizationId: string, priceId: string): Promise<{ url: string | null }> {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  // Get organization
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('id, name')
+    .eq('id', organizationId)
+    .single();
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  // Check if subscription exists
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('organization_id', organizationId)
+    .single();
+
+  const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl);
+  
+  const session = await createStripeCheckout({
+    priceId,
+    customerEmail: user.email,
+    customerId: subscription?.stripe_customer_id,
+    successUrl,
+    cancelUrl,
+    metadata: {
+      userId: user.id,
+      organizationId: org.id,
+      organizationName: org.name,
+    },
+  });
+
+  return { url: session.url };
+}
+
+export async function createPortalSession(organizationId: string): Promise<{ url: string | null }> {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  // Get subscription
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('organization_id', organizationId)
+    .single();
+
+  if (!subscription?.stripe_customer_id) {
+    throw new Error('No subscription found');
+  }
+
+  const returnUrl = stripeConfig.getPortalReturnUrl(baseUrl);
+  
+  const session = await createStripePortal({
+    customerId: subscription.stripe_customer_id,
+    returnUrl,
+  });
+
+  return { url: session.url };
+}
 
 export async function createCheckout(priceId: string): Promise<ApiResponse<{ url: string }>> {
   const supabase = await createClient();

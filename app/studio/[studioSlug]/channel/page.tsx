@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,8 @@ interface DBChannel {
   description: string | null;
   avatar_url: string | null;
   banner_url: string | null;
+  subscriber_count: number | null;
+  video_count: number | null;
 }
 
 interface DBChannelLink {
@@ -147,6 +150,10 @@ export default function ChannelPage() {
 
     if (channelData) {
       setChannelId(channelData.id);
+      
+      // Set subscriber and video counts from database
+      setSubCount(channelData.subscriber_count || 0);
+      setVideoCount(channelData.video_count || 0);
 
       // Load channel links
       const { data: linksData } = await supabase
@@ -177,13 +184,18 @@ export default function ChannelPage() {
     setLoading(false);
   };
 
-  const saveChannelField = async (field: keyof DBChannel, value: string | null) => {
+  const saveChannelField = async (field: keyof DBChannel, value: string | number | null) => {
     if (!channelId) return;
 
-    await supabase
+    const { error } = await supabase
       .from("channels")
       .update({ [field]: value })
       .eq("id", channelId);
+
+    if (error) {
+      console.error("Error saving channel field:", error);
+      throw error;
+    }
   };
 
   // Temporary edit states
@@ -200,66 +212,192 @@ export default function ChannelPage() {
   // File upload handlers
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && channelId) {
-      // TODO: Upload to Supabase storage
-      const url = URL.createObjectURL(file);
-      setChannel(prev => ({ ...prev, banner: url }));
-      await saveChannelField("banner_url", url);
+    if (!file || !channelId) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be smaller than 2MB");
+      return;
+    }
+
+    try {
+      // Upload to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${channelId}/banner-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('studio-assets')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('studio-assets')
+        .getPublicUrl(fileName);
+
+      // Update channel
+      setChannel(prev => ({ ...prev, banner: publicUrl }));
+      await saveChannelField("banner_url", publicUrl);
+      
+      toast.success("Banner updated successfully");
       setEditDialog(null);
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      toast.error("Failed to upload banner");
     }
   };
 
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && channelId) {
-      // TODO: Upload to Supabase storage
-      const url = URL.createObjectURL(file);
-      setChannel(prev => ({ ...prev, icon: url }));
-      await saveChannelField("avatar_url", url);
+    if (!file || !channelId) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be smaller than 2MB");
+      return;
+    }
+
+    try {
+      // Upload to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${channelId}/avatar-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('studio-assets')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('studio-assets')
+        .getPublicUrl(fileName);
+
+      // Update channel
+      setChannel(prev => ({ ...prev, icon: publicUrl }));
+      await saveChannelField("avatar_url", publicUrl);
+      
+      toast.success("Profile image updated successfully");
       setEditDialog(null);
+    } catch (error) {
+      console.error('Error uploading icon:', error);
+      toast.error("Failed to upload profile image");
     }
   };
 
   // Save handlers
   const saveName = async () => {
-    setChannel(prev => ({ ...prev, name: tempName }));
-    await saveChannelField("name", tempName);
-    setEditDialog(null);
+    if (!tempName.trim()) {
+      toast.error("Channel name cannot be empty");
+      return;
+    }
+
+    try {
+      setChannel(prev => ({ ...prev, name: tempName }));
+      await saveChannelField("name", tempName);
+      toast.success("Channel name updated");
+      setEditDialog(null);
+    } catch (error) {
+      toast.error("Failed to update channel name");
+    }
   };
 
   const saveHandle = async () => {
-    setChannel(prev => ({ ...prev, handle: tempHandle }));
-    await saveChannelField("handle", tempHandle);
-    setEditDialog(null);
+    // Validate handle format
+    const handleValue = tempHandle.trim();
+    if (!handleValue.startsWith('@')) {
+      toast.error("Handle must start with @");
+      return;
+    }
+
+    if (handleValue.length < 2) {
+      toast.error("Handle is too short");
+      return;
+    }
+
+    try {
+      setChannel(prev => ({ ...prev, handle: handleValue }));
+      await saveChannelField("handle", handleValue);
+      toast.success("Handle updated");
+      setEditDialog(null);
+    } catch (error) {
+      toast.error("Failed to update handle");
+    }
   };
 
   const saveDescription = async () => {
-    setChannel(prev => ({ ...prev, description: tempDescription }));
-    await saveChannelField("description", tempDescription);
-    setEditDialog(null);
+    try {
+      setChannel(prev => ({ ...prev, description: tempDescription }));
+      await saveChannelField("description", tempDescription);
+      toast.success("Description updated");
+      setEditDialog(null);
+    } catch (error) {
+      toast.error("Failed to update description");
+    }
   };
 
   const saveLinks = async () => {
     if (!channelId) return;
 
+    // Validate URLs
+    for (const link of tempLinks) {
+      try {
+        new URL(link.url);
+      } catch {
+        toast.error(`Invalid URL: ${link.url}`);
+        return;
+      }
+    }
+
     setSaving(true);
 
-    // Delete all existing links
-    await supabase.from("channel_links").delete().eq("channel_id", channelId);
+    try {
+      // Delete all existing links
+      const { error: deleteError } = await supabase
+        .from("channel_links")
+        .delete()
+        .eq("channel_id", channelId);
 
-    // Insert new links
-    const linksToInsert = tempLinks.map((link, index) => ({
-      channel_id: channelId,
-      title: link.label,
-      url: link.url,
-      position: index,
-    }));
+      if (deleteError) throw deleteError;
 
-    await supabase.from("channel_links").insert(linksToInsert);
+      // Insert new links
+      if (tempLinks.length > 0) {
+        const linksToInsert = tempLinks.map((link, index) => ({
+          channel_id: channelId,
+          title: link.label,
+          url: link.url,
+          position: index,
+        }));
 
-    setChannel(prev => ({ ...prev, links: tempLinks }));
-    setSaving(false);
-    setEditDialog(null);
+        const { error: insertError } = await supabase
+          .from("channel_links")
+          .insert(linksToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      setChannel(prev => ({ ...prev, links: tempLinks }));
+      toast.success("Links updated");
+      setEditDialog(null);
+    } catch (error) {
+      console.error('Error saving links:', error);
+      toast.error("Failed to update links");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Link management
@@ -335,46 +473,6 @@ export default function ChannelPage() {
           <h1 className="text-2xl font-bold">Channel Preview</h1>
           <p className="text-muted-foreground">See how your channel looks on YouTube</p>
         </div>
-        
-        {/* View Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground mr-2">View:</span>
-          <div className="glass rounded-lg p-1 flex">
-            <button
-              onClick={() => setViewMode("landscape")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${
-                viewMode === "landscape" 
-                  ? "bg-white/10 text-white" 
-                  : "text-muted-foreground hover:text-white"
-              }`}
-            >
-              <Monitor className="w-4 h-4" />
-              Desktop
-            </button>
-            <button
-              onClick={() => setViewMode("portrait")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${
-                viewMode === "portrait" 
-                  ? "bg-white/10 text-white" 
-                  : "text-muted-foreground hover:text-white"
-              }`}
-            >
-              <Smartphone className="w-4 h-4" />
-              Mobile
-            </button>
-            <button
-              onClick={() => setViewMode("tv")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${
-                viewMode === "tv" 
-                  ? "bg-white/10 text-white" 
-                  : "text-muted-foreground hover:text-white"
-              }`}
-            >
-              <Tv className="w-4 h-4" />
-              TV
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Toolbar */}
@@ -397,14 +495,25 @@ export default function ChannelPage() {
       </div>
 
       {/* Preview Container */}
-      <div className="glass-card overflow-hidden">
-        {viewMode === "tv" ? (
-          <TVPreview channel={channel} openDialog={openDialog} />
-        ) : viewMode === "landscape" ? (
-          <DesktopPreview channel={channel} openDialog={openDialog} />
-        ) : (
-          <MobilePreview channel={channel} openDialog={openDialog} />
-        )}
+      <div className="glass-card overflow-hidden p-6 max-h-[calc(100vh-240px)]">
+        <div className="flex gap-6 h-full">
+          <div className="flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+            <div className="px-3 py-2 border-b border-white/10 bg-white/5">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Desktop Preview</span>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <DesktopPreview channel={channel} openDialog={openDialog} />
+            </div>
+          </div>
+          <div className="shrink-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+            <div className="px-3 py-2 border-b border-white/10 bg-white/5">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mobile Preview</span>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <MobilePreview channel={channel} openDialog={openDialog} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ========== DIALOGS ========== */}
@@ -652,8 +761,15 @@ export default function ChannelPage() {
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
-            <Button onClick={() => {
-              setSubCount(parseInt(tempSubCount) || 0);
+            <Button onClick={async () => {
+              const count = parseInt(tempSubCount) || 0;
+              setSubCount(count);
+              try {
+                await saveChannelField("subscriber_count", count);
+                toast.success(`Subscriber count set to ${count.toLocaleString()}`);
+              } catch (error) {
+                toast.error("Failed to save subscriber count");
+              }
               setEditDialog(null);
             }}>
               Apply
@@ -679,8 +795,15 @@ export default function ChannelPage() {
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
-            <Button onClick={() => {
-              setVideoCount(parseInt(tempVideoCount) || 0);
+            <Button onClick={async () => {
+              const count = parseInt(tempVideoCount) || 0;
+              setVideoCount(count);
+              try {
+                await saveChannelField("video_count", count);
+                toast.success(`Video count set to ${count.toLocaleString()}`);
+              } catch (error) {
+                toast.error("Failed to save video count");
+              }
               setEditDialog(null);
             }}>
               Apply
@@ -795,10 +918,10 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
 
 function DesktopPreview({ channel, openDialog }: PreviewProps) {
   return (
-    <div className="w-full px-8">
+    <div className="p-6">
       {/* Banner */}
-      <div className="px-6">
-        <div className="w-full h-[200px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl">
+      <div>
+        <div className="w-full h-[200px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl overflow-hidden">
           {channel.banner ? (
             <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-xl" />
           ) : (
@@ -808,7 +931,7 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
       </div>
 
       {/* Channel Info */}
-      <div className="px-6">
+      <div>
         <div className="flex gap-6 items-center pt-6">
           {/* Icon */}
           <div className="w-[180px] h-[180px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center shrink-0 overflow-hidden">
@@ -888,7 +1011,7 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
 
 function MobilePreview({ channel, openDialog }: PreviewProps) {
   return (
-    <div className="w-[375px] mx-auto bg-[#0f0f0f] min-h-[700px]">
+    <div className="w-[375px]">
       {/* Banner */}
       <div className="px-4 pt-4">
         <div className="w-full h-[100px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg">

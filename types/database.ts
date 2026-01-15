@@ -207,7 +207,7 @@ export interface Asset {
 // Subscription & Billing Types
 // ============================================================================
 
-export type SubscriptionPlan = 'free' | 'creator' | 'studio';
+export type SubscriptionPlan = 'free' | 'creator' | 'team' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
 
 export interface Subscription {
