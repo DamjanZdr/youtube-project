@@ -24,7 +24,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
   // Get organization
   const { data: org } = await supabase
     .from('organizations')
-    .select('id, name')
+    .select('id, name, slug')
     .eq('id', organizationId)
     .single();
 
@@ -39,7 +39,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     .eq('organization_id', organizationId)
     .maybeSingle();
 
-  const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl);
+  const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl, org.slug);
   
   const session = await createStripeCheckout({
     priceId,
@@ -66,6 +66,17 @@ export async function createPortalSession(organizationId: string): Promise<{ url
     throw new Error('Unauthorized');
   }
 
+  // Get organization
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('id, slug')
+    .eq('id', organizationId)
+    .single();
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
   // Get subscription
   const { data: subscription } = await supabase
     .from('subscriptions')
@@ -77,7 +88,7 @@ export async function createPortalSession(organizationId: string): Promise<{ url
     throw new Error('No subscription found');
   }
 
-  const returnUrl = stripeConfig.getPortalReturnUrl(baseUrl);
+  const returnUrl = stripeConfig.getPortalReturnUrl(baseUrl, org.slug);
   
   const session = await createStripePortal({
     customerId: subscription.stripe_customer_id,
