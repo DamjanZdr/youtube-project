@@ -58,7 +58,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
       })
       .eq('organization_id', organizationId);
 
-    return { url: `${baseUrl}/studio/${org.slug}/settings?scheduled=true` };
+    return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&scheduled=true` };
   }
 
   // If they have an active subscription, determine if upgrade or downgrade
@@ -130,7 +130,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
         })
         .eq('organization_id', organizationId);
 
-      return { url: `${baseUrl}/studio/${org.slug}/settings?upgraded=true` };
+      return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&upgraded=true` };
     } else {
       // DOWNGRADE: Schedule for end of period
       // Don't touch Stripe subscription yet - just store the pending change
@@ -144,7 +144,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
         })
         .eq('organization_id', organizationId);
 
-      return { url: `${baseUrl}/studio/${org.slug}/settings?scheduled=true` };
+      return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&scheduled=true` };
     }
   }
 
@@ -292,6 +292,59 @@ export async function createBillingPortal(): Promise<ApiResponse<{ url: string }
       success: false,
     };
   }
+}
+
+export async function undoPendingChange(organizationId: string): Promise<{ success: boolean }> {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  // Get organization
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('id, slug')
+    .eq('id', organizationId)
+    .single();
+
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+
+  // Get subscription
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .single();
+
+  if (!subscription) {
+    throw new Error('No subscription found');
+  }
+
+  // If there's a scheduled cancellation, un-cancel it in Stripe
+  if (subscription.cancel_at_period_end && subscription.stripe_subscription_id) {
+    const stripe = (await import('@/lib/stripe')).getStripe();
+    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    });
+  }
+
+  // Clear pending changes in database
+  await supabase
+    .from('subscriptions')
+    .update({
+      cancel_at_period_end: false,
+      pending_plan: null,
+      pending_price_id: null,
+      pending_interval: null,
+    })
+    .eq('organization_id', organizationId);
+
+  return { success: true };
 }
 
 export async function cancelSubscription(): Promise<ApiResponse<null>> {

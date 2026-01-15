@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { plans, type Plan } from "@/config/subscriptions";
 import { Check, AlertCircle, CreditCard, Calendar, Download, X } from "lucide-react";
 import { toast } from "sonner";
-import { createCheckoutSession, createPortalSession } from "@/lib/actions/billing";
+import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
 
 interface BillingTabProps {
   subscription: any;
@@ -55,6 +55,21 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       }
     } catch (error) {
       toast.error("Failed to open billing portal");
+      console.error(error);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleUndoChange = async () => {
+    setLoading("undo");
+    try {
+      await undoPendingChange(studioId);
+      toast.success("Pending change cancelled. Your current plan will continue.");
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to cancel pending change");
       console.error(error);
     } finally {
       setLoading(null);
@@ -242,14 +257,25 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                   </div>
 
                   {hasPendingChange && (
-                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                      <p className="text-sm text-amber-600 dark:text-amber-400">
-                        {isCanceling 
-                          ? `You'll retain ${currentPlan?.name} features until ${formatDate(subscription.current_period_end)}`
-                          : `Your plan will change to ${pendingPlan?.name} on ${formatDate(subscription.current_period_end)}`
-                        }
-                      </p>
-                    </div>
+                    <>
+                      <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <p className="text-sm text-amber-600 dark:text-amber-400">
+                          {isCanceling 
+                            ? `You'll retain ${currentPlan?.name} features until ${formatDate(subscription.current_period_end)}`
+                            : `Your plan will change to ${pendingPlan?.name} on ${formatDate(subscription.current_period_end)}`
+                          }
+                        </p>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleUndoChange}
+                        disabled={loading === "undo"}
+                        className="w-full mt-2"
+                      >
+                        {loading === "undo" ? "Cancelling..." : "Undo Change"}
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
