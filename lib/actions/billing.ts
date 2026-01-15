@@ -37,7 +37,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     .from('subscriptions')
     .select('stripe_customer_id')
     .eq('organization_id', organizationId)
-    .single();
+    .maybeSingle();
 
   const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl);
   
