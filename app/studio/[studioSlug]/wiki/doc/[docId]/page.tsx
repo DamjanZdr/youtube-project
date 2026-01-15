@@ -55,6 +55,9 @@ export default function WikiDocPage({ params }: DocPageProps) {
   const [deleting, setDeleting] = useState(false);
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
   const [editor, setEditor] = useState<any>(null);
+  const [folders, setFolders] = useState<Array<{ id: string; name: string }>>([]);
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
     loadDocument();
@@ -89,6 +92,13 @@ export default function WikiDocPage({ params }: DocPageProps) {
     }
   }, [fontFamily, fontSize]);
 
+  // Auto-save folder changes immediately
+  useEffect(() => {
+    if (!loading && organizationId) {
+      saveDocument();
+    }
+  }, [folderId]);
+
   const loadDocument = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -102,8 +112,21 @@ export default function WikiDocPage({ params }: DocPageProps) {
       setContent(data.content || "");
       setFontFamily(data.font_family || "Inter");
       setFontSize(data.font_size || "16px");
+      setFolderId(data.folder_id);
+      setOrganizationId(data.organization_id);
       if (data.created_at) {
         setCreatedAt(new Date(data.created_at));
+      }
+
+      // Load folders for this organization
+      const { data: foldersData } = await supabase
+        .from("wiki_folders")
+        .select("id, name")
+        .eq("organization_id", data.organization_id)
+        .order("name");
+
+      if (foldersData) {
+        setFolders(foldersData);
       }
     }
     setLoading(false);
@@ -117,7 +140,8 @@ export default function WikiDocPage({ params }: DocPageProps) {
         title, 
         content,
         font_family: fontFamily,
-        font_size: fontSize
+        font_size: fontSize,
+        folder_id: folderId
       })
       .eq("id", docId);
     
@@ -210,6 +234,26 @@ export default function WikiDocPage({ params }: DocPageProps) {
           </>
         )}
         
+        <div className="h-px bg-border" />
+
+        {/* Folder Selection */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-2 block">Folder</label>
+          <Select value={folderId || "none"} onValueChange={(value) => setFolderId(value === "none" ? null : value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="No folder" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No folder</SelectItem>
+              {folders.map((folder) => (
+                <SelectItem key={folder.id} value={folder.id}>
+                  {folder.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="h-px bg-border" />
 
         {/* Font Controls */}

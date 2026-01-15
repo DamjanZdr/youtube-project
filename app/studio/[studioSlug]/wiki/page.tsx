@@ -225,6 +225,10 @@ export default function WikiPage({ params }: WikiPageProps) {
       )
     : recentDocuments;
 
+  // Separate documents with and without folders
+  const uncategorizedDocs = filteredDocuments.filter(doc => !doc.folder_id);
+  const categorizedDocs = filteredDocuments.filter(doc => doc.folder_id);
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -306,12 +310,92 @@ export default function WikiPage({ params }: WikiPageProps) {
             </div>
           )}
 
-          {/* Recent Documents */}
-          {filteredDocuments.length > 0 && (
+          {/* Uncategorized Documents */}
+          {uncategorizedDocs.length > 0 && !searchQuery && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Uncategorized Documents</h2>
+              <div className="space-y-2">
+                {uncategorizedDocs.map((doc) => (
+                  <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+                    <Link
+                      href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
+                      className="flex items-center gap-4 flex-1 min-w-0"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                          {doc.title || "Untitled Document"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Updated {new Date(doc.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setDeleteDocId(doc.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Documents (with folders) */}
+          {categorizedDocs.length > 0 && (
             <div>
               <h2 className="text-lg font-semibold mb-4">
                 {searchQuery ? "Search Results" : "Recent Documents"}
               </h2>
+              <div className="space-y-2">
+                {categorizedDocs.map((doc) => (
+                  <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+                    <Link
+                      href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
+                      className="flex items-center gap-4 flex-1 min-w-0"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                          {doc.title || "Untitled Document"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {doc.folder_id && (doc.folder as any)?.name && (
+                            <span className="inline-flex items-center gap-1 mr-2">
+                              <FolderOpen className="w-3 h-3" />
+                              {(doc.folder as any).name} •
+                            </span>
+                          )}
+                          Updated {new Date(doc.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setDeleteDocId(doc.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Search Results - Show all when searching */}
+          {searchQuery && filteredDocuments.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Search Results</h2>
               <div className="space-y-2">
                 {filteredDocuments.map((doc) => (
                   <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
