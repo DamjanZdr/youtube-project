@@ -56,6 +56,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
   const [activeTab, setActiveTab] = useState("studio");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     // Get tab from URL or default to studio
@@ -389,6 +392,33 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     setUploading(false);
   };
 
+  const handleDeleteStudio = async () => {
+    if (deleteConfirmText !== "DELETE" || !studio) return;
+
+    setDeleting(true);
+    try {
+      // Delete the studio
+      const { error } = await supabase
+        .from("organizations")
+        .delete()
+        .eq("id", studio.id);
+
+      if (error) throw error;
+
+      toast.success("Studio deleted successfully");
+      
+      // Redirect to hub
+      router.push("/hub");
+    } catch (error: any) {
+      console.error("Error deleting studio:", error);
+      toast.error("Failed to delete studio");
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+      setDeleteConfirmText("");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -510,7 +540,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               Deleting your studio is permanent and cannot be undone. All projects,
               documents, and data will be lost.
             </p>
-            <Button variant="destructive" className="gap-2">
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="w-4 h-4" />
               Delete Studio
             </Button>
@@ -745,6 +775,45 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               disabled={removing !== null}
             >
               {removing !== null ? 'Removing...' : 'Remove Member'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Studio Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Studio</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-muted-foreground">
+              This action <span className="font-semibold text-red-500">cannot be undone</span>. 
+              This will permanently delete the studio, all projects, documents, and data.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please type <span className="font-mono font-semibold">DELETE</span> to confirm.
+            </p>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="font-mono"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowDeleteDialog(false);
+              setDeleteConfirmText("");
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteStudio} 
+              disabled={deleteConfirmText !== "DELETE" || deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete Studio'}
             </Button>
           </DialogFooter>
         </DialogContent>
