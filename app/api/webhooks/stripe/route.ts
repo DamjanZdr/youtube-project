@@ -15,12 +15,12 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // Map Stripe price IDs to plan names
 const PRICE_TO_PLAN_MAP: Record<string, SubscriptionPlan> = {
-  [process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_creator_monthly']: 'creator',
-  [process.env.STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly']: 'creator',
-  [process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly']: 'team',
-  [process.env.STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly']: 'team',
-  [process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly']: 'enterprise',
-  [process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly']: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_creator_monthly']: 'creator',
+  [process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly']: 'creator',
+  [process.env.NEXT_PUBLIC_STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly']: 'team',
+  [process.env.NEXT_PUBLIC_STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly']: 'team',
+  [process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly']: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly']: 'enterprise',
 };
 
 export async function POST(request: Request) {

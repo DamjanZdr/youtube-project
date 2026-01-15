@@ -66,8 +66,8 @@ export const plans: Plan[] = [
       yearly: 120, // 2 months free
     },
     stripePriceId: {
-      monthly: process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_creator_monthly',
-      yearly: process.env.STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly',
+      monthly: process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_creator_monthly',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly',
     },
     features: [
       { name: 'Unlimited projects', included: true },
@@ -91,8 +91,8 @@ export const plans: Plan[] = [
       yearly: 290, // 2 months free
     },
     stripePriceId: {
-      monthly: process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly',
-      yearly: process.env.STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly',
+      monthly: process.env.NEXT_PUBLIC_STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly',
     },
     features: [
       { name: 'Unlimited projects', included: true },
@@ -117,8 +117,8 @@ export const plans: Plan[] = [
       yearly: 990, // 2 months free
     },
     stripePriceId: {
-      monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly',
-      yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly',
+      monthly: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly',
     },
     features: [
       { name: 'Unlimited projects', included: true },
