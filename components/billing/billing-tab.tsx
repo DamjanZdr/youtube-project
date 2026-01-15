@@ -191,7 +191,8 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       {/* Plan Comparison */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
         {plans.map((plan) => {
-          const isCurrent = plan.id === (subscription?.plan || "free");
+          const isCurrent = plan.id === (subscription?.plan || "free") && 
+                           (subscription?.interval || "monthly") === billingInterval;
           const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
           const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
           const thisPlanIndex = plans.findIndex(p => p.id === plan.id);
