@@ -117,7 +117,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
       <div className="flex-1 min-h-0">
         <PreviewArea
           set={currentSet}
-          channel={channel || { name: "Your Channel", avatar_url: null }}
+          channel={channel || { name: "Your Channel", avatar_url: null } as any}
           orientation={state.orientation}
           previewMode={state.previewMode}
           compareMode={state.compareMode}
