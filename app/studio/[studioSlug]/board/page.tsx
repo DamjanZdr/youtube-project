@@ -291,23 +291,11 @@ export default function BoardPage() {
   const setupDefaultStatuses = async () => {
     if (!organizationId) return;
 
-    const { data: createdStatuses } = await supabase
-      .from("board_statuses")
-      .insert(defaultStatusList.map((s, i) => ({ ...s, organization_id: organizationId, position: i })))
-      .select();
+    // Use the database function to create statuses with default tasks
+    await supabase.rpc('create_default_board_statuses', { org_id: organizationId });
 
-    if (createdStatuses) {
-      setStatuses(createdStatuses);
-      
-      // Assign any existing projects to the first status
-      const firstStatusId = createdStatuses[0]?.id;
-      if (firstStatusId && projects.length > 0) {
-        for (const p of projects) {
-          await supabase.from("projects").update({ board_status_id: firstStatusId }).eq("id", p.id);
-        }
-        setProjects(projects.map(p => ({ ...p, board_status_id: firstStatusId })));
-      }
-    }
+    // Reload the page to fetch new statuses
+    window.location.reload();
   };
 
   // Status management functions

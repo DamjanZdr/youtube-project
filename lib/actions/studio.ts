@@ -108,20 +108,8 @@ export async function createStudio(formData: FormData) {
       name: `${name} Channel`
     });
 
-  // Create default board statuses for the kanban board
-  const defaultStatuses = [
-    { name: "Idea", color: "bg-purple-500", position: 0 },
-    { name: "Package", color: "bg-orange-500", position: 1 },
-    { name: "Script", color: "bg-blue-500", position: 2 },
-    { name: "Record", color: "bg-yellow-500", position: 3 },
-    { name: "Edit", color: "bg-pink-500", position: 4 },
-    { name: "Review", color: "bg-cyan-500", position: 5 },
-    { name: "Complete", color: "bg-green-500", position: 6 },
-  ];
-
-  await supabase
-    .from("board_statuses")
-    .insert(defaultStatuses.map(s => ({ ...s, organization_id: studio.id })));
+  // Create default board statuses with tasks using database function
+  await supabase.rpc('create_default_board_statuses', { org_id: studio.id });
 
   revalidatePath("/hub");
   
