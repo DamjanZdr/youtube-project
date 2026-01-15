@@ -209,7 +209,19 @@ export default function HubPage() {
             <span className="font-semibold text-lg">YouTuber Studio</span>
           </Link>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            {/* Accept Invites Toggle */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-muted-foreground cursor-pointer" htmlFor="accept-invites">
+                Accept Invites
+              </label>
+              <Switch
+                id="accept-invites"
+                checked={acceptInvites}
+                onCheckedChange={toggleAcceptInvites}
+              />
+            </div>
+            
             <span className="text-sm text-muted-foreground">{user?.email || "preview@example.com"}</span>
             <form action="/auth/sign-out" method="post">
               <Button variant="ghost" size="sm">Sign Out</Button>
@@ -220,78 +232,6 @@ export default function HubPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-10">
-        {/* Settings Section */}
-        <div className="glass-card p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Accept Studio Invites</h3>
-              <p className="text-sm text-muted-foreground">
-                Allow other users to invite you to their studios
-              </p>
-            </div>
-            <Switch
-              checked={acceptInvites}
-              onCheckedChange={toggleAcceptInvites}
-            />
-          </div>
-        </div>
-
-        {/* Pending Invites */}
-        {pendingInvites.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5" />
-              <h2 className="text-xl font-semibold">Pending Invites</h2>
-              <Badge variant="secondary">{pendingInvites.length}</Badge>
-            </div>
-            <div className="space-y-3">
-              {pendingInvites.map((invite) => {
-                if (!invite.organization) return null;
-                
-                return (
-                <div key={invite.id} className="glass-card p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {invite.organization.logo_url ? (
-                      <img
-                        src={invite.organization.logo_url}
-                        alt={invite.organization.name}
-                        className="w-12 h-12 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="text-lg font-bold">{invite.organization.name[0]}</span>
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-semibold">{invite.organization.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleInviteResponse(invite.id, true)}
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Accept
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInviteResponse(invite.id, false)}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Decline
-                    </Button>
-                  </div>
-                </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
@@ -305,7 +245,7 @@ export default function HubPage() {
         </div>
 
         {/* Studios Grid or Empty State */}
-        {studios.length === 0 ? (
+        {studios.length === 0 && pendingInvites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center mb-6">
               <FolderKanban className="w-10 h-10 text-muted-foreground" />
@@ -326,6 +266,7 @@ export default function HubPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Active Studios */}
             {studios.map((studio) => (
               <Link
                 key={studio.id}
@@ -362,6 +303,58 @@ export default function HubPage() {
                 </div>
               </Link>
             ))}
+            
+            {/* Pending Invites */}
+            {pendingInvites.map((invite) => {
+              if (!invite.organization) return null;
+              
+              return (
+                <div key={invite.id} className="glass-card p-6 relative border-2 border-amber-500/30">
+                  <Badge className="absolute top-3 right-3 bg-amber-500/20 text-amber-600 border-amber-500/30">
+                    <Bell className="w-3 h-3 mr-1" />
+                    Pending
+                  </Badge>
+                  <div className="flex items-start gap-4 mb-4">
+                    {invite.organization.logo_url ? (
+                      <img
+                        src={invite.organization.logo_url}
+                        alt={invite.organization.name}
+                        className="w-12 h-12 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-lg font-bold">{invite.organization.name[0]}</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">
+                        {invite.organization.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => handleInviteResponse(invite.id, true)}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleInviteResponse(invite.id, false)}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>

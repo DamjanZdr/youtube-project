@@ -106,7 +106,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       setName(studioData.name);
       setSlug(studioData.slug);
 
-      // Fetch all members including owner from organization_members table only
+      // Fetch all members including pending invites from organization_members table
       const { data: membersData, error: membersError } = await supabase
         .from("organization_members")
         .select(`
@@ -117,7 +117,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           user:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
         `)
         .eq("organization_id", studioData.id)
-        .eq("status", "active")
         .order("joined_at", { ascending: true });
 
       if (!membersError && membersData) {
@@ -678,11 +677,20 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                       <div>
                         <p className="font-medium">{(member.user as any)?.full_name || (member.user as any)?.email}</p>
                         <p className="text-sm text-muted-foreground">{(member.user as any)?.email}</p>
+                        {member.joined_at && (
+                          <p className="text-xs text-muted-foreground/70 mt-0.5">
+                            {member.status === 'pending' ? 'Invited' : 'Joined'} {new Date(member.joined_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground capitalize px-3 py-1 rounded-full bg-white/5">
-                        {member.role === 'owner' ? 'Owner' : 'Member'}
+                      <span className={`text-sm capitalize px-3 py-1 rounded-full ${
+                        member.status === 'pending' 
+                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+                          : 'text-muted-foreground bg-white/5'
+                      }`}>
+                        {member.status === 'pending' ? 'Invited' : (member.role === 'owner' ? 'Owner' : 'Member')}
                       </span>
                       {member.role !== 'owner' && (
                         <Button 
