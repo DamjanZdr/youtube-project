@@ -55,7 +55,8 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode === 'subscription' && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string);
+          const subscription = subscriptionResponse as any;
           const organizationId = session.metadata?.organizationId;
           
           if (!organizationId) {
@@ -63,9 +64,9 @@ export async function POST(request: Request) {
             break;
           }
 
-          const priceId = subscription.items.data[0]?.price.id;
+          const priceId = subscription.items?.data?.[0]?.price?.id;
           const plan = PRICE_TO_PLAN_MAP[priceId] || 'free';
-          const interval = subscription.items.data[0]?.price.recurring?.interval || 'monthly';
+          const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'monthly';
 
           // Create or update subscription record
           await supabase
@@ -76,9 +77,9 @@ export async function POST(request: Request) {
               stripe_subscription_id: subscription.id,
               plan,
               status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : 'inactive',
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              cancel_at_period_end: subscription.cancel_at_period_end,
+              current_period_start: new Date((subscription.current_period_start || 0) * 1000).toISOString(),
+              current_period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
+              cancel_at_period_end: subscription.cancel_at_period_end || false,
               interval,
               failed_payment_count: 0,
               grace_period_end: null,
@@ -156,7 +157,8 @@ export async function POST(request: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         
         if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+          const subscriptionResponse = await stripe.subscriptions.retrieve(invoice.subscription as string);
+          const subscription = subscriptionResponse as any;
           const organizationId = subscription.metadata?.organizationId;
           
           if (!organizationId) {
@@ -184,7 +186,8 @@ export async function POST(request: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         
         if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+          const subscriptionResponse = await stripe.subscriptions.retrieve(invoice.subscription as string);
+          const subscription = subscriptionResponse as any;
           const organizationId = subscription.metadata?.organizationId;
           
           if (!organizationId) {
