@@ -19,10 +19,12 @@ import {
   CreditCard,
   Trash2,
   Upload,
-  UserPlus
+  UserPlus,
+  Crown
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { BillingTab } from "@/components/billing/billing-tab";
 
@@ -59,6 +61,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [selectedNewOwner, setSelectedNewOwner] = useState("");
+  const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
     // Get tab from URL or default to studio
@@ -422,6 +427,65 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     }
   };
 
+  const getCurrentUserMembership = () => {
+    if (!user || !members) return null;
+    return members.find((m: any) => m.user?.id === user.id);
+  };
+
+  const isCurrentUserOwner = () => {
+    const membership = getCurrentUserMembership();
+    return membership?.role === 'owner';
+  };
+
+  const getActiveMembers = () => {
+    return members.filter((m: any) => m.status === 'active' && m.role !== 'owner');
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!selectedNewOwner || !studio || !user) return;
+
+    setTransferring(true);
+    try {
+      // Find current owner membership
+      const currentOwnerMembership = getCurrentUserMembership();
+      if (!currentOwnerMembership) throw new Error("Current user membership not found");
+
+      // Find new owner membership
+      const newOwnerMembership = members.find((m: any) => m.id === selectedNewOwner);
+      if (!newOwnerMembership) throw new Error("New owner membership not found");
+
+      // Update current owner to editor
+      const { error: demoteError } = await supabase
+        .from("organization_members")
+        .update({ role: 'editor' })
+        .eq("id", currentOwnerMembership.id);
+
+      if (demoteError) throw demoteError;
+
+      // Update new member to owner
+      const { error: promoteError } = await supabase
+        .from("organization_members")
+        .update({ role: 'owner' })
+        .eq("id", selectedNewOwner);
+
+      if (promoteError) throw promoteError;
+
+      toast.success("Ownership transferred successfully!");
+      
+      // Reload data to reflect changes
+      await loadData();
+      
+      // Close dialog
+      setShowTransferDialog(false);
+      setSelectedNewOwner("");
+    } catch (error: any) {
+      console.error("Error transferring ownership:", error);
+      toast.error("Failed to transfer ownership");
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -716,6 +780,40 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </div>
             )}
           </div>
+
+          {/* Transfer Ownership Section - Only visible to owner */}
+          {isCurrentUserOwner() && (
+            <div className="glass-card p-6 border-amber-500/20">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-amber-500">Transfer Ownership</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Transfer ownership of this studio to another active member. You will become a regular member after the transfer.
+                  </p>
+                </div>
+              </div>
+
+              {getActiveMembers().length > 0 ? (
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                  onClick={() => setShowTransferDialog(true)}
+                >
+                  <Crown className="w-4 h-4" />
+                  Transfer Ownership
+                </Button>
+              ) : (
+                <div className="p-3 rounded-lg bg-muted/50 border border-white/5">
+                  <p className="text-sm text-muted-foreground">
+                    You need at least one other active member to transfer ownership.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Billing Tab */}
@@ -826,6 +924,64 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               disabled={deleteConfirmText !== "DELETE" || deleting}
             >
               {deleting ? 'Deleting...' : 'Delete Studio'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer Ownership Dialog */}
+      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-amber-500" />
+              Transfer Ownership
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-muted-foreground">
+              You are about to transfer ownership of <span className="font-semibold">{studio?.name}</span> to another member.
+            </p>
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-600 font-medium">
+                ⚠️ Important
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                After transferring ownership, you will become a regular member. The new owner will have full control of the studio, including the ability to remove you.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select New Owner</label>
+              <Select value={selectedNewOwner} onValueChange={setSelectedNewOwner}>
+                <SelectTrigger className="glass">
+                  <SelectValue placeholder="Choose a member..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {getActiveMembers().map((member: any) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{(member.user as any)?.full_name || (member.user as any)?.email}</span>
+                        <span className="text-xs text-muted-foreground">({(member.user as any)?.email})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowTransferDialog(false);
+              setSelectedNewOwner("");
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleTransferOwnership} 
+              disabled={!selectedNewOwner || transferring}
+              className="bg-amber-500 hover:bg-amber-600"
+            >
+              {transferring ? 'Transferring...' : 'Transfer Ownership'}
             </Button>
           </DialogFooter>
         </DialogContent>
