@@ -191,12 +191,31 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       {/* Plan Comparison */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
         {plans.map((plan) => {
-          const isCurrent = plan.id === (subscription?.plan || "free") && 
-                           (subscription?.interval || "monthly") === billingInterval;
+          const isSamePlan = plan.id === (subscription?.plan || "free");
+          const isSameInterval = (subscription?.interval || "monthly") === billingInterval;
+          const isCurrent = isSamePlan && isSameInterval;
           const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
           const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
           const thisPlanIndex = plans.findIndex(p => p.id === plan.id);
           const userHasHigherPlan = currentPlanIndex > thisPlanIndex;
+          
+          // Button text logic
+          let buttonText = "Upgrade";
+          if (loading === plan.id) {
+            buttonText = "Loading...";
+          } else if (isCurrent) {
+            buttonText = "Current Plan";
+          } else if (isSamePlan && !isSameInterval) {
+            // Same plan, different interval
+            buttonText = `Switch to ${billingInterval === "monthly" ? "Monthly" : "Yearly"}`;
+          } else if (plan.id === "free") {
+            buttonText = "Downgrade to Free";
+          } else if (isFreePlan) {
+            buttonText = "Upgrade";
+          } else {
+            // Different plan - compare by tier
+            buttonText = thisPlanIndex > currentPlanIndex ? "Upgrade" : "Downgrade";
+          }
           
           return (
             <Card
@@ -234,15 +253,10 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               <Button
                 className="w-full mt-auto h-10 text-sm font-semibold"
                 variant={isCurrent ? "outline" : plan.popular ? "default" : "outline"}
-                disabled={isCurrent || loading === plan.id || (plan.id === "free" && isFreePlan)}
+                disabled={isCurrent || loading === plan.id}
                 onClick={() => handleUpgrade(plan)}
               >
-                {loading === plan.id ? "Loading..." : 
-                 isCurrent ? "Current Plan" :
-                 plan.id === "free" ? "Downgrade" :
-                 isFreePlan ? "Upgrade" :
-                 plan.price[billingInterval] > (currentPlan?.price[billingInterval] || 0) ? "Upgrade" : "Downgrade"
-                }
+                {buttonText}
               </Button>
             </Card>
           );
