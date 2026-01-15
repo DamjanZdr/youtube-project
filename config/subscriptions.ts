@@ -80,7 +80,6 @@ export const plans: Plan[] = [
       teamMembers: 1,
       storageGb: 25,
     },
-    popular: true,
   },
   {
     id: 'team',
@@ -106,8 +105,7 @@ export const plans: Plan[] = [
       channels: -1,
       teamMembers: 4,
       storageGb: 50,
-    },
-  },
+    },    popular: true,  },
   {
     id: 'enterprise',
     name: 'Enterprise',

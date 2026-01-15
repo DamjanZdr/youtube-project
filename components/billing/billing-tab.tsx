@@ -116,9 +116,9 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       )}
 
       {/* Billing Overview Card */}
-      <Card className="glass-card p-6">
-        <div className="flex items-start justify-between mb-6">
-          <h2 className="text-xl font-semibold">Billing Overview</h2>
+      <Card className="glass-card p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold">Billing Overview</h2>
           {!isFreePlan && (
             <Button
               variant="outline"
@@ -130,154 +130,160 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Current Period */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Billing Cycle</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-2xl font-bold capitalize">
-                      {currentPlan?.name || "Free"}
-                      {!isFreePlan && subscription && (
-                        <span className="text-base font-normal text-muted-foreground ml-2">
-                          ({subscription.interval === "month" ? "Monthly" : "Yearly"})
-                        </span>
-                      )}
-                    </p>
-                    {subscription?.status === "active" && !isFreePlan && (
-                      <Badge variant="default">Active</Badge>
-                    )}
-                    {isPastDue && (
-                      <Badge variant="destructive">Past Due</Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{currentPlan?.description}</p>
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Current Billing Cycle */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-8 bg-primary rounded-full" />
+              <h3 className="text-lg font-semibold">Current Billing Cycle</h3>
+            </div>
+            
+            <div className="space-y-4 pl-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-3xl font-bold capitalize">
+                    {currentPlan?.name || "Free"}
+                  </p>
+                  {!isFreePlan && subscription && (
+                    <span className="text-lg text-muted-foreground">
+                      ({subscription.interval === "month" ? "Monthly" : "Yearly"})
+                    </span>
+                  )}
                 </div>
-
-                {!isFreePlan && subscription && (
-                  <>
-                    {/* Cycle Date Range */}
-                    <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Cycle Period</span>
-                        <span className="font-medium">
-                          {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Payment Date</span>
-                        <span className="font-medium">{formatDate(subscription.current_period_start)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Amount Paid</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            ${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            {subscription.status === "active" && !isPastDue ? "Paid" : subscription.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {isFreePlan && (
-                  <p className="text-sm text-muted-foreground">No active subscription</p>
-                )}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  {subscription?.status === "active" && !isFreePlan && (
+                    <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">Active</Badge>
+                  )}
+                  {isPastDue && (
+                    <Badge variant="destructive">Past Due</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{currentPlan?.description}</p>
               </div>
+
+              {!isFreePlan && subscription && (
+                <div className="space-y-3 pt-4">
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">Cycle Period</span>
+                    <span className="text-sm font-medium">
+                      {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">Payment Date</span>
+                    <span className="text-sm font-medium">{formatDate(subscription.current_period_start)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-muted-foreground">Amount Paid</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold">
+                        ${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}
+                      </span>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                        {subscription.status === "active" && !isPastDue ? "Paid" : subscription.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isFreePlan && (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No active subscription</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Next Period - Always show */}
+          {/* Next Billing Cycle */}
           {!isFreePlan && subscription && (
-            <div className="space-y-4 border-l pl-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Next Billing Cycle</h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-2xl font-bold capitalize">
-                        {pendingPlan?.name || (isCanceling ? "Free" : currentPlan?.name)}
-                        {!isCanceling && (
-                          <span className="text-base font-normal text-muted-foreground ml-2">
-                            ({pendingPlan && subscription?.pending_interval 
-                              ? (subscription.pending_interval === "month" ? "Monthly" : "Yearly")
-                              : subscription?.interval === "month" ? "Monthly" : "Yearly"
-                            })
-                          </span>
-                        )}
-                      </p>
-                      {hasPendingChange && (
-                        <Badge variant="outline">
-                          {isCanceling ? "Cancellation Scheduled" : "Change Scheduled"}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {pendingPlan?.description || (isCanceling ? "For hobbyists and side projects" : currentPlan?.description)}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-8 bg-muted rounded-full" />
+                <h3 className="text-lg font-semibold">Next Billing Cycle</h3>
+              </div>
+              
+              <div className="space-y-4 pl-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-3xl font-bold capitalize">
+                      {pendingPlan?.name || (isCanceling ? "Free" : currentPlan?.name)}
                     </p>
-                  </div>
-
-                  {/* Next Cycle Details */}
-                  <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Cycle Starts</span>
-                      <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
-                    </div>
-                    
                     {!isCanceling && (
-                      <>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Next Payment</span>
-                          <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Amount Due</span>
-                          <span className="font-medium">
-                            {pendingPlan && subscription.pending_interval ? (
-                              `$${subscription.pending_interval === "month" ? pendingPlan.price.monthly : pendingPlan.price.yearly}`
-                            ) : (
-                              `$${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}`
-                            )}
-                          </span>
-                        </div>
-                      </>
-                    )}
-
-                    {isCanceling && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Amount Due</span>
-                        <span className="font-medium">$0</span>
-                      </div>
+                      <span className="text-lg text-muted-foreground">
+                        ({pendingPlan && subscription?.pending_interval 
+                          ? (subscription.pending_interval === "month" ? "Monthly" : "Yearly")
+                          : subscription?.interval === "month" ? "Monthly" : "Yearly"
+                        })
+                      </span>
                     )}
                   </div>
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {hasPendingChange && (
+                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        {isCanceling ? "Cancellation Scheduled" : "Change Scheduled"}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {pendingPlan?.description || (isCanceling ? "For hobbyists and side projects" : currentPlan?.description)}
+                  </p>
+                </div>
 
-                  {hasPendingChange && (
+                <div className="space-y-3 pt-4">
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">Cycle Starts</span>
+                    <span className="text-sm font-medium">{formatDate(subscription.current_period_end)}</span>
+                  </div>
+                  
+                  {!isCanceling && (
                     <>
-                      <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                        <p className="text-sm text-amber-600 dark:text-amber-400">
-                          {isCanceling 
-                            ? `You'll retain ${currentPlan?.name} features until ${formatDate(subscription.current_period_end)}`
-                            : `Your plan will change to ${pendingPlan?.name} on ${formatDate(subscription.current_period_end)}`
-                          }
-                        </p>
+                      <div className="flex justify-between items-center py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Next Payment</span>
+                        <span className="text-sm font-medium">{formatDate(subscription.current_period_end)}</span>
                       </div>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={handleUndoChange}
-                        disabled={loading === "undo"}
-                        className="w-full mt-2"
-                      >
-                        {loading === "undo" ? "Cancelling..." : "Undo Change"}
-                      </Button>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-muted-foreground">Amount Due</span>
+                        <span className="text-lg font-bold">
+                          {pendingPlan && subscription.pending_interval ? (
+                            `$${subscription.pending_interval === "month" ? pendingPlan.price.monthly : pendingPlan.price.yearly}`
+                          ) : (
+                            `$${subscription.interval === "month" ? currentPlan?.price.monthly : currentPlan?.price.yearly}`
+                          )}
+                        </span>
+                      </div>
                     </>
                   )}
+
+                  {isCanceling && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-sm text-muted-foreground">Amount Due</span>
+                      <span className="text-lg font-bold">$0</span>
+                    </div>
+                  )}
                 </div>
+
+                {hasPendingChange && (
+                  <div className="space-y-3 pt-4">
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <p className="text-sm text-amber-600 dark:text-amber-400">
+                        {isCanceling 
+                          ? `You'll retain ${currentPlan?.name} features until ${formatDate(subscription.current_period_end)}`
+                          : `Your plan will change to ${pendingPlan?.name} on ${formatDate(subscription.current_period_end)}`
+                        }
+                      </p>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={handleUndoChange}
+                      disabled={loading === "undo"}
+                      className="w-full"
+                    >
+                      {loading === "undo" ? "Cancelling..." : "Undo Change"}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -379,7 +385,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
 
               <Button
                 className="w-full mt-auto h-10 text-sm font-semibold"
-                variant={isCurrent ? "outline" : plan.popular ? "default" : "outline"}
+                variant={
+                  isCurrent 
+                    ? "outline" 
+                    : (plan.popular && !userHasHigherPlan && thisPlanIndex >= currentPlanIndex) 
+                      ? "default" 
+                      : "outline"
+                }
                 disabled={isCurrent || loading === plan.id}
                 onClick={() => handleUpgrade(plan)}
               >
