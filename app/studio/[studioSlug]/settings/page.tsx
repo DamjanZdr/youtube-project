@@ -121,7 +121,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           role,
           joined_at,
           status,
-          user:profiles(id, email, full_name, avatar_url)
+          user:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
         `)
         .eq("organization_id", studioData.id);
 
