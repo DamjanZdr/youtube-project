@@ -314,7 +314,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       .insert({
         organization_id: studio.id,
         user_id: existingUser.id,
-        role: 'member'
+        role: 'editor'
       });
 
     if (!error) {
