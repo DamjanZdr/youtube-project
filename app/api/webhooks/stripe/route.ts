@@ -104,11 +104,34 @@ export async function POST(request: Request) {
         if (!organizationId) {
           const { data: existingSub } = await supabase
             .from('subscriptions')
-            .select('organization_id')
+            .select('organization_id, pending_plan, pending_price_id, pending_interval')
             .eq('stripe_subscription_id', subscription.id)
             .single();
           
           organizationId = existingSub?.organization_id;
+          
+          // Check if there's a pending change that should be applied
+          if (existingSub?.pending_plan && existingSub?.pending_price_id) {
+            const currentPeriodJustEnded = subscription.current_period_start * 1000 > Date.now() - 60000; // Within last minute
+            
+            if (currentPeriodJustEnded) {
+              // Apply the pending change now
+              const stripe = getStripe();
+              try {
+                await stripe.subscriptions.update(subscription.id, {
+                  items: [{
+                    id: subscription.items.data[0].id,
+                    price: existingSub.pending_price_id,
+                  }],
+                  proration_behavior: 'none', // No proration since we're at period boundary
+                });
+                
+                console.log(`Applied pending subscription change for org ${organizationId}`);
+              } catch (error) {
+                console.error('Failed to apply pending subscription change:', error);
+              }
+            }
+          }
         }
         
         if (!organizationId) {
@@ -119,6 +142,16 @@ export async function POST(request: Request) {
         const priceId = subscription.items?.data?.[0]?.price?.id;
         const plan = PRICE_TO_PLAN_MAP[priceId] || 'free';
         const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'monthly';
+
+        // Get current subscription from DB to check for pending changes
+        const { data: currentSub } = await supabase
+          .from('subscriptions')
+          .select('pending_plan, pending_price_id, pending_interval')
+          .eq('organization_id', organizationId)
+          .single();
+
+        // If the current price matches a pending change, clear the pending fields
+        const clearPending = currentSub?.pending_price_id === priceId;
 
         await supabase
           .from('subscriptions')
@@ -132,6 +165,10 @@ export async function POST(request: Request) {
             current_period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end || false,
             interval,
+            // Clear pending if it was applied, otherwise keep it
+            pending_plan: clearPending ? null : currentSub?.pending_plan,
+            pending_price_id: clearPending ? null : currentSub?.pending_price_id,
+            pending_interval: clearPending ? null : currentSub?.pending_interval,
           }, {
             onConflict: 'organization_id',
           });

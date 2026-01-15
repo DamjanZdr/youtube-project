@@ -19,9 +19,11 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
+  const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
   const isFreePlan = !subscription || subscription.plan === "free";
   const isPastDue = subscription?.status === "past_due";
   const isCanceling = subscription?.cancel_at_period_end;
+  const hasPendingChange = isCanceling || !!pendingPlan;
 
   const handleUpgrade = async (plan: Plan) => {
     if (loading) return;
@@ -162,22 +164,32 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           </div>
 
           {/* Next Period (only show if there's a change) */}
-          {isCanceling && (
+          {hasPendingChange && (
             <div className="space-y-4 border-l pl-6">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Next Period</h3>
                 <div className="space-y-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-2xl font-bold">Free</p>
-                      <Badge variant="outline">Downgrade Scheduled</Badge>
+                      <p className="text-2xl font-bold capitalize">{pendingPlan?.name || "Free"}</p>
+                      <Badge variant="outline">
+                        {isCanceling ? "Cancellation Scheduled" : "Change Scheduled"}
+                      </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">For hobbyists and side projects</p>
+                    <p className="text-sm text-muted-foreground">
+                      {pendingPlan?.description || "For hobbyists and side projects"}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
                     <CreditCard className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">$0/month</span>
+                    <span className="font-medium">
+                      {pendingPlan && subscription?.pending_interval ? (
+                        `$${subscription.pending_interval === "month" ? pendingPlan.price.monthly : pendingPlan.price.yearly}/${subscription.pending_interval === "month" ? "month" : "year"}`
+                      ) : (
+                        "$0/month"
+                      )}
+                    </span>
                   </div>
                   
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
