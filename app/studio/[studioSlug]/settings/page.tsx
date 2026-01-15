@@ -113,16 +113,18 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         .eq("id", studioData.owner_id)
         .single();
 
-      // Fetch members
+      // Fetch members (only active members)
       const { data: membersData, error: membersError } = await supabase
         .from("organization_members")
         .select(`
           id,
           role,
           joined_at,
+          status,
           user:profiles(id, email, full_name, avatar_url)
         `)
-        .eq("organization_id", studioData.id);
+        .eq("organization_id", studioData.id)
+        .eq("status", "active");
 
       // Combine owner + members
       const allMembers = [];
@@ -287,10 +289,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     
     setInviting(true);
     
-    // Check if user exists
+    // Check if user exists and get their invite preference
     const { data: existingUser } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, accept_invites')
       .eq('email', inviteEmail)
       .single();
 
@@ -300,30 +302,52 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
-    // Check if already a member
-    const alreadyMember = members.some((m: any) => m.user?.email === inviteEmail);
-    if (alreadyMember) {
-      toast.error('This user is already a member.');
+    // Check if user accepts invites
+    if (!existingUser.accept_invites) {
+      toast.error('Cannot send invite. This user has invitations turned off.');
       setInviting(false);
       return;
     }
 
-    // Add member
+    // Check if already a member or has pending invite
+    const { data: existingMembership } = await supabase
+      .from('organization_members')
+      .select('status')
+      .eq('organization_id', studio.id)
+      .eq('user_id', existingUser.id)
+      .single();
+
+    if (existingMembership) {
+      if (existingMembership.status === 'active') {
+        toast.error('This user is already a member.');
+      } else {
+        toast.error('This user already has a pending invite.');
+      }
+      setInviting(false);
+      return;
+    }
+
+    // Get current user for invited_by
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Create pending invite
     const { error } = await supabase
       .from('organization_members')
       .insert({
         organization_id: studio.id,
         user_id: existingUser.id,
-        role: 'editor'
+        role: 'editor',
+        status: 'pending',
+        invited_by: user?.id
       });
 
     if (!error) {
       await loadData();
       setShowInviteDialog(false);
       setInviteEmail('');
-      toast.success('Member invited successfully!');
+      toast.success('Invite sent successfully!');
     } else {
-      toast.error('Failed to add member: ' + error.message);
+      toast.error('Failed to send invite: ' + error.message);
     }
     
     setInviting(false);

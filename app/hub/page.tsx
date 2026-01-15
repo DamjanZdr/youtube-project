@@ -1,22 +1,201 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Users, FolderKanban } from "lucide-react";
+import { Plus, Play, Users, FolderKanban, Bell, Check, X } from "lucide-react";
 import Link from "next/link";
-import { getStudios } from "@/lib/actions/studio";
 import { CreateStudioDialog } from "./create-studio-dialog";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
-export default async function HubPage() {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  // Auth check disabled for preview
-  // if (!user) {
-  //   redirect("/auth/login");
-  // }
+interface Studio {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url?: string;
+  memberCount?: number;
+  projectCount?: number;
+}
 
-  // Fetch user studios from database
-  const studios = await getStudios();
+interface PendingInvite {
+  id: string;
+  organization_id: string;
+  organization: {
+    name: string;
+    slug: string;
+    logo_url?: string;
+  };
+  invited_by_profile?: {
+    full_name?: string;
+    email: string;
+  };
+  joined_at: string;
+}
+
+export default function HubPage() {
+  const [user, setUser] = useState<any>(null);
+  const [studios, setStudios] = useState<Studio[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
+  const [acceptInvites, setAcceptInvites] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    setLoading(true);
+
+    // Get user
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    setUser(currentUser);
+
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
+
+    // Get user profile with invite preference
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("accept_invites")
+      .eq("id", currentUser.id)
+      .single();
+
+    if (profile) {
+      setAcceptInvites(profile.accept_invites ?? true);
+    }
+
+    // Get active studios
+    const { data: activeMembers } = await supabase
+      .from("organization_members")
+      .select(`
+        organization_id,
+        organizations!inner (
+          id,
+          name,
+          slug,
+          logo_url
+        )
+      `)
+      .eq("user_id", currentUser.id)
+      .eq("status", "active");
+
+    if (activeMembers) {
+      const studioData = await Promise.all(
+        activeMembers.map(async (member: any) => {
+          const org = member.organizations;
+          
+          // Get member count
+          const { count: memberCount } = await supabase
+            .from("organization_members")
+            .select("*", { count: "exact", head: true })
+            .eq("organization_id", org.id)
+            .eq("status", "active");
+
+          // Get project count
+          const { count: projectCount } = await supabase
+            .from("projects")
+            .select("*", { count: "exact", head: true })
+            .eq("organization_id", org.id);
+
+          return {
+            id: org.id,
+            name: org.name,
+            slug: org.slug,
+            logo_url: org.logo_url,
+            memberCount: memberCount || 1,
+            projectCount: projectCount || 0,
+          };
+        })
+      );
+      setStudios(studioData);
+    }
+
+    // Get pending invites
+    const { data: pendingData } = await supabase
+      .from("organization_members")
+      .select(`
+        id,
+        organization_id,
+        joined_at,
+        organizations!inner (
+          name,
+          slug,
+          logo_url
+        ),
+        invited_by_profile:profiles!organization_members_invited_by_fkey (
+          full_name,
+          email
+        )
+      `)
+      .eq("user_id", currentUser.id)
+      .eq("status", "pending");
+
+    if (pendingData) {
+      setPendingInvites(pendingData as any);
+    }
+
+    setLoading(false);
+  }
+
+  async function toggleAcceptInvites(enabled: boolean) {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ accept_invites: enabled })
+      .eq("id", user.id);
+
+    if (error) {
+      toast.error("Failed to update setting");
+    } else {
+      setAcceptInvites(enabled);
+      toast.success(enabled ? "Invites enabled" : "Invites disabled");
+    }
+  }
+
+  async function handleInviteResponse(inviteId: string, accept: boolean) {
+    if (accept) {
+      const { error } = await supabase
+        .from("organization_members")
+        .update({ status: "active" })
+        .eq("id", inviteId);
+
+      if (error) {
+        toast.error("Failed to accept invite");
+      } else {
+        toast.success("Invite accepted!");
+        loadData();
+      }
+    } else {
+      const { error } = await supabase
+        .from("organization_members")
+        .delete()
+        .eq("id", inviteId);
+
+      if (error) {
+        toast.error("Failed to decline invite");
+      } else {
+        toast.success("Invite declined");
+        loadData();
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,6 +220,75 @@ export default async function HubPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-10">
+        {/* Settings Section */}
+        <div className="glass-card p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold mb-1">Accept Studio Invites</h3>
+              <p className="text-sm text-muted-foreground">
+                Allow other users to invite you to their studios
+              </p>
+            </div>
+            <Switch
+              checked={acceptInvites}
+              onCheckedChange={toggleAcceptInvites}
+            />
+          </div>
+        </div>
+
+        {/* Pending Invites */}
+        {pendingInvites.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Bell className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Pending Invites</h2>
+              <Badge variant="secondary">{pendingInvites.length}</Badge>
+            </div>
+            <div className="space-y-3">
+              {pendingInvites.map((invite) => (
+                <div key={invite.id} className="glass-card p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {invite.organization.logo_url ? (
+                      <img
+                        src={invite.organization.logo_url}
+                        alt={invite.organization.name}
+                        className="w-12 h-12 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-lg font-bold">{invite.organization.name[0]}</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold">{invite.organization.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Invited by {invite.invited_by_profile?.full_name || invite.invited_by_profile?.email || "someone"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleInviteResponse(invite.id, true)}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInviteResponse(invite.id, false)}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -74,7 +322,7 @@ export default async function HubPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {studios.map((studio: any) => (
+            {studios.map((studio) => (
               <Link
                 key={studio.id}
                 href={`/studio/${studio.slug}/projects`}
