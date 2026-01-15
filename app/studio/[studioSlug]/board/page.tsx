@@ -634,11 +634,9 @@ export default function BoardPage() {
           {editMode ? "Done" : "Edit"}
         </Button>
         <div className="w-px h-6 bg-white/10" />
-        <Button size="sm" className="rounded-full glow-sm" asChild>
-          <Link href={`/studio/${studioSlug}/projects`}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Project
-          </Link>
+        <Button size="sm" className="rounded-full glow-sm" onClick={() => setShowCreateDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Project
         </Button>
       </div>
 

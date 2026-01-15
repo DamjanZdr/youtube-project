@@ -170,7 +170,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
     if (error) {
       console.error("Error saving studio:", error);
-      toast.error('Failed to save studio settings');
+      if (error.code === '23505') {
+        toast.error('This studio URL is already taken. Please choose a different one.');
+      } else {
+        toast.error('Failed to save studio settings');
+      }
     } else {
       setStudio({ ...studio, name, slug });
       toast.success('Studio settings saved successfully!');

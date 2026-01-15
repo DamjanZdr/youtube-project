@@ -9,7 +9,18 @@ DECLARE
   edit_id UUID;
   review_id UUID;
   complete_id UUID;
+  existing_count INTEGER;
 BEGIN
+  -- Check if this org already has statuses
+  SELECT COUNT(*) INTO existing_count
+  FROM board_statuses
+  WHERE organization_id = org_id;
+  
+  -- Only create if no statuses exist
+  IF existing_count > 0 THEN
+    RETURN;
+  END IF;
+  
   -- Create default statuses
   INSERT INTO board_statuses (organization_id, name, color, position) VALUES
     (org_id, 'Idea', 'bg-purple-500', 0) RETURNING id INTO idea_id;
