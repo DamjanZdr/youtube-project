@@ -87,16 +87,16 @@ export const plans: Plan[] = [
     },
   },
   {
-    id: 'team',
-    name: 'Team',
+    id: 'studio',
+    name: 'Studio',
     description: 'For small teams and collaboration',
     price: {
       monthly: 29,
       yearly: 290, // 2 months free
     },
     stripePriceId: {
-      monthly: process.env.NEXT_PUBLIC_STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly',
-      yearly: process.env.NEXT_PUBLIC_STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly',
+      monthly: process.env.NEXT_PUBLIC_STRIPE_STUDIO_MONTHLY_PRICE_ID || 'price_studio_monthly',
+      yearly: process.env.NEXT_PUBLIC_STRIPE_STUDIO_YEARLY_PRICE_ID || 'price_studio_yearly',
     },
     features: [
       { name: 'Unlimited projects', included: true },

@@ -94,8 +94,9 @@ BEGIN
   -- Set limits based on plan
   plan_limit := CASE org_plan
     WHEN 'free' THEN 1
-    WHEN 'creator' THEN 10
+    WHEN 'creator' THEN 999999 -- Unlimited
     WHEN 'studio' THEN 999999 -- Unlimited
+    WHEN 'enterprise' THEN 999999 -- Unlimited
     ELSE 1
   END;
 
@@ -130,4 +131,4 @@ SET project_initiations_count = (
 WHERE project_initiations_count = 0;
 
 COMMENT ON COLUMN organizations.project_initiations_count IS 
-'Total projects ever created (lifetime). Not decremented on deletion. Free tier: 1, Creator: 10, Studio: unlimited';
+'Total projects ever created (lifetime). Not decremented on deletion. Free: 1, Creator/Studio/Enterprise: unlimited';

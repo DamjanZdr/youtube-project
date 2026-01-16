@@ -19,8 +19,9 @@ This migration implements abuse prevention for the free tier by tracking project
 
 ### 3. **Project Creation Limits by Plan**
 - **Free**: 1 project creation (lifetime)
-- **Creator**: 10 project creations (lifetime)
+- **Creator**: Unlimited
 - **Studio**: Unlimited
+- **Enterprise**: Unlimited
 - Enforced via trigger on `projects` table
 
 ## How It Works
@@ -66,7 +67,7 @@ If in 0 free orgs → Allow
 ### Scenario 3: Upgrading Plans
 1. Free org has `project_initiations_count = 1`
 2. User upgrades to Creator plan
-3. Can now create 9 more projects (total lifetime: 10)
+3. Can now create unlimited projects ✅
 
 ## Migration Steps
 

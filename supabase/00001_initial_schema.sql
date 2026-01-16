@@ -27,7 +27,7 @@ CREATE TYPE video_type AS ENUM ('long', 'short');
 CREATE TYPE asset_type AS ENUM ('thumbnail', 'export', 'short', 'raw', 'audio', 'graphic', 'other');
 
 -- Subscription plan tiers
-CREATE TYPE subscription_plan AS ENUM ('free', 'creator', 'studio');
+CREATE TYPE subscription_plan AS ENUM ('free', 'creator', 'studio', 'enterprise');
 
 -- Subscription status
 CREATE TYPE subscription_status AS ENUM ('active', 'canceled', 'past_due', 'trialing');
