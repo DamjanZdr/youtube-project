@@ -13,6 +13,7 @@ interface Project {
   status: string;
   title: string;
   updated_at: string;
+  video_type: "long" | "short";
 }
 
 export default function StudioHomePage() {
@@ -39,7 +40,7 @@ export default function StudioHomePage() {
       // Fetch project data
       const { data: projectData } = await supabase
         .from("projects")
-        .select("id, status, title, updated_at")
+        .select("id, status, title, updated_at, video_type")
         .eq("organization_id", studioData?.id)
         .order("updated_at", { ascending: false })
         .limit(5);
@@ -214,30 +215,70 @@ export default function StudioHomePage() {
         </div>
         
         {projects && projects.length > 0 ? (
-          <div className="space-y-3">
-            {projects.map((project) => (
-              <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                    <Video className="w-4 h-4 text-muted-foreground" />
+          <div className="grid grid-cols-2 gap-6">
+            {/* Long-form videos - Left column */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Long-form</h3>
+              {projects.filter(p => p.video_type === "long").length > 0 ? (
+                projects.filter(p => p.video_type === "long").map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
+                        <Video className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{project.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{project.status}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      project.status === "published" ? "bg-green-500/20 text-green-400" :
+                      project.status === "scheduled" ? "bg-purple-500/20 text-purple-400" :
+                      project.status === "editing" ? "bg-orange-500/20 text-orange-400" :
+                      project.status === "recording" ? "bg-yellow-500/20 text-yellow-400" :
+                      project.status === "script" ? "bg-blue-500/20 text-blue-400" :
+                      "bg-gray-500/20 text-gray-400"
+                    }`}>
+                      {project.status}
+                    </span>
                   </div>
-                  <div>
-                    <p className="font-medium">{project.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{project.status}</p>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No long-form videos</p>
+              )}
+            </div>
+
+            {/* Shorts - Right column */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Shorts</h3>
+              {projects.filter(p => p.video_type === "short").length > 0 ? (
+                projects.filter(p => p.video_type === "short").map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
+                        <Video className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{project.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{project.status}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      project.status === "published" ? "bg-green-500/20 text-green-400" :
+                      project.status === "scheduled" ? "bg-purple-500/20 text-purple-400" :
+                      project.status === "editing" ? "bg-orange-500/20 text-orange-400" :
+                      project.status === "recording" ? "bg-yellow-500/20 text-yellow-400" :
+                      project.status === "script" ? "bg-blue-500/20 text-blue-400" :
+                      "bg-gray-500/20 text-gray-400"
+                    }`}>
+                      {project.status}
+                    </span>
                   </div>
-                </div>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  project.status === "published" ? "bg-green-500/20 text-green-400" :
-                  project.status === "scheduled" ? "bg-purple-500/20 text-purple-400" :
-                  project.status === "editing" ? "bg-orange-500/20 text-orange-400" :
-                  project.status === "recording" ? "bg-yellow-500/20 text-yellow-400" :
-                  project.status === "script" ? "bg-blue-500/20 text-blue-400" :
-                  "bg-gray-500/20 text-gray-400"
-                }`}>
-                  {project.status}
-                </span>
-              </div>
-            ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No shorts</p>
+              )}
+            </div>
           </div>
         ) : (
           <div className="text-center py-8">
