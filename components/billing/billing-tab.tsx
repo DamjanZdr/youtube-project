@@ -425,7 +425,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           return (
             <Card
               key={plan.id}
-              className={`glass-card p-6 relative flex flex-col ${
+              className={`glass-card p-8 relative flex flex-col min-h-[520px] ${
                 plan.popular && !userHasHigherPlan ? "ring-2 ring-primary" : ""
               } ${isCurrent ? "bg-primary/5" : ""}`}
             >
@@ -435,9 +435,9 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 </div>
               )}
 
-              <div className="mb-6">
-                <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
-                <div className="flex items-baseline gap-1 mb-2">
+              <div className="mb-8">
+                <h4 className="text-xl font-bold mb-3">{plan.name}</h4>
+                <div className="flex items-baseline gap-1 mb-3">
                   <span className="text-3xl font-bold">${price}</span>
                   <span className="text-sm text-muted-foreground">
                     /{billingInterval === "monthly" ? "mo" : "yr"}
@@ -446,7 +446,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 <p className="text-xs text-muted-foreground leading-tight min-h-[32px]">{plan.description}</p>
               </div>
 
-              <ul className="space-y-2.5 mb-6 flex-1">
+              <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2">
                     {feature.included ? (
