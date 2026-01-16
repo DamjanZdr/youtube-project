@@ -20,6 +20,13 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     redirect("/auth/login");
   }
 
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
   // Fetch studio data
   const { data: studio, error } = await supabase
     .from("organizations")
@@ -54,7 +61,11 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
         {/* Client-side collapsible sidebar */}
         <StudioSidebar 
           studio={{ name: studio.name, logo_url: studio.logo_url }}
-          user={{ email: user.email ?? null, avatar_url: user.user_metadata?.avatar_url }}
+          user={{ 
+            email: user.email ?? null, 
+            avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url,
+            full_name: profile?.full_name || user.user_metadata?.full_name
+          }}
           studioSlug={studioSlug}
         />
 

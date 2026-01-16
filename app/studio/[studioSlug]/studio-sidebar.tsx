@@ -99,11 +99,11 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                     <Avatar className="w-8 h-8 border border-white/10 cursor-pointer" onClick={() => setCollapsed(false)}>
                       <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-primary/20 text-xs">
-                        {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                        {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </TooltipTrigger>
-                  <TooltipContent side="right">Expand sidebar</TooltipContent>
+                  <TooltipContent side="right">{user?.full_name || user?.email}</TooltipContent>
                 </Tooltip>
               </>
             ) : (
@@ -111,11 +111,11 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                 <Avatar className="w-8 h-8 border border-white/10">
                   <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback className="bg-primary/20 text-xs">
-                    {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                    {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.user_metadata?.full_name || user?.email || "user@example.com"}</p>
+                  <p className="text-sm font-medium truncate">{user?.full_name || user?.email || "user@example.com"}</p>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>

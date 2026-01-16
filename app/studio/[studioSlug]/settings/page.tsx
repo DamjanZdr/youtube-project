@@ -65,8 +65,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
-    // Get tab from URL or default to studio
-    const tab = searchParams.get('tab') || 'studio';
+    // Get tab from URL or default to personal
+    const tab = searchParams.get('tab') || 'personal';
     setActiveTab(tab);
   }, [searchParams]);
 
@@ -560,13 +560,13 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
         <TabsList className="glass">
-          <TabsTrigger value="studio" className="gap-2">
-            <SettingsIcon className="w-4 h-4" />
-            Studio
-          </TabsTrigger>
           <TabsTrigger value="personal" className="gap-2">
             <Users className="w-4 h-4" />
             Personal
+          </TabsTrigger>
+          <TabsTrigger value="studio" className="gap-2">
+            <SettingsIcon className="w-4 h-4" />
+            Studio
           </TabsTrigger>
           <TabsTrigger value="members" className="gap-2">
             <Users className="w-4 h-4" />
@@ -779,6 +779,21 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               >
                 {sendingPasswordReset ? 'Sending...' : 'Send Password Reset Email'}
               </Button>
+            </div>
+          </div>
+
+          {/* Sidebar Preferences */}
+          <div className="glass-card p-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Sidebar Preferences</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Customize your sidebar behavior
+              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  You can collapse the sidebar by clicking the collapse icon next to your profile in the sidebar footer.
+                </p>
+              </div>
             </div>
           </div>
         </TabsContent>

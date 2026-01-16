@@ -40,7 +40,15 @@ export default function StudioHomePage() {
     async function loadData() {
       // Fetch user data
       const { data: { user: userData } } = await supabase.auth.getUser();
-      setUser(userData);
+      if (userData) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userData.id)
+          .single();
+        
+        setUser(profile);
+      }
 
       // Fetch studio data
       const { data: studioData } = await supabase
@@ -145,7 +153,7 @@ export default function StudioHomePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!</h1>
+          <h1 className="text-2xl font-bold">Welcome back{user?.full_name ? `, ${user.full_name}` : ''}!</h1>
           <p className="text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
