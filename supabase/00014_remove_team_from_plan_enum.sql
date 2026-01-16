@@ -17,14 +17,20 @@ ALTER TYPE subscription_plan RENAME TO subscription_plan_old;
 -- Step 3: Create new enum without 'team'
 CREATE TYPE subscription_plan AS ENUM ('free', 'creator', 'studio', 'enterprise');
 
--- Step 4: Update all columns to use new enum
--- (Convert via text to avoid type mismatch)
+-- Step 4: Drop default constraint temporarily
+ALTER TABLE subscriptions 
+  ALTER COLUMN plan DROP DEFAULT;
 
--- Update subscriptions table
+-- Step 5: Update all columns to use new enum
+-- (Convert via text to avoid type mismatch)
 ALTER TABLE subscriptions 
   ALTER COLUMN plan TYPE subscription_plan USING plan::text::subscription_plan;
 
--- Step 5: Drop the old enum
+-- Step 6: Restore default if needed (set to 'free')
+ALTER TABLE subscriptions 
+  ALTER COLUMN plan SET DEFAULT 'free';
+
+-- Step 7: Drop the old enum
 DROP TYPE subscription_plan_old;
 
 -- Done! The 'team' value is now removed from the enum
