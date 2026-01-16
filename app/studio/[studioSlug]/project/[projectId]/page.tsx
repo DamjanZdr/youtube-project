@@ -44,6 +44,7 @@ interface ProjectData {
   id: string;
   title: string;
   description: string | null;
+  video_type: string;
 }
 
 interface ProjectTag {
@@ -589,7 +590,7 @@ export default function PackagingPage() {
                       e.stopPropagation();
                       openThumbnailDialog(set.id);
                     }}
-                    className="aspect-video rounded-lg bg-gradient-to-br from-white/10 to-white/5 mb-2 overflow-hidden relative group cursor-pointer"
+                    className={`${project?.video_type === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg bg-gradient-to-br from-white/10 to-white/5 mb-2 overflow-hidden relative group cursor-pointer`}
                   >
                     {set.thumbnail_url ? (
                       <>
