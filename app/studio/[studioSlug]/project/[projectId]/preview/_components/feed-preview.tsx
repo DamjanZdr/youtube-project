@@ -117,16 +117,18 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             {/* Shorts Section */}
             <div className="mb-4">
               <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
-              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
-                {[0,1,2,3,4].map(i => (
-                  <ShortCard
-                    key={`short-${i}`}
-                    isYours={isShort && i === 2}
-                    set={set}
-                    compareVideo={getVideo(i)}
-                    size="md"
-                  />
-                ))}
+              <div className="grid grid-cols-3 gap-x-4">
+                <div className="flex gap-3">
+                  {[0,1,2,3,4].map(i => (
+                    <ShortCard
+                      key={`short-${i}`}
+                      isYours={isShort && i === 2}
+                      set={set}
+                      compareVideo={getVideo(i)}
+                      size="md"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>

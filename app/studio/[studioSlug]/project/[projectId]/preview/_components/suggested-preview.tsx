@@ -109,8 +109,8 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
           <div className="h-full overflow-y-auto space-y-2 w-[400px]" style={{ scrollbarWidth: "none" }}>
             {/* Shorts Section (3 shorts) */}
             <div className="mb-3">
-              <h4 className="text-white text-sm font-semibold mb-2 px-1">Shorts</h4>
-              <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+              <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
+              <div className="flex gap-2 pb-2">
                 {[0,1,2].map(i => (
                   <ShortCard
                     key={`short-${i}`}
@@ -124,7 +124,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
             </div>
 
             {/* Long Form Videos */}
-            <div className="space-y-2">
+            <div className="space-y-2 pr-1">
               {[0,1,2,3,4].map(i => (
                 <VideoCard
                   key={`long-${i}`}
@@ -132,7 +132,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
                   set={set}
                   channel={channel}
                   compareVideo={getVideo(i)}
-                  size="md"
+                  size="sm"
                   layout="horizontal"
                 />
               ))}
