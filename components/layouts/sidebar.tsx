@@ -20,7 +20,7 @@ export function Sidebar() {
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/dashboard" className="flex items-center gap-2 font-bold">
             <span className="text-xl">🎬</span>
-            <span>YouTuber Studio</span>
+            <span>myBlueprint</span>
           </Link>
         </div>
 

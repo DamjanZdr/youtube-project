@@ -273,7 +273,7 @@ export default function HubPage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Play className="w-4 h-4 text-white fill-white" />
             </div>
-            <span className="font-semibold text-lg">YouTuber Studio</span>
+            <span className="font-semibold text-lg">myBlueprint</span>
           </Link>
           
           <div className="flex items-center gap-6">

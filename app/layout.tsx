@@ -11,7 +11,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "YouTuber Studio",
+  title: "myBlueprint",
   description: "The all-in-one creator operating system for YouTube creators",
 };
 

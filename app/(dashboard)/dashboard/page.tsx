@@ -8,7 +8,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to YouTuber Studio. Manage your content from here.
+          Welcome to myBlueprint. Manage your content from here.
         </p>
       </div>
       

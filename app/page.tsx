@@ -1,11 +1,16 @@
 import { AuthButton } from "@/components/auth-button";
 import { Button } from "@/components/ui/button";
 import { hasEnvVars } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Play, Sparkles, Layout, Eye } from "lucide-react";
+import { Play, Sparkles, Layout, Eye, FolderKanban, FileText, Users } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+
   return (
     <main className="min-h-screen flex flex-col">
       {/* Navigation */}
@@ -15,7 +20,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Play className="w-4 h-4 text-white fill-white" />
             </div>
-            <span className="font-semibold text-lg">YouTuber Studio</span>
+            <span className="font-semibold text-lg">myBlueprint</span>
           </Link>
           
           <div className="flex items-center gap-4">
@@ -57,16 +62,26 @@ export default function Home() {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/sign-up">
-              <Button size="lg" className="glow-primary text-base px-8">
-                Get Started Free
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button size="lg" variant="outline" className="text-base px-8 glass">
-                Sign In
-              </Button>
-            </Link>
+            {user ? (
+              <Link href="/hub">
+                <Button size="lg" className="glow-primary text-base px-8">
+                  Go to Hub
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/sign-up">
+                  <Button size="lg" className="glow-primary text-base px-8">
+                    Get Started Free
+                  </Button>
+                </Link>
+                <Link href="/auth/login">
+                  <Button size="lg" variant="outline" className="text-base px-8 glass">
+                    Sign In
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -78,7 +93,7 @@ export default function Home() {
             Everything you need to create
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
             {/* Feature Card 1 */}
             <div className="glass-card p-6 hover-lift">
               <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
@@ -112,13 +127,48 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Feature Card 4 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+                <FolderKanban className="w-6 h-6 text-green-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Project Management</h3>
+              <p className="text-muted-foreground">
+                Organize multiple videos at once with custom workflows and task automation.
+              </p>
+            </div>
+            
+            {/* Feature Card 5 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-pink-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Wiki & Documentation</h3>
+              <p className="text-muted-foreground">
+                Store brand guidelines, templates, and SOPs in your team knowledge base.
+              </p>
+            </div>
+            
+            {/* Feature Card 6 */}
+            <div className="glass-card p-6 hover-lift">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Team Collaboration</h3>
+              <p className="text-muted-foreground">
+                Invite team members, assign tasks, and collaborate in real-time on your content.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
-          <p>© 2026 YouTuber Studio</p>
+          <p>© 2026 myBlueprint</p>
           <div className="flex items-center gap-6">
             <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>

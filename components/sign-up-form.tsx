@@ -57,14 +57,14 @@ export function SignUpForm({
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
           <Play className="w-5 h-5 text-white fill-white" />
         </div>
-        <span className="font-bold text-xl">YouTuber Studio</span>
+        <span className="font-bold text-xl">myBlueprint</span>
       </div>
 
       <div className="glass-card p-8">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">Create an account</h1>
           <p className="text-muted-foreground mt-1">
-            Get started with YouTuber Studio
+            Get started with myBlueprint
           </p>
         </div>
         

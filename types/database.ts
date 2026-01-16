@@ -1,5 +1,5 @@
 /**
- * Database types for YouTuber Studio
+ * Database types for myBlueprint
  * These types represent the core entities in the system
  * 
  * Run `npx supabase gen types typescript` to generate types from your Supabase schema
