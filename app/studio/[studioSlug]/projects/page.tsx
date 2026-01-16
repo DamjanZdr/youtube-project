@@ -20,11 +20,8 @@ import {
   Grid3X3,
   List,
   Search,
-  Filter,
-  SortAsc,
   Tv,
   Film,
-  ChevronDown,
   Trash2,
   Copy,
   ExternalLink,
@@ -79,11 +76,9 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatusId, setSelectedStatusId] = useState<string | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
+  const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"all" | "long" | "short">("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   // Fetch projects
   useEffect(() => {
@@ -220,23 +215,23 @@ export default function ProjectsPage() {
     const matchesSearch =
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = selectedStatusId === "all" || project.board_status_id === selectedStatusId;
+    const matchesStatus = selectedStatusIds.length === 0 || selectedStatusIds.includes(project.board_status_id || "");
     const matchesType = typeFilter === "all" || project.video_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // Group projects by status for pipeline view
-  const projectsByStatus = Object.keys(STATUS_CONFIG).reduce((acc, status) => {
-    acc[status as ProjectStatus] = filteredProjects.filter((p) => p.status === status);
-    return acc;
-  }, {} as Record<ProjectStatus, Project[]>);
+  // Toggle status filter
+  const toggleStatusFilter = (statusId: string) => {
+    setSelectedStatusIds(prev => 
+      prev.includes(statusId) 
+        ? prev.filter(id => id !== statusId)
+        : [...prev, statusId]
+    );
+  };
 
-  // Stats
-  const stats = {
-    total: projects.length,
-    inProgress: projects.filter((p) => !["idea", "published"].includes(p.status)).length,
-    scheduled: projects.filter((p) => p.status === "scheduled").length,
-    published: projects.filter((p) => p.status === "published").length,
+  // Clear all status filters
+  const clearStatusFilters = () => {
+    setSelectedStatusIds([]);
   };
 
   const getStatusConfig = (status: string) => STATUS_CONFIG[status as ProjectStatus] || STATUS_CONFIG.idea;
@@ -255,24 +250,42 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Quick Stats */}
+      {/* Stats and Content Pipeline */}
       {projects.length > 0 && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="glass-card p-4">
+        <div className="space-y-4 mb-6">
+          {/* Total Projects - Clickable to clear filters */}
+          <div 
+            className={`glass-card p-4 cursor-pointer transition-all ${
+              selectedStatusIds.length === 0 ? "ring-2 ring-primary" : "hover:bg-white/5"
+            }`}
+            onClick={clearStatusFilters}
+          >
             <p className="text-sm text-muted-foreground">Total Projects</p>
-            <p className="text-2xl font-bold mt-1">{stats.total}</p>
+            <p className="text-2xl font-bold mt-1">{projects.length}</p>
           </div>
-          <div className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">In Progress</p>
-            <p className="text-2xl font-bold mt-1 text-blue-400">{stats.inProgress}</p>
-          </div>
-          <div className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">Scheduled</p>
-            <p className="text-2xl font-bold mt-1 text-cyan-400">{stats.scheduled}</p>
-          </div>
-          <div className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">Published</p>
-            <p className="text-2xl font-bold mt-1 text-green-400">{stats.published}</p>
+
+          {/* Content Pipeline */}
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
+            <div className="flex gap-2">
+              {boardStatuses.map((status) => {
+                const count = projects.filter(p => p.board_status_id === status.id).length;
+                const isSelected = selectedStatusIds.includes(status.id);
+                return (
+                  <div 
+                    key={status.id} 
+                    className={`flex-1 text-center cursor-pointer transition-all rounded-lg p-2 ${
+                      isSelected ? "bg-white/10 ring-2 ring-white/20" : "hover:bg-white/5"
+                    }`}
+                    onClick={() => toggleStatusFilter(status.id)}
+                  >
+                    <div className={`h-2 rounded-full ${status.color} mb-2`} />
+                    <p className="text-xl font-bold">{count}</p>
+                    <p className="text-xs text-muted-foreground">{status.name}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -291,52 +304,6 @@ export default function ProjectsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none w-64 text-sm"
               />
-            </div>
-
-            {/* Status Filter */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-                className="gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                {selectedStatusId === "all" 
-                  ? "All Status" 
-                  : boardStatuses.find(s => s.id === selectedStatusId)?.name || "All Status"}
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-              {showFilterMenu && (
-                <div className="absolute top-full left-0 mt-1 w-48 glass-card p-2 z-50">
-                  <button
-                    onClick={() => {
-                      setSelectedStatusId("all");
-                      setShowFilterMenu(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                      selectedStatusId === "all" ? "bg-white/10" : "hover:bg-white/5"
-                    }`}
-                  >
-                    All Status
-                  </button>
-                  {boardStatuses.map((status) => (
-                    <button
-                      key={status.id}
-                      onClick={() => {
-                        setSelectedStatusId(status.id);
-                        setShowFilterMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${
-                        selectedStatusId === status.id ? "bg-white/10" : "hover:bg-white/5"
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full ${status.color}`} />
-                      {status.name}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Type Filter */}
