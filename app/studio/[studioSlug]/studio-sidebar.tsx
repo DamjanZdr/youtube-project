@@ -4,13 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, 
-  ChevronDown,
   LogOut,
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -90,54 +88,49 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
             </Link>
           )}
 
-          {/* User */}
-          <div className={`flex items-center ${userFlexAlign}`}>
-            {collapsed ? (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="w-8 h-8 border border-white/10 cursor-pointer" onClick={() => setCollapsed(false)}>
-                      <AvatarImage src={user?.avatar_url} />
-                      <AvatarFallback className="bg-primary/20 text-xs">
-                        {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{user?.full_name || user?.email}</TooltipContent>
-                </Tooltip>
-              </>
-            ) : (
-              <>
-                <Avatar className="w-8 h-8 border border-white/10">
-                  <AvatarImage src={user?.avatar_url} />
-                  <AvatarFallback className="bg-primary/20 text-xs">
-                    {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.full_name || user?.email || "user@example.com"}</p>
-                </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCollapsed(true)}>
-                      <PanelLeftClose className="w-4 h-4" />
+          {/* Action Buttons */}
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setCollapsed(false)}
+                  className="w-full h-10"
+                >
+                  <PanelLeft className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand sidebar</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <form action="/auth/sign-out" method="post" className="flex-1">
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                      <LogOut className="w-4 h-4" />
+                      Logout
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Collapse sidebar</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <form action="/auth/sign-out" method="post">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <LogOut className="w-4 h-4" />
-                      </Button>
-                    </form>
-                  </TooltipTrigger>
-                  <TooltipContent>Sign out</TooltipContent>
-                </Tooltip>
-              </>
-            )}
-          </div>
+                  </form>
+                </TooltipTrigger>
+                <TooltipContent>Sign out</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setCollapsed(true)}
+                    className="h-9 w-9"
+                  >
+                    <PanelLeftClose className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Collapse sidebar</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
         </div>
       </aside>
       {/* Spacer div that adjusts with sidebar */}
