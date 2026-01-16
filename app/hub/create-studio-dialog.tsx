@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,21 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogo(file);
+      setLogoPreview(URL.createObjectURL(file));
+    } else {
+      setLogo(null);
+      setLogoPreview(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +48,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
     const formData = new FormData();
     formData.append("name", name);
+    if (logo) {
+      formData.append("logo", logo);
+    }
 
     const result = await createStudio(formData);
 
@@ -43,6 +60,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
     } else if (result.slug) {
       setOpen(false);
       setName("");
+      setLogo(null);
+      setLogoPreview(null);
       router.push(`/studio/${result.slug}/projects`);
     }
   };
@@ -66,19 +85,54 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               team members and manage multiple projects.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6">
-            <label htmlFor="name" className="text-sm font-medium mb-2 block">
-              Studio name
-            </label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="My Awesome Channel"
-              className="glass border-white/10"
-              autoFocus
-              required
-            />
+          <div className="py-6 space-y-6">
+            {/* Studio Icon Upload */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Studio icon (optional)</label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-white/10">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Studio icon preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl text-muted-foreground">?</span>
+                  )}
+                </div>
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={loading}
+                  >
+                    Upload Icon
+                  </Button>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoChange}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Recommended: 256x256px, PNG or JPG</p>
+                </div>
+              </div>
+            </div>
+            {/* Studio Name */}
+            <div>
+              <label htmlFor="name" className="text-sm font-medium mb-2 block">
+                Studio name
+              </label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="My Awesome Channel"
+                className="glass border-white/10"
+                autoFocus
+                required
+              />
+            </div>
             {error && (
               <p className="text-sm text-red-500 mt-2">{error}</p>
             )}

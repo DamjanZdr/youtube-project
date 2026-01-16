@@ -500,22 +500,26 @@ export default function ChannelPage() {
       </div>
 
       {/* Preview Container */}
-      <div className="glass-card overflow-hidden p-6 max-h-[calc(100vh-240px)]">
-        <div className="flex gap-6 h-full">
-          <div className="flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+      <div className="glass-card overflow-visible p-2 md:p-6">
+        <div className="flex flex-col md:flex-row gap-6 h-full w-full">
+          <div className="flex-1 min-w-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col aspect-[16/9] max-w-full">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Desktop Preview</span>
             </div>
             <div className="flex-1 overflow-hidden">
-              <DesktopPreview channel={channel} openDialog={openDialog} />
+              <div className="w-full h-full aspect-[16/9]">
+                <DesktopPreview channel={channel} openDialog={openDialog} />
+              </div>
             </div>
           </div>
-          <div className="shrink-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+          <div className="flex-1 min-w-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col aspect-[9/16] max-w-full">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mobile Preview</span>
             </div>
             <div className="flex-1 overflow-hidden">
-              <MobilePreview channel={channel} openDialog={openDialog} />
+              <div className="w-full h-full aspect-[9/16]">
+                <MobilePreview channel={channel} openDialog={openDialog} />
+              </div>
             </div>
           </div>
         </div>
@@ -855,9 +859,9 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
         {/* Main Content */}
         <div className="flex-1 overflow-hidden">
           {/* Banner */}
-          <div className="w-full h-[140px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
+          <div className="w-full aspect-[16/4] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
             {channel.banner ? (
-              <img src={channel.banner} alt="Banner" className="w-full h-full object-cover" />
+              <img src={channel.banner} alt="Banner" className="w-full h-full object-cover object-center" />
             ) : (
               <span className="text-muted-foreground/50 text-lg">Channel Banner</span>
             )}
@@ -866,9 +870,9 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
           {/* Channel Info Row */}
           <div className="p-6 flex items-center gap-6">
             {/* Icon */}
-            <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-white/20 to-white/5 border-4 border-[#0f0f0f] -mt-12 flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full bg-gradient-to-br from-white/20 to-white/5 border-4 border-[#0f0f0f] -mt-12 flex items-center justify-center shrink-0 overflow-hidden">
               {channel.icon ? (
-                <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
+                <img src={channel.icon} alt="Icon" className="w-full h-full object-cover object-center" />
               ) : (
                 <span className="text-3xl font-bold text-muted-foreground/50">C</span>
               )}

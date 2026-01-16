@@ -75,22 +75,40 @@ export async function createStudio(formData: FormData) {
     }
   }
   
+  // Prepare logo upload if present
+  let logoUrl: string | null = null;
+  const logoFile = formData.get("logo");
+  if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+    const fileExt = logoFile.name.split('.').pop();
+    const fileName = `logos/${slug}-${Date.now()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('studio-assets')
+      .upload(fileName, logoFile, { upsert: true });
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabase.storage
+        .from('studio-assets')
+        .getPublicUrl(fileName);
+      logoUrl = publicUrl;
+    }
+  }
+
   // Create the studio
   const { data: studio, error } = await supabase
     .from("organizations")
     .insert({
       name: name.trim(),
       slug,
-      owner_id: ownerId
+      owner_id: ownerId,
+      logo_url: logoUrl
     })
     .select()
     .single();
-  
+
   if (error) {
     console.error("Create studio error:", error);
     return { error: error.message };
   }
-  
+
   // Add owner as a member with owner role
   await supabase
     .from("organization_members")
@@ -99,7 +117,7 @@ export async function createStudio(formData: FormData) {
       user_id: ownerId,
       role: "owner"
     });
-  
+
   // Create a default channel for the studio
   await supabase
     .from("channels")

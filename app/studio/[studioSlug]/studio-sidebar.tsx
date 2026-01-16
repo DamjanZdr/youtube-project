@@ -109,7 +109,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                 <TooltipTrigger asChild>
                   <form action="/auth/sign-out" method="post" className="flex-1">
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-4 h-4 scale-x-[-1]" />
                       Logout
                     </Button>
                   </form>
