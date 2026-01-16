@@ -545,7 +545,7 @@ export default function PackagingPage() {
           </div>
 
           {/* Sets Grid - YouTube Preview Style */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {sets.map((set, index) => (
               <div
                 key={set.id}
@@ -607,48 +607,40 @@ export default function PackagingPage() {
                     )}
                   </div>
 
-                  {/* Title Area - YouTube Style */}
-                  <div className="flex gap-2">
-                    {/* Channel Avatar Placeholder */}
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 shrink-0" />
-
-                    {/* Title & Channel Info */}
-                    <div className="flex-1 min-w-0">
-                      {editingTitleId === set.id ? (
-                        <textarea
-                          ref={titleInputRef}
-                          value={set.title}
-                          onChange={(e) => updateSetTitle(set.id, e.target.value)}
-                          onBlur={() => saveSetTitle(set.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              saveSetTitle(set.id);
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          placeholder="Enter title..."
-                          rows={2}
-                          className="w-full text-xs font-medium bg-white/5 border border-white/20 rounded px-1.5 py-1 focus:outline-none focus:border-primary resize-none"
-                        />
-                      ) : (
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingTitleId(set.id);
-                          }}
-                          className="group/title cursor-text"
-                        >
-                          <h3 className="text-xs font-medium line-clamp-2 text-white group-hover/title:text-primary transition-colors min-h-[28px]">
-                            {set.title || (
-                              <span className="text-muted-foreground italic text-[10px]">Click to add title...</span>
-                            )}
-                          </h3>
-                        </div>
-                      )}
-                      <p className="text-[10px] text-gray-400">Channel Name</p>
-                      <p className="text-[10px] text-gray-500">0 views • Just now</p>
-                    </div>
+                  {/* Title Area - Simplified */}
+                  <div className="mt-2">
+                    {editingTitleId === set.id ? (
+                      <textarea
+                        ref={titleInputRef}
+                        value={set.title}
+                        onChange={(e) => updateSetTitle(set.id, e.target.value)}
+                        onBlur={() => saveSetTitle(set.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            saveSetTitle(set.id);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        placeholder="Enter title..."
+                        rows={2}
+                        className="w-full text-xs font-medium bg-white/5 border border-white/20 rounded px-1.5 py-1 focus:outline-none focus:border-primary resize-none"
+                      />
+                    ) : (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTitleId(set.id);
+                        }}
+                        className="group/title cursor-text"
+                      >
+                        <h3 className="text-xs font-medium line-clamp-2 text-white group-hover/title:text-primary transition-colors min-h-[28px]">
+                          {set.title || (
+                            <span className="text-muted-foreground italic text-[10px]">Click to add title...</span>
+                          )}
+                        </h3>
+                      </div>
+                    )}
                   </div>
 
                   {/* Character count */}
