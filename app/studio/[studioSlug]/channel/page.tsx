@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -68,6 +69,7 @@ interface DBChannelLink {
 export default function ChannelPage() {
   const params = useParams();
   const studioSlug = params.studioSlug as string;
+  const queryClient = useQueryClient();
   
   const [viewMode, setViewMode] = useState<ViewMode>("landscape");
   const [editDialog, setEditDialog] = useState<EditDialog>(null);
@@ -196,6 +198,9 @@ export default function ChannelPage() {
       console.error("Error saving channel field:", error);
       throw error;
     }
+    
+    // Invalidate all channel queries to trigger refetch
+    queryClient.invalidateQueries({ queryKey: ["channel"] });
   };
 
   // Temporary edit states

@@ -76,16 +76,23 @@ export default function PreviewPage({ params }: PreviewPageProps) {
   const { data: sets = [] } = useQuery({
     queryKey: ["packaging-sets", projectId],
     queryFn: () => fetchPackagingSets(projectId),
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   const { data: channel } = useQuery({
     queryKey: ["channel", projectId],
     queryFn: () => fetchChannel(projectId),
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when user comes back to tab
   });
 
   const { data: videoType = "long" } = useQuery({
     queryKey: ["video-type", projectId],
     queryFn: () => fetchVideoType(projectId),
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   const currentSet = sets[state.currentSetIndex];
