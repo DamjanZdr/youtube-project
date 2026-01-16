@@ -11,6 +11,11 @@ UPDATE subscriptions
 SET plan = 'studio'
 WHERE plan = 'team';
 
+-- Also update pending_plan if it exists
+UPDATE subscriptions 
+SET pending_plan = 'studio'
+WHERE pending_plan = 'team';
+
 -- Step 2: Rename the old enum type
 ALTER TYPE subscription_plan RENAME TO subscription_plan_old;
 
