@@ -44,6 +44,13 @@ const STATUS_CONFIG = {
 type ProjectStatus = keyof typeof STATUS_CONFIG;
 type ViewMode = "grid" | "list";
 
+interface BoardStatus {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+}
+
 interface Project {
   id: string;
   title: string;
@@ -56,6 +63,7 @@ interface Project {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  board_status_id: string | null;
   // Active set data
   active_set_title?: string | null;
   active_set_thumbnail?: string | null;
@@ -67,9 +75,11 @@ export default function ProjectsPage() {
   const studioSlug = params.studioSlug as string;
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [boardStatuses, setBoardStatuses] = useState<BoardStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatusId, setSelectedStatusId] = useState<string | "all">("all");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<"all" | "long" | "short">("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -95,6 +105,15 @@ export default function ProjectsPage() {
       setLoading(false);
       return;
     }
+
+    // Fetch board statuses
+    const { data: statusData } = await supabase
+      .from("board_statuses")
+      .select("id, name, color, position")
+      .eq("organization_id", org.id)
+      .order("position", { ascending: true });
+
+    setBoardStatuses(statusData || []);
 
     // Fetch projects for this organization with active packaging set
     const { data, error } = await supabase
@@ -201,7 +220,7 @@ export default function ProjectsPage() {
     const matchesSearch =
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter;
+    const matchesStatus = selectedStatusId === "all" || project.board_status_id === selectedStatusId;
     const matchesType = typeFilter === "all" || project.video_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -283,35 +302,37 @@ export default function ProjectsPage() {
                 className="gap-2"
               >
                 <Filter className="w-4 h-4" />
-                {statusFilter === "all" ? "All Status" : STATUS_CONFIG[statusFilter].label}
+                {selectedStatusId === "all" 
+                  ? "All Status" 
+                  : boardStatuses.find(s => s.id === selectedStatusId)?.name || "All Status"}
                 <ChevronDown className="w-3 h-3" />
               </Button>
               {showFilterMenu && (
                 <div className="absolute top-full left-0 mt-1 w-48 glass-card p-2 z-50">
                   <button
                     onClick={() => {
-                      setStatusFilter("all");
+                      setSelectedStatusId("all");
                       setShowFilterMenu(false);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                      statusFilter === "all" ? "bg-white/10" : "hover:bg-white/5"
+                      selectedStatusId === "all" ? "bg-white/10" : "hover:bg-white/5"
                     }`}
                   >
                     All Status
                   </button>
-                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                  {boardStatuses.map((status) => (
                     <button
-                      key={key}
+                      key={status.id}
                       onClick={() => {
-                        setStatusFilter(key as ProjectStatus);
+                        setSelectedStatusId(status.id);
                         setShowFilterMenu(false);
                       }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${
-                        statusFilter === key ? "bg-white/10" : "hover:bg-white/5"
+                        selectedStatusId === status.id ? "bg-white/10" : "hover:bg-white/5"
                       }`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${config.color}`} />
-                      {config.label}
+                      <span className={`w-2 h-2 rounded-full ${status.color}`} />
+                      {status.name}
                     </button>
                   ))}
                 </div>
