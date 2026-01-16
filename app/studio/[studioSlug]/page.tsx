@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
-import { Plus, Video, Clock, TrendingUp, Calendar } from "lucide-react";
+import { Plus, Video, Clock, TrendingUp } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -14,6 +14,12 @@ interface Project {
   title: string;
   updated_at: string;
   video_type: "long" | "short";
+  board_status_id: string | null;
+}
+
+interface BoardStatus {
+  id: string;
+  position: number;
 }
 
 export default function StudioHomePage() {
@@ -24,6 +30,7 @@ export default function StudioHomePage() {
 
   const [studio, setStudio] = useState<{ id: string; name: string } | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [boardStatuses, setBoardStatuses] = useState<BoardStatus[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
@@ -37,10 +44,19 @@ export default function StudioHomePage() {
 
       setStudio(studioData);
 
+      // Fetch board statuses
+      const { data: statusData } = await supabase
+        .from("board_statuses")
+        .select("id, position")
+        .eq("organization_id", studioData?.id)
+        .order("position", { ascending: true });
+
+      setBoardStatuses(statusData || []);
+
       // Fetch project data
       const { data: projectData } = await supabase
         .from("projects")
-        .select("id, status, title, updated_at, video_type")
+        .select("id, status, title, updated_at, video_type, board_status_id")
         .eq("organization_id", studioData?.id)
         .order("updated_at", { ascending: false })
         .limit(5);
@@ -108,16 +124,14 @@ export default function StudioHomePage() {
     router.push(`/studio/${studioSlug}/project/${newProject.id}`);
   }
 
-  const statusCounts = {
-    idea: projects?.filter(p => p.status === "idea").length || 0,
-    script: projects?.filter(p => p.status === "script").length || 0,
-    recording: projects?.filter(p => p.status === "recording").length || 0,
-    editing: projects?.filter(p => p.status === "editing").length || 0,
-    scheduled: projects?.filter(p => p.status === "scheduled").length || 0,
-    published: projects?.filter(p => p.status === "published").length || 0,
-  };
+  // Find the last board status (highest position)
+  const lastStatusId = boardStatuses.length > 0 
+    ? boardStatuses[boardStatuses.length - 1].id 
+    : null;
 
   const totalProjects = projects?.length || 0;
+  const completedProjects = projects?.filter(p => p.board_status_id === lastStatusId).length || 0;
+  const inProgressProjects = totalProjects - completedProjects;
 
   return (
     <div className="p-8">
@@ -134,7 +148,7 @@ export default function StudioHomePage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="glass-card p-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -142,7 +156,7 @@ export default function StudioHomePage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{totalProjects}</p>
-              <p className="text-sm text-muted-foreground">Total Projects</p>
+              <p className="text-sm text-muted-foreground">Total</p>
             </div>
           </div>
         </div>
@@ -153,20 +167,8 @@ export default function StudioHomePage() {
               <Clock className="w-5 h-5 text-yellow-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{statusCounts.editing + statusCounts.recording}</p>
+              <p className="text-2xl font-bold">{inProgressProjects}</p>
               <p className="text-sm text-muted-foreground">In Progress</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{statusCounts.scheduled}</p>
-              <p className="text-sm text-muted-foreground">Scheduled</p>
             </div>
           </div>
         </div>
@@ -177,31 +179,10 @@ export default function StudioHomePage() {
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{statusCounts.published}</p>
-              <p className="text-sm text-muted-foreground">Published</p>
+              <p className="text-2xl font-bold">{completedProjects}</p>
+              <p className="text-sm text-muted-foreground">Completed</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Pipeline Overview */}
-      <div className="glass-card p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
-        <div className="flex gap-2">
-          {[
-            { label: "Ideas", count: statusCounts.idea, color: "bg-gray-500" },
-            { label: "Script", count: statusCounts.script, color: "bg-blue-500" },
-            { label: "Recording", count: statusCounts.recording, color: "bg-yellow-500" },
-            { label: "Editing", count: statusCounts.editing, color: "bg-orange-500" },
-            { label: "Scheduled", count: statusCounts.scheduled, color: "bg-purple-500" },
-            { label: "Published", count: statusCounts.published, color: "bg-green-500" },
-          ].map((stage) => (
-            <div key={stage.label} className="flex-1 text-center">
-              <div className={`h-2 rounded-full ${stage.color} mb-2`} />
-              <p className="text-xl font-bold">{stage.count}</p>
-              <p className="text-xs text-muted-foreground">{stage.label}</p>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -221,7 +202,7 @@ export default function StudioHomePage() {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Long-form</h3>
               {projects.filter(p => p.video_type === "long").length > 0 ? (
                 projects.filter(p => p.video_type === "long").map((project) => (
-                  <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
                         <Video className="w-4 h-4 text-muted-foreground" />
@@ -241,7 +222,7 @@ export default function StudioHomePage() {
                     }`}>
                       {project.status}
                     </span>
-                  </div>
+                  </a>
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No long-form videos</p>
@@ -253,7 +234,7 @@ export default function StudioHomePage() {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Shorts</h3>
               {projects.filter(p => p.video_type === "short").length > 0 ? (
                 projects.filter(p => p.video_type === "short").map((project) => (
-                  <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
                         <Video className="w-4 h-4 text-muted-foreground" />
@@ -273,7 +254,7 @@ export default function StudioHomePage() {
                     }`}>
                       {project.status}
                     </span>
-                  </div>
+                  </a>
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No shorts</p>
