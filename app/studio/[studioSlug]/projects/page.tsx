@@ -212,8 +212,10 @@ export default function ProjectsPage() {
 
   // Filter projects
   const filteredProjects = projects.filter((project) => {
+    // Use display title for search (active set title if available, otherwise project title)
+    const displayTitle = project.active_set_title || project.title;
     const matchesSearch =
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      displayTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = selectedStatusIds.length === 0 || selectedStatusIds.includes(project.board_status_id || "");
     const matchesType = typeFilter === "all" || project.video_type === typeFilter;
