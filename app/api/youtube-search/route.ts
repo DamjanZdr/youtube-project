@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
       id: item.id.videoId,
       title: item.snippet.title,
       channelTitle: item.snippet.channelTitle,
+      channelThumbnail: item.snippet.thumbnails.default?.url,
       thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
       publishedAt: item.snippet.publishedAt,
     }));

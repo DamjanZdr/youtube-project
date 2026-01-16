@@ -28,6 +28,7 @@ export function VideoCard({
   const thumbnail = isYours ? set?.thumbnail_url : compareVideo?.thumbnail;
   const title = isYours ? (set?.title || "Your Video") : (compareVideo?.title || "Other Video");
   const channelName = isYours ? channel?.name : (compareVideo?.channelTitle || "Channel");
+  const channelAvatar = isYours ? channel?.avatar_url : (compareVideo?.channelThumbnail || null);
   const viewInfo = isYours ? "1.2M views" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
 
   const sizeClasses = {
@@ -46,7 +47,12 @@ export function VideoCard({
         </div>
         <div className="flex-1 min-w-0">
           <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
-          <p className={`${s.meta} text-zinc-400 mt-1`}>{channelName}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <div className={`${s.avatar} rounded-full bg-zinc-700 shrink-0 overflow-hidden`}>
+              {channelAvatar && <img src={channelAvatar} className="w-full h-full object-cover" alt="" />}
+            </div>
+            <p className={`${s.meta} text-zinc-400`}>{channelName}</p>
+          </div>
           <p className={`${s.meta} text-zinc-400`}>{viewInfo}</p>
         </div>
       </div>
@@ -60,7 +66,9 @@ export function VideoCard({
         <span className={`absolute bottom-2 right-2 ${s.duration} bg-black/80 px-1.5 py-0.5 rounded font-medium`}>12:34</span>
       </div>
       <div className={`flex ${s.gap}`}>
-        <div className={`${s.avatar} rounded-full bg-zinc-700 shrink-0 mt-0.5`} />
+        <div className={`${s.avatar} rounded-full bg-zinc-700 shrink-0 mt-0.5 overflow-hidden`}>
+          {channelAvatar && <img src={channelAvatar} className="w-full h-full object-cover" alt="" />}
+        </div>
         <div className="flex-1 min-w-0">
           <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
           <p className={`${s.meta} text-zinc-400 mt-1`}>{channelName}</p>
