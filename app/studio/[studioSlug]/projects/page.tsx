@@ -229,11 +229,6 @@ export default function ProjectsPage() {
     );
   };
 
-  // Clear all status filters
-  const clearStatusFilters = () => {
-    setSelectedStatusIds([]);
-  };
-
   const getStatusConfig = (status: string) => STATUS_CONFIG[status as ProjectStatus] || STATUS_CONFIG.idea;
 
   return (
@@ -250,42 +245,28 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Stats and Content Pipeline */}
+      {/* Content Pipeline */}
       {projects.length > 0 && (
-        <div className="space-y-4 mb-6">
-          {/* Total Projects - Clickable to clear filters */}
-          <div 
-            className={`glass-card p-4 cursor-pointer transition-all ${
-              selectedStatusIds.length === 0 ? "ring-2 ring-primary" : "hover:bg-white/5"
-            }`}
-            onClick={clearStatusFilters}
-          >
-            <p className="text-sm text-muted-foreground">Total Projects</p>
-            <p className="text-2xl font-bold mt-1">{projects.length}</p>
-          </div>
-
-          {/* Content Pipeline */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
-            <div className="flex gap-2">
-              {boardStatuses.map((status) => {
-                const count = projects.filter(p => p.board_status_id === status.id).length;
-                const isSelected = selectedStatusIds.includes(status.id);
-                return (
-                  <div 
-                    key={status.id} 
-                    className={`flex-1 text-center cursor-pointer transition-all rounded-lg p-2 ${
-                      isSelected ? "bg-white/10 ring-2 ring-white/20" : "hover:bg-white/5"
-                    }`}
-                    onClick={() => toggleStatusFilter(status.id)}
-                  >
-                    <div className={`h-2 rounded-full ${status.color} mb-2`} />
-                    <p className="text-xl font-bold">{count}</p>
-                    <p className="text-xs text-muted-foreground">{status.name}</p>
-                  </div>
-                );
-              })}
-            </div>
+        <div className="glass-card p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
+          <div className="flex gap-2">
+            {boardStatuses.map((status) => {
+              const count = projects.filter(p => p.board_status_id === status.id).length;
+              const isSelected = selectedStatusIds.includes(status.id);
+              return (
+                <div 
+                  key={status.id} 
+                  className={`flex-1 text-center cursor-pointer transition-all rounded-lg p-2 ${
+                    isSelected ? "bg-white/10 ring-2 ring-white/20" : "hover:bg-white/5"
+                  }`}
+                  onClick={() => toggleStatusFilter(status.id)}
+                >
+                  <div className={`h-2 rounded-full ${status.color} mb-2`} />
+                  <p className="text-xl font-bold">{count}</p>
+                  <p className="text-xs text-muted-foreground">{status.name}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -396,14 +377,14 @@ export default function ProjectsPage() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} studioSlug={studioSlug} />
+            <ProjectCard key={project.id} project={project} studioSlug={studioSlug} boardStatuses={boardStatuses} />
           ))}
         </div>
       ) : (
         /* List View */
         <div className="space-y-2">
           {filteredProjects.map((project) => (
-            <ProjectListItem key={project.id} project={project} studioSlug={studioSlug} />
+            <ProjectListItem key={project.id} project={project} studioSlug={studioSlug} boardStatuses={boardStatuses} />
           ))}
         </div>
       )}
@@ -419,9 +400,11 @@ export default function ProjectsPage() {
 }
 
 // Project Card Component
-function ProjectCard({ project, studioSlug }: { project: Project; studioSlug: string }) {
-  const config = STATUS_CONFIG[project.status] || STATUS_CONFIG.idea;
-  const StatusIcon = config.icon;
+function ProjectCard({ project, studioSlug, boardStatuses }: { project: Project; studioSlug: string; boardStatuses: BoardStatus[] }) {
+  // Find the actual board status for this project
+  const boardStatus = boardStatuses.find(s => s.id === project.board_status_id);
+  const statusName = boardStatus?.name || "Unknown";
+  const statusColor = boardStatus?.color || "bg-gray-500";
   
   // Use active set data if available, otherwise fall back to project data
   const displayTitle = project.active_set_title || project.title;
@@ -461,10 +444,10 @@ function ProjectCard({ project, studioSlug }: { project: Project; studioSlug: st
 
         <div className="flex items-center justify-between">
           <span
-            className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${config.color} bg-opacity-20`}
+            className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${statusColor} bg-opacity-20`}
           >
-            <StatusIcon className="w-3 h-3" />
-            {config.label}
+            <span className={`w-2 h-2 rounded-full ${statusColor}`} />
+            {statusName}
           </span>
 
           {project.due_date && (
@@ -480,9 +463,11 @@ function ProjectCard({ project, studioSlug }: { project: Project; studioSlug: st
 }
 
 // Project List Item Component
-function ProjectListItem({ project, studioSlug }: { project: Project; studioSlug: string }) {
-  const config = STATUS_CONFIG[project.status] || STATUS_CONFIG.idea;
-  const StatusIcon = config.icon;
+function ProjectListItem({ project, studioSlug, boardStatuses }: { project: Project; studioSlug: string; boardStatuses: BoardStatus[] }) {
+  // Find the actual board status for this project
+  const boardStatus = boardStatuses.find(s => s.id === project.board_status_id);
+  const statusName = boardStatus?.name || "Unknown";
+  const statusColor = boardStatus?.color || "bg-gray-500";
   
   // Use active set data if available, otherwise fall back to project data
   const displayTitle = project.active_set_title || project.title;
@@ -525,10 +510,10 @@ function ProjectListItem({ project, studioSlug }: { project: Project; studioSlug
 
       {/* Status */}
       <span
-        className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${config.color} bg-opacity-20 shrink-0`}
+        className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${statusColor} bg-opacity-20 shrink-0`}
       >
-        <StatusIcon className="w-3 h-3" />
-        {config.label}
+        <span className={`w-2 h-2 rounded-full ${statusColor}`} />
+        {statusName}
       </span>
 
       {/* Date */}
