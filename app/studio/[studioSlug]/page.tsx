@@ -20,6 +20,8 @@ interface Project {
 interface BoardStatus {
   id: string;
   position: number;
+  name: string;
+  color: string;
 }
 
 export default function StudioHomePage() {
@@ -47,7 +49,7 @@ export default function StudioHomePage() {
       // Fetch board statuses
       const { data: statusData } = await supabase
         .from("board_statuses")
-        .select("id, position")
+        .select("id, position, name, color")
         .eq("organization_id", studioData?.id)
         .order("position", { ascending: true });
 
@@ -183,6 +185,23 @@ export default function StudioHomePage() {
               <p className="text-sm text-muted-foreground">Completed</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Content Pipeline */}
+      <div className="glass-card p-6 mb-8">
+        <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
+        <div className="flex gap-2">
+          {boardStatuses.map((status) => {
+            const count = projects?.filter(p => p.board_status_id === status.id).length || 0;
+            return (
+              <div key={status.id} className="flex-1 text-center">
+                <div className={`h-2 rounded-full ${status.color} mb-2`} />
+                <p className="text-xl font-bold">{count}</p>
+                <p className="text-xs text-muted-foreground">{status.name}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
