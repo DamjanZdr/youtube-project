@@ -1,4 +1,4 @@
-import { formatRelativeTime } from "./utils";
+import { formatRelativeTime, formatViewCount } from "./utils";
 import type { PackagingSet, Channel, YouTubeVideo } from "./types";
 
 interface VideoCardProps {
@@ -29,7 +29,7 @@ export function VideoCard({
   const title = isYours ? (set?.title || "Your Video") : (compareVideo?.title || "Other Video");
   const channelName = isYours ? channel?.name : (compareVideo?.channelTitle || "Channel");
   const channelAvatar = isYours ? channel?.avatar_url : (compareVideo?.channelThumbnail || null);
-  const viewInfo = isYours ? "1 day ago" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
+  const viewInfo = isYours ? "1 day ago" : (compareVideo ? `${formatViewCount()} • ${formatRelativeTime(compareVideo.publishedAt)}` : "500K views • 2 days ago");
 
   const sizeClasses = {
     sm: { avatar: "w-8 h-8", title: "text-sm", meta: "text-xs", duration: "text-[10px]", thumb: "w-40", gap: "gap-2" },
