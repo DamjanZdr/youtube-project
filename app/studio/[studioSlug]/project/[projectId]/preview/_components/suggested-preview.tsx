@@ -50,10 +50,24 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
         {/* Suggested Videos */}
         <div className="flex-1 overflow-y-auto p-2 space-y-2" style={{ scrollbarWidth: "none" }}>
-          {[0,1,2,3,4,5].map(i => (
+          {/* Shorts Section - 2 side by side */}
+          <div className="flex gap-2 mb-2">
+            {[0,1].map(i => (
+              <ShortCard
+                key={`short-${i}`}
+                isYours={isShort && i === 1}
+                set={set}
+                compareVideo={getVideo(i)}
+                size="sm"
+              />
+            ))}
+          </div>
+
+          {/* Long Form Videos */}
+          {[0,1,2,3].map(i => (
             <VideoCard
-              key={i}
-              isYours={i === 1}
+              key={`long-${i}`}
+              isYours={!isShort && i === 1}
               set={set}
               channel={channel}
               compareVideo={getVideo(i)}

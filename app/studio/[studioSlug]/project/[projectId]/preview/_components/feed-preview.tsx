@@ -31,10 +31,24 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
 
         {/* Feed Content */}
         <div className="flex-1 overflow-y-auto p-2 space-y-3" style={{ scrollbarWidth: "none" }}>
-          {[0,1,2,3,4].map(i => (
+          {/* Shorts Section - 2 side by side */}
+          <div className="flex gap-2 mb-3">
+            {[0,1].map(i => (
+              <ShortCard
+                key={`short-${i}`}
+                isYours={isShort && i === 1}
+                set={set}
+                compareVideo={getVideo(i)}
+                size="sm"
+              />
+            ))}
+          </div>
+
+          {/* Long Form Videos */}
+          {[0,1,2,3].map(i => (
             <VideoCard 
-              key={i}
-              isYours={i === 1}
+              key={`long-${i}`}
+              isYours={!isShort && i === 1}
               set={set}
               channel={channel}
               compareVideo={getVideo(i)}
@@ -117,18 +131,16 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             {/* Shorts Section */}
             <div className="mb-4">
               <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
-              <div className="grid grid-cols-3 gap-x-4">
-                <div className="flex gap-3">
-                  {[0,1,2,3,4].map(i => (
-                    <ShortCard
-                      key={`short-${i}`}
-                      isYours={isShort && i === 2}
-                      set={set}
-                      compareVideo={getVideo(i)}
-                      size="md"
-                    />
-                  ))}
-                </div>
+              <div className="flex gap-3">
+                {[0,1,2,3,4].map(i => (
+                  <ShortCard
+                    key={`short-${i}`}
+                    isYours={isShort && i === 2}
+                    set={set}
+                    compareVideo={getVideo(i)}
+                    size="md"
+                  />
+                ))}
               </div>
             </div>
           </div>
