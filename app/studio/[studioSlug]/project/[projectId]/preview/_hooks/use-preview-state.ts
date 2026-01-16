@@ -14,6 +14,8 @@ export interface UsePreviewStateReturn {
   setCompareMode: (value: boolean) => void;
   compareVideos: YouTubeVideo[];
   setCompareVideos: (videos: YouTubeVideo[]) => void;
+  compareShorts: YouTubeVideo[];
+  setCompareShorts: (videos: YouTubeVideo[]) => void;
 }
 
 const STORAGE_KEY = "preview-state";
@@ -34,6 +36,7 @@ export function usePreviewState(): UsePreviewStateReturn {
   const [previewMode, setPreviewModeState] = useState<PreviewMode>("feed");
   const [compareMode, setCompareModeState] = useState(false);
   const [compareVideos, setCompareVideosState] = useState<YouTubeVideo[]>([]);
+  const [compareShorts, setShortsState] = useState<YouTubeVideo[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load from localStorage on mount
@@ -76,6 +79,10 @@ export function usePreviewState(): UsePreviewStateReturn {
     setCompareVideosState(videos);
   }, []);
 
+  const setCompareShorts = useCallback((videos: YouTubeVideo[]) => {
+    setShortsState(videos);
+  }, []);
+
   return {
     currentSetIndex,
     setCurrentSetIndex,
@@ -87,5 +94,7 @@ export function usePreviewState(): UsePreviewStateReturn {
     setCompareMode,
     compareVideos,
     setCompareVideos,
+    compareShorts,
+    setCompareShorts,
   };
 }

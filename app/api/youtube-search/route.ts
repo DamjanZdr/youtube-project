@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "10";
+  const videoDuration = searchParams.get("videoDuration"); // 'short' for <60s, 'long' for >4min, 'medium' for 4-20min
 
   if (!query) {
     return NextResponse.json({ error: "Query parameter 'q' is required" }, { status: 400 });
@@ -44,14 +45,20 @@ export async function GET(request: NextRequest) {
   }
 
   // Check cache first
-  const cacheKey = `${query.toLowerCase().trim()}_${maxResults}`;
+  const cacheKey = `${query.toLowerCase().trim()}_${maxResults}_${videoDuration || 'any'}`;
   const cachedResult = getCachedResult(cacheKey);
   if (cachedResult) {
     return NextResponse.json(cachedResult);
   }
 
   try {
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`;
+    // Add videoDuration parameter if specified
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=${maxResults}`;
+    if (videoDuration) {
+      url += `&videoDuration=${videoDuration}`;
+    }
+    url += `&key=${YOUTUBE_API_KEY}`;
+    
     console.log("Fetching YouTube API:", url.replace(YOUTUBE_API_KEY!, "***API_KEY***"));
     
     const response = await fetch(url);

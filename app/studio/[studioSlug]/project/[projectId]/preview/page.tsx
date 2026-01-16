@@ -53,10 +53,15 @@ async function fetchVideoType(projectId: string): Promise<string> {
   return project?.video_type || "long";
 }
 
-async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]> {
+async function searchYouTubeVideos(query: string, videoDuration?: 'short' | 'medium' | 'long'): Promise<YouTubeVideo[]> {
   if (!query) return [];
   
-  const response = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}&maxResults=10`);
+  let url = `/api/youtube-search?q=${encodeURIComponent(query)}&maxResults=10`;
+  if (videoDuration) {
+    url += `&videoDuration=${videoDuration}`;
+  }
+  
+  const response = await fetch(url);
   
   if (!response.ok) return [];
   const data = await response.json();
@@ -90,8 +95,13 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     const fetchCompareVideos = async () => {
       // Only fetch if compare mode is on AND we haven't fetched yet (or it was turned off and on again)
       if (state.compareMode && currentSet?.title && lastFetchedRef.current !== currentSet.title) {
-        const videos = await searchYouTubeVideos(currentSet.title);
-        state.setCompareVideos(videos);
+        // Fetch both long-form and shorts separately
+        const [longVideos, shortVideos] = await Promise.all([
+          searchYouTubeVideos(currentSet.title, 'medium'), // medium = 4-20 minutes (long-form)
+          searchYouTubeVideos(currentSet.title, 'short')   // short = < 60 seconds
+        ]);
+        state.setCompareVideos(longVideos);
+        state.setCompareShorts(shortVideos);
         lastFetchedRef.current = currentSet.title;
       } else if (!state.compareMode) {
         // Reset the ref when compare is turned off, so next turn-on will fetch fresh
@@ -100,14 +110,15 @@ export default function PreviewPage({ params }: PreviewPageProps) {
       }
     };
     fetchCompareVideos();
-  }, [state.compareMode, currentSet?.title, state.setCompareVideos]);
+  }, [state.compareMode, currentSet?.title, state.setCompareVideos, state.setCompareShorts]);
 
   // Clear compare videos when compare mode is turned off
   useEffect(() => {
     if (!state.compareMode) {
       state.setCompareVideos([]);
+      state.setCompareShorts([]);
     }
-  }, [state.compareMode, state.setCompareVideos]);
+  }, [state.compareMode, state.setCompareVideos, state.setCompareShorts]);
 
   if (!sets.length) {
     return (
@@ -138,6 +149,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
           previewMode={state.previewMode}
           compareMode={state.compareMode}
           compareVideos={state.compareVideos}
+          compareShorts={state.compareShorts}
           videoType={videoType}
         />
       </div>

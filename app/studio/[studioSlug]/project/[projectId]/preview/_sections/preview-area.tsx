@@ -10,6 +10,7 @@ interface PreviewAreaProps {
   previewMode: PreviewMode;
   compareMode: boolean;
   compareVideos: YouTubeVideo[];
+  compareShorts: YouTubeVideo[];
   videoType: string;
 }
 
@@ -20,6 +21,7 @@ export function PreviewArea({
   previewMode,
   compareMode,
   compareVideos,
+  compareShorts,
   videoType,
 }: PreviewAreaProps) {
   const previewProps = {
@@ -28,6 +30,7 @@ export function PreviewArea({
     orientation,
     compareMode,
     compareVideos,
+    compareShorts,
     videoType,
   };
 

@@ -10,6 +10,7 @@ interface SuggestedPreviewProps {
   orientation: string;
   compareMode: boolean;
   compareVideos: YouTubeVideo[];
+  compareShorts: YouTubeVideo[];
   videoType: string; // 'short' or 'long'
 }
 
@@ -31,8 +32,9 @@ function VideoPlayer({ size = "lg" }: { size?: "sm" | "lg" }) {
   );
 }
 
-export function SuggestedPreview({ set, channel, orientation, compareMode, compareVideos, videoType }: SuggestedPreviewProps) {
-  const getVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+export function SuggestedPreview({ set, channel, orientation, compareMode, compareVideos, compareShorts, videoType }: SuggestedPreviewProps) {
+  const getLongVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+  const getShortVideo = (i: number) => compareMode && compareShorts.length ? compareShorts[i > 1 ? i - 1 : i] : null;
   const isShort = videoType === 'short';
 
   if (orientation === "portrait") {
@@ -57,7 +59,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
                 key={`short-${i}`}
                 isYours={isShort && i === 1}
                 set={set}
-                compareVideo={getVideo(i)}
+                compareVideo={getShortVideo(i)}
                 size="sm"
               />
             ))}
@@ -70,7 +72,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
               isYours={!isShort && i === 1}
               set={set}
               channel={channel}
-              compareVideo={getVideo(i)}
+              compareVideo={getLongVideo(i)}
               size="sm"
               layout="horizontal"
             />
@@ -130,7 +132,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
                     key={`short-${i}`}
                     isYours={isShort && i === 1}
                     set={set}
-                    compareVideo={getVideo(i)}
+                    compareVideo={getShortVideo(i)}
                     size="sm"
                   />
                 ))}
@@ -145,7 +147,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
                   isYours={!isShort && i === 1}
                   set={set}
                   channel={channel}
-                  compareVideo={getVideo(i)}
+                  compareVideo={getLongVideo(i)}
                   size="sm"
                   layout="horizontal"
                 />

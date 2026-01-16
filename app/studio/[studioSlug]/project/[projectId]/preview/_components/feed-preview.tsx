@@ -10,11 +10,13 @@ interface FeedPreviewProps {
   orientation: string;
   compareMode: boolean;
   compareVideos: YouTubeVideo[];
+  compareShorts: YouTubeVideo[];
   videoType: string; // 'short' or 'long'
 }
 
-export function FeedPreview({ set, channel, orientation, compareMode, compareVideos, videoType }: FeedPreviewProps) {
-  const getVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+export function FeedPreview({ set, channel, orientation, compareMode, compareVideos, compareShorts, videoType }: FeedPreviewProps) {
+  const getLongVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+  const getShortVideo = (i: number) => compareMode && compareShorts.length ? compareShorts[i > 1 ? i - 1 : i] : null;
   const isShort = videoType === 'short';
 
   if (orientation === "portrait") {
@@ -38,7 +40,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
                 key={`short-${i}`}
                 isYours={isShort && i === 1}
                 set={set}
-                compareVideo={getVideo(i)}
+                compareVideo={getShortVideo(i)}
                 size="sm"
               />
             ))}
@@ -51,7 +53,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
               isYours={!isShort && i === 1}
               set={set}
               channel={channel}
-              compareVideo={getVideo(i)}
+              compareVideo={getLongVideo(i)}
               size="sm"
             />
           ))}
@@ -122,7 +124,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
                   isYours={!isShort && i === 1}
                   set={set}
                   channel={channel}
-                  compareVideo={getVideo(i)}
+                  compareVideo={getLongVideo(i)}
                   size="md"
                 />
               ))}
@@ -137,7 +139,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
                     key={`short-${i}`}
                     isYours={isShort && i === 2}
                     set={set}
-                    compareVideo={getVideo(i)}
+                    compareVideo={getShortVideo(i)}
                     size="md"
                   />
                 ))}
