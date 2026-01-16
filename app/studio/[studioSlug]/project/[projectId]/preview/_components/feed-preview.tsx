@@ -133,7 +133,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             {/* Shorts Section */}
             <div className="mb-4">
               <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-5 gap-x-4">
                 {[0,1,2,3,4].map(i => (
                   <ShortCard
                     key={`short-${i}`}
