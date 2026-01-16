@@ -67,7 +67,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
 
         {/* Sidebar Footer */}
         <div className={`border-t border-white/5 ${footerPadding}`}>
-          {/* Back to Hub - At bottom */}
+          {/* Back to Hub */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -90,58 +90,41 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
             </Link>
           )}
 
-          {/* Collapse Toggle */}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setCollapsed(false)}
-                  className="w-full h-10 mb-2"
-                >
-                  <PanelLeft className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand sidebar</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setCollapsed(true)}
-              className="w-full justify-start gap-2 mb-3 text-muted-foreground hover:text-foreground"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-              Collapse
-            </Button>
-          )}
-
           {/* User */}
           <div className={`flex items-center ${userFlexAlign}`}>
             {collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar className="w-8 h-8 border border-white/10 cursor-pointer">
-                    <AvatarImage src={user?.avatar_url} />
-                    <AvatarFallback className="bg-primary/20 text-xs">
-                      {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent side="right">{user?.full_name || user?.email}</TooltipContent>
-              </Tooltip>
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="w-8 h-8 border border-white/10 cursor-pointer" onClick={() => setCollapsed(false)}>
+                      <AvatarImage src={user?.avatar_url} />
+                      <AvatarFallback className="bg-primary/20 text-xs">
+                        {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">Expand sidebar</TooltipContent>
+                </Tooltip>
+              </>
             ) : (
               <>
                 <Avatar className="w-8 h-8 border border-white/10">
                   <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback className="bg-primary/20 text-xs">
-                    {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                    {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.full_name || user?.email || "user@example.com"}</p>
+                  <p className="text-sm font-medium truncate">{user?.user_metadata?.full_name || user?.email || "user@example.com"}</p>
                 </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCollapsed(true)}>
+                      <PanelLeftClose className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Collapse sidebar</TooltipContent>
+                </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <form action="/auth/sign-out" method="post">

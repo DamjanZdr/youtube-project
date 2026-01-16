@@ -33,10 +33,15 @@ export default function StudioHomePage() {
   const [studio, setStudio] = useState<{ id: string; name: string } | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [boardStatuses, setBoardStatuses] = useState<BoardStatus[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     async function loadData() {
+      // Fetch user data
+      const { data: { user: userData } } = await supabase.auth.getUser();
+      setUser(userData);
+
       // Fetch studio data
       const { data: studioData } = await supabase
         .from("organizations")
@@ -140,7 +145,7 @@ export default function StudioHomePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back!</h1>
+          <h1 className="text-2xl font-bold">Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!</h1>
           <p className="text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
