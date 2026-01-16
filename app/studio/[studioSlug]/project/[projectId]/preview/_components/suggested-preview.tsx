@@ -1,6 +1,6 @@
 import { Search, Menu, Bell, Video } from "lucide-react";
 import { YouTubeLogo } from "./youtube-logo";
-import { VideoCard } from "./video-card";
+import { VideoCard, ShortCard } from "./video-card";
 import { PhoneMockup } from "./phone-mockup";
 import type { PackagingSet, Channel, YouTubeVideo } from "./types";
 
@@ -10,6 +10,7 @@ interface SuggestedPreviewProps {
   orientation: string;
   compareMode: boolean;
   compareVideos: YouTubeVideo[];
+  videoType: string; // 'short' or 'long'
 }
 
 function VideoPlayer({ size = "lg" }: { size?: "sm" | "lg" }) {
@@ -30,8 +31,9 @@ function VideoPlayer({ size = "lg" }: { size?: "sm" | "lg" }) {
   );
 }
 
-export function SuggestedPreview({ set, channel, orientation, compareMode, compareVideos }: SuggestedPreviewProps) {
+export function SuggestedPreview({ set, channel, orientation, compareMode, compareVideos, videoType }: SuggestedPreviewProps) {
   const getVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+  const isShort = videoType === 'short';
 
   if (orientation === "portrait") {
     return (
@@ -105,17 +107,36 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
           {/* Suggested Sidebar */}
           <div className="h-full overflow-y-auto space-y-2 w-[400px]" style={{ scrollbarWidth: "none" }}>
-            {[0,1,2,3,4,5,6,7].map(i => (
-              <VideoCard
-                key={i}
-                isYours={i === 1}
-                set={set}
-                channel={channel}
-                compareVideo={getVideo(i)}
-                size="md"
-                layout="horizontal"
-              />
-            ))}
+            {/* Shorts Section (3 shorts) */}
+            <div className="mb-3">
+              <h4 className="text-white text-sm font-semibold mb-2 px-1">Shorts</h4>
+              <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+                {[0,1,2].map(i => (
+                  <ShortCard
+                    key={`short-${i}`}
+                    isYours={isShort && i === 1}
+                    set={set}
+                    compareVideo={getVideo(i)}
+                    size="sm"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Long Form Videos */}
+            <div className="space-y-2">
+              {[0,1,2,3,4].map(i => (
+                <VideoCard
+                  key={`long-${i}`}
+                  isYours={!isShort && i === 1}
+                  set={set}
+                  channel={channel}
+                  compareVideo={getVideo(i)}
+                  size="md"
+                  layout="horizontal"
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

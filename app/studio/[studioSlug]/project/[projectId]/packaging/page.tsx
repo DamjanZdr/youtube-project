@@ -385,7 +385,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
 
                 {/* Thumbnail */}
                 <div className="w-48 shrink-0">
-                  <div className="aspect-video rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-white/20 transition-colors">
+                  <div className={`${videoType === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-white/20 transition-colors`}>
                     {set.thumbnail ? (
                       <img src={set.thumbnail} alt="" className="w-full h-full object-cover rounded-xl" />
                     ) : (

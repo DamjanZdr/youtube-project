@@ -10,6 +10,13 @@ interface VideoCardProps {
   layout?: "vertical" | "horizontal";
 }
 
+interface ShortCardProps {
+  isYours: boolean;
+  set?: PackagingSet;
+  compareVideo?: YouTubeVideo | null;
+  size?: "sm" | "md";
+}
+
 export function VideoCard({ 
   isYours, 
   set, 
@@ -60,6 +67,27 @@ export function VideoCard({
           <p className={`${s.meta} text-zinc-400`}>{viewInfo}</p>
         </div>
       </div>
+    </div>
+  );
+}
+export function ShortCard({ isYours, set, compareVideo, size = "md" }: ShortCardProps) {
+  const thumbnail = isYours ? set?.thumbnail_url : compareVideo?.thumbnail;
+  const title = isYours ? (set?.title || "Your Short") : (compareVideo?.title || "Short Video");
+  const viewInfo = isYours ? "1.2M views" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
+
+  const sizeClasses = {
+    sm: { width: "w-32", title: "text-[10px]", views: "text-[9px]" },
+    md: { width: "w-40", title: "text-xs", views: "text-[10px]" },
+  };
+  const s = sizeClasses[size];
+
+  return (
+    <div className={`${s.width} ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
+      <div className="aspect-[9/16] rounded-xl bg-zinc-800 overflow-hidden relative mb-2">
+        {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
+      </div>
+      <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
+      <p className={`${s.views} text-zinc-400 mt-0.5`}>{viewInfo}</p>
     </div>
   );
 }

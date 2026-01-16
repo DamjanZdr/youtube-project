@@ -1,6 +1,6 @@
 import { Search, Home, PlaySquare, Clock, User, Menu, Bell, Video } from "lucide-react";
 import { YouTubeLogo } from "./youtube-logo";
-import { VideoCard } from "./video-card";
+import { VideoCard, ShortCard } from "./video-card";
 import { PhoneMockup } from "./phone-mockup";
 import type { PackagingSet, Channel, YouTubeVideo } from "./types";
 
@@ -10,10 +10,12 @@ interface FeedPreviewProps {
   orientation: string;
   compareMode: boolean;
   compareVideos: YouTubeVideo[];
+  videoType: string; // 'short' or 'long'
 }
 
-export function FeedPreview({ set, channel, orientation, compareMode, compareVideos }: FeedPreviewProps) {
+export function FeedPreview({ set, channel, orientation, compareMode, compareVideos, videoType }: FeedPreviewProps) {
   const getVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
+  const isShort = videoType === 'short';
 
   if (orientation === "portrait") {
     return (
@@ -98,17 +100,34 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             ))}
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: "none" }}>
-            <div className="grid grid-cols-4 gap-x-4 gap-y-6">
-              {[0,1,2,3,4,5,6,7].map(i => (
+            {/* Long Form Videos Section */}
+            <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-8">
+              {[0,1,2].map(i => (
                 <VideoCard
-                  key={i}
-                  isYours={i === 1}
+                  key={`long-${i}`}
+                  isYours={!isShort && i === 1}
                   set={set}
                   channel={channel}
                   compareVideo={getVideo(i)}
                   size="md"
                 />
               ))}
+            </div>
+
+            {/* Shorts Section */}
+            <div className="mb-4">
+              <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
+              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+                {[0,1,2,3,4].map(i => (
+                  <ShortCard
+                    key={`short-${i}`}
+                    isYours={isShort && i === 2}
+                    set={set}
+                    compareVideo={getVideo(i)}
+                    size="md"
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

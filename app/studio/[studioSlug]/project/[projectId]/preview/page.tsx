@@ -42,6 +42,17 @@ async function fetchChannel(projectId: string): Promise<Channel | null> {
   return channel;
 }
 
+async function fetchVideoType(projectId: string): Promise<string> {
+  const supabase = createClient();
+  const { data: project } = await supabase
+    .from("projects")
+    .select("video_type")
+    .eq("id", projectId)
+    .single();
+
+  return project?.video_type || "long";
+}
+
 async function searchYouTubeVideos(query: string): Promise<YouTubeVideo[]> {
   if (!query) return [];
   
@@ -65,6 +76,11 @@ export default function PreviewPage({ params }: PreviewPageProps) {
   const { data: channel } = useQuery({
     queryKey: ["channel", projectId],
     queryFn: () => fetchChannel(projectId),
+  });
+
+  const { data: videoType = "long" } = useQuery({
+    queryKey: ["video-type", projectId],
+    queryFn: () => fetchVideoType(projectId),
   });
 
   const currentSet = sets[state.currentSetIndex];
@@ -122,6 +138,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
           previewMode={state.previewMode}
           compareMode={state.compareMode}
           compareVideos={state.compareVideos}
+          videoType={videoType}
         />
       </div>
     </div>
