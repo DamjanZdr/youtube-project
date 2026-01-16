@@ -29,7 +29,7 @@ export function VideoCard({
   const title = isYours ? (set?.title || "Your Video") : (compareVideo?.title || "Other Video");
   const channelName = isYours ? channel?.name : (compareVideo?.channelTitle || "Channel");
   const channelAvatar = isYours ? channel?.avatar_url : (compareVideo?.channelThumbnail || null);
-  const viewInfo = isYours ? "1.2M views" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
+  const viewInfo = isYours ? "1 day ago" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
 
   const sizeClasses = {
     sm: { avatar: "w-8 h-8", title: "text-sm", meta: "text-xs", duration: "text-[10px]", thumb: "w-40", gap: "gap-2" },
@@ -81,7 +81,7 @@ export function VideoCard({
 export function ShortCard({ isYours, set, compareVideo, size = "md" }: ShortCardProps) {
   const thumbnail = isYours ? set?.thumbnail_url : compareVideo?.thumbnail;
   const title = isYours ? (set?.title || "Your Short") : (compareVideo?.title || "Short Video");
-  const viewInfo = isYours ? "1.2M views" : (compareVideo ? formatRelativeTime(compareVideo.publishedAt) : "500K views");
+  const viewInfo = isYours ? "1.2M views" : (compareVideo ? "500K views" : "500K views");
 
   const sizeClasses = {
     sm: { width: "w-32", title: "text-[10px]", views: "text-[9px]" },

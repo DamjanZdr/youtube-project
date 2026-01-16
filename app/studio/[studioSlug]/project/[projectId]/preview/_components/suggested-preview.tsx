@@ -33,8 +33,8 @@ function VideoPlayer({ size = "lg" }: { size?: "sm" | "lg" }) {
 }
 
 export function SuggestedPreview({ set, channel, orientation, compareMode, compareVideos, compareShorts, videoType }: SuggestedPreviewProps) {
-  const getLongVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[i > 1 ? i - 1 : i] : null;
-  const getShortVideo = (i: number) => compareMode && compareShorts.length ? compareShorts[i > 1 ? i - 1 : i] : null;
+  const getLongVideo = (i: number) => compareMode && compareVideos.length ? compareVideos[Math.min(i, compareVideos.length - 1)] : null;
+  const getShortVideo = (i: number) => compareMode && compareShorts.length ? compareShorts[Math.min(i, compareShorts.length - 1)] : null;
   const isShort = videoType === 'short';
 
   if (orientation === "portrait") {
