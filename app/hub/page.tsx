@@ -273,7 +273,7 @@ export default function HubPage() {
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-14 object-contain bg-white/0"
+              className="max-h-12 object-contain bg-white/0"
               style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)", width: 'auto', height: '100%' }}
             />
           </Link>
