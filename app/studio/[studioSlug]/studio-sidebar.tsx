@@ -42,11 +42,11 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
         <div className={`p-4 border-b border-white/5 ${headerPadding}`}>
           <div className="flex items-center gap-3">
             <div className={`${logoPadding} rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0`}>
-              {studio.logo_url ? (
-                <img src={studio.logo_url} alt={studio.name} className="w-full h-full rounded-xl object-cover" />
-              ) : (
-                <span className="font-bold text-lg">{studio.name[0]}</span>
-              )}
+              <img
+                src={studio.logo_url || "/bplogo.png"}
+                alt={studio.name}
+                className="w-full h-full rounded-xl object-cover bg-white/0"
+              />
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0 overflow-hidden">

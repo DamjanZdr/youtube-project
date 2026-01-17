@@ -17,12 +17,14 @@ export default async function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Play className="w-4 h-4 text-white fill-white" />
-            </div>
+            <img
+              src="/bplogo.png"
+              alt="myBlueprint Logo"
+              className="w-8 h-8 rounded-lg object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(80, 0, 255, 0.08)" }}
+            />
             <span className="font-semibold text-lg">myBlueprint</span>
           </Link>
-          
           <div className="flex items-center gap-4">
             {hasEnvVars && (
               <Suspense fallback={<div className="w-20 h-9" />}>
