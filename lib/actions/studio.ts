@@ -1,19 +1,3 @@
-  // Prepare logo upload if present
-  let logoUrl: string | null = null;
-  const logoFile = formData.get("logo");
-  if (logoFile && logoFile instanceof File && logoFile.size > 0) {
-    const fileExt = logoFile.name.split('.').pop();
-    const fileName = `logos/${slug}-${Date.now()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from('studio-assets')
-      .upload(fileName, logoFile, { upsert: true });
-    if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage
-        .from('studio-assets')
-        .getPublicUrl(fileName);
-      logoUrl = publicUrl;
-    }
-  }
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
