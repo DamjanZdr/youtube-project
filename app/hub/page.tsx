@@ -269,11 +269,13 @@ export default function HubPage() {
       {/* Top Bar */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/hub" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Play className="w-4 h-4 text-white fill-white" />
-            </div>
-            <span className="font-semibold text-lg">myBlueprint</span>
+          <Link href="/hub" className="flex items-center">
+            <img
+              src="/bplogo.png"
+              alt="Logo"
+              className="w-8 h-8 object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)" }}
+            />
           </Link>
           
           <div className="flex items-center gap-6">

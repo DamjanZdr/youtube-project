@@ -52,8 +52,8 @@
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 95%;
     
-    /* Primary action color - YouTube red accent */
-    --primary: 0 90% 55%;
+    /* Primary action color - Brand blue accent */
+    --primary: 210 94% 51%; /* #088afa */
     --primary-foreground: 0 0% 100%;
     
     /* Secondary - subtle gray */

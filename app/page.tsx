@@ -16,14 +16,13 @@ export default async function Home() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center">
             <img
               src="/bplogo.png"
-              alt="myBlueprint Logo"
+              alt="Logo"
               className="w-8 h-8 object-contain bg-white/0"
-              style={{ boxShadow: "0 2px 8px 0 rgba(80, 0, 255, 0.08)" }}
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)" }}
             />
-            <span className="font-semibold text-lg">myBlueprint</span>
           </Link>
           <div className="flex items-center gap-4">
             {hasEnvVars && (
