@@ -1,14 +1,4 @@
 import type { Metadata } from "next";
-
-// Add favicon and logo meta tags
-export const metadata: Metadata = {
-  icons: [
-    { rel: "icon", url: "/bplogo.ico" },
-    { rel: "apple-touch-icon", url: "/bplogo.png" },
-  ],
-  title: "myBlueprint",
-  description: "The all-in-one creator operating system for YouTube creators",
-};
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Providers } from "@/components/providers";
@@ -23,6 +13,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "myBlueprint",
   description: "The all-in-one creator operating system for YouTube creators",
+  icons: [
+    { rel: "icon", url: "/bplogo.ico" },
+    { rel: "apple-touch-icon", url: "/bplogo.png" },
+  ],
 };
 
 const inter = Inter({
