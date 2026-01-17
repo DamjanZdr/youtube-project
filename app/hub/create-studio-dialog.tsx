@@ -86,39 +86,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-6">
-            {/* Studio Icon Upload */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Studio icon (optional)</label>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-white/10">
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="Studio icon preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl text-muted-foreground">?</span>
-                  )}
-                </div>
-                <div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => logoInputRef.current?.click()}
-                    disabled={loading}
-                  >
-                    Upload Icon
-                  </Button>
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Recommended: 256x256px, PNG or JPG</p>
-                </div>
-              </div>
-            </div>
-            {/* Studio Name */}
+            {/* Studio Name First */}
             <div>
               <label htmlFor="name" className="text-sm font-medium mb-2 block">
                 Studio name
@@ -132,6 +100,35 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 autoFocus
                 required
               />
+            </div>
+            {/* Studio Icon Upload Modernized */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-[#6d28d9] to-[#dc2626] flex items-center justify-center overflow-hidden">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Studio icon preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-white">{name?.[0]?.toUpperCase() || 'S'}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={loading}
+                >
+                  Upload Logo
+                </Button>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+                <p className="text-xs text-muted-foreground">Recommended: 256×256px, PNG or JPG</p>
+              </div>
             </div>
             {error && (
               <p className="text-sm text-red-500 mt-2">{error}</p>
