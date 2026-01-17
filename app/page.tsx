@@ -20,7 +20,7 @@ export default async function Home() {
             <img
               src="/bplogo.png"
               alt="myBlueprint Logo"
-              className="w-8 h-8 rounded-lg object-contain bg-white/0"
+              className="w-8 h-8 object-contain bg-white/0"
               style={{ boxShadow: "0 2px 8px 0 rgba(80, 0, 255, 0.08)" }}
             />
             <span className="font-semibold text-lg">myBlueprint</span>

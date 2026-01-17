@@ -41,11 +41,11 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
         {/* Sidebar Header */}
         <div className={`p-4 border-b border-white/5 ${headerPadding}`}>
           <div className="flex items-center gap-3">
-            <div className={`${logoPadding} rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0`}>
+            <div className={`${logoPadding} bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0`}>
               <img
                 src={studio.logo_url || "/bplogo.png"}
                 alt={studio.name}
-                className="w-full h-full rounded-xl object-cover bg-white/0"
+                className="w-full h-full object-cover bg-white/0"
               />
             </div>
             {!collapsed && (
