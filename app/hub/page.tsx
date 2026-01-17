@@ -269,12 +269,12 @@ export default function HubPage() {
       {/* Top Bar */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/hub" className="flex items-center">
+          <Link href="/hub" className="flex items-center h-16 px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="w-8 h-8 object-contain bg-white/0"
-              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)" }}
+              className="max-h-10 py-1 object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)", width: 'auto', height: '100%' }}
             />
           </Link>
           
