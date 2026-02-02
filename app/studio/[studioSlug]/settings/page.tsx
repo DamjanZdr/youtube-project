@@ -20,12 +20,14 @@ import {
   Trash2,
   Upload,
   UserPlus,
-  Crown
+  Crown,
+  Youtube
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { BillingTab } from "@/components/billing/billing-tab";
+import { YouTubeTab } from "@/components/settings/youtube-tab";
 
 interface SettingsPageProps {
   params: Promise<{ studioSlug: string }>;
@@ -572,6 +574,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Users className="w-4 h-4" />
             Members
           </TabsTrigger>
+          <TabsTrigger value="youtube" className="gap-2">
+            <Youtube className="w-4 h-4" />
+            YouTube
+          </TabsTrigger>
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="w-4 h-4" />
             Billing
@@ -882,6 +888,15 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         {/* Billing Tab */}
         <TabsContent value="billing">
           <BillingTab subscription={subscription} studioId={studio?.id} />
+        </TabsContent>
+
+        {/* YouTube Tab */}
+        <TabsContent value="youtube">
+          <YouTubeTab 
+            studioId={studio?.id} 
+            studioSlug={studioSlug} 
+            isOwner={studio?.owner_id === user?.id}
+          />
         </TabsContent>
       </Tabs>
       </div>
