@@ -62,7 +62,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
       setName("");
       setLogo(null);
       setLogoPreview(null);
-      router.push(`/studio/${result.slug}/projects`);
+      router.push(`/studio/${result.slug}`);
     }
   };
 

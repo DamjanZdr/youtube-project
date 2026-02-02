@@ -339,7 +339,7 @@ export default function HubPage() {
             {studios.map((studio) => (
               <Link
                 key={studio.id}
-                href={`/studio/${studio.slug}/projects`}
+                href={`/studio/${studio.slug}`}
                 className="glass-card p-6 hover-lift group"
               >
                 <div className="flex items-start gap-4">
