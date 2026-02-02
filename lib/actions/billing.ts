@@ -13,36 +13,49 @@ import type { ApiResponse } from '@/types';
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export async function createCheckoutSession(organizationId: string, priceId: string): Promise<{ url: string | null }> {
-  const supabase = await createClient();
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('Unauthorized');
-  }
+  try {
+    const supabase = await createClient();
+    
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error('Authentication failed');
+    }
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
 
-  // Get organization
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('id, name, slug')
-    .eq('id', organizationId)
-    .single();
+    // Get organization
+    const { data: org, error: orgError } = await supabase
+      .from('organizations')
+      .select('id, name, slug')
+      .eq('id', organizationId)
+      .single();
 
-  if (!org) {
-    throw new Error('Organization not found');
-  }
+    if (orgError) {
+      console.error('Organization fetch error:', orgError);
+      throw new Error('Failed to fetch organization');
+    }
+    if (!org) {
+      throw new Error('Organization not found');
+    }
 
-  // Check if subscription exists
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('organization_id', organizationId)
-    .maybeSingle();
+    // Check if subscription exists
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .maybeSingle();
 
-  // If downgrading to free plan (empty priceId), cancel the subscription
-  if (!priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
-    // Set to cancel at period end in Stripe
-    const stripe = (await import('@/lib/stripe')).getStripe();
+    if (subError) {
+      console.error('Subscription fetch error:', subError);
+    }
+
+    // If downgrading to free plan (empty priceId), cancel the subscription
+    if (!priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
+      // Set to cancel at period end in Stripe
+      const stripe = (await import('@/lib/stripe')).getStripe();
     await stripe.subscriptions.update(subscription.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
@@ -165,6 +178,10 @@ export async function createCheckoutSession(organizationId: string, priceId: str
   });
 
   return { url: session.url };
+  } catch (error) {
+    console.error('createCheckoutSession error:', error);
+    throw error;
+  }
 }
 
 export async function createPortalSession(organizationId: string): Promise<{ url: string | null }> {
