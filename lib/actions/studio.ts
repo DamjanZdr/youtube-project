@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 // Generate a URL-friendly slug from a name
@@ -110,17 +110,28 @@ export async function createStudio(formData: FormData) {
     return { error: error.message };
   }
 
+  // Use admin client for operations that need to bypass RLS
+  const adminClient = createAdminClient();
+
   // Add owner as a member with owner role
-  await supabase
+  const { error: memberError } = await adminClient
     .from("organization_members")
     .insert({
       organization_id: studio.id,
       user_id: ownerId,
-      role: "owner"
+      role: "owner",
+      status: "active"
     });
 
+  if (memberError) {
+    console.error("Failed to add owner as member:", memberError);
+    // Clean up the created organization if we couldn't add the member
+    await adminClient.from("organizations").delete().eq("id", studio.id);
+    return { error: "Failed to create studio membership: " + memberError.message };
+  }
+
   // Create a default channel for the studio
-  await supabase
+  await adminClient
     .from("channels")
     .insert({
       organization_id: studio.id,
@@ -128,7 +139,7 @@ export async function createStudio(formData: FormData) {
     });
 
   // Create default board statuses with tasks using database function
-  await supabase.rpc('create_default_board_statuses', { org_id: studio.id });
+  await adminClient.rpc('create_default_board_statuses', { org_id: studio.id });
 
   revalidatePath("/hub");
   
