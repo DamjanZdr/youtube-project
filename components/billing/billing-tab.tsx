@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -38,6 +38,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     action: "",
     message: "",
   });
+
+  // Redeem Key State
+  const [redeemKey, setRedeemKey] = useState("");
+  const [redeemLoading, setRedeemLoading] = useState(false);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+  const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
+  const redeemInputRef = useRef<HTMLInputElement>(null);
 
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
@@ -147,6 +154,34 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       console.error(error);
     } finally {
       setLoading(null);
+    }
+  };
+
+  const handleRedeemKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRedeemLoading(true);
+    setRedeemError(null);
+    setRedeemSuccess(null);
+    try {
+      const res = await fetch("/api/keys/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: redeemKey, organization_id: studioId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRedeemError(data.error || "Failed to redeem key");
+      } else {
+        setRedeemSuccess(`Key redeemed! Upgraded to ${data.plan}${data.expires_at ? ` until ${new Date(data.expires_at).toLocaleDateString()}` : " (lifetime)"}`);
+        setRedeemKey("");
+        if (redeemInputRef.current) redeemInputRef.current.value = "";
+        // Optionally, refresh the page or subscription info
+        window.location.reload();
+      }
+    } catch (err) {
+      setRedeemError("Failed to redeem key");
+    } finally {
+      setRedeemLoading(false);
     }
   };
 
@@ -360,7 +395,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             </div>
           )}
         </div>
-      </Card>
+      </Card> {/* End of Billing Overview Card */}
 
       {/* Billing Interval Toggle */}
       <div className="flex items-center justify-center gap-4 glass-card p-3 w-fit mx-auto">
@@ -478,7 +513,29 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             </Card>
           );
         })}
-      </div>
+      </div> {/* End of plans grid */}
+
+      {/* Redeem Key Section (below plans, above billing history) */}
+      <Card className="glass-card max-w-2xl mx-auto mt-10 p-6 flex flex-col items-center">
+        <h3 className="text-lg font-semibold mb-4">Redeem a Plan Key</h3>
+        <form onSubmit={handleRedeemKey} className="w-full flex flex-col md:flex-row items-start md:items-center gap-2">
+          <input
+            ref={redeemInputRef}
+            type="text"
+            placeholder="Enter key to redeem..."
+            className="input input-bordered w-full md:w-64 px-3 py-2 rounded border border-border bg-background text-foreground"
+            value={redeemKey}
+            onChange={e => setRedeemKey(e.target.value)}
+            disabled={redeemLoading}
+            required
+          />
+          <Button type="submit" disabled={redeemLoading || !redeemKey} className="w-full md:w-auto">
+            {redeemLoading ? "Redeeming..." : "Redeem Key"}
+          </Button>
+        </form>
+        {redeemError && <div className="text-red-500 text-sm mt-2">{redeemError}</div>}
+        {redeemSuccess && <div className="text-green-500 text-sm mt-2">{redeemSuccess}</div>}
+      </Card>
 
       {/* Billing History */}
       {!isFreePlan && subscription && (
