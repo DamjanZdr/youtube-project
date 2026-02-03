@@ -31,6 +31,7 @@ import {
   ListVideo,
   X,
 } from "lucide-react";
+import { YouTubePush } from "@/components/project/youtube-push";
 
 interface PackagingSet {
   id: string;
@@ -83,6 +84,11 @@ export default function PackagingPage() {
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
+  
+  // YouTube state
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [youtubeLastSynced, setYoutubeLastSynced] = useState<string | null>(null);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -107,7 +113,7 @@ export default function PackagingPage() {
     
     // Fetch project, sets, tags, and playlists in parallel
     const [projectRes, setsRes, tagsRes] = await Promise.all([
-      supabase.from("projects").select("*, organization_id").eq("id", projectId).single(),
+      supabase.from("projects").select("*, organization_id, youtube_video_id, youtube_last_synced_at").eq("id", projectId).single(),
       supabase.from("packaging_sets").select("*").eq("project_id", projectId).order("position"),
       supabase.from("project_tags").select("*").eq("project_id", projectId).order("position"),
     ]);
@@ -115,6 +121,9 @@ export default function PackagingPage() {
     if (projectRes.data) {
       setProject(projectRes.data);
       setDescription(projectRes.data.description || "");
+      setOrganizationId(projectRes.data.organization_id);
+      setYoutubeVideoId(projectRes.data.youtube_video_id || null);
+      setYoutubeLastSynced(projectRes.data.youtube_last_synced_at || null);
       
       // Load playlists for the channel (playlists are channel-specific)
       const { data: playlistsData } = await supabase
@@ -815,6 +824,26 @@ export default function PackagingPage() {
               )}
             </div>
           </div>
+
+          {/* YouTube Push */}
+          {organizationId && (
+            <div className="glass-card p-6">
+              <YouTubePush
+                projectId={projectId}
+                organizationId={organizationId}
+                linkedVideoId={youtubeVideoId}
+                lastSyncedAt={youtubeLastSynced}
+                hasTitle={sets.some(s => s.is_selected && s.title.trim().length > 0)}
+                hasDescription={description.trim().length > 0}
+                hasTags={tags.length > 0}
+                hasThumbnail={sets.some(s => s.is_selected && s.thumbnail_url)}
+                onVideoLinked={(videoId) => {
+                  setYoutubeVideoId(videoId);
+                  if (!videoId) setYoutubeLastSynced(null);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
