@@ -169,7 +169,8 @@ export async function POST(req: NextRequest) {
       ? "key_upgrade" 
       : "key_redeemed";
   
-  await supabase.from("billing_events").insert({
+  // Log billing event (non-blocking)
+  supabase.from("billing_events").insert({
     organization_id: organization_id,
     user_id: user.id,
     event_type: eventType,
@@ -184,7 +185,9 @@ export async function POST(req: NextRequest) {
       key_duration: planKey.duration,
       extended: isSamePlan && sub.source === "key",
     }
-  }).catch(err => console.error("Failed to log billing event:", err));
+  }).then(({ error }) => {
+    if (error) console.error("Failed to log billing event:", error);
+  });
 
   // Build response message
   let message = "";
