@@ -140,7 +140,7 @@ export default function AdminSubscriptionsPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          {["all", "free", "creator", "studio", "agency"].map((plan) => (
+          {["all", "free", "creator", "studio", "enterprise"].map((plan) => (
             <button
               key={plan}
               onClick={() => {
