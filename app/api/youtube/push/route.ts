@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
     
     const results: { metadata?: boolean; thumbnail?: boolean; errors: string[] } = { errors: [] };
     
-    // Get project packaging data
-    const { data: titles } = await adminClient
-      .from('project_titles')
-      .select('title')
+    // Get selected packaging set (contains title and thumbnail)
+    const { data: packagingSet } = await adminClient
+      .from('packaging_sets')
+      .select('title, thumbnail_url')
       .eq('project_id', projectId)
-      .eq('selected', true)
+      .eq('is_selected', true)
       .single();
     
     const { data: tags } = await adminClient
@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
       try {
         const updateData: { title?: string; description?: string; tags?: string[] } = {};
         
-        if (pushTitle && titles?.title) {
-          updateData.title = titles.title;
+        if (pushTitle && packagingSet?.title) {
+          updateData.title = packagingSet.title;
         }
         
         if (pushDescription && project.description) {
@@ -135,17 +135,9 @@ export async function POST(request: NextRequest) {
     // Push thumbnail if requested
     if (pushThumbnail) {
       try {
-        // Get selected thumbnail
-        const { data: thumbnail } = await adminClient
-          .from('project_thumbnails')
-          .select('image_url')
-          .eq('project_id', projectId)
-          .eq('selected', true)
-          .single();
-        
-        if (thumbnail?.image_url) {
+        if (packagingSet?.thumbnail_url) {
           // Fetch the image
-          const imageResponse = await fetch(thumbnail.image_url);
+          const imageResponse = await fetch(packagingSet.thumbnail_url);
           if (!imageResponse.ok) {
             throw new Error('Failed to fetch thumbnail image');
           }

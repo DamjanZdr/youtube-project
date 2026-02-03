@@ -29,6 +29,7 @@ import {
   Check,
   ListVideo
 } from "lucide-react";
+import { YouTubePush } from "@/components/project/youtube-push";
 
 interface PackagingSet {
   id: string;
@@ -114,6 +115,9 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [youtubeLastSynced, setYoutubeLastSynced] = useState<string | null>(null);
 
   useEffect(() => {
     loadPackagingData();
@@ -122,16 +126,29 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   const loadPackagingData = async () => {
     setLoading(true);
 
+    // Get organization ID from slug
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", studioSlug)
+      .single();
+    
+    if (org) {
+      setOrganizationId(org.id);
+    }
+
     // Load project data
     const { data: project } = await supabase
       .from("projects")
-      .select("description, video_type")
+      .select("description, video_type, youtube_video_id, youtube_last_synced_at")
       .eq("id", projectId)
       .single();
 
     if (project) {
       setDescription(project.description || "");
       setVideoType(project.video_type || "long");
+      setYoutubeVideoId(project.youtube_video_id || null);
+      setYoutubeLastSynced(project.youtube_last_synced_at || null);
     }
 
     // Load packaging sets
@@ -573,6 +590,26 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               </Button>
             </div>
           </div>
+
+          {/* YouTube Push */}
+          {organizationId && (
+            <div className="glass-card p-6">
+              <YouTubePush
+                projectId={projectId}
+                organizationId={organizationId}
+                linkedVideoId={youtubeVideoId}
+                lastSyncedAt={youtubeLastSynced}
+                hasTitle={sets.some(s => s.selected && s.title.trim().length > 0)}
+                hasDescription={description.trim().length > 0}
+                hasTags={tags.length > 0}
+                hasThumbnail={sets.some(s => s.selected && s.thumbnail)}
+                onVideoLinked={(videoId) => {
+                  setYoutubeVideoId(videoId);
+                  if (!videoId) setYoutubeLastSynced(null);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
