@@ -45,7 +45,15 @@ CREATE POLICY "Org owners can manage youtube connections" ON youtube_connections
   );
 
 -- Trigger for updated_at
+CREATE OR REPLACE FUNCTION update_youtube_connections_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER update_youtube_connections_updated_at
   BEFORE UPDATE ON youtube_connections
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION update_youtube_connections_updated_at();
