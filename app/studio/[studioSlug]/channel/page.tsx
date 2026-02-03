@@ -529,7 +529,7 @@ export default function ChannelPage() {
           <DialogHeader>
             <DialogTitle>Channel Banner</DialogTitle>
             <DialogDescription>
-              Upload a banner image for your channel. Recommended size: 2560 x 1440 pixels.
+              Upload a banner image. Recommended: 2560 x 1440 px. Keep important content in the center 1546 x 423 px "safe area" - this is what viewers see on most devices.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -854,8 +854,8 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden">
-          {/* Banner */}
-          <div className="w-full h-[140px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
+          {/* Banner - TV shows more of the banner (closer to full 16:9) */}
+          <div className="w-full aspect-[16/9] max-h-[180px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center overflow-hidden">
             {channel.banner ? (
               <img src={channel.banner} alt="Banner" className="w-full h-full object-cover" />
             ) : (
@@ -924,9 +924,9 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
 function DesktopPreview({ channel, openDialog }: PreviewProps) {
   return (
     <div className="p-6">
-      {/* Banner */}
+      {/* Banner - Desktop shows ~6.2:1 aspect ratio (center strip of the 16:9 upload) */}
       <div>
-        <div className="w-full h-[200px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl overflow-hidden">
+        <div className="w-full aspect-[6.2/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl overflow-hidden">
           {channel.banner ? (
             <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-xl" />
           ) : (
@@ -1017,9 +1017,9 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
 function MobilePreview({ channel, openDialog }: PreviewProps) {
   return (
     <div className="w-[375px]">
-      {/* Banner */}
+      {/* Banner - Mobile shows ~6.2:1 aspect ratio (same as desktop, center crop of 16:9) */}
       <div className="px-4 pt-4">
-        <div className="w-full h-[100px] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg">
+        <div className="w-full aspect-[6.2/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg overflow-hidden">
           {channel.banner ? (
             <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-lg" />
           ) : (
