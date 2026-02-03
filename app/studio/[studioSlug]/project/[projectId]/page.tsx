@@ -98,6 +98,9 @@ export default function PackagingPage() {
   const [youtubePlaylists, setYoutubePlaylists] = useState<YouTubePlaylist[]>([]);
   const [selectedYoutubePlaylist, setSelectedYoutubePlaylist] = useState<string | null>(null);
   const [loadingYoutubePlaylists, setLoadingYoutubePlaylists] = useState(false);
+  const [showCreateYoutubePlaylist, setShowCreateYoutubePlaylist] = useState(false);
+  const [newYoutubePlaylistName, setNewYoutubePlaylistName] = useState("");
+  const [creatingYoutubePlaylist, setCreatingYoutubePlaylist] = useState(false);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -184,6 +187,38 @@ export default function PackagingPage() {
       console.error("Failed to load YouTube playlists:", error);
     }
     setLoadingYoutubePlaylists(false);
+  };
+
+  // Create a new YouTube playlist
+  const createYoutubePlaylist = async () => {
+    if (!organizationId || !newYoutubePlaylistName.trim()) return;
+    
+    setCreatingYoutubePlaylist(true);
+    try {
+      const response = await fetch('/api/youtube/playlists/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationId,
+          title: newYoutubePlaylistName.trim(),
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Add new playlist to list and select it
+        setYoutubePlaylists(prev => [data.playlist, ...prev]);
+        setSelectedYoutubePlaylist(data.playlist.id);
+        setNewYoutubePlaylistName("");
+        setShowCreateYoutubePlaylist(false);
+      } else {
+        const error = await response.json();
+        console.error("Failed to create playlist:", error);
+      }
+    } catch (error) {
+      console.error("Failed to create YouTube playlist:", error);
+    }
+    setCreatingYoutubePlaylist(false);
   };
 
   // Load playlists when organizationId changes
@@ -824,10 +859,69 @@ export default function PackagingPage() {
                 <ListVideo className="w-4 h-4 text-muted-foreground" />
                 YouTube Playlists
               </h3>
-              {loadingYoutubePlaylists && (
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-              )}
+              <div className="flex items-center gap-2">
+                {loadingYoutubePlaylists && (
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                )}
+                {organizationId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCreateYoutubePlaylist(true)}
+                    className="h-7 px-2 text-xs gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    New
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {/* Create new playlist inline */}
+            {showCreateYoutubePlaylist && (
+              <div className="flex gap-2 mb-3">
+                <Input
+                  value={newYoutubePlaylistName}
+                  onChange={(e) => setNewYoutubePlaylistName(e.target.value)}
+                  placeholder="Playlist name..."
+                  className="flex-1 h-8 text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newYoutubePlaylistName.trim()) {
+                      createYoutubePlaylist();
+                    }
+                    if (e.key === 'Escape') {
+                      setShowCreateYoutubePlaylist(false);
+                      setNewYoutubePlaylistName("");
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  className="h-8"
+                  onClick={createYoutubePlaylist}
+                  disabled={!newYoutubePlaylistName.trim() || creatingYoutubePlaylist}
+                >
+                  {creatingYoutubePlaylist ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Create"
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setShowCreateYoutubePlaylist(false);
+                    setNewYoutubePlaylistName("");
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+            
             <div className="max-h-[180px] overflow-y-auto space-y-0.5 pr-1">
               {!organizationId ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
