@@ -162,6 +162,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
   }
 
+  // Log billing event
+  const eventType = isSamePlan && sub.source === "key" 
+    ? "key_extended" 
+    : isUpgrade 
+      ? "key_upgrade" 
+      : "key_redeemed";
+  
+  await supabase.from("billing_events").insert({
+    organization_id: organization_id,
+    user_id: user.id,
+    event_type: eventType,
+    previous_plan: sub.plan,
+    new_plan: planKey.plan,
+    amount_cents: 0, // Key = free
+    source: "key",
+    key_id: planKey.id,
+    period_start: now.toISOString(),
+    period_end: expiresAt?.toISOString() || null,
+    metadata: {
+      key_duration: planKey.duration,
+      extended: isSamePlan && sub.source === "key",
+    }
+  }).catch(err => console.error("Failed to log billing event:", err));
+
   // Build response message
   let message = "";
   if (isSamePlan && sub.source === "key") {

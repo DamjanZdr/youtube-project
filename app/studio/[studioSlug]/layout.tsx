@@ -4,6 +4,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { StudioSidebar } from "./studio-sidebar";
+import { updateUserActivity, updateOrgActivity } from "@/lib/actions/activity";
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -54,6 +55,10 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
       redirect("/hub");
     }
   }
+
+  // Track activity (non-blocking)
+  updateUserActivity().catch(() => {});
+  updateOrgActivity(studio.id).catch(() => {});
 
   return (
     <TooltipProvider>

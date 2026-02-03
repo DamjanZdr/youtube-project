@@ -6,6 +6,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { DashboardLayout } from '@/components/layouts/dashboard-layout';
+import { updateUserActivity } from '@/lib/actions/activity';
 
 export default async function Layout({
   children,
@@ -18,6 +19,9 @@ export default async function Layout({
   if (!user) {
     redirect('/sign-in');
   }
+
+  // Track user activity (non-blocking)
+  updateUserActivity().catch(() => {});
 
   return <DashboardLayout>{children}</DashboardLayout>;
 }

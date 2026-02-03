@@ -165,6 +165,7 @@ export async function POST(request: Request) {
             current_period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end || false,
             interval,
+            source: 'stripe',
             // Clear pending if it was applied, otherwise keep it
             pending_plan: clearPending ? null : currentSub?.pending_plan,
             pending_price_id: clearPending ? null : currentSub?.pending_price_id,
@@ -172,6 +173,18 @@ export async function POST(request: Request) {
           }, {
             onConflict: 'organization_id',
           });
+
+        // Log billing event for subscription change
+        if (event.type === 'customer.subscription.created') {
+          await supabase.from('billing_events').insert({
+            organization_id: organizationId,
+            event_type: 'subscription_created',
+            new_plan: plan,
+            source: 'stripe',
+            period_start: new Date((subscription.current_period_start || 0) * 1000).toISOString(),
+            period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
+          }).catch(err => console.error('Failed to log billing event:', err));
+        }
 
         console.log(`Subscription ${event.type} for org ${organizationId}, plan: ${plan}`);
         break;
@@ -192,12 +205,22 @@ export async function POST(request: Request) {
           .update({
             plan: 'free',
             status: 'canceled',
+            source: 'stripe',
             cancel_at_period_end: false,
             grace_period_end: null,
             failed_payment_count: 0,
             last_payment_error: null,
           })
           .eq('organization_id', organizationId);
+
+        // Log billing event for cancellation
+        await supabase.from('billing_events').insert({
+          organization_id: organizationId,
+          event_type: 'subscription_cancelled',
+          previous_plan: PRICE_TO_PLAN_MAP[subscription.items?.data?.[0]?.price?.id] || 'unknown',
+          new_plan: 'free',
+          source: 'stripe',
+        }).catch(err => console.error('Failed to log billing event:', err));
 
         console.log(`Subscription canceled for org ${organizationId}`);
         break;
@@ -222,13 +245,34 @@ export async function POST(request: Request) {
             .from('subscriptions')
             .update({
               status: 'active',
+              source: 'stripe', // Ensure source is set to stripe
               failed_payment_count: 0,
               grace_period_end: null,
               last_payment_error: null,
             })
             .eq('organization_id', organizationId);
 
-          console.log(`Invoice paid for org ${organizationId}`);
+          // Log billing event for payment
+          const priceId = subscription.items?.data?.[0]?.price?.id;
+          const plan = PRICE_TO_PLAN_MAP[priceId] || 'free';
+          
+          await supabase.from('billing_events').insert({
+            organization_id: organizationId,
+            event_type: 'payment_success',
+            new_plan: plan,
+            amount_cents: invoice.amount_paid,
+            currency: invoice.currency,
+            source: 'stripe',
+            stripe_invoice_id: invoice.id,
+            period_start: new Date((subscription.current_period_start || 0) * 1000).toISOString(),
+            period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
+            metadata: {
+              invoice_number: invoice.number,
+              customer_email: invoice.customer_email,
+            }
+          }).catch(err => console.error('Failed to log billing event:', err));
+
+          console.log(`Invoice paid for org ${organizationId}, amount: $${(invoice.amount_paid / 100).toFixed(2)}`);
         }
         break;
       }
@@ -269,6 +313,19 @@ export async function POST(request: Request) {
               last_payment_error: invoice.last_finalization_error?.message || 'Payment failed',
             })
             .eq('organization_id', organizationId);
+
+          // Log billing event for failed payment
+          await supabase.from('billing_events').insert({
+            organization_id: organizationId,
+            event_type: 'payment_failed',
+            amount_cents: invoice.amount_due,
+            source: 'stripe',
+            stripe_invoice_id: invoice.id,
+            metadata: {
+              attempt_count: failedCount,
+              error_message: invoice.last_finalization_error?.message,
+            }
+          }).catch(err => console.error('Failed to log billing event:', err));
 
           console.log(`Payment failed for org ${organizationId}, attempt ${failedCount}`);
         }

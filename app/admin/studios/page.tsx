@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +35,19 @@ import {
   Key,
   Mail,
   Loader2,
-  Check,
   Copy,
-  Link
+  Link,
+  Clock,
+  DollarSign,
+  History,
+  Gift,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  XCircle,
+  CheckCircle,
+  CreditCard
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 
 interface Studio {
@@ -43,6 +55,7 @@ interface Studio {
   name: string;
   slug: string;
   created_at: string;
+  last_activity_at: string | null;
   owner: {
     id: string;
     email: string;
@@ -51,9 +64,22 @@ interface Studio {
   subscription: {
     plan: string;
     status: string;
+    source: string | null;
   } | null;
   member_count: number;
   project_count: number;
+}
+
+interface BillingEvent {
+  id: string;
+  user_id: string | null;
+  event_type: string;
+  previous_plan: string | null;
+  new_plan: string | null;
+  amount_cents: number | null;
+  source: string;
+  created_at: string;
+  user?: { email: string; full_name: string | null };
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -80,6 +106,14 @@ export default function AdminStudiosPage() {
   const [sending, setSending] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<{ key: string; redeemUrl: string } | null>(null);
 
+  // Studio Details Dialog
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsStudio, setDetailsStudio] = useState<Studio | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [billingHistory, setBillingHistory] = useState<BillingEvent[]>([]);
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
+
   useEffect(() => {
     async function loadStudios() {
       setLoading(true);
@@ -100,6 +134,7 @@ export default function AdminStudiosPage() {
           name,
           slug,
           created_at,
+          last_activity_at,
           owner_id
         `)
         .order("created_at", { ascending: false })
@@ -123,7 +158,7 @@ export default function AdminStudiosPage() {
           { data: projects },
         ] = await Promise.all([
           supabase.from("profiles").select("id, email, full_name").in("id", ownerIds),
-          supabase.from("subscriptions").select("organization_id, plan, status").in("organization_id", orgIds),
+          supabase.from("subscriptions").select("organization_id, plan, status, source").in("organization_id", orgIds),
           supabase.from("organization_members").select("organization_id").in("organization_id", orgIds),
           supabase.from("projects").select("organization_id").in("organization_id", orgIds),
         ]);
@@ -146,6 +181,82 @@ export default function AdminStudiosPage() {
   }, [page, search]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  // Load studio details with billing history
+  const loadStudioDetails = async (studio: Studio) => {
+    setDetailsStudio(studio);
+    setDetailsOpen(true);
+    setDetailsLoading(true);
+    setBillingHistory([]);
+    setTotalPaid(0);
+    setSubscriptionDetails(null);
+
+    const supabase = createClient();
+
+    // Get full subscription details
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("organization_id", studio.id)
+      .single();
+    
+    setSubscriptionDetails(sub);
+
+    // Get billing events for this org
+    const { data: events } = await supabase
+      .from("billing_events")
+      .select(`
+        *,
+        user:user_id (email, full_name)
+      `)
+      .eq("organization_id", studio.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    setBillingHistory(events || []);
+
+    // Calculate total paid
+    const { data: payments } = await supabase
+      .from("billing_events")
+      .select("amount_cents")
+      .eq("organization_id", studio.id)
+      .eq("event_type", "payment_success");
+
+    const total = payments?.reduce((sum, p) => sum + (p.amount_cents || 0), 0) || 0;
+    setTotalPaid(total);
+
+    setDetailsLoading(false);
+  };
+
+  const getEventIcon = (eventType: string) => {
+    switch (eventType) {
+      case "payment_success":
+        return <DollarSign className="w-4 h-4 text-green-500" />;
+      case "payment_failed":
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case "key_redeemed":
+      case "key_upgrade":
+      case "key_extended":
+        return <Gift className="w-4 h-4 text-purple-500" />;
+      case "plan_upgraded":
+        return <ArrowUpCircle className="w-4 h-4 text-blue-500" />;
+      case "plan_downgraded":
+        return <ArrowDownCircle className="w-4 h-4 text-amber-500" />;
+      case "subscription_created":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "subscription_cancelled":
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <History className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const formatEventType = (eventType: string) => {
+    return eventType
+      .split("_")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const handleSendKey = async () => {
     setSending(true);
@@ -224,7 +335,7 @@ export default function AdminStudiosPage() {
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Members</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Projects</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Created</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Last Active</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>
@@ -244,8 +355,13 @@ export default function AdminStudiosPage() {
             ) : (
               studios.map((studio) => {
                 const plan = studio.subscription?.plan || "free";
+                const isGifted = studio.subscription?.source === "key";
                 return (
-                  <tr key={studio.id} className="border-b border-white/5 hover:bg-white/5">
+                  <tr 
+                    key={studio.id} 
+                    className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
+                    onClick={() => loadStudioDetails(studio)}
+                  >
                     <td className="p-4">
                       <div>
                         <p className="font-medium">{studio.name}</p>
@@ -266,9 +382,16 @@ export default function AdminStudiosPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${planColors[plan] || planColors.free}`}>
-                        {plan}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${planColors[plan] || planColors.free}`}>
+                          {plan}
+                        </span>
+                        {isGifted && (
+                          <span title="Gifted">
+                            <Gift className="w-3 h-3 text-purple-400" />
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -283,17 +406,24 @@ export default function AdminStudiosPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDistanceToNow(new Date(studio.created_at), { addSuffix: true })}</span>
-                      </div>
+                      {studio.last_activity_at ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-green-500" />
+                          <span>{formatDistanceToNow(new Date(studio.last_activity_at), { addSuffix: true })}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Never</span>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => openSendKeyDialog(studio)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openSendKeyDialog(studio);
+                          }}
                           title="Send Plan Key"
                         >
                           <Key className="w-4 h-4" />
@@ -301,7 +431,10 @@ export default function AdminStudiosPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(`/studio/${studio.slug}`, "_blank")}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`/studio/${studio.slug}`, "_blank");
+                          }}
                           title="Open Studio"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -445,6 +578,229 @@ export default function AdminStudiosPage() {
                 </Button>
               </div>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Studio Details Dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">
+                  {detailsStudio?.name?.[0]?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="font-bold">{detailsStudio?.name}</p>
+                <p className="text-sm text-muted-foreground font-normal">/{detailsStudio?.slug}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {detailsLoading ? (
+            <div className="flex-1 flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Tabs defaultValue="overview" className="flex-1 overflow-hidden flex flex-col">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="billing">Billing History</TabsTrigger>
+                <TabsTrigger value="subscription">Subscription</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="flex-1 overflow-auto space-y-4 py-4">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  <Card className="p-4 bg-green-500/10 border-green-500/20">
+                    <div className="flex items-center gap-2 text-green-500 mb-1">
+                      <DollarSign className="w-4 h-4" />
+                      <span className="text-xs font-medium">Total Revenue</span>
+                    </div>
+                    <p className="text-2xl font-bold">${(totalPaid / 100).toFixed(2)}</p>
+                  </Card>
+                  <Card className="p-4 bg-blue-500/10 border-blue-500/20">
+                    <div className="flex items-center gap-2 text-blue-500 mb-1">
+                      <FolderKanban className="w-4 h-4" />
+                      <span className="text-xs font-medium">Projects</span>
+                    </div>
+                    <p className="text-2xl font-bold">{detailsStudio?.project_count || 0}</p>
+                  </Card>
+                  <Card className="p-4 bg-purple-500/10 border-purple-500/20">
+                    <div className="flex items-center gap-2 text-purple-500 mb-1">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs font-medium">Last Activity</span>
+                    </div>
+                    <p className="text-lg font-bold">
+                      {detailsStudio?.last_activity_at 
+                        ? formatDistanceToNow(new Date(detailsStudio.last_activity_at), { addSuffix: true })
+                        : "Never"
+                      }
+                    </p>
+                  </Card>
+                </div>
+
+                {/* Quick Info */}
+                <Card className="p-4">
+                  <h4 className="font-semibold mb-3">Studio Info</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Studio ID</span>
+                      <code className="text-xs bg-muted px-2 py-1 rounded">{detailsStudio?.id}</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Created</span>
+                      <span>{detailsStudio?.created_at ? format(new Date(detailsStudio.created_at), "PPP") : "-"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Owner</span>
+                      <span>{detailsStudio?.owner?.email || "Unknown"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Members</span>
+                      <span>{detailsStudio?.member_count || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Plan</span>
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${planColors[detailsStudio?.subscription?.plan || "free"]} capitalize`}>
+                          {detailsStudio?.subscription?.plan || "free"}
+                        </Badge>
+                        {detailsStudio?.subscription?.source === "key" && (
+                          <Badge className="bg-purple-500/20 text-purple-400">
+                            <Gift className="w-3 h-3 mr-1" />
+                            Gifted
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="billing" className="flex-1 overflow-hidden py-4">
+                <ScrollArea className="h-[300px]">
+                  {billingHistory.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No billing history yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pr-4">
+                      {billingHistory.map((event) => (
+                        <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                          {getEventIcon(event.event_type)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{formatEventType(event.event_type)}</span>
+                              {event.amount_cents && event.amount_cents > 0 && (
+                                <Badge variant="outline" className="text-green-500 border-green-500/30">
+                                  ${(event.amount_cents / 100).toFixed(2)}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {event.previous_plan && event.new_plan && (
+                                <span className="mr-2">• {event.previous_plan} → {event.new_plan}</span>
+                              )}
+                              {event.new_plan && !event.previous_plan && (
+                                <span className="mr-2">• {event.new_plan}</span>
+                              )}
+                              {event.user?.email && (
+                                <span className="mr-2">• by {event.user.email}</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(event.created_at), "PPp")}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="subscription" className="flex-1 overflow-hidden py-4">
+                <ScrollArea className="h-[300px]">
+                  {subscriptionDetails ? (
+                    <Card className="p-4">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        Subscription Details
+                      </h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Plan</span>
+                          <Badge className={`${planColors[subscriptionDetails.plan]} capitalize`}>
+                            {subscriptionDetails.plan}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Status</span>
+                          <Badge variant={subscriptionDetails.status === "active" ? "default" : "destructive"}>
+                            {subscriptionDetails.status}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Source</span>
+                          <span className="flex items-center gap-1">
+                            {subscriptionDetails.source === "key" ? (
+                              <>
+                                <Gift className="w-3 h-3 text-purple-400" />
+                                Key (Gifted)
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-3 h-3" />
+                                Stripe
+                              </>
+                            )}
+                          </span>
+                        </div>
+                        {subscriptionDetails.current_period_start && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Period Start</span>
+                            <span>{format(new Date(subscriptionDetails.current_period_start), "PPP")}</span>
+                          </div>
+                        )}
+                        {subscriptionDetails.current_period_end && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Period End</span>
+                            <span>{format(new Date(subscriptionDetails.current_period_end), "PPP")}</span>
+                          </div>
+                        )}
+                        {subscriptionDetails.stripe_customer_id && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Stripe Customer</span>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {subscriptionDetails.stripe_customer_id}
+                            </code>
+                          </div>
+                        )}
+                        {subscriptionDetails.previous_plan && (
+                          <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <p className="text-xs text-amber-400">
+                              <strong>Previous plan:</strong> {subscriptionDetails.previous_plan}
+                              {subscriptionDetails.previous_stripe_subscription_id && (
+                                <span> (Stripe sub paused)</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No subscription data</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
