@@ -84,7 +84,7 @@ export function ShortCard({ isYours, set, compareVideo, size = "md" }: ShortCard
   const viewInfo = isYours ? "1.2M views" : (compareVideo ? "500K views" : "500K views");
 
   const sizeClasses = {
-    sm: { width: "w-32", title: "text-[10px]", views: "text-[9px]" },
+    sm: { width: "flex-1 min-w-0", title: "text-[10px]", views: "text-[9px]" },
     md: { width: "w-full", title: "text-xs", views: "text-[10px]" },
   };
   const s = sizeClasses[size];
