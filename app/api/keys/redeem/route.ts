@@ -60,14 +60,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
   }
 
-  // Calculate expiration
+  // Calculate expiration based on duration
   const now = new Date();
   let expiresAt: Date | null = null;
-  if (planKey.plan_type === "lifetime") {
+  if (planKey.duration === "lifetime") {
     expiresAt = null;
   } else {
     expiresAt = new Date(now);
-    expiresAt.setMonth(expiresAt.getMonth() + getDurationMonths(planKey.plan_type));
+    expiresAt.setMonth(expiresAt.getMonth() + getDurationMonths(planKey.duration));
   }
 
   // Update plan_keys as redeemed
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     .update({
       previous_plan: sub.plan,
       previous_stripe_subscription_id: sub.stripe_subscription_id,
-      plan: planKey.plan_type,
+      plan: planKey.plan,
       source: "key",
       current_period_start: now.toISOString(),
       current_period_end: expiresAt ? expiresAt.toISOString() : null,
@@ -102,5 +102,5 @@ export async function POST(req: NextRequest) {
 
   // TODO: Pause/cancel Stripe billing if needed (not implemented here)
 
-  return NextResponse.json({ success: true, plan: planKey.plan_type, expires_at: expiresAt });
+  return NextResponse.json({ success: true, plan: planKey.plan, expires_at: expiresAt });
 }

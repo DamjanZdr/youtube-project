@@ -4,7 +4,8 @@
 CREATE TABLE IF NOT EXISTS plan_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   key TEXT UNIQUE NOT NULL,
-  plan_type TEXT NOT NULL, -- 'creator', 'studio', 'enterprise', or 'lifetime' for duration
+  plan TEXT NOT NULL, -- 'creator', 'studio', 'enterprise'
+  duration TEXT NOT NULL DEFAULT 'year', -- 'month', 'year', 'lifetime'
   assigned_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- Optional: pre-assign to specific org
   redeemed_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   redeemed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,

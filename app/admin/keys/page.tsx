@@ -98,8 +98,8 @@ export default function AdminKeysPage() {
       .select(`
         id,
         key,
-        plan:plan_type,
-        duration:plan_type,
+        plan,
+        duration,
         created_at,
         redeemed_at,
         redeemed_by,
@@ -162,11 +162,13 @@ export default function AdminKeysPage() {
     const { error } = await supabase.from("plan_keys").insert(
       newKeys.map(key => ({
         key,
-        plan_type: genPlan,
+        plan: genPlan,
+        duration: genDuration,
       }))
     );
 
     if (error) {
+      console.error("Insert error:", error);
       toast.error("Failed to generate keys");
     } else {
       setGeneratedKeys(newKeys);
