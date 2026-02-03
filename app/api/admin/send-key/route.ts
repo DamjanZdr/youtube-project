@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init to avoid build errors when env var is missing
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 function generateKey(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -84,7 +91,8 @@ export async function POST(req: NextRequest) {
 
   // Send email if we have an email address
   let emailSent = false;
-  if (email && process.env.RESEND_API_KEY) {
+  const resend = getResend();
+  if (email && resend) {
     try {
       await resend.emails.send({
         from: "MyBlueprint <noreply@myblueprint.studio>",

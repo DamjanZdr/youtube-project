@@ -7,13 +7,17 @@ import { getStripe, createCheckoutSession } from "@/lib/stripe";
 import { plans } from "@/config/subscriptions";
 import { stripeConfig } from "@/lib/stripe/config";
 
-// Vercel Cron config: runs every hour
-export const config = {
-  schedule: "0 * * * *", // every hour
-};
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+// Initialize Resend lazily to avoid build errors when env var is missing
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY not set, email sending disabled");
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -110,8 +114,9 @@ export async function GET(req: NextRequest) {
               : pendingPlanConfig.price.monthly;
             const checkoutUrl = `${appUrl}/studio/${org.slug}/settings?tab=billing&activate_plan=${sub.pending_plan}&interval=${interval}`;
             
+            const resend = getResend();
             try {
-              await resend.emails.send({
+              if (resend) await resend.emails.send({
                 from: "MyBlueprint <noreply@myblueprint.studio>",
                 to: ownerEmail,
                 subject: `Your Gifted Plan Has Expired - Activate ${planName} Now`,
@@ -219,8 +224,9 @@ export async function GET(req: NextRequest) {
           // Send notification email
           if (ownerEmail && process.env.RESEND_API_KEY && org) {
             const planConfig = plans.find(p => p.id === sub.previous_plan);
+            const resend = getResend();
             try {
-              await resend.emails.send({
+              if (resend) await resend.emails.send({
                 from: "MyBlueprint <noreply@myblueprint.studio>",
                 to: ownerEmail,
                 subject: `Your ${planConfig?.name || sub.previous_plan} Subscription Has Resumed`,
@@ -283,8 +289,9 @@ export async function GET(req: NextRequest) {
         
         // Send notification email
         if (ownerEmail && process.env.RESEND_API_KEY && org) {
+          const resend = getResend();
           try {
-            await resend.emails.send({
+            if (resend) await resend.emails.send({
               from: "MyBlueprint <noreply@myblueprint.studio>",
               to: ownerEmail,
               subject: `Your Gifted Plan Has Expired`,
