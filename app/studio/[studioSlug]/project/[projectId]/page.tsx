@@ -60,6 +60,12 @@ interface Playlist {
   description: string | null;
 }
 
+interface YouTubePlaylist {
+  id: string;
+  title: string;
+  itemCount: number;
+}
+
 export default function PackagingPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -89,6 +95,9 @@ export default function PackagingPage() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubeLastSynced, setYoutubeLastSynced] = useState<string | null>(null);
+  const [youtubePlaylists, setYoutubePlaylists] = useState<YouTubePlaylist[]>([]);
+  const [selectedYoutubePlaylist, setSelectedYoutubePlaylist] = useState<string | null>(null);
+  const [loadingYoutubePlaylists, setLoadingYoutubePlaylists] = useState(false);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -159,6 +168,30 @@ export default function PackagingPage() {
 
     setLoading(false);
   };
+
+  // Load YouTube playlists when organization is available
+  const loadYoutubePlaylists = async () => {
+    if (!organizationId) return;
+    
+    setLoadingYoutubePlaylists(true);
+    try {
+      const response = await fetch(`/api/youtube/playlists?organizationId=${organizationId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setYoutubePlaylists(data.playlists || []);
+      }
+    } catch (error) {
+      console.error("Failed to load YouTube playlists:", error);
+    }
+    setLoadingYoutubePlaylists(false);
+  };
+
+  // Load playlists when organizationId changes
+  useEffect(() => {
+    if (organizationId) {
+      loadYoutubePlaylists();
+    }
+  }, [organizationId]);
 
   // === SET OPERATIONS ===
   const createSet = async (title: string = "", isSelected: boolean = false): Promise<PackagingSet | null> => {
@@ -784,41 +817,48 @@ export default function PackagingPage() {
             </div>
           </div>
 
-          {/* Playlist */}
+          {/* Playlist - YouTube Playlists */}
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium flex items-center gap-2">
                 <ListVideo className="w-4 h-4 text-muted-foreground" />
-                Playlists
+                YouTube Playlists
               </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCreatePlaylist(true)}
-                className="h-7 px-2 text-xs gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                New Playlist
-              </Button>
+              {loadingYoutubePlaylists && (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              )}
             </div>
-            <div className="max-h-[140px] overflow-y-auto space-y-0.5 pr-1">
-              {playlists.length === 0 ? (
+            <div className="max-h-[180px] overflow-y-auto space-y-0.5 pr-1">
+              {!organizationId ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No playlists yet
+                  Connect YouTube in Studio Settings
+                </p>
+              ) : youtubePlaylists.length === 0 && !loadingYoutubePlaylists ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No playlists on your channel
                 </p>
               ) : (
-                playlists.map((playlist) => (
+                youtubePlaylists.map((playlist) => (
                   <div
                     key={playlist.id}
-                    className="flex items-center gap-3 px-2 py-2 rounded hover:bg-white/5 cursor-pointer"
-                    onClick={() => togglePlaylist(playlist.id)}
+                    className={`flex items-center gap-3 px-2 py-2 rounded hover:bg-white/5 cursor-pointer ${
+                      selectedYoutubePlaylist === playlist.id ? "bg-white/10" : ""
+                    }`}
+                    onClick={() => setSelectedYoutubePlaylist(
+                      selectedYoutubePlaylist === playlist.id ? null : playlist.id
+                    )}
                   >
                     <Checkbox
-                      checked={selectedPlaylists.includes(playlist.id)}
-                      onCheckedChange={() => togglePlaylist(playlist.id)}
+                      checked={selectedYoutubePlaylist === playlist.id}
+                      onCheckedChange={() => setSelectedYoutubePlaylist(
+                        selectedYoutubePlaylist === playlist.id ? null : playlist.id
+                      )}
                       className="h-5 w-5 rounded-none border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black data-[state=checked]:border-white"
                     />
-                    <span className="text-sm">{playlist.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm truncate block">{playlist.title}</span>
+                      <span className="text-xs text-muted-foreground">{playlist.itemCount} videos</span>
+                    </div>
                   </div>
                 ))
               )}
@@ -837,6 +877,7 @@ export default function PackagingPage() {
                 hasDescription={description.trim().length > 0}
                 hasTags={tags.length > 0}
                 hasThumbnail={sets.some(s => s.is_selected && s.thumbnail_url)}
+                selectedPlaylistId={selectedYoutubePlaylist}
                 onVideoLinked={(videoId) => {
                   setYoutubeVideoId(videoId);
                   if (!videoId) setYoutubeLastSynced(null);

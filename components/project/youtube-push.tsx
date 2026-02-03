@@ -11,9 +11,7 @@ import {
   Loader2, 
   Check,
   ExternalLink,
-  Search,
-  Plus,
-  ListVideo
+  Search
 } from "lucide-react";
 import {
   Dialog,
@@ -26,26 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface YouTubeVideo {
   id: string;
   title: string;
   thumbnail: string | null;
   publishedAt: string | null;
-}
-
-interface YouTubePlaylist {
-  id: string;
-  title: string;
-  thumbnail: string | null;
-  itemCount: number;
 }
 
 interface YouTubePushProps {
@@ -57,6 +41,7 @@ interface YouTubePushProps {
   hasDescription: boolean;
   hasTags: boolean;
   hasThumbnail: boolean;
+  selectedPlaylistId?: string | null;
   onVideoLinked: (videoId: string | null) => void;
 }
 
@@ -69,15 +54,14 @@ export function YouTubePush({
   hasDescription,
   hasTags,
   hasThumbnail,
+  selectedPlaylistId,
   onVideoLinked,
 }: YouTubePushProps) {
   const [hasConnection, setHasConnection] = useState<boolean | null>(null);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showPushDialog, setShowPushDialog] = useState(false);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
-  const [playlists, setPlaylists] = useState<YouTubePlaylist[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
-  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [linking, setLinking] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,10 +71,6 @@ export function YouTubePush({
   const [pushDescription, setPushDescription] = useState(true);
   const [pushTags, setPushTags] = useState(true);
   const [pushThumbnail, setPushThumbnail] = useState(true);
-  
-  // Playlist options
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
-  const [newPlaylistName, setNewPlaylistName] = useState("");
 
   useEffect(() => {
     checkConnection();
@@ -125,23 +105,6 @@ export function YouTubePush({
       toast.error("Failed to load videos");
     }
     setLoadingVideos(false);
-  };
-
-  const loadPlaylists = async () => {
-    setLoadingPlaylists(true);
-    try {
-      const response = await fetch(`/api/youtube/playlists?organizationId=${organizationId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPlaylists(data.playlists || []);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || "Failed to load playlists");
-      }
-    } catch {
-      toast.error("Failed to load playlists");
-    }
-    setLoadingPlaylists(false);
   };
 
   const handleOpenLinkDialog = () => {
@@ -209,23 +172,17 @@ export function YouTubePush({
           pushTags,
           pushThumbnail,
           playlistId: selectedPlaylistId || undefined,
-          newPlaylistName: newPlaylistName.trim() || undefined,
         }),
       });
       
       if (response.ok) {
         const result = await response.json();
         let message = result.message || "Pushed to YouTube successfully";
-        if (result.results?.playlistCreated) {
-          message += ` (created playlist "${result.results.playlistCreated}")`;
-        }
         if (result.results?.addedToPlaylist) {
           message += " (added to playlist)";
         }
         toast.success(message);
         setShowPushDialog(false);
-        setSelectedPlaylistId("");
-        setNewPlaylistName("");
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to push to YouTube");
@@ -234,11 +191,6 @@ export function YouTubePush({
       toast.error("Failed to push to YouTube");
     }
     setPushing(false);
-  };
-
-  const handleOpenPushDialog = () => {
-    setShowPushDialog(true);
-    loadPlaylists();
   };
 
   const filteredVideos = videos.filter(v => 
@@ -310,7 +262,7 @@ export function YouTubePush({
           </div>
           
           <Button 
-            onClick={handleOpenPushDialog} 
+            onClick={() => setShowPushDialog(true)} 
             className="w-full gap-2"
             disabled={!hasTitle && !hasDescription && !hasTags && !hasThumbnail}
           >
@@ -448,66 +400,12 @@ export function YouTubePush({
                 Thumbnail {!hasThumbnail && "(no thumbnail selected)"}
               </Label>
             </div>
-            
-            {/* Playlist Section */}
-            <div className="border-t border-white/10 pt-4 mt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <ListVideo className="w-4 h-4 text-muted-foreground" />
-                <Label className="font-medium">Add to Playlist (optional)</Label>
+
+            {selectedPlaylistId && (
+              <div className="pt-2 border-t border-white/10 text-sm text-muted-foreground">
+                Will also add video to selected playlist
               </div>
-              
-              {loadingPlaylists ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading playlists...
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Select 
-                    value={selectedPlaylistId} 
-                    onValueChange={(v) => {
-                      setSelectedPlaylistId(v);
-                      if (v) setNewPlaylistName("");
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select existing playlist..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      {playlists.map((playlist) => (
-                        <SelectItem key={playlist.id} value={playlist.id}>
-                          {playlist.title} ({playlist.itemCount} videos)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>or</span>
-                    <div className="flex-1 h-px bg-white/10" />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Create new playlist..."
-                      value={newPlaylistName}
-                      onChange={(e) => {
-                        setNewPlaylistName(e.target.value);
-                        if (e.target.value) setSelectedPlaylistId("");
-                      }}
-                      className="flex-1"
-                    />
-                    {newPlaylistName && (
-                      <div className="flex items-center px-2 text-xs text-green-500">
-                        <Plus className="w-3 h-3 mr-1" />
-                        New
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
           
           <DialogFooter>
@@ -516,7 +414,7 @@ export function YouTubePush({
             </Button>
             <Button 
               onClick={handlePush} 
-              disabled={pushing || (!pushTitle && !pushDescription && !pushTags && !pushThumbnail && !selectedPlaylistId && !newPlaylistName)}
+              disabled={pushing || (!pushTitle && !pushDescription && !pushTags && !pushThumbnail)}
               className="gap-2"
             >
               {pushing ? (
