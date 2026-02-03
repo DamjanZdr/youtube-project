@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  Key
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -214,8 +215,14 @@ export default function AdminSubscriptionsPage() {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm capitalize">{sub.source || "stripe"}</span>
+                      {sub.source === "key" ? (
+                        <Key className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm capitalize">
+                        {sub.source || (sub.plan === "free" ? "Free" : "Stripe")}
+                      </span>
                     </div>
                   </td>
                   <td className="p-4">
