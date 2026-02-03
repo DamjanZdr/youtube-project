@@ -40,7 +40,7 @@ const ITEMS_PER_PAGE = 20;
 const planOptions = [
   { value: "creator", label: "Creator", color: "bg-blue-500/20 text-blue-300" },
   { value: "studio", label: "Studio", color: "bg-purple-500/20 text-purple-300" },
-  { value: "agency", label: "Agency", color: "bg-orange-500/20 text-orange-300" },
+  { value: "enterprise", label: "Enterprise", color: "bg-orange-500/20 text-orange-300" },
 ];
 
 const durationOptions = [
