@@ -13,6 +13,11 @@ import {
   addVideoToPlaylist,
   getVideoPlaylistItem
 } from '@/lib/youtube';
+import sharp from 'sharp';
+
+// YouTube thumbnail requirements: 1280x720 (16:9)
+const YOUTUBE_THUMBNAIL_WIDTH = 1280;
+const YOUTUBE_THUMBNAIL_HEIGHT = 720;
 
 export async function POST(request: NextRequest) {
   try {
@@ -158,9 +163,18 @@ export async function POST(request: NextRequest) {
           }
           
           const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-          const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
           
-          await updateVideoThumbnail(accessToken, project.youtube_video_id, imageBuffer, contentType);
+          // Resize/crop to YouTube's required 1280x720 (16:9) dimensions
+          // Using 'cover' to fill the entire area, cropping if needed
+          const processedBuffer = await sharp(imageBuffer)
+            .resize(YOUTUBE_THUMBNAIL_WIDTH, YOUTUBE_THUMBNAIL_HEIGHT, {
+              fit: 'cover',
+              position: 'center',
+            })
+            .jpeg({ quality: 95 }) // YouTube accepts JPEG, PNG, GIF - JPEG is most efficient
+            .toBuffer();
+          
+          await updateVideoThumbnail(accessToken, project.youtube_video_id, processedBuffer, 'image/jpeg');
           results.thumbnail = true;
         } else {
           results.errors.push('No thumbnail selected');
