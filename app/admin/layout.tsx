@@ -15,9 +15,6 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Admin emails - these users have access to the admin panel
-const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
-
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
@@ -42,9 +39,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      // Check if user is admin
-      const adminEmails = ADMIN_EMAILS.map(e => e.trim().toLowerCase());
-      if (adminEmails.includes(user.email?.toLowerCase() || "")) {
+      // Check if user has admin role in database
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role === "admin") {
         setIsAdmin(true);
       } else {
         router.push("/");
