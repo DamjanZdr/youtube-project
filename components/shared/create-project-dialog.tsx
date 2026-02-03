@@ -40,7 +40,6 @@ export function CreateProjectDialog({
       setVideoType("long");
       onOpenChange(false);
     } catch (err: any) {
-      console.error("Error creating project:", err);
       // Extract user-friendly message from Supabase error
       const message = err?.message || "Failed to create project. Please try again.";
       setError(message);
