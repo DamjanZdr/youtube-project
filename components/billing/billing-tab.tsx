@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -41,11 +42,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     plan: Plan | null;
     action: string;
     message: string;
+    isScheduleForGift?: boolean; // True when scheduling a plan for after gift expires
   }>({
     open: false,
     plan: null,
     action: "",
     message: "",
+    isScheduleForGift: false,
   });
 
   // Redeem Key State
@@ -58,6 +61,9 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   // Pending Keys State
   const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
   const [loadingPendingKeys, setLoadingPendingKeys] = useState(true);
+
+  // URL params for activation link from email
+  const searchParams = useSearchParams();
 
   // Load pending keys for this organization
   useEffect(() => {
@@ -84,6 +90,30 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     }
   }, [studioId]);
 
+  // Handle activate_plan URL parameter (from email link after gift expires)
+  useEffect(() => {
+    const activatePlan = searchParams.get("activate_plan");
+    const interval = searchParams.get("interval");
+    
+    if (activatePlan && interval) {
+      const planToActivate = plans.find(p => p.id === activatePlan);
+      if (planToActivate) {
+        // Auto-show confirmation dialog for the scheduled plan
+        const price = interval === "year" ? planToActivate.price.yearly : planToActivate.price.monthly;
+        setConfirmDialog({
+          open: true,
+          plan: planToActivate,
+          action: `Activate ${planToActivate.name}`,
+          message: `Complete your ${planToActivate.name} ${interval === "year" ? "Yearly" : "Monthly"} subscription for $${price}/${interval === "year" ? "year" : "month"}. Your gifted plan has expired and this was your scheduled plan.`,
+          isScheduleForGift: false, // This is a direct upgrade now
+        });
+        
+        // Also set the billing interval to match
+        setBillingInterval(interval === "year" ? "yearly" : "monthly");
+      }
+    }
+  }, [searchParams]);
+
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
   const isFreePlan = !subscription || subscription.plan === "free";
@@ -92,6 +122,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const hasPendingChange = isCanceling || !!pendingPlan;
   const isGiftedPlan = subscription?.source === "key";
   const isLifetime = isGiftedPlan && !subscription?.current_period_end;
+  const isPendingActivation = subscription?.source === "pending_activation"; // Gift expired, waiting for user to complete checkout
 
   const handleUpgrade = async (plan: Plan) => {
     if (loading) return;
@@ -114,7 +145,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     }
   };
 
-  const showConfirmation = (plan: Plan) => {
+  const showConfirmation = (plan: Plan, forceScheduleForGift: boolean = false) => {
     const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
     const newPlanIndex = plans.findIndex(p => p.id === plan.id);
     const isSamePlan = plan.id === (subscription?.plan || "free");
@@ -126,8 +157,15 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     
     let action = "";
     let message = "";
+    let isScheduleForGift = false;
     
-    if (plan.id === "free") {
+    // Special handling for gifted plans (non-lifetime)
+    if (isGiftedPlan && !isLifetime && forceScheduleForGift) {
+      // User wants to schedule a plan for after their gift expires
+      isScheduleForGift = true;
+      action = `Schedule ${plan.name} for After Gift`;
+      message = `Schedule ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} ($${price}/${billingInterval === "monthly" ? "month" : "year"}) to start when your gift expires on ${formatDate(subscription?.current_period_end)}? You won't be charged until then.`;
+    } else if (plan.id === "free") {
       action = "Downgrade to Free";
       message = `Are you sure you want to cancel your ${currentPlan?.name} subscription? You'll continue to have access until the end of your current billing period.`;
     } else if (isSamePlan && !isSameInterval) {
@@ -145,7 +183,12 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     } else if (newPlanIndex > currentPlanIndex) {
       // Upgrade
       action = `Upgrade to ${plan.name}`;
-      message = `Upgrade to ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} for $${price}/${billingInterval === "monthly" ? "month" : "year"}? You'll be charged immediately with proration for the remaining time on your current plan.`;
+      if (isGiftedPlan && !isLifetime) {
+        // Upgrading from a gifted plan overrides the gift immediately
+        message = `Upgrade to ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} for $${price}/${billingInterval === "monthly" ? "month" : "year"}? This will override your current gifted plan and you'll be charged immediately.`;
+      } else {
+        message = `Upgrade to ${plan.name} ${billingInterval === "monthly" ? "Monthly" : "Yearly"} for $${price}/${billingInterval === "monthly" ? "month" : "year"}? You'll be charged immediately with proration for the remaining time on your current plan.`;
+      }
     } else {
       // Downgrade
       action = `Downgrade to ${plan.name}`;
@@ -157,6 +200,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       plan,
       action,
       message,
+      isScheduleForGift,
     });
   };
 
@@ -164,7 +208,47 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     if (!confirmDialog.plan) return;
     
     setConfirmDialog({ ...confirmDialog, open: false });
-    await handleUpgrade(confirmDialog.plan);
+    
+    // If scheduling for after gift expires, use the pending plan API
+    if (confirmDialog.isScheduleForGift) {
+      await handleScheduleForGift(confirmDialog.plan);
+    } else {
+      await handleUpgrade(confirmDialog.plan);
+    }
+  };
+
+  const handleScheduleForGift = async (plan: Plan) => {
+    if (loading) return;
+    
+    setLoading(plan.id);
+    try {
+      const interval = billingInterval === "monthly" ? "month" : "year";
+      
+      const res = await fetch("/api/subscriptions/pending", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organization_id: studioId,
+          plan: plan.id,
+          interval,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        toast.error(data.error || "Failed to schedule plan");
+        return;
+      }
+      
+      toast.success(`${plan.name} scheduled to start when your gift expires!`);
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to schedule plan");
+      console.error(error);
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleManageBilling = async () => {
@@ -309,6 +393,42 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 className="mt-3"
               >
                 Update Payment Method
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Activation Banner - Gift expired, scheduled plan awaiting payment */}
+      {isPendingActivation && pendingPlan && (
+        <div className="glass-card p-4 border-2 border-purple-500/50 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
+          <div className="flex items-start gap-3">
+            <Gift className="w-5 h-5 text-purple-500 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-semibold text-purple-400">Complete Your {pendingPlan.name} Subscription</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your gifted plan has expired. You previously scheduled to continue with {pendingPlan.name}. 
+                Complete payment to activate your subscription.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => {
+                  const interval = subscription?.pending_interval || "month";
+                  const price = interval === "year" ? pendingPlan.price.yearly : pendingPlan.price.monthly;
+                  setConfirmDialog({
+                    open: true,
+                    plan: pendingPlan,
+                    action: `Activate ${pendingPlan.name}`,
+                    message: `Activate your ${pendingPlan.name} ${interval === "year" ? "Yearly" : "Monthly"} subscription for $${price}/${interval === "year" ? "year" : "month"}.`,
+                    isScheduleForGift: false,
+                  });
+                  setBillingInterval(subscription?.pending_interval === "year" ? "yearly" : "monthly");
+                }}
+                disabled={loading !== null}
+                className="mt-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Activate {pendingPlan.name} Now
               </Button>
             </div>
           </div>
@@ -550,16 +670,25 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-2xl font-bold capitalize">
-                      {subscription.previous_plan && subscription.previous_plan !== "free" 
-                        ? plans.find(p => p.id === subscription.previous_plan)?.name || subscription.previous_plan
-                        : "Free"
+                      {subscription.pending_plan
+                        ? plans.find(p => p.id === subscription.pending_plan)?.name || subscription.pending_plan
+                        : subscription.previous_plan && subscription.previous_plan !== "free" 
+                          ? plans.find(p => p.id === subscription.previous_plan)?.name || subscription.previous_plan
+                          : "Free"
                       }
                     </p>
+                    {subscription.pending_plan && (
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
+                        Scheduled
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {subscription.previous_plan && subscription.previous_plan !== "free"
-                      ? "Your original Stripe subscription will resume"
-                      : "You'll revert to the free tier"
+                    {subscription.pending_plan
+                      ? `You've scheduled to start paying for ${plans.find(p => p.id === subscription.pending_plan)?.name} when your gift expires`
+                      : subscription.previous_plan && subscription.previous_plan !== "free"
+                        ? "Your original Stripe subscription will resume"
+                        : "You'll revert to the free tier"
                     }
                   </p>
                 </div>
@@ -569,17 +698,61 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     <span className="text-muted-foreground">Gift Expires</span>
                     <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
                   </div>
+                  {subscription.pending_plan && subscription.pending_interval && (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">Scheduled Plan</span>
+                      <span className="font-medium capitalize">
+                        {subscription.pending_plan} ({subscription.pending_interval === "year" ? "Yearly" : "Monthly"})
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                  <p className="text-xs text-purple-400">
-                    Enjoy your gifted {currentPlan?.name} plan until {formatDate(subscription.current_period_end)}! 
-                    {subscription.previous_plan && subscription.previous_plan !== "free"
-                      ? ` Your ${subscription.previous_plan} subscription will automatically resume after.`
-                      : " You can upgrade anytime to keep your features."
-                    }
-                  </p>
-                </div>
+                {subscription.pending_plan ? (
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-xs text-blue-400 mb-2">
+                      ✓ You've scheduled {plans.find(p => p.id === subscription.pending_plan)?.name} to start on {formatDate(subscription.current_period_end)}.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7"
+                      onClick={async () => {
+                        setLoading("cancel-pending");
+                        try {
+                          const res = await fetch("/api/subscriptions/pending", {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ organization_id: studioId }),
+                          });
+                          if (res.ok) {
+                            toast.success("Scheduled plan cancelled");
+                            window.location.reload();
+                          } else {
+                            toast.error("Failed to cancel scheduled plan");
+                          }
+                        } catch {
+                          toast.error("Failed to cancel scheduled plan");
+                        } finally {
+                          setLoading(null);
+                        }
+                      }}
+                      disabled={loading === "cancel-pending"}
+                    >
+                      {loading === "cancel-pending" ? "Cancelling..." : "Cancel Scheduled Plan"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <p className="text-xs text-purple-400">
+                      Enjoy your gifted {currentPlan?.name} plan until {formatDate(subscription.current_period_end)}! 
+                      {subscription.previous_plan && subscription.previous_plan !== "free"
+                        ? ` Your ${subscription.previous_plan} subscription will automatically resume after.`
+                        : " You can schedule a paid plan below to continue after your gift expires."
+                      }
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -647,6 +820,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           const currentPlanIndex = plans.findIndex(p => p.id === (subscription?.plan || "free"));
           const thisPlanIndex = plans.findIndex(p => p.id === plan.id);
           const userHasHigherPlan = currentPlanIndex > thisPlanIndex;
+          const isHigherTierUpgrade = thisPlanIndex > currentPlanIndex;
+          
+          // For gifted plans (non-lifetime): determine if we show "Schedule" or "Upgrade Now"
+          // Higher tier = "Upgrade Now" (overrides gift immediately)
+          // Same/lower tier = "Schedule for After Gift" (preserves gift)
+          const canScheduleForGift = isGiftedPlan && !isLifetime && !isHigherTierUpgrade && plan.id !== "free";
+          const isScheduledPlan = subscription?.pending_plan === plan.id;
           
           // Button text logic
           let buttonText = "Upgrade";
@@ -654,6 +834,15 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             buttonText = "Loading...";
           } else if (isCurrent) {
             buttonText = "Current Plan";
+          } else if (isScheduledPlan) {
+            // This plan is already scheduled for after gift
+            buttonText = "Scheduled";
+          } else if (canScheduleForGift) {
+            // Gifted plan: same or lower tier = schedule for after gift
+            buttonText = "Schedule for After Gift";
+          } else if (isGiftedPlan && !isLifetime && isHigherTierUpgrade) {
+            // Gifted plan: higher tier = upgrade now (overrides gift)
+            buttonText = "Upgrade Now";
           } else if (isSamePlan && !isSameInterval) {
             // Same plan, different interval
             buttonText = `Switch to ${billingInterval === "monthly" ? "Monthly" : "Yearly"}`;
@@ -708,14 +897,14 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               <Button
                 className="w-full mt-auto h-10 text-sm font-semibold"
                 variant={
-                  isCurrent 
+                  isCurrent || isScheduledPlan
                     ? "outline" 
                     : (plan.popular && !userHasHigherPlan && thisPlanIndex >= currentPlanIndex) 
                       ? "default" 
                       : "outline"
                 }
-                disabled={isCurrent || loading === plan.id}
-                onClick={() => showConfirmation(plan)}
+                disabled={isCurrent || isScheduledPlan || loading === plan.id}
+                onClick={() => showConfirmation(plan, canScheduleForGift)}
               >
                 {buttonText}
               </Button>

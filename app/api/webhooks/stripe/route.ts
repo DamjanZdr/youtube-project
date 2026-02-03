@@ -19,6 +19,8 @@ const PRICE_TO_PLAN_MAP: Record<string, SubscriptionPlan> = {
   [process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly']: 'creator',
   [process.env.NEXT_PUBLIC_STRIPE_STUDIO_MONTHLY_PRICE_ID || 'price_studio_monthly']: 'studio',
   [process.env.NEXT_PUBLIC_STRIPE_STUDIO_YEARLY_PRICE_ID || 'price_studio_yearly']: 'studio',
+  [process.env.NEXT_PUBLIC_STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly']: 'studio',
+  [process.env.NEXT_PUBLIC_STRIPE_TEAM_YEARLY_PRICE_ID || 'price_team_yearly']: 'studio',
   [process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || 'price_enterprise_monthly']: 'enterprise',
   [process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_enterprise_yearly']: 'enterprise',
 };
@@ -70,6 +72,7 @@ export async function POST(request: Request) {
           const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'monthly';
 
           // Create or update subscription record
+          // Clear pending_plan fields as the user has now completed checkout
           await supabase
             .from('subscriptions')
             .upsert({
@@ -82,9 +85,13 @@ export async function POST(request: Request) {
               current_period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
               cancel_at_period_end: subscription.cancel_at_period_end || false,
               interval,
+              source: 'stripe', // Reset source from 'pending_activation' to 'stripe'
               failed_payment_count: 0,
               grace_period_end: null,
               last_payment_error: null,
+              pending_plan: null, // Clear pending plan
+              pending_interval: null, // Clear pending interval
+              pending_price_id: null, // Clear pending price ID
             }, {
               onConflict: 'organization_id',
             });
