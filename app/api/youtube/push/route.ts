@@ -5,7 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { updateVideoMetadata, updateVideoThumbnail, refreshAccessToken } from '@/lib/youtube';
+import { 
+  updateVideoMetadata, 
+  updateVideoThumbnail, 
+  refreshAccessToken,
+  createPlaylist,
+  addVideoToPlaylist,
+  getVideoPlaylistItem
+} from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +25,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { projectId, pushTitle, pushDescription, pushTags, pushThumbnail } = await request.json();
+    const { 
+      projectId, 
+      pushTitle, 
+      pushDescription, 
+      pushTags, 
+      pushThumbnail,
+      playlistId,        // Existing YouTube playlist ID
+      newPlaylistName,   // Name for new playlist to create
+    } = await request.json();
     
     if (!projectId) {
       return NextResponse.json({ error: 'Missing project ID' }, { status: 400 });
@@ -153,6 +168,35 @@ export async function POST(request: NextRequest) {
       } catch (thumbError: any) {
         console.error('Failed to update thumbnail:', thumbError);
         results.errors.push(`Thumbnail update failed: ${thumbError.message}`);
+      }
+    }
+    
+    // Handle playlist - either add to existing or create new
+    if (playlistId || newPlaylistName) {
+      try {
+        let targetPlaylistId = playlistId;
+        
+        // Create new playlist if name provided
+        if (newPlaylistName && !playlistId) {
+          const newPlaylist = await createPlaylist(accessToken, newPlaylistName);
+          targetPlaylistId = newPlaylist.id;
+          (results as any).playlistCreated = newPlaylist.title;
+        }
+        
+        if (targetPlaylistId) {
+          // Check if video is already in playlist
+          const existingItem = await getVideoPlaylistItem(accessToken, targetPlaylistId, project.youtube_video_id);
+          
+          if (!existingItem) {
+            await addVideoToPlaylist(accessToken, targetPlaylistId, project.youtube_video_id);
+            (results as any).addedToPlaylist = true;
+          } else {
+            (results as any).alreadyInPlaylist = true;
+          }
+        }
+      } catch (playlistError: any) {
+        console.error('Failed to handle playlist:', playlistError);
+        results.errors.push(`Playlist operation failed: ${playlistError.message}`);
       }
     }
     

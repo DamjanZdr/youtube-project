@@ -189,3 +189,114 @@ export async function updateVideoThumbnail(
   
   return response.data;
 }
+
+/**
+ * List playlists from the authenticated user's channel
+ */
+export async function listMyPlaylists(accessToken: string, maxResults = 50) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.playlists.list({
+    part: ['snippet', 'contentDetails'],
+    mine: true,
+    maxResults,
+  });
+  
+  return response.data.items?.map(item => ({
+    id: item.id!,
+    title: item.snippet?.title || 'Untitled',
+    description: item.snippet?.description || '',
+    thumbnail: item.snippet?.thumbnails?.medium?.url || null,
+    itemCount: item.contentDetails?.itemCount || 0,
+  })) || [];
+}
+
+/**
+ * Create a new playlist on YouTube
+ */
+export async function createPlaylist(
+  accessToken: string,
+  title: string,
+  description?: string,
+  privacyStatus: 'public' | 'private' | 'unlisted' = 'public'
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.playlists.insert({
+    part: ['snippet', 'status'],
+    requestBody: {
+      snippet: {
+        title,
+        description: description || '',
+      },
+      status: {
+        privacyStatus,
+      },
+    },
+  });
+  
+  return {
+    id: response.data.id!,
+    title: response.data.snippet?.title || title,
+  };
+}
+
+/**
+ * Add a video to a playlist
+ */
+export async function addVideoToPlaylist(
+  accessToken: string,
+  playlistId: string,
+  videoId: string
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.playlistItems.insert({
+    part: ['snippet'],
+    requestBody: {
+      snippet: {
+        playlistId,
+        resourceId: {
+          kind: 'youtube#video',
+          videoId,
+        },
+      },
+    },
+  });
+  
+  return response.data;
+}
+
+/**
+ * Remove a video from a playlist
+ */
+export async function removeVideoFromPlaylist(
+  accessToken: string,
+  playlistItemId: string
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  await youtube.playlistItems.delete({
+    id: playlistItemId,
+  });
+}
+
+/**
+ * Check if a video is in a playlist
+ */
+export async function getVideoPlaylistItem(
+  accessToken: string,
+  playlistId: string,
+  videoId: string
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.playlistItems.list({
+    part: ['id'],
+    playlistId,
+    videoId,
+    maxResults: 1,
+  });
+  
+  return response.data.items?.[0]?.id || null;
+}
