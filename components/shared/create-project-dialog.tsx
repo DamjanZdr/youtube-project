@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tv, Film } from "lucide-react";
+import { Tv, Film, AlertCircle } from "lucide-react";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -25,11 +25,13 @@ export function CreateProjectDialog({
   const [description, setDescription] = useState("");
   const [videoType, setVideoType] = useState<"long" | "short">("long");
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
 
     setCreating(true);
+    setError(null);
     try {
       await onCreateProject({ title, description, videoType });
       // Reset form
@@ -37,18 +39,36 @@ export function CreateProjectDialog({
       setDescription("");
       setVideoType("long");
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error creating project:", error);
+    } catch (err: any) {
+      console.error("Error creating project:", err);
+      // Extract user-friendly message from Supabase error
+      const message = err?.message || "Failed to create project. Please try again.";
+      setError(message);
     } finally {
       setCreating(false);
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setError(null); // Clear error when closing
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogTitle>Create New Project</DialogTitle>
         <div className="space-y-4 mt-4">
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+          
           <div>
             <label className="text-sm font-medium mb-2 block">Project Title</label>
             <Input
