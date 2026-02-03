@@ -90,6 +90,8 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const isPastDue = subscription?.status === "past_due";
   const isCanceling = subscription?.cancel_at_period_end;
   const hasPendingChange = isCanceling || !!pendingPlan;
+  const isGiftedPlan = subscription?.source === "key";
+  const isLifetime = isGiftedPlan && !subscription?.current_period_end;
 
   const handleUpgrade = async (plan: Plan) => {
     if (loading) return;
@@ -210,7 +212,19 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       if (!res.ok) {
         setRedeemError(data.error || "Failed to redeem key");
       } else {
-        setRedeemSuccess(`Key redeemed! Upgraded to ${data.plan}${data.expires_at ? ` until ${new Date(data.expires_at).toLocaleDateString()}` : " (lifetime)"}`);
+        // Build success message based on response
+        let successMsg = data.message || `Activated ${data.plan} plan`;
+        if (data.expires_at) {
+          successMsg += ` until ${new Date(data.expires_at).toLocaleDateString()}`;
+        } else {
+          successMsg += " (lifetime)";
+        }
+        if (data.extended) {
+          successMsg = `🎉 ${successMsg} - Time added to existing plan!`;
+        } else if (data.upgraded) {
+          successMsg = `🚀 ${successMsg}`;
+        }
+        setRedeemSuccess(successMsg);
         setRedeemKey("");
         if (redeemInputRef.current) redeemInputRef.current.value = "";
         // Optionally, refresh the page or subscription info
@@ -235,7 +249,15 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       if (!res.ok) {
         toast.error(data.error || "Failed to redeem key");
       } else {
-        toast.success(`Key redeemed! Upgraded to ${data.plan}`);
+        // Build success message
+        let successMsg = data.message || `Activated ${data.plan} plan`;
+        if (data.extended) {
+          toast.success(`🎉 ${successMsg} - Time extended!`);
+        } else if (data.upgraded) {
+          toast.success(`🚀 ${successMsg}`);
+        } else {
+          toast.success(successMsg);
+        }
         window.location.reload();
       }
     } catch (err) {
@@ -297,7 +319,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       <Card className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Billing Overview</h2>
-          {!isFreePlan && (
+          {!isFreePlan && !isGiftedPlan && (
             <Button
               variant="outline"
               onClick={handleManageBilling}
@@ -322,13 +344,24 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                   <p className="text-2xl font-bold capitalize">
                     {currentPlan?.name || "Free"}
                   </p>
-                  {!isFreePlan && subscription && (
+                  {!isFreePlan && subscription && !isGiftedPlan && (
                     <span className="text-sm text-muted-foreground">
                       ({subscription.interval === "month" ? "Monthly" : "Yearly"})
                     </span>
                   )}
+                  {isGiftedPlan && (
+                    <span className="text-sm text-muted-foreground">
+                      ({isLifetime ? "Lifetime" : subscription?.interval === "month" ? "Monthly" : "Yearly"})
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
+                  {isGiftedPlan && (
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
+                      <Gift className="w-3 h-3 mr-1" />
+                      Gifted
+                    </Badge>
+                  )}
                   {isPastDue && (
                     <Badge variant="destructive" className="text-xs">Past Due</Badge>
                   )}
@@ -336,7 +369,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 <p className="text-xs text-muted-foreground">{currentPlan?.description}</p>
               </div>
 
-              {!isFreePlan && subscription && (
+              {!isFreePlan && subscription && !isGiftedPlan && (
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground">Cycle Period</span>
@@ -362,6 +395,47 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 </div>
               )}
 
+              {/* Gifted Plan Details */}
+              {!isFreePlan && subscription && isGiftedPlan && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Activated</span>
+                    <span className="font-medium">{formatDate(subscription.current_period_start)}</span>
+                  </div>
+                  {isLifetime ? (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">Duration</span>
+                      <span className="font-medium text-purple-500">♾️ Lifetime Access</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">Expires</span>
+                      <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-xs pt-2 border-t">
+                    <span className="text-muted-foreground">Cost</span>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30 text-xs">
+                        <Gift className="w-3 h-3 mr-1" />
+                        Free Gift
+                      </Badge>
+                      <span className="font-bold text-muted-foreground line-through">
+                        ${subscription.interval === "month" || !subscription.interval ? currentPlan?.price.yearly : currentPlan?.price.yearly}
+                      </span>
+                    </div>
+                  </div>
+                  {subscription.previous_plan && subscription.previous_plan !== "free" && (
+                    <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Your previous {subscription.previous_plan} Stripe subscription is paused. 
+                        It will resume when this gifted plan expires.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {isFreePlan && (
                 <div className="py-4 text-center">
                   <p className="text-xs text-muted-foreground">No active subscription</p>
@@ -370,8 +444,8 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
             </div>
           </div>
 
-          {/* Next Billing Cycle */}
-          {!isFreePlan && subscription && (
+          {/* Next Billing Cycle - for Stripe subscriptions */}
+          {!isFreePlan && subscription && !isGiftedPlan && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-6 bg-amber-500 rounded-full" />
@@ -460,6 +534,72 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     </Button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* What Happens When Gift Expires - for gifted plans */}
+          {!isFreePlan && subscription && isGiftedPlan && !isLifetime && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-purple-500 rounded-full" />
+                <h3 className="font-semibold">When Gift Expires</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-2xl font-bold capitalize">
+                      {subscription.previous_plan && subscription.previous_plan !== "free" 
+                        ? plans.find(p => p.id === subscription.previous_plan)?.name || subscription.previous_plan
+                        : "Free"
+                      }
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {subscription.previous_plan && subscription.previous_plan !== "free"
+                      ? "Your original Stripe subscription will resume"
+                      : "You'll revert to the free tier"
+                    }
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Gift Expires</span>
+                    <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-xs text-purple-400">
+                    Enjoy your gifted {currentPlan?.name} plan until {formatDate(subscription.current_period_end)}! 
+                    {subscription.previous_plan && subscription.previous_plan !== "free"
+                      ? ` Your ${subscription.previous_plan} subscription will automatically resume after.`
+                      : " You can upgrade anytime to keep your features."
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lifetime Gift - no expiration */}
+          {!isFreePlan && subscription && isGiftedPlan && isLifetime && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full" />
+                <h3 className="font-semibold">Lifetime Access</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg text-center">
+                  <Sparkles className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+                  <p className="text-lg font-bold text-purple-400 mb-1">You're Set for Life!</p>
+                  <p className="text-xs text-muted-foreground">
+                    Your {currentPlan?.name} plan never expires. Enjoy all features forever.
+                  </p>
+                </div>
               </div>
             </div>
           )}

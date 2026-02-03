@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+// Plan hierarchy (higher index = better plan)
+const PLAN_HIERARCHY = ["free", "creator", "studio", "enterprise"];
+
+// Helper: get plan level (for comparison)
+function getPlanLevel(plan: string): number {
+  const index = PLAN_HIERARCHY.indexOf(plan);
+  return index >= 0 ? index : 0;
+}
+
 // Helper: get plan duration in months
-function getDurationMonths(duration: string) {
+function getDurationMonths(duration: string): number {
   if (duration === "month") return 1;
   if (duration === "year") return 12;
   if (duration === "lifetime") return 1200; // Arbitrary large number for lifetime
@@ -77,12 +86,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
   }
 
+  // Compare plan levels
+  const currentPlanLevel = getPlanLevel(sub.plan);
+  const keyPlanLevel = getPlanLevel(planKey.plan);
+  const isSamePlan = sub.plan === planKey.plan;
+  const isUpgrade = keyPlanLevel > currentPlanLevel;
+  const isDowngrade = keyPlanLevel < currentPlanLevel;
+
+  // Prevent downgrading with a key
+  if (isDowngrade) {
+    const currentPlanName = sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1);
+    const keyPlanName = planKey.plan.charAt(0).toUpperCase() + planKey.plan.slice(1);
+    return NextResponse.json({ 
+      error: `Cannot redeem this key. You're already on ${currentPlanName}, which is higher than ${keyPlanName}. This key cannot be used to downgrade your plan.`,
+      code: "DOWNGRADE_NOT_ALLOWED"
+    }, { status: 400 });
+  }
+
   // Calculate expiration based on duration
   const now = new Date();
   let expiresAt: Date | null = null;
+  
   if (planKey.duration === "lifetime") {
+    // Lifetime keys never expire
     expiresAt = null;
+  } else if (isSamePlan && sub.source === "key" && sub.current_period_end) {
+    // Same plan + already on a key: EXTEND the existing time
+    // Start from current expiration date instead of now
+    const currentExpiration = new Date(sub.current_period_end);
+    expiresAt = new Date(currentExpiration);
+    expiresAt.setMonth(expiresAt.getMonth() + getDurationMonths(planKey.duration));
   } else {
+    // Upgrade or first key on this plan: start fresh from now
     expiresAt = new Date(now);
     expiresAt.setMonth(expiresAt.getMonth() + getDurationMonths(planKey.duration));
   }
@@ -101,23 +136,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to redeem key" }, { status: 500 });
   }
 
-  // Update subscription: backup previous plan, set new plan, set source to 'key'
+  // Build the subscription update
+  // Only backup previous plan if this is an upgrade AND they were on a Stripe plan
+  const subscriptionUpdate: Record<string, any> = {
+    plan: planKey.plan,
+    source: "key",
+    key_id: planKey.id, // Track which key is active
+    current_period_start: isSamePlan && sub.source === "key" ? sub.current_period_start : now.toISOString(),
+    current_period_end: expiresAt ? expiresAt.toISOString() : null,
+  };
+
+  // If upgrading from a Stripe paid plan, store the previous info so we can resume if key expires
+  if (isUpgrade && sub.source === "stripe" && sub.plan !== "free") {
+    subscriptionUpdate.previous_plan = sub.plan;
+    subscriptionUpdate.previous_stripe_subscription_id = sub.stripe_subscription_id;
+    // Note: We should ideally pause the Stripe subscription here
+    // For now, the admin should manually pause/cancel via Stripe dashboard
+  }
+
   const { error: subUpdateError } = await supabase
     .from("subscriptions")
-    .update({
-      previous_plan: sub.plan,
-      previous_stripe_subscription_id: sub.stripe_subscription_id,
-      plan: planKey.plan,
-      source: "key",
-      current_period_start: now.toISOString(),
-      current_period_end: expiresAt ? expiresAt.toISOString() : null,
-    })
+    .update(subscriptionUpdate)
     .eq("id", sub.id);
   if (subUpdateError) {
     return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
   }
 
-  // TODO: Pause/cancel Stripe billing if needed (not implemented here)
+  // Build response message
+  let message = "";
+  if (isSamePlan && sub.source === "key") {
+    message = `Extended your ${planKey.plan} plan`;
+  } else if (isUpgrade) {
+    message = `Upgraded to ${planKey.plan}`;
+  } else {
+    message = `Activated ${planKey.plan} plan`;
+  }
 
-  return NextResponse.json({ success: true, plan: planKey.plan, expires_at: expiresAt });
+  return NextResponse.json({ 
+    success: true, 
+    plan: planKey.plan, 
+    expires_at: expiresAt,
+    message,
+    extended: isSamePlan && sub.source === "key",
+    upgraded: isUpgrade,
+    previous_plan: isUpgrade ? sub.plan : null,
+  });
 }
