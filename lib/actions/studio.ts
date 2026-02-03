@@ -141,6 +141,17 @@ export async function createStudio(formData: FormData) {
   // Create default board statuses with tasks using database function
   await adminClient.rpc('create_default_board_statuses', { org_id: studio.id });
 
+  // Create a free subscription for the studio
+  await adminClient
+    .from("subscriptions")
+    .insert({
+      organization_id: studio.id,
+      plan: "free",
+      status: "active",
+      source: null,
+      interval: null
+    });
+
   revalidatePath("/hub");
   
   return { success: true, slug: studio.slug };
