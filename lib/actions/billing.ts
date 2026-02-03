@@ -56,128 +56,128 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     if (!priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
       // Set to cancel at period end in Stripe
       const stripe = (await import('@/lib/stripe')).getStripe();
-    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-      cancel_at_period_end: true,
-    });
-
-    // Update database to reflect pending downgrade to free
-    await supabase
-      .from('subscriptions')
-      .update({
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
         cancel_at_period_end: true,
-        pending_plan: 'free',
-        pending_price_id: null,
-        pending_interval: null,
-      })
-      .eq('organization_id', organizationId);
-
-    return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&scheduled=true` };
-  }
-
-  // If they have an active subscription, determine if upgrade or downgrade
-  if (priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
-    const stripe = (await import('@/lib/stripe')).getStripe();
-    const plans = (await import('@/config/subscriptions')).plans;
-    
-    // If they had scheduled a cancellation, un-cancel it by selecting a new plan
-    if (subscription.cancel_at_period_end) {
-      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-        cancel_at_period_end: false,
-      });
-    }
-    
-    // Get current and new plan details
-    const currentPlan = plans.find(p => p.id === subscription.plan);
-    const currentPlanTier = plans.findIndex(p => p.id === subscription.plan);
-    
-    // Find which plan and interval the new price belongs to
-    let newPlan: any = null;
-    let newInterval: 'month' | 'year' | null = null;
-    let newPlanTier = -1;
-    
-    for (let i = 0; i < plans.length; i++) {
-      const plan = plans[i];
-      if (plan.stripePriceId.monthly === priceId) {
-        newPlan = plan;
-        newInterval = 'month';
-        newPlanTier = i;
-        break;
-      } else if (plan.stripePriceId.yearly === priceId) {
-        newPlan = plan;
-        newInterval = 'year';
-        newPlanTier = i;
-        break;
-      }
-    }
-
-    if (!newPlan || !newInterval) {
-      throw new Error('Invalid price ID');
-    }
-
-    const currentInterval = subscription.interval || 'month';
-    
-    // Determine if this is an upgrade or downgrade
-    // Upgrade = higher tier OR same/higher tier + monthly->yearly
-    // Downgrade = lower tier OR any tier + yearly->monthly
-    const isUpgrade = newPlanTier > currentPlanTier || 
-                      (newPlanTier >= currentPlanTier && currentInterval === 'month' && newInterval === 'year');
-    
-    if (isUpgrade) {
-      // UPGRADE: Apply immediately with proration
-      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-        items: [{
-          id: (await stripe.subscriptions.retrieve(subscription.stripe_subscription_id)).items.data[0].id,
-          price: priceId,
-        }],
-        proration_behavior: 'always_invoice', // Charge the difference immediately
       });
 
-      // Clear any pending changes
+      // Update database to reflect pending downgrade to free
       await supabase
         .from('subscriptions')
         .update({
-          cancel_at_period_end: false,
-          pending_plan: null,
+          cancel_at_period_end: true,
+          pending_plan: 'free',
           pending_price_id: null,
           pending_interval: null,
         })
         .eq('organization_id', organizationId);
 
-      return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&upgraded=true` };
-    } else {
-      // DOWNGRADE: Schedule for end of period
-      // Don't touch Stripe subscription yet - just store the pending change
-      await supabase
-        .from('subscriptions')
-        .update({
-          cancel_at_period_end: false, // Cancel any pending cancellation
-          pending_plan: newPlan.id,
-          pending_price_id: priceId,
-          pending_interval: newInterval,
-        })
-        .eq('organization_id', organizationId);
-
       return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&scheduled=true` };
     }
-  }
 
-  // No active subscription - create new checkout session
-  const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl, org.slug);
-  
-  const session = await createStripeCheckout({
-    priceId,
-    customerEmail: user.email,
-    customerId: subscription?.stripe_customer_id,
-    successUrl,
-    cancelUrl,
-    metadata: {
-      userId: user.id,
-      organizationId: org.id,
-      organizationName: org.name,
-    },
-  });
+    // If they have an active subscription, determine if upgrade or downgrade
+    if (priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
+      const stripe = (await import('@/lib/stripe')).getStripe();
+      const plans = (await import('@/config/subscriptions')).plans;
+      
+      // If they had scheduled a cancellation, un-cancel it by selecting a new plan
+      if (subscription.cancel_at_period_end) {
+        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+          cancel_at_period_end: false,
+        });
+      }
+      
+      // Get current and new plan details
+      const currentPlan = plans.find(p => p.id === subscription.plan);
+      const currentPlanTier = plans.findIndex(p => p.id === subscription.plan);
+      
+      // Find which plan and interval the new price belongs to
+      let newPlan: any = null;
+      let newInterval: 'month' | 'year' | null = null;
+      let newPlanTier = -1;
+      
+      for (let i = 0; i < plans.length; i++) {
+        const plan = plans[i];
+        if (plan.stripePriceId.monthly === priceId) {
+          newPlan = plan;
+          newInterval = 'month';
+          newPlanTier = i;
+          break;
+        } else if (plan.stripePriceId.yearly === priceId) {
+          newPlan = plan;
+          newInterval = 'year';
+          newPlanTier = i;
+          break;
+        }
+      }
 
-  return { url: session.url };
+      if (!newPlan || !newInterval) {
+        throw new Error('Invalid price ID');
+      }
+
+      const currentInterval = subscription.interval || 'month';
+      
+      // Determine if this is an upgrade or downgrade
+      // Upgrade = higher tier OR same/higher tier + monthly->yearly
+      // Downgrade = lower tier OR any tier + yearly->monthly
+      const isUpgrade = newPlanTier > currentPlanTier || 
+                        (newPlanTier >= currentPlanTier && currentInterval === 'month' && newInterval === 'year');
+      
+      if (isUpgrade) {
+        // UPGRADE: Apply immediately with proration
+        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+          items: [{
+            id: (await stripe.subscriptions.retrieve(subscription.stripe_subscription_id)).items.data[0].id,
+            price: priceId,
+          }],
+          proration_behavior: 'always_invoice', // Charge the difference immediately
+        });
+
+        // Clear any pending changes
+        await supabase
+          .from('subscriptions')
+          .update({
+            cancel_at_period_end: false,
+            pending_plan: null,
+            pending_price_id: null,
+            pending_interval: null,
+          })
+          .eq('organization_id', organizationId);
+
+        return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&upgraded=true` };
+      } else {
+        // DOWNGRADE: Schedule for end of period
+        // Don't touch Stripe subscription yet - just store the pending change
+        await supabase
+          .from('subscriptions')
+          .update({
+            cancel_at_period_end: false, // Cancel any pending cancellation
+            pending_plan: newPlan.id,
+            pending_price_id: priceId,
+            pending_interval: newInterval,
+          })
+          .eq('organization_id', organizationId);
+
+        return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&scheduled=true` };
+      }
+    }
+
+    // No active subscription - create new checkout session
+    const { successUrl, cancelUrl } = stripeConfig.getCheckoutUrls(baseUrl, org.slug);
+    
+    const session = await createStripeCheckout({
+      priceId,
+      customerEmail: user.email,
+      customerId: subscription?.stripe_customer_id,
+      successUrl,
+      cancelUrl,
+      metadata: {
+        userId: user.id,
+        organizationId: org.id,
+        organizationName: org.name,
+      },
+    });
+
+    return { url: session.url };
   } catch (error) {
     console.error('createCheckoutSession error:', error);
     throw error;
