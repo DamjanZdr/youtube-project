@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -62,9 +61,6 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
   const [loadingPendingKeys, setLoadingPendingKeys] = useState(true);
 
-  // URL params for activation link from email
-  const searchParams = useSearchParams();
-
   // Load pending keys for this organization
   useEffect(() => {
     async function loadPendingKeys() {
@@ -90,29 +86,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     }
   }, [studioId]);
 
-  // Handle activate_plan URL parameter (from email link after gift expires)
-  useEffect(() => {
-    const activatePlan = searchParams.get("activate_plan");
-    const interval = searchParams.get("interval");
-    
-    if (activatePlan && interval) {
-      const planToActivate = plans.find(p => p.id === activatePlan);
-      if (planToActivate) {
-        // Auto-show confirmation dialog for the scheduled plan
-        const price = interval === "year" ? planToActivate.price.yearly : planToActivate.price.monthly;
-        setConfirmDialog({
-          open: true,
-          plan: planToActivate,
-          action: `Activate ${planToActivate.name}`,
-          message: `Complete your ${planToActivate.name} ${interval === "year" ? "Yearly" : "Monthly"} subscription for $${price}/${interval === "year" ? "year" : "month"}. Your gifted plan has expired and this was your scheduled plan.`,
-          isScheduleForGift: false, // This is a direct upgrade now
-        });
-        
-        // Also set the billing interval to match
-        setBillingInterval(interval === "year" ? "yearly" : "monthly");
-      }
-    }
-  }, [searchParams]);
+  // TODO: Handle activate_plan URL parameter from email link (needs Suspense boundary in parent)
 
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
