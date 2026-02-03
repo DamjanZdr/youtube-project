@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tv, Film, AlertCircle } from "lucide-react";
@@ -59,6 +59,9 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogTitle>Create New Project</DialogTitle>
+        <DialogDescription className="sr-only">
+          Create a new video project by entering a title and selecting the video type.
+        </DialogDescription>
         <div className="space-y-4 mt-4">
           {/* Error Message */}
           {error && (

@@ -416,6 +416,26 @@ export default function BoardPage() {
   const createProject = async (data: { title: string; description: string; videoType: "long" | "short" }) => {
     if (!organizationId) return;
 
+    // Check project limit before attempting to create
+    const { count: projectCount } = await supabase
+      .from("projects")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId);
+
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("organization_id", organizationId)
+      .single();
+
+    const plan = sub?.plan || "free";
+    const limits: Record<string, number> = { free: 1, creator: -1, studio: -1, agency: -1 };
+    const limit = limits[plan] ?? 1;
+
+    if (limit !== -1 && (projectCount ?? 0) >= limit) {
+      throw new Error(`Project limit reached for ${plan} plan (${limit} projects). Upgrade to create more projects.`);
+    }
+
     // Get or create default channel
     let { data: channel } = await supabase
       .from("channels")
