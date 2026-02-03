@@ -248,7 +248,7 @@ export function YouTubePush({
               <span>Video linked</span>
               {lastSyncedAt && (
                 <span className="text-xs text-muted-foreground">
-                  • Last synced {new Date(lastSyncedAt).toLocaleDateString()}
+                  • Last synced {new Date(lastSyncedAt).toLocaleString()}
                 </span>
               )}
             </div>
