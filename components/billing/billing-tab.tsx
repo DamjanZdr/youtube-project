@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,9 +13,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { plans, type Plan } from "@/config/subscriptions";
-import { Check, AlertCircle, CreditCard, Calendar, Download, X } from "lucide-react";
+import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
+import { createClient } from "@/lib/supabase/client";
+
+interface PendingKey {
+  id: string;
+  key: string;
+  plan: string;
+  duration: string;
+  sent_at: string;
+}
 
 interface BillingTabProps {
   subscription: any;
@@ -45,6 +54,35 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [redeemError, setRedeemError] = useState<string | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
   const redeemInputRef = useRef<HTMLInputElement>(null);
+
+  // Pending Keys State
+  const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
+  const [loadingPendingKeys, setLoadingPendingKeys] = useState(true);
+
+  // Load pending keys for this organization
+  useEffect(() => {
+    async function loadPendingKeys() {
+      setLoadingPendingKeys(true);
+      const supabase = createClient();
+      
+      // Get keys assigned to this org that haven't been redeemed
+      const { data: keys } = await supabase
+        .from("plan_keys")
+        .select("id, key, plan, duration, sent_at")
+        .eq("assigned_org_id", studioId)
+        .is("redeemed_at", null)
+        .order("sent_at", { ascending: false });
+      
+      if (keys) {
+        setPendingKeys(keys);
+      }
+      setLoadingPendingKeys(false);
+    }
+    
+    if (studioId) {
+      loadPendingKeys();
+    }
+  }, [studioId]);
 
   const currentPlan = plans.find(p => p.id === (subscription?.plan || "free"));
   const pendingPlan = subscription?.pending_plan ? plans.find(p => p.id === subscription.pending_plan) : null;
@@ -182,6 +220,37 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       setRedeemError("Failed to redeem key");
     } finally {
       setRedeemLoading(false);
+    }
+  };
+
+  const handleRedeemPendingKey = async (key: string) => {
+    setRedeemLoading(true);
+    try {
+      const res = await fetch("/api/keys/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, organization_id: studioId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to redeem key");
+      } else {
+        toast.success(`Key redeemed! Upgraded to ${data.plan}`);
+        window.location.reload();
+      }
+    } catch (err) {
+      toast.error("Failed to redeem key");
+    } finally {
+      setRedeemLoading(false);
+    }
+  };
+
+  const formatDuration = (duration: string) => {
+    switch (duration) {
+      case "month": return "1 Month";
+      case "year": return "1 Year";
+      case "lifetime": return "Lifetime";
+      default: return duration;
     }
   };
 
@@ -514,6 +583,58 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           );
         })}
       </div> {/* End of plans grid */}
+
+      {/* Pending Keys Section */}
+      {pendingKeys.length > 0 && (
+        <Card className="glass-card max-w-2xl mx-auto mt-10 p-6 border-2 border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <Gift className="w-5 h-5 text-green-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">You Have a Plan Key!</h3>
+              <p className="text-sm text-muted-foreground">
+                {pendingKeys.length === 1 ? "A key has been" : `${pendingKeys.length} keys have been`} assigned to this studio
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {pendingKeys.map((pendingKey) => (
+              <div 
+                key={pendingKey.id} 
+                className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-white/10"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-green-500" />
+                    <code className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                      {pendingKey.key}
+                    </code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="capitalize bg-blue-500/10 text-blue-400 border-blue-500/30">
+                      {pendingKey.plan}
+                    </Badge>
+                    <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
+                      {formatDuration(pendingKey.duration)}
+                    </Badge>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => handleRedeemPendingKey(pendingKey.key)}
+                  disabled={redeemLoading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Activate Now
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Redeem Key Section (below plans, above billing history) */}
       <Card className="glass-card max-w-2xl mx-auto mt-10 p-6 flex flex-col items-center">

@@ -15,7 +15,24 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { key, organization_id } = await req.json();
+  const body = await req.json();
+  const key = body.key;
+  let organization_id = body.organization_id || body.organizationId;
+  const studioSlug = body.studioSlug;
+  
+  // If studioSlug provided, look up the org ID
+  if (studioSlug && !organization_id) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", studioSlug)
+      .single();
+    
+    if (org) {
+      organization_id = org.id;
+    }
+  }
+  
   if (!key || !organization_id) {
     return NextResponse.json({ error: "Missing key or organization_id" }, { status: 400 });
   }

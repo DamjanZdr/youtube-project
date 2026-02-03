@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS plan_keys (
   plan TEXT NOT NULL, -- 'creator', 'studio', 'enterprise'
   duration TEXT NOT NULL DEFAULT 'year', -- 'month', 'year', 'lifetime'
   assigned_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- Optional: pre-assign to specific org
+  sent_to_email TEXT, -- Email address the key was sent to
+  sent_at TIMESTAMPTZ, -- When the key was emailed
   redeemed_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   redeemed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   redeemed_at TIMESTAMPTZ,
