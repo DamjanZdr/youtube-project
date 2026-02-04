@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
-import { Plus, Video, Clock, TrendingUp } from "lucide-react";
+import { Plus, Video, Clock, TrendingUp, Youtube } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -24,6 +24,17 @@ interface BoardStatus {
   color: string;
 }
 
+// Format subscriber count with abbreviations (1.2K, 45.6K, 1.2M, etc.)
+function formatSubscriberCount(count: number): string {
+  if (count >= 1000000) {
+    return (count / 1000000).toFixed(count >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  }
+  if (count >= 1000) {
+    return (count / 1000).toFixed(count >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  }
+  return count.toLocaleString();
+}
+
 export default function StudioHomePage() {
   const params = useParams();
   const router = useRouter();
@@ -35,6 +46,7 @@ export default function StudioHomePage() {
   const [boardStatuses, setBoardStatuses] = useState<BoardStatus[]>([]);
   const [user, setUser] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState<number>(0);
 
   useEffect(() => {
     async function loadData() {
@@ -77,6 +89,15 @@ export default function StudioHomePage() {
         .limit(5);
 
       setProjects(projectData || []);
+
+      // Fetch subscriber count
+      const { data: channelData } = await supabase
+        .from("channels")
+        .select("subscriber_count")
+        .eq("organization_id", studioData?.id)
+        .single();
+
+      setSubscriberCount(channelData?.subscriber_count || 0);
     }
 
     loadData();
@@ -183,7 +204,20 @@ export default function StudioHomePage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Subscriber Count - Featured */}
+        <div className="glass-card p-5 border border-red-500/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
+              <Youtube className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{formatSubscriberCount(subscriberCount)}</p>
+              <p className="text-sm text-muted-foreground">Subscribers</p>
+            </div>
+          </div>
+        </div>
+
         <div className="glass-card p-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">

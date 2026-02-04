@@ -536,14 +536,6 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                       </span>
                     </div>
                   </div>
-                  {subscription.previous_plan && subscription.previous_plan !== "free" && (
-                    <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                        Your previous {subscription.previous_plan} Stripe subscription is paused. 
-                        It will resume when this gifted plan expires.
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
 
