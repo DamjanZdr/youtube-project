@@ -26,8 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 
-// DEBUG: Test if any React events work
-console.log("=== IDEA PAGE MODULE LOADED ===");
+
 
 // Types
 interface WhiteboardElement {
@@ -78,11 +77,6 @@ export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const supabase = createClient();
-  
-  // DEBUG: Log on component mount
-  useEffect(() => {
-    console.log("=== IDEA PAGE COMPONENT MOUNTED ===");
-  }, []);
 
   // Canvas state
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -491,15 +485,7 @@ export default function IdeaPage() {
   const selectedEl = elements.find((el) => el.id === selectedElement);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden" onClick={() => console.log("OUTER DIV CLICKED")}>
-      {/* DEBUG TEST BUTTON */}
-      <button 
-        onClick={() => alert("BUTTON WORKS!")} 
-        style={{ padding: '10px', background: 'red', color: 'white', margin: '10px' }}
-      >
-        DEBUG: Click Me!
-      </button>
-      
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Toolbar */}
       <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
         {/* Tool Buttons */}
@@ -507,10 +493,7 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "select" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => {
-              console.log("Select tool clicked");
-              setActiveTool("select");
-            }}
+            onClick={() => setActiveTool("select")}
             title="Select (V)"
           >
             <MousePointer2 className="w-4 h-4" />
@@ -712,16 +695,8 @@ export default function IdeaPage() {
           `,
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
-          minHeight: "400px",
-          border: "3px solid red",
-        }}
-        onClick={(e) => {
-          console.log("CANVAS CLICKED!", e.target);
-          alert("Canvas clicked!");
         }}
         onMouseDown={(e) => {
-          console.log("CANVAS MOUSEDOWN!", e.target);
-          // Handle all mouse interactions here
           const target = e.target as HTMLElement;
           
           // If clicking on an element, don't do canvas actions
@@ -737,7 +712,6 @@ export default function IdeaPage() {
           }
           
           const pos = getCanvasPosition(e);
-          console.log("Canvas mousedown at:", pos, "with tool:", activeTool);
           
           if (activeTool === "draw") {
             setIsDrawing(true);

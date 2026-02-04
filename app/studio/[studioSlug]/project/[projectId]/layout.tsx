@@ -233,7 +233,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       </header>
 
       {/* Tab Content */}
-      <main className="flex-1 min-h-0 relative">{children}</main>
+      <main className="flex-1 min-h-0 relative flex flex-col">{children}</main>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
