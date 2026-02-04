@@ -57,3 +57,4 @@ CREATE TRIGGER update_youtube_connections_updated_at
   BEFORE UPDATE ON youtube_connections
   FOR EACH ROW
   EXECUTE FUNCTION update_youtube_connections_updated_at();
+  
