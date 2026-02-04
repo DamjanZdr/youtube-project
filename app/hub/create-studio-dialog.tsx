@@ -233,7 +233,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Studio Name */}
-            <div className="mb-8">
+            <div>
               <label htmlFor="studio-name" className="text-sm font-medium mb-3 block text-muted-foreground">
                 Studio Name <span className="text-red-400">*</span>
               </label>
@@ -247,60 +247,60 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               />
             </div>
 
-            {/* Key Redemption - Under Studio Name */}
-            <div className="mb-8">
-              {keyInfo ? (
-                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Key className="w-4 h-4 text-green-400" />
-                      <span className="text-sm font-medium text-green-400">Key Applied</span>
+            {/* Key Redemption - Vertically centered in remaining space */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                {keyInfo ? (
+                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Key className="w-4 h-4 text-green-400" />
+                        <span className="text-sm font-medium text-green-400">Key Applied</span>
+                      </div>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
-                      <X className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
+                        {keyInfo.plan}
+                      </Badge>
+                      <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                        {formatDuration(keyInfo.duration)}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
-                      {keyInfo.plan}
-                    </Badge>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {formatDuration(keyInfo.duration)}
-                    </Badge>
+                ) : showKeyInput ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-muted-foreground">Redeem Key</label>
+                      <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setShowKeyInput(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={redeemKey}
+                        onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                        placeholder="XXXX-XXXX-XXXX-XXXX"
+                        className="font-mono text-sm bg-white/5"
+                      />
+                      <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
+                        {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {keyError && <p className="text-xs text-red-400">{keyError}</p>}
                   </div>
-                </div>
-              ) : showKeyInput ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-muted-foreground">Redeem Key</label>
-                    <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setShowKeyInput(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={redeemKey}
-                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
-                      className="font-mono text-sm bg-white/5"
-                    />
-                    <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
-                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                    </Button>
-                  </div>
-                  {keyError && <p className="text-xs text-red-400">{keyError}</p>}
-                </div>
-              ) : (
-                <Button variant="outline" className="w-full gap-2 h-11 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => setShowKeyInput(true)}>
-                  <Key className="w-4 h-4" />
-                  Have a plan key?
-                </Button>
-              )}
+                ) : (
+                  <Button variant="outline" className="w-full gap-2 h-11 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => setShowKeyInput(true)}>
+                    <Key className="w-4 h-4" />
+                    Have a plan key?
+                  </Button>
+                )}
+              </div>
             </div>
 
-            <div className="flex-1" /> {/* Spacer */}
-
-            {error && <p className="text-sm text-red-400 mt-4">{error}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
 
           {/* Right Panel - Plans */}
