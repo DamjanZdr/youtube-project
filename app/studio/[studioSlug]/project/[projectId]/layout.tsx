@@ -16,6 +16,7 @@ import {
   Copy,
   ExternalLink,
   ListTodo,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,6 +90,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   };
 
   const tabs = [
+    { href: `/studio/${studioSlug}/project/${projectId}/idea`, icon: Lightbulb, label: "Idea" },
     { href: `/studio/${studioSlug}/project/${projectId}`, icon: Package, label: "Packaging", exact: true },
     { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard" },
     { href: `/studio/${studioSlug}/project/${projectId}/preview`, icon: Eye, label: "Preview" },
