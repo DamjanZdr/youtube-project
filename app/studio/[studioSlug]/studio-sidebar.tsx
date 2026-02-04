@@ -1,10 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { 
-  ArrowLeft, 
-  LogOut,
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
@@ -15,13 +12,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { NavLinks } from "./nav-links";
+import { SidebarUserDropup } from "@/components/shared/sidebar-user-dropup";
 
 interface StudioSidebarProps {
   studio: {
     name: string;
     logo_url: string | null;
   };
-  user: any;
+  user: {
+    id: string;
+    email: string | null;
+    full_name?: string | null;
+    avatar_url?: string | null;
+    accept_invites?: boolean;
+  };
   studioSlug: string;
 }
 
@@ -65,30 +69,21 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
 
         {/* Sidebar Footer */}
         <div className={`border-t border-white/5 ${footerPadding}`}>
-          {/* Back to Hub */}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link 
-                  href="/hub" 
-                  className="flex items-center justify-center w-full h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors mb-2"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Back to Hub</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link 
-              href="/hub" 
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3 px-3 py-2 rounded-xl hover:bg-white/5"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Hub
-            </Link>
-          )}
+          {/* User Profile Dropup */}
+          <div className="mb-2">
+            <SidebarUserDropup 
+              user={{
+                id: user.id,
+                email: user.email,
+                full_name: user.full_name,
+                avatar_url: user.avatar_url,
+              }}
+              initialAcceptInvites={user.accept_invites ?? true}
+              collapsed={collapsed}
+            />
+          </div>
 
-          {/* Action Buttons */}
+          {/* Collapse/Expand Button */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -104,18 +99,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
               <TooltipContent side="right">Expand sidebar</TooltipContent>
             </Tooltip>
           ) : (
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <form action="/auth/sign-out" method="post" className="flex-1">
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-                      <LogOut className="w-4 h-4 scale-x-[-1]" />
-                      Logout
-                    </Button>
-                  </form>
-                </TooltipTrigger>
-                <TooltipContent>Sign out</TooltipContent>
-              </Tooltip>
+            <div className="flex justify-end">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 

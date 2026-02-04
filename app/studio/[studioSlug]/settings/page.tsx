@@ -49,9 +49,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -67,8 +64,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
-    // Get tab from URL or default to personal
-    const tab = searchParams.get('tab') || 'personal';
+    // Get tab from URL or default to studio
+    const tab = searchParams.get('tab') || 'studio';
     setActiveTab(tab);
   }, [searchParams]);
 
@@ -174,79 +171,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       }
     }
     setSaving(false);
-  };
-
-  const handleSaveDisplayName = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: displayName })
-      .eq('id', user.id);
-
-    if (error) {
-      console.error('Error saving display name:', error);
-      toast.error('Failed to save display name');
-    } else {
-      setUser({ ...user, full_name: displayName });
-      toast.success('Display name updated successfully!');
-    }
-    setSaving(false);
-  };
-
-  const handleSendPasswordReset = async () => {
-    if (!user?.email) return;
-    
-    setSendingPasswordReset(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/auth/update-password`,
-    });
-
-    if (error) {
-      console.error('Error sending password reset:', error);
-      toast.error('Failed to send password reset email');
-    } else {
-      toast.success('Password reset email sent! Check your inbox.');
-    }
-    setSendingPasswordReset(false);
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploadingAvatar(true);
-    
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('studio-assets')
-      .upload(filePath, file, { upsert: true });
-
-    if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage
-        .from('studio-assets')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (!updateError) {
-        setUser({ ...user, avatar_url: publicUrl });
-        toast.success('Profile picture updated successfully!');
-      } else {
-        toast.error('Failed to update profile picture');
-      }
-    } else {
-      toast.error('Failed to upload profile picture');
-    }
-    
-    setUploadingAvatar(false);
   };
 
   const getMemberLimit = () => {
@@ -562,10 +486,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
         <TabsList className="glass">
-          <TabsTrigger value="personal" className="gap-2">
-            <Users className="w-4 h-4" />
-            Personal
-          </TabsTrigger>
           <TabsTrigger value="studio" className="gap-2">
             <SettingsIcon className="w-4 h-4" />
             Studio
@@ -699,108 +619,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               <Trash2 className="w-4 h-4" />
               Delete Studio
             </Button>
-          </div>
-        </TabsContent>
-
-        {/* Personal Settings */}
-        <TabsContent value="personal" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Profile</h3>
-              
-              {/* Profile Picture */}
-              <div className="flex items-center gap-6 mb-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
-                  {user?.avatar_url ? (
-                    <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-3xl font-bold">{displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}</span>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="avatar-upload">
-                    <Button variant="outline" className="gap-2" disabled={uploadingAvatar} asChild>
-                      <span>
-                        <Upload className="w-4 h-4" />
-                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                      </span>
-                    </Button>
-                  </label>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Recommended: 256x256px, PNG or JPG
-                  </p>
-                </div>
-              </div>
-              
-              {/* Display Name */}
-              <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium">Display Name</label>
-                <Input 
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="glass max-w-md"
-                  placeholder="Your display name"
-                />
-              </div>
-
-              {/* Email (read-only) */}
-              <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium">Email</label>
-                <Input 
-                  value={user?.email || ''}
-                  disabled
-                  className="glass max-w-md bg-white/5"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Email cannot be changed
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleSaveDisplayName} disabled={saving} className="glow-sm">
-                {saving ? 'Saving...' : 'Save Profile'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Password Section */}
-          <div className="glass-card p-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Password</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Send a password reset email to {user?.email}
-              </p>
-              <Button 
-                onClick={handleSendPasswordReset} 
-                disabled={sendingPasswordReset}
-                variant="outline"
-              >
-                {sendingPasswordReset ? 'Sending...' : 'Send Password Reset Email'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Sidebar Preferences */}
-          <div className="glass-card p-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Sidebar Preferences</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Customize your sidebar behavior
-              </p>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  You can collapse the sidebar by clicking the collapse icon next to your profile in the sidebar footer.
-                </p>
-              </div>
-            </div>
           </div>
         </TabsContent>
 
