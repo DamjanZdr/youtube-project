@@ -253,9 +253,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     const plan = subscription?.plan || 'free';
     switch (plan) {
       case 'free':
-      case 'pro':
+      case 'creator':
         return 1;
-      case 'team':
+      case 'studio':
         return 4;
       case 'enterprise':
         return 999; // Unlimited

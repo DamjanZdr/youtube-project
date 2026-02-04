@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { plans, type Plan } from "@/config/subscriptions";
-import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift } from "lucide-react";
+import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift, Users } from "lucide-react";
 import { toast } from "sonner";
 import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
 import { createClient } from "@/lib/supabase/client";
@@ -59,9 +59,12 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
   const [loadingPendingKeys, setLoadingPendingKeys] = useState(true);
 
-  // Load pending keys for this organization
+  // Member count state (for downgrade validation)
+  const [memberCount, setMemberCount] = useState<number>(1);
+
+  // Load pending keys and member count for this organization
   useEffect(() => {
-    async function loadPendingKeys() {
+    async function loadData() {
       setLoadingPendingKeys(true);
       const supabase = createClient();
       
@@ -76,11 +79,20 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       if (keys) {
         setPendingKeys(keys);
       }
+      
+      // Get member count
+      const { count } = await supabase
+        .from("organization_members")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", studioId)
+        .eq("status", "active");
+      
+      setMemberCount(count || 1);
       setLoadingPendingKeys(false);
     }
     
     if (studioId) {
-      loadPendingKeys();
+      loadData();
     }
   }, [studioId]);
 
@@ -123,6 +135,20 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                            "monthly";
     const isSameInterval = currentInterval === billingInterval;
     const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
+    const isDowngrade = newPlanIndex < currentPlanIndex;
+    
+    // Check member limit for downgrades
+    if (isDowngrade) {
+      const targetMemberLimit = plan.limits.teamMembers;
+      if (targetMemberLimit !== -1 && memberCount > targetMemberLimit) {
+        const excess = memberCount - targetMemberLimit;
+        toast.error(
+          `Cannot downgrade: You have ${memberCount} members but ${plan.name} allows only ${targetMemberLimit}. Please remove ${excess} member${excess > 1 ? 's' : ''} first.`,
+          { duration: 5000 }
+        );
+        return;
+      }
+    }
     
     let action = "";
     let message = "";
@@ -648,6 +674,12 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           const thisPlanIndex = plans.findIndex(p => p.id === plan.id);
           const userHasHigherPlan = currentPlanIndex > thisPlanIndex;
           
+          // Check if downgrade is blocked due to member limits
+          const isDowngrade = thisPlanIndex < currentPlanIndex;
+          const planMemberLimit = plan.limits.teamMembers;
+          const exceedsMemberLimit = isDowngrade && planMemberLimit !== -1 && memberCount > planMemberLimit;
+          const memberExcess = exceedsMemberLimit ? memberCount - planMemberLimit : 0;
+          
           // Button text logic
           let buttonText = "Upgrade";
           if (loading === plan.id) {
@@ -671,7 +703,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               key={plan.id}
               className={`glass-card p-8 relative flex flex-col min-h-[520px] ${
                 plan.popular && !userHasHigherPlan ? "ring-2 ring-primary" : ""
-              } ${isCurrent ? "bg-primary/5" : ""}`}
+              } ${isCurrent ? "bg-primary/5" : ""} ${exceedsMemberLimit ? "opacity-60" : ""}`}
             >
               {plan.popular && !userHasHigherPlan && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -705,6 +737,18 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 ))}
               </ul>
 
+              {/* Member limit warning for downgrades */}
+              {exceedsMemberLimit && (
+                <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <div className="flex items-start gap-2">
+                    <Users className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Remove {memberExcess} member{memberExcess > 1 ? 's' : ''} to downgrade ({memberCount}/{planMemberLimit})
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <Button
                 className="w-full mt-auto h-10 text-sm font-semibold"
                 variant={
@@ -714,7 +758,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                       ? "default" 
                       : "outline"
                 }
-                disabled={isCurrent || loading === plan.id}
+                disabled={isCurrent || loading === plan.id || exceedsMemberLimit}
                 onClick={() => showConfirmation(plan)}
               >
                 {buttonText}

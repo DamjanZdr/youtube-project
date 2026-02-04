@@ -8,9 +8,57 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckoutSession as createStripeCheckout, createPortalSession as createStripePortal } from '@/lib/stripe';
 import { stripeConfig } from '@/lib/stripe/config';
-import type { ApiResponse } from '@/types';
+import { plans } from '@/config/subscriptions';
+import type { ApiResponse, SubscriptionPlan } from '@/types';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+/**
+ * Get member limit for a given plan
+ */
+export function getMemberLimitForPlan(plan: SubscriptionPlan): number {
+  const planConfig = plans.find(p => p.id === plan);
+  return planConfig?.limits.teamMembers ?? 1;
+}
+
+/**
+ * Check if downgrade is allowed based on member count
+ */
+export async function checkDowngradeAllowed(organizationId: string, targetPlan: SubscriptionPlan): Promise<{
+  allowed: boolean;
+  currentMembers: number;
+  targetLimit: number;
+  message?: string;
+}> {
+  const supabase = await createClient();
+  
+  // Get active member count
+  const { count: memberCount } = await supabase
+    .from('organization_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', organizationId)
+    .eq('status', 'active');
+  
+  const currentMembers = memberCount || 1;
+  const targetLimit = getMemberLimitForPlan(targetPlan);
+  
+  // -1 means unlimited
+  if (targetLimit === -1) {
+    return { allowed: true, currentMembers, targetLimit };
+  }
+  
+  if (currentMembers > targetLimit) {
+    const excess = currentMembers - targetLimit;
+    return {
+      allowed: false,
+      currentMembers,
+      targetLimit,
+      message: `You have ${currentMembers} members but ${targetPlan} plan allows only ${targetLimit}. Please remove ${excess} member${excess > 1 ? 's' : ''} before downgrading.`
+    };
+  }
+  
+  return { allowed: true, currentMembers, targetLimit };
+}
 
 export async function createCheckoutSession(organizationId: string, priceId: string): Promise<{ url: string | null }> {
   try {
@@ -54,6 +102,12 @@ export async function createCheckoutSession(organizationId: string, priceId: str
 
     // If downgrading to free plan (empty priceId), cancel the subscription
     if (!priceId && subscription?.stripe_subscription_id && subscription.status === 'active') {
+      // Check if member count allows downgrade to free
+      const downgradeCheck = await checkDowngradeAllowed(organizationId, 'free');
+      if (!downgradeCheck.allowed) {
+        throw new Error(downgradeCheck.message);
+      }
+      
       // Set to cancel at period end in Stripe
       const stripe = (await import('@/lib/stripe')).getStripe();
       await stripe.subscriptions.update(subscription.stripe_subscription_id, {
@@ -145,6 +199,12 @@ export async function createCheckoutSession(organizationId: string, priceId: str
 
         return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&upgraded=true` };
       } else {
+        // DOWNGRADE: Check member limits before allowing
+        const downgradeCheck = await checkDowngradeAllowed(organizationId, newPlan.id);
+        if (!downgradeCheck.allowed) {
+          throw new Error(downgradeCheck.message);
+        }
+        
         // DOWNGRADE: Schedule for end of period
         // Don't touch Stripe subscription yet - just store the pending change
         await supabase
