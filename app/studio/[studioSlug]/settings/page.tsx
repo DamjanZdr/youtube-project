@@ -87,7 +87,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       
       if (profile) {
         setUser(profile);
-        setDisplayName(profile.full_name || '');
       }
     }
     
