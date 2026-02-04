@@ -115,27 +115,40 @@ export default function IdeaPage() {
   async function loadWhiteboard() {
     setLoading(true);
 
-    const { data: elementsData } = await supabase
-      .from("project_whiteboard_elements")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("z_index", { ascending: true });
+    try {
+      const { data: elementsData, error: elementsError } = await supabase
+        .from("project_whiteboard_elements")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("z_index", { ascending: true });
 
-    const { data: connectionsData } = await supabase
-      .from("project_whiteboard_connections")
-      .select("*")
-      .eq("project_id", projectId);
+      if (elementsError) {
+        console.error("Failed to load elements:", elementsError);
+        // Table might not exist yet - that's ok, just start empty
+      }
 
-    if (elementsData) {
-      setElements(elementsData);
-      setHistory([elementsData]);
-      setHistoryIndex(0);
+      const { data: connectionsData, error: connectionsError } = await supabase
+        .from("project_whiteboard_connections")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (connectionsError) {
+        console.error("Failed to load connections:", connectionsError);
+      }
+
+      if (elementsData) {
+        setElements(elementsData);
+        setHistory([elementsData]);
+        setHistoryIndex(0);
+      }
+      if (connectionsData) {
+        setConnections(connectionsData);
+      }
+    } catch (err) {
+      console.error("Whiteboard load error:", err);
+    } finally {
+      setLoading(false);
     }
-    if (connectionsData) {
-      setConnections(connectionsData);
-    }
-
-    setLoading(false);
   }
 
   // Save element to database
@@ -478,7 +491,10 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "select" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => setActiveTool("select")}
+            onClick={() => {
+              console.log("Select tool clicked");
+              setActiveTool("select");
+            }}
             title="Select (V)"
           >
             <MousePointer2 className="w-4 h-4" />
