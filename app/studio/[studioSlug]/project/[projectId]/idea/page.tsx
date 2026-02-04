@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import {
   Plus,
   Type,
-  Square,
   Pencil,
-  MousePointer2,
   Trash2,
   Undo,
   Redo,
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Play,
+  Pause,
 } from "lucide-react";
 import {
   Popover,
@@ -52,7 +52,7 @@ interface WhiteboardConnection {
   target_arrow: boolean;
 }
 
-type Tool = "select" | "panel" | "text" | "draw";
+type Tool = "select" | "draw";
 type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 const COLORS = [
@@ -88,23 +88,30 @@ export default function IdeaPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeTool, setActiveTool] = useState<Tool>("select");
-  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [selectedElements, setSelectedElements] = useState<Set<string>>(new Set());
   const [editingElement, setEditingElement] = useState<string | null>(null);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragElementOffsets, setDragElementOffsets] = useState<Map<string, { x: number; y: number }>>(new Map());
+
+  // Selection box state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
+  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 });
 
   // Resize state
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 0, h: 0, ex: 0, ey: 0 });
+  const [resizeElementId, setResizeElementId] = useState<string | null>(null);
 
   // Connection state
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const [connectMousePos, setConnectMousePos] = useState({ x: 0, y: 0 });
   const [connectTarget, setConnectTarget] = useState<string | null>(null);
+  const [hoveredConnection, setHoveredConnection] = useState<string | null>(null);
 
   // Viewport state
   const [zoom, setZoom] = useState(1);
@@ -117,6 +124,9 @@ export default function IdeaPage() {
   const [drawPath, setDrawPath] = useState<string>("");
   const [drawColor, setDrawColor] = useState("#ffffff");
 
+  // Flow animation
+  const [flowEnabled, setFlowEnabled] = useState(true);
+
   // History
   const [history, setHistory] = useState<WhiteboardElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -125,6 +135,36 @@ export default function IdeaPage() {
   useEffect(() => {
     loadWhiteboard();
   }, [projectId]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (editingElement) return;
+      
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedElements.size > 0) {
+          selectedElements.forEach((id) => deleteElement(id));
+          setSelectedElements(new Set());
+        }
+      }
+      if (e.key === "Escape") {
+        setSelectedElements(new Set());
+        setEditingElement(null);
+        setIsConnecting(false);
+        setConnectFrom(null);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedElements, editingElement, historyIndex]);
 
   // Debounced auto-save
   const debouncedSave = useCallback((element: Partial<WhiteboardElement> & { id: string }) => {
@@ -163,7 +203,7 @@ export default function IdeaPage() {
     }
   }
 
-  async function createElement(element: Partial<WhiteboardElement>) {
+  async function createElement(element: Partial<WhiteboardElement>, connectToId?: string): Promise<string | null> {
     const tempId = crypto.randomUUID();
     const tempElement = { ...element, id: tempId } as WhiteboardElement;
     setElements((prev) => [...prev, tempElement]);
@@ -177,10 +217,18 @@ export default function IdeaPage() {
     if (error) {
       toast.error("Failed to create element");
       setElements((prev) => prev.filter((el) => el.id !== tempId));
+      return null;
     } else if (data) {
       setElements((prev) => prev.map((el) => (el.id === tempId ? data : el)));
       pushHistory([...elements.filter(el => el.id !== tempId), data]);
+      
+      if (connectToId) {
+        await saveConnection(connectToId, data.id);
+      }
+      
+      return data.id;
     }
+    return null;
   }
 
   async function saveConnection(sourceId: string, targetId: string) {
@@ -203,12 +251,16 @@ export default function IdeaPage() {
     }
   }
 
+  async function deleteConnection(id: string) {
+    await supabase.from("project_whiteboard_connections").delete().eq("id", id);
+    setConnections((prev) => prev.filter((c) => c.id !== id));
+    setHoveredConnection(null);
+  }
+
   async function deleteElement(id: string) {
     await supabase.from("project_whiteboard_elements").delete().eq("id", id);
     setElements((prev) => prev.filter((el) => el.id !== id));
     setConnections((prev) => prev.filter((c) => c.source_element_id !== id && c.target_element_id !== id));
-    setSelectedElement(null);
-    setEditingElement(null);
   }
 
   function pushHistory(newElements: WhiteboardElement[]) {
@@ -241,6 +293,15 @@ export default function IdeaPage() {
     };
   }
 
+  function getViewCenter(): { x: number; y: number } {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: (rect.width / 2 - pan.x) / zoom,
+      y: (rect.height / 2 - pan.y) / zoom,
+    };
+  }
+
   function getElementBounds(el: WhiteboardElement) {
     const w = el.width ?? DEFAULT_WIDTH;
     const h = el.height ?? DEFAULT_HEIGHT;
@@ -260,7 +321,6 @@ export default function IdeaPage() {
     const tx = t.x + t.w / 2;
     const ty = t.y + t.h / 2;
 
-    // Bezier curve
     const dx = tx - sx;
     const dy = ty - sy;
     const ctrl = Math.min(Math.abs(dx), Math.abs(dy), 80);
@@ -272,19 +332,64 @@ export default function IdeaPage() {
     }
   }
 
-  // Canvas handlers
+  function getConnectionLength(conn: WhiteboardConnection): number {
+    const source = elements.find((el) => el.id === conn.source_element_id);
+    const target = elements.find((el) => el.id === conn.target_element_id);
+    if (!source || !target) return 100;
+
+    const s = getElementBounds(source);
+    const t = getElementBounds(target);
+    const dx = (t.x + t.w / 2) - (s.x + s.w / 2);
+    const dy = (t.y + t.h / 2) - (s.y + s.h / 2);
+    return Math.sqrt(dx * dx + dy * dy) * 1.2;
+  }
+
+  function addPanelAtCenter() {
+    const center = getViewCenter();
+    createElement({
+      element_type: "panel",
+      x: center.x - DEFAULT_WIDTH / 2,
+      y: center.y - DEFAULT_HEIGHT / 2,
+      width: DEFAULT_WIDTH,
+      height: DEFAULT_HEIGHT,
+      background_color: "#1a1a2e",
+      border_color: "#ffffff20",
+      text_color: "#ffffff",
+      font_size: 14,
+      title: null,
+      content: "",
+      z_index: elements.length,
+    });
+  }
+
+  function addTextAtCenter() {
+    const center = getViewCenter();
+    createElement({
+      element_type: "text",
+      x: center.x - 50,
+      y: center.y - 12,
+      width: null,
+      height: null,
+      background_color: "transparent",
+      border_color: "transparent",
+      text_color: "#ffffff",
+      font_size: 16,
+      title: null,
+      content: "Text",
+      z_index: elements.length,
+    });
+  }
+
   function handleCanvasMouseDown(e: React.MouseEvent) {
     const target = e.target as HTMLElement;
 
-    // Pan with middle click or alt+click
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
 
-    // Ignore if clicking on element or handle
-    if (target.closest("[data-element]") || target.closest("[data-resize]") || target.closest("[data-connector]")) {
+    if (target.closest("[data-element]") || target.closest("[data-resize]") || target.closest("[data-connector]") || target.closest("[data-connection]")) {
       return;
     }
 
@@ -293,44 +398,34 @@ export default function IdeaPage() {
     if (activeTool === "draw") {
       setIsDrawing(true);
       setDrawPath(`M ${pos.x} ${pos.y}`);
-    } else if (activeTool === "panel") {
-      createElement({
-        element_type: "panel",
-        x: pos.x - DEFAULT_WIDTH / 2,
-        y: pos.y - DEFAULT_HEIGHT / 2,
-        width: DEFAULT_WIDTH,
-        height: DEFAULT_HEIGHT,
-        background_color: "#1a1a2e",
-        border_color: "#ffffff20",
-        text_color: "#ffffff",
-        font_size: 14,
-        title: null,
-        content: "",
-        z_index: elements.length,
-      });
-    } else if (activeTool === "text") {
-      createElement({
-        element_type: "text",
-        x: pos.x,
-        y: pos.y,
-        width: null,
-        height: null,
-        background_color: "transparent",
-        border_color: "transparent",
-        text_color: "#ffffff",
-        font_size: 16,
-        title: null,
-        content: "Text",
-        z_index: elements.length,
-      });
     } else if (activeTool === "select") {
-      setSelectedElement(null);
-      setEditingElement(null);
-      if (isConnecting) {
+      if (isConnecting && connectFrom) {
+        const newPanel = {
+          element_type: "panel" as const,
+          x: pos.x - DEFAULT_WIDTH / 2,
+          y: pos.y - DEFAULT_HEIGHT / 2,
+          width: DEFAULT_WIDTH,
+          height: DEFAULT_HEIGHT,
+          background_color: "#1a1a2e",
+          border_color: "#ffffff20",
+          text_color: "#ffffff",
+          font_size: 14,
+          title: null,
+          content: "",
+          z_index: elements.length,
+        };
+        createElement(newPanel, connectFrom);
         setIsConnecting(false);
         setConnectFrom(null);
         setConnectTarget(null);
+        return;
       }
+
+      setIsSelecting(true);
+      setSelectionStart(pos);
+      setSelectionEnd(pos);
+      setSelectedElements(new Set());
+      setEditingElement(null);
     }
   }
 
@@ -338,7 +433,6 @@ export default function IdeaPage() {
     if (activeTool !== "select") return;
     e.stopPropagation();
 
-    // If connecting, complete connection
     if (isConnecting && connectFrom && connectFrom !== el.id) {
       saveConnection(connectFrom, el.id);
       setIsConnecting(false);
@@ -347,10 +441,34 @@ export default function IdeaPage() {
       return;
     }
 
-    setSelectedElement(el.id);
-    setIsDragging(true);
     const pos = getCanvasPos(e);
-    setDragOffset({ x: el.x - pos.x, y: el.y - pos.y });
+    
+    if (e.shiftKey) {
+      const newSelected = new Set(selectedElements);
+      if (newSelected.has(el.id)) {
+        newSelected.delete(el.id);
+      } else {
+        newSelected.add(el.id);
+      }
+      setSelectedElements(newSelected);
+      return;
+    }
+
+    if (!selectedElements.has(el.id)) {
+      setSelectedElements(new Set([el.id]));
+    }
+
+    setIsDragging(true);
+    
+    const offsets = new Map<string, { x: number; y: number }>();
+    selectedElements.forEach((id) => {
+      const elem = elements.find((e) => e.id === id);
+      if (elem) {
+        offsets.set(id, { x: elem.x - pos.x, y: elem.y - pos.y });
+      }
+    });
+    offsets.set(el.id, { x: el.x - pos.x, y: el.y - pos.y });
+    setDragElementOffsets(offsets);
   }
 
   function handleElementDoubleClick(e: React.MouseEvent, el: WhiteboardElement) {
@@ -363,9 +481,10 @@ export default function IdeaPage() {
 
   function handleResizeMouseDown(e: React.MouseEvent, el: WhiteboardElement, handle: ResizeHandle) {
     e.stopPropagation();
-    setSelectedElement(el.id);
+    setSelectedElements(new Set([el.id]));
     setIsResizing(true);
     setResizeHandle(handle);
+    setResizeElementId(el.id);
     const pos = getCanvasPos(e);
     const bounds = getElementBounds(el);
     setResizeStart({ x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h, ex: pos.x, ey: pos.y });
@@ -387,9 +506,28 @@ export default function IdeaPage() {
 
     const pos = getCanvasPos(e);
 
+    if (isSelecting) {
+      setSelectionEnd(pos);
+      const minX = Math.min(selectionStart.x, pos.x);
+      const maxX = Math.max(selectionStart.x, pos.x);
+      const minY = Math.min(selectionStart.y, pos.y);
+      const maxY = Math.max(selectionStart.y, pos.y);
+      
+      const inBox = new Set<string>();
+      elements.forEach((el) => {
+        const bounds = getElementBounds(el);
+        const elCenterX = bounds.x + bounds.w / 2;
+        const elCenterY = bounds.y + bounds.h / 2;
+        if (elCenterX >= minX && elCenterX <= maxX && elCenterY >= minY && elCenterY <= maxY) {
+          inBox.add(el.id);
+        }
+      });
+      setSelectedElements(inBox);
+      return;
+    }
+
     if (isConnecting) {
       setConnectMousePos(pos);
-      // Check hover target
       const target = e.target as HTMLElement;
       const elDiv = target.closest("[data-element]");
       if (elDiv) {
@@ -410,8 +548,8 @@ export default function IdeaPage() {
       return;
     }
 
-    if (isResizing && selectedElement && resizeHandle) {
-      const el = elements.find((e) => e.id === selectedElement);
+    if (isResizing && resizeElementId && resizeHandle) {
+      const el = elements.find((e) => e.id === resizeElementId);
       if (!el) return;
 
       const dx = pos.x - resizeStart.ex;
@@ -421,7 +559,6 @@ export default function IdeaPage() {
       let newW = resizeStart.w;
       let newH = resizeStart.h;
 
-      // Handle resize directions
       if (resizeHandle.includes("e")) newW = Math.max(MIN_WIDTH, resizeStart.w + dx);
       if (resizeHandle.includes("w")) {
         const dw = Math.min(dx, resizeStart.w - MIN_WIDTH);
@@ -437,7 +574,7 @@ export default function IdeaPage() {
 
       setElements((prev) =>
         prev.map((item) =>
-          item.id === selectedElement
+          item.id === resizeElementId
             ? { ...item, x: newX, y: newY, width: newW, height: newH }
             : item
         )
@@ -445,29 +582,36 @@ export default function IdeaPage() {
       return;
     }
 
-    if (isDragging && selectedElement) {
+    if (isDragging && dragElementOffsets.size > 0) {
       setElements((prev) =>
-        prev.map((item) =>
-          item.id === selectedElement
-            ? { ...item, x: pos.x + dragOffset.x, y: pos.y + dragOffset.y }
-            : item
-        )
+        prev.map((item) => {
+          const offset = dragElementOffsets.get(item.id);
+          if (offset) {
+            return { ...item, x: pos.x + offset.x, y: pos.y + offset.y };
+          }
+          return item;
+        })
       );
     }
   }
 
-  function handleMouseUp() {
+  async function handleMouseUp() {
     if (isConnecting && connectFrom && connectTarget) {
       saveConnection(connectFrom, connectTarget);
+      setIsConnecting(false);
+      setConnectFrom(null);
+      setConnectTarget(null);
     }
 
-    if (isDragging && selectedElement) {
-      const el = elements.find((e) => e.id === selectedElement);
-      if (el) debouncedSave({ id: el.id, x: el.x, y: el.y });
+    if (isDragging && dragElementOffsets.size > 0) {
+      dragElementOffsets.forEach((_, id) => {
+        const el = elements.find((e) => e.id === id);
+        if (el) debouncedSave({ id: el.id, x: el.x, y: el.y });
+      });
     }
 
-    if (isResizing && selectedElement) {
-      const el = elements.find((e) => e.id === selectedElement);
+    if (isResizing && resizeElementId) {
+      const el = elements.find((e) => e.id === resizeElementId);
       if (el) debouncedSave({ id: el.id, x: el.x, y: el.y, width: el.width, height: el.height });
     }
 
@@ -491,12 +635,12 @@ export default function IdeaPage() {
 
     setIsPanning(false);
     setIsDragging(false);
+    setDragElementOffsets(new Map());
     setIsResizing(false);
     setResizeHandle(null);
+    setResizeElementId(null);
     setIsDrawing(false);
-    setIsConnecting(false);
-    setConnectFrom(null);
-    setConnectTarget(null);
+    setIsSelecting(false);
   }
 
   async function updateContent(id: string, content: string) {
@@ -517,135 +661,25 @@ export default function IdeaPage() {
     );
   }
 
-  const selectedEl = elements.find((el) => el.id === selectedElement);
+  const selectedEl = selectedElements.size === 1 ? elements.find((el) => selectedElements.has(el.id)) : null;
 
-  // Resize handle cursors
   const cursorMap: Record<ResizeHandle, string> = {
     n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize",
     ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize",
   };
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
-        <div className="flex items-center gap-1 px-2 border-r border-white/10">
-          <Button variant={activeTool === "select" ? "secondary" : "ghost"} size="icon" onClick={() => setActiveTool("select")} title="Select (V)">
-            <MousePointer2 className="w-4 h-4" />
-          </Button>
-          <Button variant={activeTool === "panel" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("panel"); setSelectedElement(null); }} title="Add Box (B)">
-            <Square className="w-4 h-4" />
-          </Button>
-          <Button variant={activeTool === "text" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("text"); setSelectedElement(null); }} title="Add Text (T)">
-            <Type className="w-4 h-4" />
-          </Button>
-          <Button variant={activeTool === "draw" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("draw"); setSelectedElement(null); }} title="Draw (D)">
-            <Pencil className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {activeTool === "draw" && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" title="Draw Color">
-                <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: drawColor }} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2">
-              <div className="grid grid-cols-5 gap-1">
-                {TEXT_COLORS.map((color) => (
-                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setDrawColor(color)} />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-
-        {selectedEl && activeTool === "select" && (
-          <>
-            <div className="h-6 w-px bg-white/10" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <div className="w-4 h-4 rounded border border-white/20" style={{ backgroundColor: selectedEl.background_color }} />
-                  <span className="text-xs">Fill</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2">
-                <div className="grid grid-cols-5 gap-1">
-                  {COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "background_color", color)} />
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <div className="w-4 h-4 rounded border-2" style={{ borderColor: selectedEl.border_color }} />
-                  <span className="text-xs">Border</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2">
-                <div className="grid grid-cols-5 gap-1">
-                  {COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "border_color", color)} />
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Type className="w-3 h-3" style={{ color: selectedEl.text_color }} />
-                  <span className="text-xs">Text</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2">
-                <div className="grid grid-cols-5 gap-1">
-                  {TEXT_COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "text_color", color)} />
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-300" onClick={() => deleteElement(selectedEl.id)} title="Delete">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </>
-        )}
-
-        <div className="flex-1" />
-
-        <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0} title="Undo">
-          <Undo className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
-          <Redo className="w-4 h-4" />
-        </Button>
-        <div className="h-6 w-px bg-white/10" />
-        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z / 1.2, 0.25))} title="Zoom Out">
-          <ZoomOut className="w-4 h-4" />
-        </Button>
-        <span className="text-xs text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
-        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(z * 1.2, 3))} title="Zoom In">
-          <ZoomIn className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} title="Reset View">
-          <Maximize2 className="w-4 h-4" />
-        </Button>
-      </div>
-
+    <div className="absolute inset-0 overflow-hidden">
       {/* Canvas */}
       <div
         ref={canvasRef}
-        className="flex-1 relative overflow-hidden select-none"
+        className="absolute inset-0 select-none"
         style={{
           background: "radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%)",
           backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
-          cursor: isConnecting ? "crosshair" : activeTool === "draw" ? "crosshair" : activeTool === "select" ? "default" : "crosshair",
+          cursor: isConnecting ? "crosshair" : activeTool === "draw" ? "crosshair" : "default",
         }}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
@@ -655,18 +689,62 @@ export default function IdeaPage() {
       >
         <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
           {/* SVG Connections */}
-          <svg className="absolute inset-0 pointer-events-none" style={{ overflow: "visible" }}>
+          <svg className="absolute inset-0" style={{ overflow: "visible", pointerEvents: "none" }}>
             <defs>
               <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff50" />
+                <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+              </marker>
+              <marker id="arrow-hover" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
               </marker>
               <marker id="arrow-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
               </marker>
             </defs>
-            {connections.map((c) => (
-              <path key={c.id} d={getConnectionPath(c)} stroke="#ffffff50" strokeWidth={2} fill="none" markerEnd="url(#arrow)" />
-            ))}
+            
+            {/* Existing connections */}
+            {connections.map((c) => {
+              const path = getConnectionPath(c);
+              const length = getConnectionLength(c);
+              const isHovered = hoveredConnection === c.id;
+              
+              return (
+                <g key={c.id} style={{ pointerEvents: "stroke" }}>
+                  {/* Invisible wider path for hover detection */}
+                  <path
+                    d={path}
+                    stroke="transparent"
+                    strokeWidth={16}
+                    fill="none"
+                    data-connection={c.id}
+                    style={{ cursor: "pointer", pointerEvents: "stroke" }}
+                    onMouseEnter={() => setHoveredConnection(c.id)}
+                    onMouseLeave={() => setHoveredConnection(null)}
+                    onClick={() => deleteConnection(c.id)}
+                  />
+                  {/* Visible path */}
+                  <path
+                    d={path}
+                    stroke={isHovered ? "#ef4444" : "#60a5fa"}
+                    strokeWidth={2}
+                    fill="none"
+                    strokeDasharray="8 4"
+                    markerEnd={isHovered ? "url(#arrow-hover)" : "url(#arrow)"}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {flowEnabled && !isHovered && (
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        values={`${length};0`}
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </path>
+                </g>
+              );
+            })}
+            
             {/* Connection preview */}
             {isConnecting && connectFrom && (
               <g>
@@ -698,15 +776,30 @@ export default function IdeaPage() {
                 })()}
               </g>
             )}
+            
             {/* Draw preview */}
             {drawPath && (
               <path d={drawPath} stroke={drawColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            )}
+
+            {/* Selection box */}
+            {isSelecting && (
+              <rect
+                x={Math.min(selectionStart.x, selectionEnd.x)}
+                y={Math.min(selectionStart.y, selectionEnd.y)}
+                width={Math.abs(selectionEnd.x - selectionStart.x)}
+                height={Math.abs(selectionEnd.y - selectionStart.y)}
+                fill="rgba(96, 165, 250, 0.1)"
+                stroke="#60a5fa"
+                strokeWidth={1}
+                strokeDasharray="4 2"
+              />
             )}
           </svg>
 
           {/* Elements */}
           {elements.map((el) => {
-            const isSelected = selectedElement === el.id;
+            const isSelected = selectedElements.has(el.id);
             const isEditing = editingElement === el.id;
             const isConnectSrc = connectFrom === el.id;
             const isConnectTgt = isConnecting && connectFrom !== el.id;
@@ -721,7 +814,19 @@ export default function IdeaPage() {
                   data-element-id={el.id}
                   className="absolute pointer-events-auto"
                   style={{ overflow: "visible", left: 0, top: 0, cursor: activeTool === "select" ? "pointer" : "default" }}
-                  onClick={() => activeTool === "select" && setSelectedElement(el.id)}
+                  onClick={(e) => {
+                    if (activeTool === "select") {
+                      e.stopPropagation();
+                      if (e.shiftKey) {
+                        const newSel = new Set(selectedElements);
+                        if (newSel.has(el.id)) newSel.delete(el.id);
+                        else newSel.add(el.id);
+                        setSelectedElements(newSel);
+                      } else {
+                        setSelectedElements(new Set([el.id]));
+                      }
+                    }
+                  }}
                 >
                   <path
                     d={el.content || ""}
@@ -783,7 +888,7 @@ export default function IdeaPage() {
                   )}
                 </div>
 
-                {/* Resize handles (8 points) - only when selected */}
+                {/* Resize handles - only when selected */}
                 {isSelected && !isEditing && (
                   <>
                     {(["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeHandle[]).map((handle) => {
@@ -797,7 +902,6 @@ export default function IdeaPage() {
                         cursor: cursorMap[handle],
                         zIndex: 10,
                       };
-                      // Position handles
                       if (handle === "n") { style.top = -4; style.left = "50%"; style.marginLeft = -4; }
                       if (handle === "s") { style.bottom = -4; style.left = "50%"; style.marginLeft = -4; }
                       if (handle === "e") { style.right = -4; style.top = "50%"; style.marginTop = -4; }
@@ -817,10 +921,10 @@ export default function IdeaPage() {
                       );
                     })}
 
-                    {/* Connector button (center right) */}
+                    {/* Connector button */}
                     <div
                       data-connector="true"
-                      className="absolute w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-md cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
+                      className="absolute w-5 h-5 bg-primary rounded-full border-2 border-white shadow-md cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
                       style={{ right: -10, top: "50%", marginTop: -10, zIndex: 20 }}
                       onMouseDown={(e) => handleConnectorMouseDown(e, el.id)}
                     >
@@ -837,7 +941,7 @@ export default function IdeaPage() {
         {isConnecting && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass rounded-lg text-sm flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${connectTarget ? "bg-green-500" : "bg-blue-400 animate-pulse"}`} />
-            {connectTarget ? "Release to connect" : "Drag to another box to connect"}
+            {connectTarget ? "Release to connect" : "Drop on empty space to create connected box"}
           </div>
         )}
 
@@ -850,11 +954,181 @@ export default function IdeaPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Start brainstorming</h3>
               <p className="text-muted-foreground text-sm max-w-xs">
-                Click to add boxes. Double-click to edit. Drag the green connector to link boxes.
+                Click the + button to add boxes. Double-click to edit. Drag to select multiple.
               </p>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Floating Toolbar - Left */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1.5 glass rounded-xl border border-white/10">
+        {/* Add Panel Button */}
+        <Button 
+          size="icon" 
+          className="bg-primary hover:bg-primary/90 text-white"
+          onClick={addPanelAtCenter}
+          title="Add Box"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+        
+        <div className="h-6 w-px bg-white/10" />
+        
+        {/* Add Text */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={addTextAtCenter}
+          title="Add Text"
+        >
+          <Type className="w-4 h-4" />
+        </Button>
+        
+        {/* Draw Mode Toggle */}
+        <Button 
+          variant={activeTool === "draw" ? "secondary" : "ghost"} 
+          size="icon" 
+          onClick={() => setActiveTool(activeTool === "draw" ? "select" : "draw")}
+          title="Draw Mode"
+        >
+          <Pencil className="w-4 h-4" />
+        </Button>
+
+        {activeTool === "draw" && (
+          <>
+            <div className="h-6 w-px bg-white/10" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" title="Draw Color">
+                  <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: drawColor }} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2">
+                <div className="grid grid-cols-5 gap-1">
+                  {TEXT_COLORS.map((color) => (
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setDrawColor(color)} />
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </>
+        )}
+      </div>
+
+      {/* Selection Toolbar - appears when element selected */}
+      {selectedEl && !editingElement && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 glass rounded-xl border border-white/10">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 h-8">
+                <div className="w-4 h-4 rounded border border-white/20" style={{ backgroundColor: selectedEl.background_color }} />
+                <span className="text-xs">Fill</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {COLORS.map((color) => (
+                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "background_color", color)} />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 h-8">
+                <div className="w-4 h-4 rounded border-2" style={{ borderColor: selectedEl.border_color }} />
+                <span className="text-xs">Border</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {COLORS.map((color) => (
+                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "border_color", color)} />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 h-8">
+                <Type className="w-3 h-3" style={{ color: selectedEl.text_color }} />
+                <span className="text-xs">Text</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {TEXT_COLORS.map((color) => (
+                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "text_color", color)} />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <div className="h-6 w-px bg-white/10" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-red-400 hover:text-red-300 h-8 w-8" 
+            onClick={() => { deleteElement(selectedEl.id); setSelectedElements(new Set()); }}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Multi-select delete */}
+      {selectedElements.size > 1 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 glass rounded-xl border border-white/10">
+          <span className="text-xs text-muted-foreground">{selectedElements.size} selected</span>
+          <div className="h-6 w-px bg-white/10" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-red-400 hover:text-red-300 h-8 w-8" 
+            onClick={() => { 
+              selectedElements.forEach((id) => deleteElement(id)); 
+              setSelectedElements(new Set()); 
+            }}
+            title="Delete All"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Floating Toolbar - Right */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 px-2 py-1.5 glass rounded-xl border border-white/10">
+        <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)">
+          <Undo className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo (Ctrl+Y)">
+          <Redo className="w-4 h-4" />
+        </Button>
+        
+        <div className="h-6 w-px bg-white/10" />
+        
+        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z / 1.2, 0.25))} title="Zoom Out">
+          <ZoomOut className="w-4 h-4" />
+        </Button>
+        <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(zoom * 100)}%</span>
+        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(z * 1.2, 3))} title="Zoom In">
+          <ZoomIn className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} title="Reset View">
+          <Maximize2 className="w-4 h-4" />
+        </Button>
+        
+        <div className="h-6 w-px bg-white/10" />
+        
+        <Button 
+          variant={flowEnabled ? "secondary" : "ghost"} 
+          size="icon" 
+          onClick={() => setFlowEnabled(!flowEnabled)}
+          title={flowEnabled ? "Disable Flow Animation" : "Enable Flow Animation"}
+        >
+          {flowEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </Button>
       </div>
     </div>
   );
