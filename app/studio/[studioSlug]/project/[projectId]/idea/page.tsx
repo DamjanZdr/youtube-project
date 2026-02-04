@@ -1039,43 +1039,43 @@ export default function IdeaPage() {
             </svg>
             <p className="absolute top-28 left-2 text-xs text-primary/70 font-medium pointer-events-none">Select or Draw</p>
             
-            {/* Add panel - longer, diagonal down-right */}
-            <svg className="absolute top-14 left-28 w-20 h-28 pointer-events-none">
+            {/* Add panel - longer, diagonal down-right - start more right */}
+            <svg className="absolute top-14 left-[7rem] w-20 h-28 pointer-events-none">
               <path d="M4 0 C10 30, 30 60, 45 95" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
             </svg>
             <p className="absolute top-44 left-32 text-xs text-primary/70 font-medium pointer-events-none">Add panel</p>
             
-            {/* Add text - short, mostly right, barely down */}
-            <svg className="absolute top-14 left-40 w-20 h-12 pointer-events-none">
+            {/* Add text - short, mostly right, barely down - start more right */}
+            <svg className="absolute top-14 left-[9.5rem] w-20 h-12 pointer-events-none">
               <path d="M0 0 C15 5, 40 15, 55 35" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
             </svg>
             <p className="absolute top-24 left-56 text-xs text-primary/70 font-medium pointer-events-none">Add text</p>
 
             {/* RIGHT SIDE */}
             
-            {/* Undo/Redo - nearly entirely to left */}
-            <svg className="absolute top-14 right-60 w-20 h-12 pointer-events-none">
+            {/* Undo/Redo - nearly entirely to left - start between buttons */}
+            <svg className="absolute top-14 right-[15.5rem] w-20 h-12 pointer-events-none">
               <path d="M55 0 C40 5, 15 15, 0 35" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
             <p className="absolute top-24 right-72 text-xs text-muted-foreground/50 pointer-events-none">Undo / Redo</p>
             
-            {/* Zoom - more left than down, shorter than reset view */}
-            <svg className="absolute top-14 right-32 w-16 h-16 pointer-events-none">
+            {/* Zoom - more left than down - start under 100% */}
+            <svg className="absolute top-14 right-[8.5rem] w-16 h-16 pointer-events-none">
               <path d="M50 0 C35 15, 15 30, 0 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
             <p className="absolute top-28 right-44 text-xs text-muted-foreground/50 pointer-events-none">Zoom</p>
             
-            {/* Reset view - diagonal down-left, longer */}
-            <svg className="absolute top-14 right-14 w-16 h-28 pointer-events-none">
+            {/* Reset view - diagonal down-left, longer - start from center of button */}
+            <svg className="absolute top-14 right-[3.5rem] w-16 h-28 pointer-events-none">
               <path d="M45 0 C35 30, 15 60, 0 95" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
-            <p className="absolute top-44 right-24 text-xs text-muted-foreground/50 pointer-events-none">Reset view</p>
+            <p className="absolute top-44 right-20 text-xs text-muted-foreground/50 pointer-events-none">Reset view</p>
             
-            {/* Animate - nearly fully down, slight left */}
-            <svg className="absolute top-14 right-5 w-12 h-14 pointer-events-none">
-              <path d="M35 0 C32 20, 28 35, 25 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
+            {/* Animate - nearly fully down, slight left - bit to the left */}
+            <svg className="absolute top-14 right-3 w-12 h-14 pointer-events-none">
+              <path d="M25 0 C22 20, 18 35, 15 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
-            <p className="absolute top-28 right-2 text-xs text-muted-foreground/50 pointer-events-none">Animate</p>
+            <p className="absolute top-28 right-1 text-xs text-muted-foreground/50 pointer-events-none">Animate</p>
 
             {/* Center hint */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
