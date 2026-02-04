@@ -57,22 +57,28 @@ export default function HubPage() {
 
     // Get user
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    setUser(currentUser);
 
     if (!currentUser) {
       setLoading(false);
       return;
     }
 
-    // Get user profile with invite preference
+    // Get user profile with invite preference and display info
     const { data: profile } = await supabase
       .from("profiles")
-      .select("accept_invites")
+      .select("id, email, full_name, avatar_url, accept_invites")
       .eq("id", currentUser.id)
       .single();
 
     if (profile) {
+      setUser(profile);
       setAcceptInvites(profile.accept_invites ?? true);
+    } else {
+      // Fallback to auth user if profile not found
+      setUser({
+        id: currentUser.id,
+        email: currentUser.email,
+      });
     }
 
     // Get active studios

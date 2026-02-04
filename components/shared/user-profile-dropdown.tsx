@@ -58,7 +58,7 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
               <span className="text-sm font-medium">{initials}</span>
             )}
           </div>
-          <span className="text-sm hidden sm:inline-block max-w-[150px] truncate">{user.email}</span>
+          <span className="text-sm hidden sm:inline-block max-w-[150px] truncate">{displayName}</span>
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
