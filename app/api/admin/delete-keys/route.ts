@@ -27,20 +27,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No keys provided" }, { status: 400 });
   }
 
-  // Get the keys to be deleted
-  const { data: keysToDelete, error: fetchError } = await adminClient
+  // Get the keys to be deactivated
+  const { data: keysToDeactivate, error: fetchError } = await adminClient
     .from("plan_keys")
-    .select("id, plan, redeemed_org_id, redeemed_at")
-    .in("id", keyIds);
+    .select("id, plan, redeemed_org_id, redeemed_at, deactivated_at")
+    .in("id", keyIds)
+    .is("deactivated_at", null); // Only get non-deactivated keys
 
   if (fetchError) {
     console.error("Failed to fetch keys:", fetchError);
     return NextResponse.json({ error: "Failed to fetch keys" }, { status: 500 });
   }
 
+  if (!keysToDeactivate || keysToDeactivate.length === 0) {
+    return NextResponse.json({ error: "No active keys to deactivate" }, { status: 400 });
+  }
+
   // Find active keys (redeemed and currently powering an org's subscription)
-  const redeemedOrgIds = keysToDelete
-    ?.filter(k => k.redeemed_org_id && k.redeemed_at)
+  const redeemedOrgIds = keysToDeactivate
+    .filter(k => k.redeemed_org_id && k.redeemed_at)
     .map(k => k.redeemed_org_id!) || [];
 
   let revokedCount = 0;
@@ -54,10 +59,10 @@ export async function POST(req: NextRequest) {
       .eq("source", "key");
 
     if (subscriptions && subscriptions.length > 0) {
-      // For each subscription that matches a key being deleted, downgrade to free
+      // For each subscription that matches a key being deactivated, downgrade to free
       for (const sub of subscriptions) {
-        // Check if this subscription's plan matches any of the keys being deleted for this org
-        const matchingKey = keysToDelete?.find(
+        // Check if this subscription's plan matches any of the keys being deactivated for this org
+        const matchingKey = keysToDeactivate.find(
           k => k.redeemed_org_id === sub.organization_id && k.plan === sub.plan
         );
 
@@ -82,20 +87,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Delete the keys
-  const { error: deleteError } = await adminClient
+  // Deactivate the keys (soft delete)
+  const { error: deactivateError } = await adminClient
     .from("plan_keys")
-    .delete()
-    .in("id", keyIds);
+    .update({
+      deactivated_at: new Date().toISOString(),
+      deactivated_by: user.id,
+    })
+    .in("id", keyIds)
+    .is("deactivated_at", null);
 
-  if (deleteError) {
-    console.error("Failed to delete keys:", deleteError);
-    return NextResponse.json({ error: "Failed to delete keys" }, { status: 500 });
+  if (deactivateError) {
+    console.error("Failed to deactivate keys:", deactivateError);
+    return NextResponse.json({ error: "Failed to deactivate keys" }, { status: 500 });
   }
 
   return NextResponse.json({ 
     success: true, 
-    deleted: keyIds.length,
+    deactivated: keysToDeactivate.length,
     revoked: revokedCount,
   });
 }

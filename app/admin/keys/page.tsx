@@ -13,7 +13,7 @@ import {
   Key,
   ChevronLeft,
   ChevronRight,
-  Trash2,
+  Ban,
   Building2,
   Download,
   Mail,
@@ -38,13 +38,14 @@ interface PlanKey {
   sent_to_email: string | null;
   sent_at: string | null;
   expires_at: string | null;
+  deactivated_at: string | null;
   redeemed_org?: { name: string } | null;
   assigned_org?: { name: string } | null;
   redeemed_user?: { email: string } | null;
   is_active?: boolean; // Whether this key is the org's current active subscription
 }
 
-type KeyStatus = "available" | "sent" | "active" | "expired";
+type KeyStatus = "available" | "sent" | "active" | "expired" | "deactivated";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -83,7 +84,7 @@ export default function AdminKeysPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const [filter, setFilter] = useState<"all" | "available" | "sent" | "active" | "expired">("all");
+  const [filter, setFilter] = useState<"all" | "available" | "sent" | "active" | "expired" | "deactivated">("all");
 
   // Selection state
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -97,9 +98,9 @@ export default function AdminKeysPage() {
   const [generatedKeys, setGeneratedKeys] = useState<string[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Delete/Cancel confirmation dialog
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  // Deactivate confirmation dialog
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
 
   // Send email dialog
   const [showSendEmail, setShowSendEmail] = useState(false);
@@ -109,6 +110,7 @@ export default function AdminKeysPage() {
 
   // Helper to get key status
   const getKeyStatus = (key: PlanKey): KeyStatus => {
+    if (key.deactivated_at) return "deactivated";
     if (!key.redeemed_at) {
       if (key.sent_to_email || key.assigned_org_id) return "sent";
       return "available";
@@ -119,7 +121,7 @@ export default function AdminKeysPage() {
 
   // Get status breakdown for selected keys
   const getSelectedStatusBreakdown = () => {
-    const breakdown = { available: 0, sent: 0, active: 0, expired: 0 };
+    const breakdown = { available: 0, sent: 0, active: 0, expired: 0, deactivated: 0 };
     keys.forEach(key => {
       if (selectedKeys.has(key.id)) {
         breakdown[getKeyStatus(key)]++;
@@ -157,23 +159,28 @@ export default function AdminKeysPage() {
         assigned_org_id,
         sent_to_email,
         sent_at,
-        expires_at
+        expires_at,
+        deactivated_at
       `)
       .order("created_at", { ascending: false })
       .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
     // Filter logic - active/expired need to be filtered client-side after checking subscriptions
-    if (filter === "available") {
-      countQuery = countQuery.is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
-      dataQuery = dataQuery.is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
+    if (filter === "deactivated") {
+      countQuery = countQuery.not("deactivated_at", "is", null);
+      dataQuery = dataQuery.not("deactivated_at", "is", null);
+    } else if (filter === "available") {
+      countQuery = countQuery.is("deactivated_at", null).is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
+      dataQuery = dataQuery.is("deactivated_at", null).is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
     } else if (filter === "sent") {
-      countQuery = countQuery.is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
-      dataQuery = dataQuery.is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
+      countQuery = countQuery.is("deactivated_at", null).is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
+      dataQuery = dataQuery.is("deactivated_at", null).is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
     } else if (filter === "active" || filter === "expired") {
-      // For active/expired, we need redeemed keys
-      countQuery = countQuery.not("redeemed_at", "is", null);
-      dataQuery = dataQuery.not("redeemed_at", "is", null);
+      // For active/expired, we need redeemed keys that are not deactivated
+      countQuery = countQuery.is("deactivated_at", null).not("redeemed_at", "is", null);
+      dataQuery = dataQuery.is("deactivated_at", null).not("redeemed_at", "is", null);
     }
+    // "all" filter shows everything
 
     if (search) {
       dataQuery = dataQuery.ilike("key", `%${search}%`);
@@ -273,13 +280,18 @@ export default function AdminKeysPage() {
     setGenerating(false);
   }
 
-  async function handleDeleteKey(keyId: string) {
-    const keyToDelete = keys.find(k => k.id === keyId);
-    const status = keyToDelete ? getKeyStatus(keyToDelete) : "available";
+  async function handleDeactivateKey(keyId: string) {
+    const keyToDeactivate = keys.find(k => k.id === keyId);
+    const status = keyToDeactivate ? getKeyStatus(keyToDeactivate) : "available";
+    
+    if (status === "deactivated") {
+      toast.error("Key is already deactivated");
+      return;
+    }
     
     const message = status === "active" 
-      ? "This key is currently active. Deleting it will revoke the subscription. Continue?"
-      : "Are you sure you want to delete this key?";
+      ? "This key is currently active. Deactivating it will revoke the subscription. Continue?"
+      : "Are you sure you want to deactivate this key?";
     
     if (!confirm(message)) return;
 
@@ -293,25 +305,25 @@ export default function AdminKeysPage() {
       const result = await response.json();
       
       if (!response.ok) {
-        toast.error(result.error || "Failed to delete key");
+        toast.error(result.error || "Failed to deactivate key");
       } else {
         if (result.revoked > 0) {
-          toast.success("Key deleted, subscription revoked");
+          toast.success("Key deactivated, subscription revoked");
         } else {
-          toast.success("Key deleted");
+          toast.success("Key deactivated");
         }
       }
     } catch (err) {
-      toast.error("Failed to delete key");
+      toast.error("Failed to deactivate key");
     }
     
     loadKeys();
   }
 
-  async function handleBulkDelete() {
+  async function handleBulkDeactivate() {
     if (selectedKeys.size === 0) return;
     
-    setDeleting(true);
+    setDeactivating(true);
     
     try {
       const response = await fetch("/api/admin/delete-keys", {
@@ -323,20 +335,20 @@ export default function AdminKeysPage() {
       const result = await response.json();
       
       if (!response.ok) {
-        toast.error(result.error || "Failed to delete keys");
+        toast.error(result.error || "Failed to deactivate keys");
       } else {
         if (result.revoked > 0) {
-          toast.success(`Deleted ${result.deleted} key(s), revoked ${result.revoked} subscription(s)`);
+          toast.success(`Deactivated ${result.deactivated} key(s), revoked ${result.revoked} subscription(s)`);
         } else {
-          toast.success(`Deleted ${result.deleted} key(s)`);
+          toast.success(`Deactivated ${result.deactivated} key(s)`);
         }
       }
     } catch (err) {
-      toast.error("Failed to delete keys");
+      toast.error("Failed to deactivate keys");
     }
     
-    setDeleting(false);
-    setShowDeleteConfirm(false);
+    setDeactivating(false);
+    setShowDeactivateConfirm(false);
     setSelectedKeys(new Set());
     loadKeys();
   }
@@ -454,6 +466,7 @@ export default function AdminKeysPage() {
             { value: "sent", label: "Sent" },
             { value: "active", label: "Active" },
             { value: "expired", label: "Expired" },
+            { value: "deactivated", label: "Deactivated" },
           ] as const).map((f) => (
             <button
               key={f.value}
@@ -481,11 +494,11 @@ export default function AdminKeysPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
+              onClick={() => setShowDeactivateConfirm(true)}
               className="gap-2"
             >
-              <Trash2 className="w-4 h-4" />
-              Delete Selected
+              <Ban className="w-4 h-4" />
+              Deactivate Selected
             </Button>
           </div>
         )}
@@ -561,7 +574,12 @@ export default function AdminKeysPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      {status === "active" ? (
+                      {status === "deactivated" ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 flex items-center gap-1 w-fit">
+                          <Ban className="w-3 h-3" />
+                          Deactivated
+                        </span>
+                      ) : status === "active" ? (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
                           Active
                         </span>
@@ -581,7 +599,7 @@ export default function AdminKeysPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      {(status === "active" || status === "expired") && key.redeemed_org ? (
+                      {(status === "active" || status === "expired" || status === "deactivated") && key.redeemed_org ? (
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-muted-foreground" />
                           <div>
@@ -630,13 +648,15 @@ export default function AdminKeysPage() {
                             <Send className="w-4 h-4" />
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDeleteKey(key.id)}
-                          className="p-2 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
-                          title="Delete key"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {status !== "deactivated" && (
+                          <button
+                            onClick={() => handleDeactivateKey(key.id)}
+                            className="p-2 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                            title="Deactivate key"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -797,15 +817,15 @@ export default function AdminKeysPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      {/* Deactivate Confirmation Dialog */}
+      <Dialog open={showDeactivateConfirm} onOpenChange={setShowDeactivateConfirm}>
         <DialogContent className="max-w-md">
           <DialogTitle className="flex items-center gap-2 text-red-400">
             <AlertTriangle className="w-5 h-5" />
-            Delete {selectedKeys.size} Key(s)
+            Deactivate {selectedKeys.size} Key(s)
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete the selected keys? This action cannot be undone.
+            Are you sure you want to deactivate the selected keys? They will remain in the system but cannot be used.
           </DialogDescription>
 
           <div className="mt-4 space-y-3">
@@ -860,7 +880,7 @@ export default function AdminKeysPage() {
                 <p className="text-sm text-red-300 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   Warning: {getSelectedStatusBreakdown().active} key(s) are currently active.
-                  Deleting them will revoke the subscription and downgrade to Free.
+                  Deactivating them will revoke the subscription and downgrade to Free.
                 </p>
               </div>
             )}
@@ -869,27 +889,27 @@ export default function AdminKeysPage() {
           <div className="flex gap-2 mt-4">
             <Button 
               variant="outline" 
-              onClick={() => setShowDeleteConfirm(false)} 
+              onClick={() => setShowDeactivateConfirm(false)} 
               className="flex-1"
-              disabled={deleting}
+              disabled={deactivating}
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
-              onClick={handleBulkDelete} 
+              onClick={handleBulkDeactivate} 
               className="flex-1 gap-2"
-              disabled={deleting}
+              disabled={deactivating}
             >
-              {deleting ? (
+              {deactivating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Deleting...
+                  Deactivating...
                 </>
               ) : (
                 <>
-                  <Trash2 className="w-4 h-4" />
-                  Delete {selectedKeys.size} Key(s)
+                  <Ban className="w-4 h-4" />
+                  Deactivate {selectedKeys.size} Key(s)
                 </>
               )}
             </Button>
