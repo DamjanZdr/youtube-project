@@ -713,7 +713,12 @@ export default function IdeaPage() {
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
         }}
+        onClick={(e) => {
+          console.log("CANVAS CLICKED!", e.target);
+          alert("Canvas clicked!");
+        }}
         onMouseDown={(e) => {
+          console.log("CANVAS MOUSEDOWN!", e.target);
           // Handle all mouse interactions here
           const target = e.target as HTMLElement;
           
