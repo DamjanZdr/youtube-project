@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 
+// DEBUG: Test if any React events work
+console.log("=== IDEA PAGE MODULE LOADED ===");
+
 // Types
 interface WhiteboardElement {
   id: string;
@@ -75,6 +78,11 @@ export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const supabase = createClient();
+  
+  // DEBUG: Log on component mount
+  useEffect(() => {
+    console.log("=== IDEA PAGE COMPONENT MOUNTED ===");
+  }, []);
 
   // Canvas state
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -483,7 +491,15 @@ export default function IdeaPage() {
   const selectedEl = elements.find((el) => el.id === selectedElement);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden" onClick={() => console.log("OUTER DIV CLICKED")}>
+      {/* DEBUG TEST BUTTON */}
+      <button 
+        onClick={() => alert("BUTTON WORKS!")} 
+        style={{ padding: '10px', background: 'red', color: 'white', margin: '10px' }}
+      >
+        DEBUG: Click Me!
+      </button>
+      
       {/* Toolbar */}
       <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
         {/* Tool Buttons */}
