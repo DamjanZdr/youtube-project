@@ -809,6 +809,16 @@ export default function IdeaPage() {
             const bounds = getElementBounds(el);
 
             if (el.element_type === "drawing") {
+              // Extract original start position from path (M x y ...)
+              // The path contains absolute coords, el.x/y stores the original start point
+              // We calculate offset from original position to enable dragging
+              const pathMatch = el.content?.match(/^M\s*([\d.]+)\s+([\d.]+)/);
+              const origX = pathMatch ? parseFloat(pathMatch[1]) : el.x;
+              const origY = pathMatch ? parseFloat(pathMatch[2]) : el.y;
+              // Offset = how much the element has moved from its original position
+              const offsetX = el.x - origX;
+              const offsetY = el.y - origY;
+              
               return (
                 <svg
                   key={el.id}
@@ -817,8 +827,8 @@ export default function IdeaPage() {
                   className="absolute pointer-events-auto"
                   style={{ 
                     overflow: "visible", 
-                    left: el.x, 
-                    top: el.y, 
+                    left: 0, 
+                    top: 0,
                     cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default" 
                   }}
                   onMouseDown={(e) => {
@@ -851,15 +861,16 @@ export default function IdeaPage() {
                     }
                   }}
                 >
-                  <path
-                    d={el.content || ""}
-                    stroke={isSelected ? "#60a5fa" : el.border_color}
-                    strokeWidth={el.font_size}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ transform: `translate(${-el.x}px, ${-el.y}px)` }}
-                  />
+                  <g style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}>
+                    <path
+                      d={el.content || ""}
+                      stroke={isSelected ? "#60a5fa" : el.border_color}
+                      strokeWidth={el.font_size}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </g>
                 </svg>
               );
             }
