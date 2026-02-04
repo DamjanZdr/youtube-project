@@ -306,10 +306,10 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           {/* Right Panel - Plans */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Plan Header with Billing Toggle */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
-              <h3 className="text-lg font-semibold">Choose a Plan</h3>
+            <div className="relative flex items-center justify-center p-6 border-b border-white/10 bg-white/[0.02]">
+              <h3 className="absolute left-6 text-lg font-semibold">Choose a Plan</h3>
               
-              {/* Billing Interval Toggle */}
+              {/* Billing Interval Toggle - Absolutely centered */}
               <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
                 <button
                   onClick={() => setBillingInterval("monthly")}
