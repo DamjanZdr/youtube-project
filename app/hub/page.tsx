@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Plus, Play, Users, FolderKanban, Bell, Check, X } from "lucide-react";
 import Link from "next/link";
 import { CreateStudioDialog } from "./create-studio-dialog";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 
 interface Studio {
   id: string;
@@ -152,22 +152,6 @@ export default function HubPage() {
     setLoading(false);
   }
 
-  async function toggleAcceptInvites(enabled: boolean) {
-    if (!user) return;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ accept_invites: enabled })
-      .eq("id", user.id);
-
-    if (error) {
-      toast.error("Failed to update setting");
-    } else {
-      setAcceptInvites(enabled);
-      toast.success(enabled ? "Invites enabled" : "Invites disabled");
-    }
-  }
-
   async function handleInviteResponse(inviteId: string, accept: boolean, isTransfer: boolean = false) {
     if (accept) {
       if (isTransfer) {
@@ -278,23 +262,13 @@ export default function HubPage() {
             />
           </Link>
           
-          <div className="flex items-center gap-6">
-            {/* Accept Invites Toggle */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground cursor-pointer" htmlFor="accept-invites">
-                Accept Invites
-              </label>
-              <Switch
-                id="accept-invites"
-                checked={acceptInvites}
-                onCheckedChange={toggleAcceptInvites}
+          <div className="flex items-center gap-4">
+            {user && (
+              <UserProfileDropdown 
+                user={user} 
+                initialAcceptInvites={acceptInvites} 
               />
-            </div>
-            
-            <span className="text-sm text-muted-foreground">{user?.email || "preview@example.com"}</span>
-            <form action="/auth/sign-out" method="post">
-              <Button variant="ghost" size="sm">Sign Out</Button>
-            </form>
+            )}
           </div>
         </div>
       </header>

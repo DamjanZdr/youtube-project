@@ -1,22 +1,37 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "./logout-button";
+import { AuthUserDropdown } from "./shared/auth-user-dropdown";
 
 export async function AuthButton() {
   const supabase = await createClient();
 
-  // You can also use getUser() which will be slower.
-  const { data } = await supabase.auth.getClaims();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const user = data?.claims;
+  if (user) {
+    // Fetch full profile data
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_url, accept_invites")
+      .eq("id", user.id)
+      .single();
 
-  return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <LogoutButton />
-    </div>
-  ) : (
+    if (profile) {
+      return (
+        <AuthUserDropdown
+          user={{
+            id: profile.id,
+            email: profile.email,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+          }}
+          initialAcceptInvites={profile.accept_invites ?? true}
+        />
+      );
+    }
+  }
+
+  return (
     <div className="flex gap-2">
       <Button asChild size="sm" variant={"outline"}>
         <Link href="/auth/login">Sign in</Link>
