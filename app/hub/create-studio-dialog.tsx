@@ -202,7 +202,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Logo Upload */}
-            <div className="mb-8">
+            <div className="mb-8 text-center">
               <label className="text-sm font-medium mb-4 block text-muted-foreground">Studio Logo</label>
               <div 
                 onClick={() => logoInputRef.current?.click()}
@@ -229,7 +229,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 className="hidden"
                 onChange={handleLogoChange}
               />
-              <p className="text-xs text-muted-foreground text-center mt-3">PNG or JPG, 256×256px</p>
+              <p className="text-xs text-muted-foreground mt-3">PNG or JPG, 256×256px</p>
             </div>
 
             {/* Studio Name */}
@@ -247,46 +247,94 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               />
             </div>
 
-            {/* Billing Interval Toggle - Centered */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <label className="text-sm font-medium text-muted-foreground">Billing Period</label>
-                <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
-                  <button
-                    onClick={() => setBillingInterval("monthly")}
-                    className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-                      billingInterval === "monthly"
-                        ? "bg-primary text-primary-foreground shadow-lg"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Monthly
-                  </button>
-                  <button
-                    onClick={() => setBillingInterval("yearly")}
-                    className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                      billingInterval === "yearly"
-                        ? "bg-primary text-primary-foreground shadow-lg"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Yearly
-                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-semibold">
-                      -17%
-                    </span>
-                  </button>
+            {/* Key Redemption - Under Studio Name */}
+            <div className="mb-8">
+              {keyInfo ? (
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-green-400" />
+                      <span className="text-sm font-medium text-green-400">Key Applied</span>
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
+                      {keyInfo.plan}
+                    </Badge>
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                      {formatDuration(keyInfo.duration)}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
+              ) : showKeyInput ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-muted-foreground">Redeem Key</label>
+                    <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setShowKeyInput(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={redeemKey}
+                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      className="font-mono text-sm bg-white/5"
+                    />
+                    <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
+                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                  {keyError && <p className="text-xs text-red-400">{keyError}</p>}
+                </div>
+              ) : (
+                <Button variant="outline" className="w-full gap-2 h-11 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => setShowKeyInput(true)}>
+                  <Key className="w-4 h-4" />
+                  Have a plan key?
+                </Button>
+              )}
             </div>
+
+            <div className="flex-1" /> {/* Spacer */}
 
             {error && <p className="text-sm text-red-400 mt-4">{error}</p>}
           </div>
 
           {/* Right Panel - Plans */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Plan Header */}
-            <div className="flex items-center p-6 border-b border-white/10 bg-white/[0.02]">
+            {/* Plan Header with Billing Toggle */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
               <h3 className="text-lg font-semibold">Choose a Plan</h3>
+              
+              {/* Billing Interval Toggle */}
+              <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
+                <button
+                  onClick={() => setBillingInterval("monthly")}
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                    billingInterval === "monthly"
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingInterval("yearly")}
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                    billingInterval === "yearly"
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Yearly
+                  <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-semibold">
+                    SAVE 17%
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Plan Cards */}
@@ -355,63 +403,22 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between gap-3 p-6 border-t border-white/10 bg-white/[0.02]">
-              {/* Key Redemption */}
-              <div>
-                {keyInfo ? (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-                    <Key className="w-4 h-4 text-green-400" />
-                    <span className="text-sm font-medium text-green-400">Key Applied:</span>
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
-                      {keyInfo.plan}
-                    </Badge>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {formatDuration(keyInfo.duration)}
-                    </Badge>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : showKeyInput ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={redeemKey}
-                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
-                      className="font-mono text-sm bg-white/5 w-48"
-                    />
-                    <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
-                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowKeyInput(false)}>Cancel</Button>
-                    {keyError && <span className="text-xs text-red-400 ml-2">{keyError}</span>}
-                  </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10 bg-white/[0.02]">
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading} className="px-6">
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 text-base font-medium">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : selectedPlan === "free" || keyInfo ? (
+                  "Create Studio"
                 ) : (
-                  <Button variant="outline" className="gap-2 h-10 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => setShowKeyInput(true)}>
-                    <Key className="w-4 h-4" />
-                    Have a plan key?
-                  </Button>
+                  "Continue to Checkout"
                 )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading} className="px-6">
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 text-base font-medium">
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : selectedPlan === "free" || keyInfo ? (
-                    "Create Studio"
-                  ) : (
-                    "Continue to Checkout"
-                  )}
-                </Button>
-              </div>
+              </Button>
             </div>
           </div>
         </div>
