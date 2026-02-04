@@ -98,9 +98,12 @@ export default function AdminKeysPage() {
   const [generatedKeys, setGeneratedKeys] = useState<string[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Deactivate confirmation dialog
+  // Deactivate confirmation dialog (bulk)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
+
+  // Single key deactivate dialog
+  const [singleDeactivateKey, setSingleDeactivateKey] = useState<PlanKey | null>(null);
 
   // Send email dialog
   const [showSendEmail, setShowSendEmail] = useState(false);
@@ -282,24 +285,29 @@ export default function AdminKeysPage() {
 
   async function handleDeactivateKey(keyId: string) {
     const keyToDeactivate = keys.find(k => k.id === keyId);
-    const status = keyToDeactivate ? getKeyStatus(keyToDeactivate) : "available";
+    if (!keyToDeactivate) return;
+    
+    const status = getKeyStatus(keyToDeactivate);
     
     if (status === "deactivated") {
       toast.error("Key is already deactivated");
       return;
     }
     
-    const message = status === "active" 
-      ? "This key is currently active. Deactivating it will revoke the subscription. Continue?"
-      : "Are you sure you want to deactivate this key?";
-    
-    if (!confirm(message)) return;
+    // Show confirmation dialog
+    setSingleDeactivateKey(keyToDeactivate);
+  }
+
+  async function confirmSingleDeactivate() {
+    if (!singleDeactivateKey) return;
+
+    setDeactivating(true);
 
     try {
       const response = await fetch("/api/admin/delete-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyIds: [keyId] }),
+        body: JSON.stringify({ keyIds: [singleDeactivateKey.id] }),
       });
       
       const result = await response.json();
@@ -317,6 +325,8 @@ export default function AdminKeysPage() {
       toast.error("Failed to deactivate key");
     }
     
+    setSingleDeactivateKey(null);
+    setDeactivating(false);
     loadKeys();
   }
 
@@ -1011,6 +1021,68 @@ export default function AdminKeysPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Single Key Deactivate Dialog */}
+      <Dialog open={!!singleDeactivateKey} onOpenChange={(open) => !open && setSingleDeactivateKey(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <AlertTriangle className="w-5 h-5" />
+              Deactivate Key
+            </DialogTitle>
+            <DialogDescription>
+              {singleDeactivateKey && getKeyStatus(singleDeactivateKey) === "active"
+                ? "This key is currently active. Deactivating it will revoke the subscription and downgrade to Free."
+                : "Are you sure you want to deactivate this key? It will no longer be usable."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {singleDeactivateKey && (
+            <div className="bg-white/5 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Key</span>
+                <code className="font-mono text-sm">{singleDeactivateKey.key}</code>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Plan</span>
+                <span className="capitalize">{singleDeactivateKey.plan}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <span className="capitalize">{getKeyStatus(singleDeactivateKey)}</span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSingleDeactivateKey(null)}
+              disabled={deactivating}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmSingleDeactivate}
+              disabled={deactivating}
+              className="gap-2"
+            >
+              {deactivating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deactivating...
+                </>
+              ) : (
+                <>
+                  <Ban className="w-4 h-4" />
+                  Deactivate
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

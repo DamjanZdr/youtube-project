@@ -962,7 +962,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
 
       {/* Confirmation Dialog */}
       <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{confirmDialog.action}</DialogTitle>
             <DialogDescription className="pt-4">
