@@ -192,10 +192,10 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="glass-strong border-white/10 sm:max-w-[1100px] p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass-strong border-white/10 w-[95vw] max-w-[1600px] p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col lg:flex-row">
           {/* Left Side - Studio Details */}
-          <div className="lg:w-[300px] p-6 border-b lg:border-b-0 lg:border-r border-white/10 bg-muted/20 flex-shrink-0">
+          <div className="lg:w-[380px] p-8 border-b lg:border-b-0 lg:border-r border-white/10 bg-muted/20 flex-shrink-0">
             <div className="mb-8">
               <h2 className="text-xl font-bold mb-1">Create Studio</h2>
               <p className="text-sm text-muted-foreground">
@@ -277,9 +277,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </div>
 
           {/* Right Side - Plan Selection (Same as Billing Tab) */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-8 overflow-y-auto">
             {/* Billing Interval Toggle */}
-            <div className="flex items-center justify-center gap-4 glass-card p-3 w-fit mx-auto mb-6">
+            <div className="flex items-center justify-center gap-4 glass-card p-3 w-fit mx-auto mb-8">
               <button
                 onClick={() => setBillingInterval("monthly")}
                 className={`px-4 py-2 rounded-lg transition-all ${
@@ -306,7 +306,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards - Same styling as Billing Tab */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {plans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 const isKeyPlan = keyInfo?.plan === plan.id;
