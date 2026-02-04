@@ -11,7 +11,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Check, Key, Sparkles, X, ImageIcon } from "lucide-react";
+import { Plus, Loader2, Check, Key, X, ImageIcon } from "lucide-react";
 import { createStudio } from "@/lib/actions/studio";
 import { plans as allPlans } from "@/config/subscriptions";
 import { toast } from "sonner";
@@ -251,75 +251,6 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               />
             </div>
 
-            {/* Redeem Key Section */}
-            <div className="pt-4 border-t border-white/10">
-              {keyInfo ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Key className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-500">Key Applied</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={clearKey}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
-                      {keyInfo.plan}
-                    </Badge>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {formatDuration(keyInfo.duration)}
-                    </Badge>
-                  </div>
-                </div>
-              ) : showKeyInput ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Redeem Key</label>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="h-6 text-xs"
-                      onClick={() => setShowKeyInput(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={redeemKey}
-                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
-                      className="font-mono text-sm"
-                    />
-                    <Button 
-                      size="sm"
-                      onClick={validateKey}
-                      disabled={validatingKey || !redeemKey.trim()}
-                    >
-                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                    </Button>
-                  </div>
-                  {keyError && <p className="text-xs text-red-500">{keyError}</p>}
-                </div>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="w-full gap-2"
-                  onClick={() => setShowKeyInput(true)}
-                >
-                  <Key className="w-4 h-4" />
-                  Have a plan key?
-                </Button>
-              )}
-            </div>
-
             {error && (
               <p className="text-sm text-red-500 mt-4">{error}</p>
             )}
@@ -435,34 +366,95 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               })}
             </div>
 
-            {/* Action Buttons - Desktop only */}
-            <div className="hidden lg:flex items-center justify-end gap-3 pt-6 mt-6 border-t border-white/10">
-              <Button
-                variant="ghost"
-                onClick={() => setOpen(false)}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={loading || !name.trim()}
-                className="min-w-[160px]"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : selectedPlan === "free" || keyInfo ? (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Create Studio
-                  </>
+            {/* Footer - Key redemption + Action Buttons */}
+            <div className="hidden lg:flex items-center justify-between gap-4 pt-6 mt-6 border-t border-white/10">
+              {/* Key Redemption */}
+              <div className="flex-1 max-w-md">
+                {keyInfo ? (
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Key className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-medium text-green-500">Key Applied</span>
+                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
+                          {keyInfo.plan}
+                        </Badge>
+                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                          {formatDuration(keyInfo.duration)}
+                        </Badge>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={clearKey}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : showKeyInput ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={redeemKey}
+                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      className="font-mono text-sm max-w-[200px]"
+                    />
+                    <Button 
+                      size="sm"
+                      onClick={validateKey}
+                      disabled={validatingKey || !redeemKey.trim()}
+                    >
+                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => setShowKeyInput(false)}
+                    >
+                      Cancel
+                    </Button>
+                    {keyError && <span className="text-xs text-red-500">{keyError}</span>}
+                  </div>
                 ) : (
-                  "Continue to Checkout"
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => setShowKeyInput(true)}
+                  >
+                    <Key className="w-4 h-4" />
+                    Have a plan key?
+                  </Button>
                 )}
-              </Button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setOpen(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={loading || !name.trim()}
+                  className="min-w-[160px]"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : selectedPlan === "free" || keyInfo ? (
+                    "Create Studio"
+                  ) : (
+                    "Continue to Checkout"
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
