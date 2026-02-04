@@ -485,7 +485,7 @@ export default function IdeaPage() {
   const selectedEl = elements.find((el) => el.id === selectedElement);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="absolute inset-0 flex flex-col overflow-hidden">
       {/* Toolbar */}
       <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
         {/* Tool Buttons */}
