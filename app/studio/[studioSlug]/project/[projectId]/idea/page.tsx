@@ -1031,123 +1031,127 @@ export default function IdeaPage() {
         {/* Onboarding hints - only show when canvas is empty */}
         {elements.length === 0 && (
           <>
-            {/* LEFT TOOLBAR TOOLTIPS */}
+            {/* LEFT TOOLBAR TOOLTIPS - scattered, no boxes, lines from text edge */}
             
-            {/* Mode toggle tooltip - positioned below-left */}
-            <div className="absolute top-20 left-6 pointer-events-none">
-              <svg className="absolute -top-8 left-8 w-16 h-10" viewBox="0 0 64 40">
+            {/* Mode toggle */}
+            <div className="absolute top-28 left-4 pointer-events-none">
+              <svg className="absolute -top-14 left-16 w-20 h-16 overflow-visible" viewBox="0 0 80 64">
                 <path 
-                  d="M32 38 Q32 20 20 10 L20 4" 
+                  d="M0 60 Q0 30 30 15 L30 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-primary/40"
+                  className="text-primary/50"
                   strokeLinecap="round"
                 />
-                <path d="M17 8 L20 2 L23 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/40" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M27 10 L30 4 L33 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="bg-primary/10 border border-primary/20 rounded-lg px-2.5 py-1.5">
-                <p className="text-[11px] text-primary/80">Select / Draw</p>
-              </div>
+              <p className="text-xs text-primary/70 font-medium">Select or Draw mode</p>
             </div>
             
-            {/* Panel button tooltip - positioned below-center */}
-            <div className="absolute top-24 left-32 pointer-events-none">
-              <svg className="absolute -top-12 left-6 w-12 h-14" viewBox="0 0 48 56">
+            {/* Panel button */}
+            <div className="absolute top-44 left-20 pointer-events-none">
+              <svg className="absolute -top-32 left-12 w-24 h-36 overflow-visible" viewBox="0 0 96 144">
                 <path 
-                  d="M24 54 Q24 30 -8 10 L-8 4" 
+                  d="M0 140 Q0 80 68 40 L68 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-primary/40"
+                  className="text-primary/50"
                   strokeLinecap="round"
                 />
-                <path d="M-11 8 L-8 2 L-5 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/40" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M65 10 L68 4 L71 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="bg-primary/10 border border-primary/20 rounded-lg px-2.5 py-1.5">
-                <p className="text-[11px] text-primary/80">Add Panel</p>
-              </div>
+              <p className="text-xs text-primary/70 font-medium">Add a panel</p>
             </div>
             
-            {/* Text button tooltip - positioned below-right */}
-            <div className="absolute top-20 left-52 pointer-events-none">
-              <svg className="absolute -top-8 left-1 w-16 h-10" viewBox="0 0 64 40">
+            {/* Text button */}
+            <div className="absolute top-28 left-48 pointer-events-none">
+              <svg className="absolute -top-14 -left-4 w-20 h-16 overflow-visible" viewBox="0 0 80 64">
                 <path 
-                  d="M32 38 Q32 20 -20 10 L-20 4" 
+                  d="M80 60 Q80 30 -26 15 L-26 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-primary/40"
+                  className="text-primary/50"
                   strokeLinecap="round"
                 />
-                <path d="M-23 8 L-20 2 L-17 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/40" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M-29 10 L-26 4 L-23 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="bg-primary/10 border border-primary/20 rounded-lg px-2.5 py-1.5">
-                <p className="text-[11px] text-primary/80">Add Text</p>
-              </div>
+              <p className="text-xs text-primary/70 font-medium">Add text</p>
             </div>
 
             {/* RIGHT TOOLBAR TOOLTIPS */}
             
-            {/* Undo/Redo tooltip */}
-            <div className="absolute top-20 right-72 pointer-events-none">
-              <svg className="absolute -top-8 right-4 w-16 h-10" viewBox="0 0 64 40">
+            {/* Undo/Redo */}
+            <div className="absolute top-28 right-72 pointer-events-none">
+              <svg className="absolute -top-14 right-0 w-20 h-16 overflow-visible" viewBox="0 0 80 64">
                 <path 
-                  d="M32 38 Q32 20 52 10 L52 4" 
+                  d="M80 60 Q80 30 55 15 L55 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-muted-foreground/30"
+                  className="text-muted-foreground/40"
                   strokeLinecap="round"
                 />
-                <path d="M49 8 L52 2 L55 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/30" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M52 10 L55 4 L58 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="glass rounded-lg px-2.5 py-1.5 border border-white/5">
-                <p className="text-[11px] text-muted-foreground/60">Undo / Redo</p>
-              </div>
+              <p className="text-xs text-muted-foreground/60">Undo / Redo</p>
             </div>
             
-            {/* Zoom tooltip */}
-            <div className="absolute top-24 right-36 pointer-events-none">
-              <svg className="absolute -top-12 right-8 w-12 h-14" viewBox="0 0 48 56">
+            {/* Zoom */}
+            <div className="absolute top-44 right-44 pointer-events-none">
+              <svg className="absolute -top-32 right-4 w-24 h-36 overflow-visible" viewBox="0 0 96 144">
                 <path 
-                  d="M24 54 Q24 30 38 10 L38 4" 
+                  d="M96 140 Q96 80 60 40 L60 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-muted-foreground/30"
+                  className="text-muted-foreground/40"
                   strokeLinecap="round"
                 />
-                <path d="M35 8 L38 2 L41 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/30" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M57 10 L60 4 L63 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="glass rounded-lg px-2.5 py-1.5 border border-white/5">
-                <p className="text-[11px] text-muted-foreground/60">Zoom Controls</p>
-              </div>
+              <p className="text-xs text-muted-foreground/60">Zoom in/out</p>
             </div>
             
-            {/* Flow animation tooltip */}
-            <div className="absolute top-20 right-4 pointer-events-none">
-              <svg className="absolute -top-8 right-2 w-16 h-10" viewBox="0 0 64 40">
+            {/* Center view */}
+            <div className="absolute top-28 right-24 pointer-events-none">
+              <svg className="absolute -top-14 right-6 w-16 h-16 overflow-visible" viewBox="0 0 64 64">
                 <path 
-                  d="M44 38 Q44 20 44 10 L44 4" 
+                  d="M64 60 Q50 40 28 20 L28 6" 
                   stroke="currentColor" 
                   strokeWidth="1.5" 
                   fill="none" 
-                  className="text-muted-foreground/30"
+                  className="text-muted-foreground/40"
                   strokeLinecap="round"
                 />
-                <path d="M41 8 L44 2 L47 8" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/30" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M25 10 L28 4 L31 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div className="glass rounded-lg px-2.5 py-1.5 border border-white/5">
-                <p className="text-[11px] text-muted-foreground/60">Animate Lines</p>
-              </div>
+              <p className="text-xs text-muted-foreground/60">Reset view</p>
+            </div>
+            
+            {/* Flow animation */}
+            <div className="absolute top-44 right-4 pointer-events-none">
+              <svg className="absolute -top-32 right-2 w-16 h-36 overflow-visible" viewBox="0 0 64 144">
+                <path 
+                  d="M64 140 Q40 100 16 50 L16 6" 
+                  stroke="currentColor" 
+                  strokeWidth="1.5" 
+                  fill="none" 
+                  className="text-muted-foreground/40"
+                  strokeLinecap="round"
+                />
+                <path d="M13 10 L16 4 L19 10" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="text-xs text-muted-foreground/60">Line animation</p>
             </div>
 
             {/* Center hint */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
               <div className="text-center">
-                <p className="text-muted-foreground/40 text-sm">Click a tool above to get started</p>
-                <p className="text-muted-foreground/25 text-xs mt-2">Double-click to edit · Drag to move · Shift+click for multi-select</p>
+                <p className="text-muted-foreground/35 text-sm">Click a tool to get started</p>
+                <p className="text-muted-foreground/20 text-xs mt-2">Double-click to edit · Drag to move · Shift+click for multi-select</p>
               </div>
             </div>
           </>
