@@ -62,15 +62,7 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        {/* User info */}
-        <div className="px-3 py-2">
-          <p className="text-sm font-medium">{displayName}</p>
-          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-        </div>
-        
-        <DropdownMenuSeparator />
-        
+      <DropdownMenuContent align="end" className="w-56">
         {/* Accept Invites Toggle */}
         <div 
           className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer"

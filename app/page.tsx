@@ -6,6 +6,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Play, Sparkles, Layout, Eye, FolderKanban, FileText, Users } from "lucide-react";
 
+// Force dynamic rendering to check auth state
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
