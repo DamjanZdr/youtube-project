@@ -24,14 +24,8 @@ interface BoardStatus {
   color: string;
 }
 
-// Format subscriber count with abbreviations (1.2K, 45.6K, 1.2M, etc.)
+// Format subscriber count with commas (e.g., 6,900,000)
 function formatSubscriberCount(count: number): string {
-  if (count >= 1000000) {
-    return (count / 1000000).toFixed(count >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
-  }
-  if (count >= 1000) {
-    return (count / 1000).toFixed(count >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K';
-  }
   return count.toLocaleString();
 }
 
@@ -90,7 +84,7 @@ export default function StudioHomePage() {
 
       setProjects(projectData || []);
 
-      // Fetch subscriber count
+      // Fetch subscriber count - first from DB, then try to sync live from YouTube
       const { data: channelData } = await supabase
         .from("channels")
         .select("subscriber_count")
@@ -98,6 +92,19 @@ export default function StudioHomePage() {
         .single();
 
       setSubscriberCount(channelData?.subscriber_count || 0);
+
+      // Try to fetch live stats from YouTube if connected
+      try {
+        const response = await fetch(`/api/youtube/stats?organizationId=${studioData?.id}`);
+        if (response.ok) {
+          const stats = await response.json();
+          if (stats.subscriberCount) {
+            setSubscriberCount(stats.subscriberCount);
+          }
+        }
+      } catch (e) {
+        // YouTube not connected or error - use cached value
+      }
     }
 
     loadData();

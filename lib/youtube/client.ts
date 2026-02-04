@@ -77,6 +77,30 @@ export async function getMyChannel(accessToken: string) {
 }
 
 /**
+ * Get channel statistics (subscriber count, video count, view count)
+ */
+export async function getChannelStatistics(accessToken: string) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.channels.list({
+    part: ['statistics'],
+    mine: true,
+  });
+  
+  const channel = response.data.items?.[0];
+  if (!channel) {
+    throw new Error('No channel found for this account');
+  }
+  
+  return {
+    subscriberCount: parseInt(channel.statistics?.subscriberCount || '0', 10),
+    videoCount: parseInt(channel.statistics?.videoCount || '0', 10),
+    viewCount: parseInt(channel.statistics?.viewCount || '0', 10),
+    hiddenSubscriberCount: channel.statistics?.hiddenSubscriberCount || false,
+  };
+}
+
+/**
  * List videos from the authenticated user's channel
  */
 export async function listMyVideos(accessToken: string, maxResults = 50) {

@@ -41,14 +41,8 @@ interface PendingInvite {
   joined_at: string;
 }
 
-// Format subscriber count with abbreviations (1.2K, 45.6K, 1.2M, etc.)
+// Format subscriber count with commas (e.g., 6,900,000)
 function formatSubscriberCount(count: number): string {
-  if (count >= 1000000) {
-    return (count / 1000000).toFixed(count >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
-  }
-  if (count >= 1000) {
-    return (count / 1000).toFixed(count >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K';
-  }
   return count.toLocaleString();
 }
 
@@ -126,12 +120,23 @@ export default function HubPage() {
             .select("*", { count: "exact", head: true })
             .eq("organization_id", org.id);
 
-          // Get subscriber count from channel
-          const { data: channelData } = await supabase
-            .from("channels")
-            .select("subscriber_count")
-            .eq("organization_id", org.id)
-            .single();
+          // Get subscriber count - try live from YouTube API first
+          let subscriberCount = 0;
+          try {
+            const response = await fetch(`/api/youtube/stats?organizationId=${org.id}`);
+            if (response.ok) {
+              const stats = await response.json();
+              subscriberCount = stats.subscriberCount || 0;
+            }
+          } catch (e) {
+            // YouTube not connected - try from cached channel data
+            const { data: channelData } = await supabase
+              .from("channels")
+              .select("subscriber_count")
+              .eq("organization_id", org.id)
+              .single();
+            subscriberCount = channelData?.subscriber_count || 0;
+          }
 
           return {
             id: org.id,
@@ -140,7 +145,7 @@ export default function HubPage() {
             logo_url: org.logo_url,
             memberCount: memberCount || 1,
             projectCount: projectCount || 0,
-            subscriberCount: channelData?.subscriber_count || 0,
+            subscriberCount,
           };
         })
       );
