@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Play } from "lucide-react";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -43,11 +43,8 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {/* Logo */}
-      <div className="flex items-center justify-center gap-2 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-          <Play className="w-5 h-5 text-white fill-white" />
-        </div>
-        <span className="font-bold text-xl">myBlueprint</span>
+      <div className="flex items-center justify-center mb-2">
+        <Image src="/bplogo.png" alt="myBlueprint" width={160} height={40} className="h-10 w-auto" />
       </div>
 
       <div className="glass-card p-8">

@@ -177,13 +177,13 @@ function RedeemPageContent() {
           <p className="text-muted-foreground mb-6">
             Sign in or create an account to redeem your plan key.
           </p>
-          <div className="space-y-3">
-            <Link href={`/auth/login?redirect=${redirectUrl}`}>
-              <Button className="w-full">Sign In</Button>
-            </Link>
-            <Link href={`/auth/sign-up?redirect=${redirectUrl}`}>
-              <Button variant="outline" className="w-full">Create Account</Button>
-            </Link>
+          <div className="flex flex-col gap-3">
+            <Button asChild className="w-full">
+              <Link href={`/auth/login?redirect=${redirectUrl}`}>Sign In</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/auth/sign-up?redirect=${redirectUrl}`}>Create Account</Link>
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
             Don't have an account? Create one to get started.
