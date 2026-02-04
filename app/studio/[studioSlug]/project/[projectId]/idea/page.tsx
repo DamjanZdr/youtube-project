@@ -145,17 +145,33 @@ export default function IdeaPage() {
         .from("project_whiteboard_elements")
         .update(element)
         .eq("id", element.id);
-      if (error) toast.error("Failed to save");
+      if (error) {
+        console.error("Update error:", error);
+        toast.error("Failed to save");
+      }
     } else {
+      // Create a temporary ID for immediate display
+      const tempId = crypto.randomUUID();
+      const tempElement = { ...element, id: tempId } as WhiteboardElement;
+      
+      // Immediately add to local state for instant feedback
+      setElements((prev) => [...prev, tempElement]);
+      
+      // Then save to database
       const { data, error } = await supabase
         .from("project_whiteboard_elements")
         .insert({ ...element, project_id: projectId })
         .select()
         .single();
+        
       if (error) {
-        toast.error("Failed to create element");
+        console.error("Insert error:", error);
+        toast.error("Failed to create element: " + error.message);
+        // Remove the temp element on failure
+        setElements((prev) => prev.filter((el) => el.id !== tempId));
       } else if (data) {
-        setElements((prev) => [...prev, data]);
+        // Replace temp element with real one from DB
+        setElements((prev) => prev.map((el) => el.id === tempId ? data : el));
         pushHistory([...elements, data]);
       }
     }
@@ -245,6 +261,7 @@ export default function IdeaPage() {
     if (target.closest('[data-element]')) return;
 
     const pos = getCanvasPosition(e);
+    console.log("Canvas clicked at:", pos, "with tool:", activeTool);
 
     if (activeTool === "panel") {
       saveElement({
