@@ -14,9 +14,9 @@ import type { ApiResponse, SubscriptionPlan } from '@/types';
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 /**
- * Get member limit for a given plan
+ * Get member limit for a given plan (local helper, not exported as server action)
  */
-export function getMemberLimitForPlan(plan: SubscriptionPlan): number {
+function getMemberLimitForPlan(plan: SubscriptionPlan): number {
   const planConfig = plans.find(p => p.id === plan);
   return planConfig?.limits.teamMembers ?? 1;
 }
