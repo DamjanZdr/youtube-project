@@ -70,6 +70,7 @@ const TEXT_COLORS = [
 ];
 
 const DRAG_THRESHOLD = 5;
+const HANDLE_SIZE = 10;
 
 export default function IdeaPage() {
   const params = useParams();
@@ -87,8 +88,9 @@ export default function IdeaPage() {
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   
 
-  const [connectingFrom, setConnectingFrom] = useState<{ elementId: string; side: string } | null>(null);
-  const [connectionPreview, setConnectionPreview] = useState<{ x: number; y: number } | null>(null);
+  const [connectingFrom, setConnectingFrom] = useState<{ elementId: string; side: string; startX: number; startY: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [hoverTargetId, setHoverTargetId] = useState<string | null>(null);
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -236,15 +238,56 @@ export default function IdeaPage() {
     if (element.element_type === "panel") {
       const content = element.content || "";
       if (!content.trim()) {
-        return { w: 60, h: 28 };
+        return { w: 70, h: 34 };
       }
       const lines = content.split("\n");
       const maxLineLength = Math.max(...lines.map((l) => l.length), 1);
-      const w = Math.max(60, Math.min(300, maxLineLength * 8 + 20));
-      const h = Math.max(28, lines.length * 18 + 12);
+      const w = Math.max(70, Math.min(280, maxLineLength * 8 + 24));
+      const h = Math.max(34, lines.length * 18 + 16);
       return { w, h };
     }
     return { w: element.width || 80, h: element.height || 28 };
+  }
+
+  function getElementCenter(element: WhiteboardElement): { x: number; y: number } {
+    const size = getElementSize(element);
+    return { x: element.x + size.w / 2, y: element.y + size.h / 2 };
+  }
+
+  function getHandlePosition(element: WhiteboardElement, side: string): { x: number; y: number } {
+    const size = getElementSize(element);
+    switch (side) {
+      case "top": return { x: element.x + size.w / 2, y: element.y };
+      case "right": return { x: element.x + size.w, y: element.y + size.h / 2 };
+      case "bottom": return { x: element.x + size.w / 2, y: element.y + size.h };
+      case "left": return { x: element.x, y: element.y + size.h / 2 };
+      default: return { x: element.x, y: element.y };
+    }
+  }
+
+  function getBestConnectionPoints(source: WhiteboardElement, target: WhiteboardElement): { start: { x: number; y: number }; end: { x: number; y: number } } {
+    const sourceCenter = getElementCenter(source);
+    const targetCenter = getElementCenter(target);
+    const sourceSize = getElementSize(source);
+    const targetSize = getElementSize(target);
+
+    // Determine best sides based on relative position
+    const dx = targetCenter.x - sourceCenter.x;
+    const dy = targetCenter.y - sourceCenter.y;
+
+    let startSide: string, endSide: string;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      startSide = dx > 0 ? "right" : "left";
+      endSide = dx > 0 ? "left" : "right";
+    } else {
+      startSide = dy > 0 ? "bottom" : "top";
+      endSide = dy > 0 ? "top" : "bottom";
+    }
+
+    return {
+      start: getHandlePosition(source, startSide),
+      end: getHandlePosition(target, endSide),
+    };
   }
 
   function getConnectionPath(connection: WhiteboardConnection): string {
@@ -252,18 +295,20 @@ export default function IdeaPage() {
     const target = elements.find((el) => el.id === connection.target_element_id);
     if (!source || !target) return "";
 
-    const sourceSize = getElementSize(source);
-    const targetSize = getElementSize(target);
+    const { start, end } = getBestConnectionPoints(source, target);
 
-    const sx = source.x + sourceSize.w / 2;
-    const sy = source.y + sourceSize.h / 2;
-    const tx = target.x + targetSize.w / 2;
-    const ty = target.y + targetSize.h / 2;
+    // Smooth bezier curve
+    const midX = (start.x + end.x) / 2;
+    const midY = (start.y + end.y) / 2;
+    const dx = Math.abs(end.x - start.x);
+    const dy = Math.abs(end.y - start.y);
+    const curve = Math.min(dx, dy) * 0.5;
 
-    const mx = (sx + tx) / 2;
-    const my = (sy + ty) / 2;
-
-    return `M ${sx} ${sy} Q ${mx} ${sy} ${mx} ${my} T ${tx} ${ty}`;
+    if (dx > dy) {
+      return `M ${start.x} ${start.y} C ${start.x + curve} ${start.y}, ${end.x - curve} ${end.y}, ${end.x} ${end.y}`;
+    } else {
+      return `M ${start.x} ${start.y} C ${start.x} ${start.y + curve}, ${end.x} ${end.y - curve}, ${end.x} ${end.y}`;
+    }
   }
 
   function getHandlePositions(element: WhiteboardElement) {
@@ -324,8 +369,10 @@ export default function IdeaPage() {
       } else if (activeTool === "select") {
         setSelectedElement(null);
         setEditingElement(null);
-        setConnectingFrom(null);
-        setConnectionPreview(null);
+        if (connectingFrom) {
+          setConnectingFrom(null);
+          setHoverTargetId(null);
+        }
       }
     }
   }
@@ -342,8 +389,13 @@ export default function IdeaPage() {
 
   function handleHandleMouseDown(e: React.MouseEvent, elementId: string, side: string) {
     e.stopPropagation();
-    setConnectingFrom({ elementId, side });
-    setConnectionPreview(getCanvasPosition(e));
+    e.preventDefault();
+    const pos = getCanvasPosition(e);
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    const handlePos = getHandlePosition(element, side);
+    setConnectingFrom({ elementId, side, startX: handlePos.x, startY: handlePos.y });
+    setMousePos(pos);
   }
 
   function handleMouseMove(e: React.MouseEvent) {
@@ -353,7 +405,25 @@ export default function IdeaPage() {
       return;
     }
 
-    
+    if (connectingFrom) {
+      const pos = getCanvasPosition(e);
+      setMousePos(pos);
+      
+      // Check if hovering over a potential target element
+      const target = e.target as HTMLElement;
+      const elementDiv = target.closest("[data-element]");
+      if (elementDiv) {
+        const targetId = elementDiv.getAttribute("data-element-id");
+        if (targetId && targetId !== connectingFrom.elementId) {
+          setHoverTargetId(targetId);
+        } else {
+          setHoverTargetId(null);
+        }
+      } else {
+        setHoverTargetId(null);
+      }
+      return;
+    }
 
     if (isDrawing && activeTool === "draw") {
       const pos = getCanvasPosition(e);
@@ -381,16 +451,11 @@ export default function IdeaPage() {
 
   function handleMouseUp(e: React.MouseEvent) {
     if (connectingFrom) {
-      const target = e.target as HTMLElement;
-      const elementDiv = target.closest("[data-element]");
-      if (elementDiv) {
-        const targetId = elementDiv.getAttribute("data-element-id");
-        if (targetId && targetId !== connectingFrom.elementId) {
-          saveConnection(connectingFrom.elementId, targetId);
-        }
+      if (hoverTargetId) {
+        saveConnection(connectingFrom.elementId, hoverTargetId);
       }
       setConnectingFrom(null);
-      setConnectionPreview(null);
+      setHoverTargetId(null);
       return;
     }
 
@@ -572,7 +637,13 @@ export default function IdeaPage() {
           backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
-          cursor: activeTool === "draw" ? "crosshair" : activeTool === "select" ? "default" : "crosshair",
+          cursor: connectingFrom 
+            ? "crosshair" 
+            : activeTool === "draw" 
+              ? "crosshair" 
+              : activeTool === "select" 
+                ? "default" 
+                : "crosshair",
         }}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
@@ -586,17 +657,34 @@ export default function IdeaPage() {
               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff60" />
               </marker>
+              <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+              </marker>
             </defs>
             {connections.map((c) => (
               <path key={c.id} d={getConnectionPath(c)} stroke={c.line_color} strokeWidth={c.line_width} fill="none" markerEnd="url(#arrowhead)" />
             ))}
-            {connectingFrom && connectionPreview && (() => {
-              const el = elements.find((e) => e.id === connectingFrom.elementId);
-              if (!el) return null;
-              const handles = getHandlePositions(el);
-              const p = handles[connectingFrom.side as keyof typeof handles];
-              return <line x1={p.x} y1={p.y} x2={connectionPreview.x} y2={connectionPreview.y} stroke="#ffffff60" strokeWidth={2} strokeDasharray="5 5" />;
-            })()}
+            {connectingFrom && (
+              <g>
+                {/* Connection line from handle to cursor */}
+                <line 
+                  x1={connectingFrom.startX} 
+                  y1={connectingFrom.startY} 
+                  x2={mousePos.x} 
+                  y2={mousePos.y} 
+                  stroke={hoverTargetId ? "#22c55e" : "#60a5fa"} 
+                  strokeWidth={2} 
+                  strokeDasharray={hoverTargetId ? "none" : "6 3"}
+                  markerEnd={hoverTargetId ? "url(#arrowhead-active)" : undefined}
+                />
+                {/* Animated circle at cursor when not over target */}
+                {!hoverTargetId && (
+                  <circle cx={mousePos.x} cy={mousePos.y} r={6} fill="#60a5fa" opacity={0.6}>
+                    <animate attributeName="r" values="6;8;6" dur="1s" repeatCount="indefinite" />
+                  </circle>
+                )}
+              </g>
+            )}
             {drawPath && <path d={drawPath} stroke={drawColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
           </svg>
 
@@ -604,6 +692,9 @@ export default function IdeaPage() {
             const isSelected = selectedElement === element.id;
             const isEditing = editingElement === element.id;
             const isHovered = hoveredElement === element.id;
+            const isConnectSource = connectingFrom?.elementId === element.id;
+            const isConnectTarget = connectingFrom && connectingFrom.elementId !== element.id;
+            const isHoverTarget = hoverTargetId === element.id;
             const showHandles = (isSelected || isHovered) && activeTool === "select" && !isDragging && !connectingFrom;
             const handles = getHandlePositions(element);
             const size = getElementSize(element);
@@ -613,18 +704,26 @@ export default function IdeaPage() {
                 key={element.id}
                 data-element="true"
                 data-element-id={element.id}
-                className={`absolute pointer-events-auto ${isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : ""}`}
+                className={`absolute pointer-events-auto transition-all duration-150 ${
+                  isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : ""
+                } ${isConnectSource ? "ring-2 ring-blue-400 opacity-50" : ""} ${
+                  isHoverTarget ? "ring-2 ring-green-500 scale-105" : ""
+                } ${isConnectTarget && !isHoverTarget ? "opacity-70" : ""}`}
                 style={{
                   left: element.x,
                   top: element.y,
                   width: element.element_type === "panel" ? size.w : "auto",
                   minHeight: element.element_type === "panel" ? size.h : "auto",
                   backgroundColor: element.background_color,
-                  borderColor: element.border_color,
-                  borderWidth: element.element_type === "panel" ? 1 : 0,
+                  borderColor: isHoverTarget ? "#22c55e" : element.border_color,
+                  borderWidth: element.element_type === "panel" ? (isHoverTarget ? 2 : 1) : 0,
                   borderRadius: element.element_type === "panel" ? 8 : 0,
-                  cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default",
-                  zIndex: element.z_index,
+                  cursor: connectingFrom 
+                    ? (isConnectTarget ? "pointer" : "not-allowed")
+                    : activeTool === "select" 
+                      ? (isDragging ? "grabbing" : "grab") 
+                      : "default",
+                  zIndex: isHoverTarget ? 1000 : element.z_index,
                 }}
                 onMouseDown={(e) => handleElementMouseDown(e, element)}
                 onMouseEnter={() => setHoveredElement(element.id)}
@@ -676,12 +775,18 @@ export default function IdeaPage() {
                   <>
                     {(["top", "right", "bottom", "left"] as const).map((side) => {
                       const pos = handles[side];
+                      const offset = HANDLE_SIZE / 2;
                       return (
                         <div
                           key={side}
                           data-handle="true"
-                          className="absolute w-3 h-3 bg-primary rounded-full border-2 border-white cursor-crosshair hover:scale-125 transition-transform"
-                          style={{ left: pos.x - element.x - 6, top: pos.y - element.y - 6 }}
+                          className="absolute bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-crosshair hover:bg-blue-400 hover:scale-125 transition-all z-50"
+                          style={{ 
+                            width: HANDLE_SIZE, 
+                            height: HANDLE_SIZE,
+                            left: pos.x - element.x - offset, 
+                            top: pos.y - element.y - offset,
+                          }}
                           onMouseDown={(e) => handleHandleMouseDown(e, element.id, side)}
                         />
                       );
@@ -694,8 +799,9 @@ export default function IdeaPage() {
         </div>
 
         {connectingFrom && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass rounded-lg text-sm">
-            Drag to another element to connect
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass rounded-lg text-sm flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${hoverTargetId ? "bg-green-500" : "bg-blue-400 animate-pulse"}`} />
+            {hoverTargetId ? "Release to connect" : "Drag to another panel to connect"}
           </div>
         )}
 
