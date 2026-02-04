@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,6 @@ import {
   Pencil,
   MousePointer2,
   Trash2,
-  Link2,
-  Palette,
   Undo,
   Redo,
   ZoomIn,
@@ -25,8 +23,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-
-
 
 // Types
 interface WhiteboardElement {
@@ -56,14 +52,14 @@ interface WhiteboardConnection {
   target_arrow: boolean;
 }
 
-type Tool = "select" | "panel" | "text" | "draw" | "connect";
+type Tool = "select" | "panel" | "text" | "draw";
 
 const COLORS = [
-  "#1a1a2e", "#2d2d44", "#3d3d5c", // Dark
-  "#dc2626", "#ea580c", "#d97706", // Warm
-  "#16a34a", "#0d9488", "#0891b2", // Cool
-  "#2563eb", "#7c3aed", "#c026d3", // Vibrant
-  "#ffffff", "#a3a3a3", "#525252", // Neutral
+  "#1a1a2e", "#2d2d44", "#3d3d5c",
+  "#dc2626", "#ea580c", "#d97706",
+  "#16a34a", "#0d9488", "#0891b2",
+  "#2563eb", "#7c3aed", "#c026d3",
+  "#ffffff", "#a3a3a3", "#525252",
 ];
 
 const TEXT_COLORS = [
@@ -73,70 +69,61 @@ const TEXT_COLORS = [
   "#93c5fd", "#c4b5fd", "#f0abfc",
 ];
 
+const DRAG_THRESHOLD = 5;
+
 export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const supabase = createClient();
 
-  // Canvas state
   const canvasRef = useRef<HTMLDivElement>(null);
   const [elements, setElements] = useState<WhiteboardElement[]>([]);
   const [connections, setConnections] = useState<WhiteboardConnection[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Tool state
   const [activeTool, setActiveTool] = useState<Tool>("select");
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [editingElement, setEditingElement] = useState<string | null>(null);
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  
 
-  // Viewport state
+  const [connectingFrom, setConnectingFrom] = useState<{ elementId: string; side: string } | null>(null);
+  const [connectionPreview, setConnectionPreview] = useState<{ x: number; y: number } | null>(null);
+
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  // Drawing state
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawPath, setDrawPath] = useState<string>("");
   const [drawColor, setDrawColor] = useState("#ffffff");
 
-  // Drag state
+  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
+  const [mouseDownElement, setMouseDownElement] = useState<WhiteboardElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // History for undo/redo
   const [history, setHistory] = useState<WhiteboardElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Load whiteboard data
   useEffect(() => {
     loadWhiteboard();
   }, [projectId]);
 
   async function loadWhiteboard() {
     setLoading(true);
-
     try {
-      const { data: elementsData, error: elementsError } = await supabase
+      const { data: elementsData } = await supabase
         .from("project_whiteboard_elements")
         .select("*")
         .eq("project_id", projectId)
         .order("z_index", { ascending: true });
 
-      if (elementsError) {
-        console.error("Failed to load elements:", elementsError);
-        // Table might not exist yet - that's ok, just start empty
-      }
-
-      const { data: connectionsData, error: connectionsError } = await supabase
+      const { data: connectionsData } = await supabase
         .from("project_whiteboard_connections")
         .select("*")
         .eq("project_id", projectId);
-
-      if (connectionsError) {
-        console.error("Failed to load connections:", connectionsError);
-      }
 
       if (elementsData) {
         setElements(elementsData);
@@ -153,91 +140,58 @@ export default function IdeaPage() {
     }
   }
 
-  // Save element to database
   async function saveElement(element: Partial<WhiteboardElement> & { id?: string }) {
     if (element.id) {
-      const { error } = await supabase
-        .from("project_whiteboard_elements")
-        .update(element)
-        .eq("id", element.id);
-      if (error) {
-        console.error("Update error:", error);
-        toast.error("Failed to save");
-      }
+      await supabase.from("project_whiteboard_elements").update(element).eq("id", element.id);
     } else {
-      // Create a temporary ID for immediate display
       const tempId = crypto.randomUUID();
       const tempElement = { ...element, id: tempId } as WhiteboardElement;
-      
-      // Immediately add to local state for instant feedback
       setElements((prev) => [...prev, tempElement]);
-      
-      // Then save to database
+
       const { data, error } = await supabase
         .from("project_whiteboard_elements")
         .insert({ ...element, project_id: projectId })
         .select()
         .single();
-        
+
       if (error) {
-        console.error("Insert error:", error);
-        toast.error("Failed to create element: " + error.message);
-        // Remove the temp element on failure
+        toast.error("Failed to create element");
         setElements((prev) => prev.filter((el) => el.id !== tempId));
       } else if (data) {
-        // Replace temp element with real one from DB
-        setElements((prev) => prev.map((el) => el.id === tempId ? data : el));
+        setElements((prev) => prev.map((el) => (el.id === tempId ? data : el)));
         pushHistory([...elements, data]);
       }
     }
   }
 
-  // Save connection to database
   async function saveConnection(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
+    const exists = connections.some(
+      (c) =>
+        (c.source_element_id === sourceId && c.target_element_id === targetId) ||
+        (c.source_element_id === targetId && c.target_element_id === sourceId)
+    );
+    if (exists) return;
+
     const { data, error } = await supabase
       .from("project_whiteboard_connections")
-      .insert({
-        project_id: projectId,
-        source_element_id: sourceId,
-        target_element_id: targetId,
-      })
+      .insert({ project_id: projectId, source_element_id: sourceId, target_element_id: targetId })
       .select()
       .single();
 
-    if (error) {
-      toast.error("Failed to create connection");
-    } else if (data) {
+    if (!error && data) {
       setConnections((prev) => [...prev, data]);
     }
   }
 
-  // Delete element
   async function deleteElement(id: string) {
-    const { error } = await supabase
-      .from("project_whiteboard_elements")
-      .delete()
-      .eq("id", id);
-
-    if (!error) {
-      setElements((prev) => prev.filter((el) => el.id !== id));
-      setConnections((prev) =>
-        prev.filter((c) => c.source_element_id !== id && c.target_element_id !== id)
-      );
-      setSelectedElement(null);
-      pushHistory(elements.filter((el) => el.id !== id));
-    }
+    await supabase.from("project_whiteboard_elements").delete().eq("id", id);
+    setElements((prev) => prev.filter((el) => el.id !== id));
+    setConnections((prev) => prev.filter((c) => c.source_element_id !== id && c.target_element_id !== id));
+    setSelectedElement(null);
+    setEditingElement(null);
   }
 
-  // Delete connection
-  async function deleteConnection(id: string) {
-    await supabase
-      .from("project_whiteboard_connections")
-      .delete()
-      .eq("id", id);
-    setConnections((prev) => prev.filter((c) => c.id !== id));
-  }
-
-  // History management
   function pushHistory(newElements: WhiteboardElement[]) {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(newElements);
@@ -259,8 +213,7 @@ export default function IdeaPage() {
     }
   }
 
-  // Get mouse position in canvas coordinates
-  function getCanvasPosition(e: React.MouseEvent): { x: number; y: number } {
+  function getCanvasPosition(e: React.MouseEvent | MouseEvent): { x: number; y: number } {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     return {
@@ -269,111 +222,187 @@ export default function IdeaPage() {
     };
   }
 
-  // Canvas click handler
-  function handleCanvasClick(e: React.MouseEvent) {
-    // Only handle clicks on the canvas background, not on elements
-    const target = e.target as HTMLElement;
-    if (target.closest('[data-element]')) return;
-
-    const pos = getCanvasPosition(e);
-    console.log("Canvas clicked at:", pos, "with tool:", activeTool);
-
-    if (activeTool === "panel") {
-      saveElement({
-        element_type: "panel",
-        x: pos.x,
-        y: pos.y,
-        width: 200,
-        height: 150,
-        background_color: "#1a1a2e",
-        border_color: "#ffffff20",
-        text_color: "#ffffff",
-        font_size: 14,
-        title: null,
-        content: "",
-        z_index: elements.length,
-      });
-    } else if (activeTool === "text") {
-      saveElement({
-        element_type: "text",
-        x: pos.x,
-        y: pos.y,
-        width: null,
-        height: null,
-        background_color: "transparent",
-        border_color: "transparent",
-        text_color: "#ffffff",
-        font_size: 16,
-        title: null,
-        content: "New text",
-        z_index: elements.length,
-      });
-    } else if (activeTool === "select") {
-      setSelectedElement(null);
-      setConnectingFrom(null);
-    }
+  async function updateElementContent(id: string, content: string) {
+    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, content } : el)));
+    await supabase.from("project_whiteboard_elements").update({ content }).eq("id", id);
   }
 
-  // Handle element click
-  function handleElementClick(e: React.MouseEvent, elementId: string) {
-    e.stopPropagation();
+  async function updateElementColor(id: string, colorKey: string, color: string) {
+    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, [colorKey]: color } : el)));
+    await supabase.from("project_whiteboard_elements").update({ [colorKey]: color }).eq("id", id);
+  }
 
-    if (activeTool === "connect") {
-      if (connectingFrom === null) {
-        setConnectingFrom(elementId);
-      } else if (connectingFrom !== elementId) {
-        saveConnection(connectingFrom, elementId);
-        setConnectingFrom(null);
+  function getElementSize(element: WhiteboardElement): { w: number; h: number } {
+    if (element.element_type === "panel") {
+      const content = element.content || "";
+      if (!content.trim()) {
+        return { w: 60, h: 28 };
       }
-    } else {
-      setSelectedElement(elementId);
+      const lines = content.split("\n");
+      const maxLineLength = Math.max(...lines.map((l) => l.length), 1);
+      const w = Math.max(60, Math.min(300, maxLineLength * 8 + 20));
+      const h = Math.max(28, lines.length * 18 + 12);
+      return { w, h };
+    }
+    return { w: element.width || 80, h: element.height || 28 };
+  }
+
+  function getConnectionPath(connection: WhiteboardConnection): string {
+    const source = elements.find((el) => el.id === connection.source_element_id);
+    const target = elements.find((el) => el.id === connection.target_element_id);
+    if (!source || !target) return "";
+
+    const sourceSize = getElementSize(source);
+    const targetSize = getElementSize(target);
+
+    const sx = source.x + sourceSize.w / 2;
+    const sy = source.y + sourceSize.h / 2;
+    const tx = target.x + targetSize.w / 2;
+    const ty = target.y + targetSize.h / 2;
+
+    const mx = (sx + tx) / 2;
+    const my = (sy + ty) / 2;
+
+    return `M ${sx} ${sy} Q ${mx} ${sy} ${mx} ${my} T ${tx} ${ty}`;
+  }
+
+  function getHandlePositions(element: WhiteboardElement) {
+    const size = getElementSize(element);
+    return {
+      top: { x: element.x + size.w / 2, y: element.y },
+      right: { x: element.x + size.w, y: element.y + size.h / 2 },
+      bottom: { x: element.x + size.w / 2, y: element.y + size.h },
+      left: { x: element.x, y: element.y + size.h / 2 },
+    };
+  }
+
+  function handleCanvasMouseDown(e: React.MouseEvent) {
+    const target = e.target as HTMLElement;
+
+    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+
+    if (!target.closest("[data-element]") && !target.closest("[data-handle]")) {
+      const pos = getCanvasPosition(e);
+
+      if (activeTool === "draw") {
+        setIsDrawing(true);
+        setDrawPath(`M ${pos.x} ${pos.y}`);
+      } else if (activeTool === "panel") {
+        saveElement({
+          element_type: "panel",
+          x: pos.x,
+          y: pos.y,
+          width: null,
+          height: null,
+          background_color: "#1a1a2e",
+          border_color: "#ffffff20",
+          text_color: "#ffffff",
+          font_size: 14,
+          title: null,
+          content: "",
+          z_index: elements.length,
+        });
+      } else if (activeTool === "text") {
+        saveElement({
+          element_type: "text",
+          x: pos.x,
+          y: pos.y,
+          width: null,
+          height: null,
+          background_color: "transparent",
+          border_color: "transparent",
+          text_color: "#ffffff",
+          font_size: 16,
+          title: null,
+          content: "Text",
+          z_index: elements.length,
+        });
+      } else if (activeTool === "select") {
+        setSelectedElement(null);
+        setEditingElement(null);
+        setConnectingFrom(null);
+        setConnectionPreview(null);
+      }
     }
   }
 
-  // Handle element drag
   function handleElementMouseDown(e: React.MouseEvent, element: WhiteboardElement) {
     if (activeTool !== "select") return;
     e.stopPropagation();
 
-    setIsDragging(true);
-    setSelectedElement(element.id);
     const pos = getCanvasPosition(e);
-    setDragStart(pos);
+    setMouseDownPos(pos);
+    setMouseDownElement(element);
     setDragOffset({ x: element.x - pos.x, y: element.y - pos.y });
+  }
+
+  function handleHandleMouseDown(e: React.MouseEvent, elementId: string, side: string) {
+    e.stopPropagation();
+    setConnectingFrom({ elementId, side });
+    setConnectionPreview(getCanvasPosition(e));
   }
 
   function handleMouseMove(e: React.MouseEvent) {
     if (isPanning) {
-      setPan({
-        x: pan.x + (e.clientX - panStart.x),
-        y: pan.y + (e.clientY - panStart.y),
-      });
+      setPan({ x: pan.x + (e.clientX - panStart.x), y: pan.y + (e.clientY - panStart.y) });
       setPanStart({ x: e.clientX, y: e.clientY });
-    } else if (isDragging && selectedElement) {
-      const pos = getCanvasPosition(e);
-      setElements((prev) =>
-        prev.map((el) =>
-          el.id === selectedElement
-            ? { ...el, x: pos.x + dragOffset.x, y: pos.y + dragOffset.y }
-            : el
-        )
-      );
-    } else if (isDrawing && activeTool === "draw") {
+      return;
+    }
+
+    
+
+    if (isDrawing && activeTool === "draw") {
       const pos = getCanvasPosition(e);
       setDrawPath((prev) => `${prev} L ${pos.x} ${pos.y}`);
+      return;
+    }
+
+    if (mouseDownPos && mouseDownElement && !isDragging) {
+      const pos = getCanvasPosition(e);
+      const dist = Math.sqrt(Math.pow(pos.x - mouseDownPos.x, 2) + Math.pow(pos.y - mouseDownPos.y, 2));
+      if (dist > DRAG_THRESHOLD) {
+        setIsDragging(true);
+        setSelectedElement(mouseDownElement.id);
+        setEditingElement(null);
+      }
+    }
+
+    if (isDragging && mouseDownElement) {
+      const pos = getCanvasPosition(e);
+      setElements((prev) =>
+        prev.map((el) => (el.id === mouseDownElement.id ? { ...el, x: pos.x + dragOffset.x, y: pos.y + dragOffset.y } : el))
+      );
     }
   }
 
-  function handleMouseUp() {
-    if (isDragging && selectedElement) {
-      // Save position to database
-      const element = elements.find((el) => el.id === selectedElement);
-      if (element) {
-        saveElement({ id: element.id, x: element.x, y: element.y });
+  function handleMouseUp(e: React.MouseEvent) {
+    if (connectingFrom) {
+      const target = e.target as HTMLElement;
+      const elementDiv = target.closest("[data-element]");
+      if (elementDiv) {
+        const targetId = elementDiv.getAttribute("data-element-id");
+        if (targetId && targetId !== connectingFrom.elementId) {
+          saveConnection(connectingFrom.elementId, targetId);
+        }
       }
+      setConnectingFrom(null);
+      setConnectionPreview(null);
+      return;
     }
+
+    if (isDragging && mouseDownElement) {
+      const element = elements.find((el) => el.id === mouseDownElement.id);
+      if (element) saveElement({ id: element.id, x: element.x, y: element.y });
+    } else if (mouseDownElement && !isDragging) {
+      setSelectedElement(mouseDownElement.id);
+      setEditingElement(mouseDownElement.id);
+    }
+
     if (isDrawing && drawPath) {
-      // Save drawing
       saveElement({
         element_type: "drawing",
         x: 0,
@@ -390,88 +419,12 @@ export default function IdeaPage() {
       });
       setDrawPath("");
     }
+
+    setIsPanning(false);
     setIsDragging(false);
     setIsDrawing(false);
-  }
-
-  function handleCanvasMouseDown(e: React.MouseEvent) {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
-      // Middle click or alt+click to pan
-      setIsPanning(true);
-      setPanStart({ x: e.clientX, y: e.clientY });
-    } else if (activeTool === "draw" && e.target === canvasRef.current) {
-      const pos = getCanvasPosition(e);
-      setIsDrawing(true);
-      setDrawPath(`M ${pos.x} ${pos.y}`);
-    }
-  }
-
-  function handleCanvasMouseUp() {
-    setIsPanning(false);
-    handleMouseUp();
-  }
-
-  // Update element content
-  async function updateElementContent(id: string, content: string) {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, content } : el))
-    );
-    await supabase
-      .from("project_whiteboard_elements")
-      .update({ content })
-      .eq("id", id);
-  }
-
-  // Update element title
-  async function updateElementTitle(id: string, title: string) {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, title } : el))
-    );
-    await supabase
-      .from("project_whiteboard_elements")
-      .update({ title })
-      .eq("id", id);
-  }
-
-  // Update element color
-  async function updateElementColor(id: string, colorKey: string, color: string) {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, [colorKey]: color } : el))
-    );
-    await supabase
-      .from("project_whiteboard_elements")
-      .update({ [colorKey]: color })
-      .eq("id", id);
-  }
-
-  // Get connection line path
-  function getConnectionPath(connection: WhiteboardConnection): string {
-    const source = elements.find((el) => el.id === connection.source_element_id);
-    const target = elements.find((el) => el.id === connection.target_element_id);
-    if (!source || !target) return "";
-
-    const sourceX = source.x + (source.width || 100) / 2;
-    const sourceY = source.y + (source.height || 50) / 2;
-    const targetX = target.x + (target.width || 100) / 2;
-    const targetY = target.y + (target.height || 50) / 2;
-
-    // Bezier curve
-    const midX = (sourceX + targetX) / 2;
-    return `M ${sourceX} ${sourceY} Q ${midX} ${sourceY} ${midX} ${(sourceY + targetY) / 2} T ${targetX} ${targetY}`;
-  }
-
-  // Zoom controls
-  function zoomIn() {
-    setZoom((z) => Math.min(z * 1.2, 3));
-  }
-
-  function zoomOut() {
-    setZoom((z) => Math.max(z / 1.2, 0.3));
-  }
-
-  function resetView() {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setMouseDownPos(null);
+    setMouseDownElement(null);
   }
 
   if (loading) {
@@ -486,116 +439,68 @@ export default function IdeaPage() {
 
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
-      {/* Toolbar */}
       <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
-        {/* Tool Buttons */}
         <div className="flex items-center gap-1 px-2 border-r border-white/10">
-          <Button
-            variant={activeTool === "select" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => {
-              setActiveTool("select");
-            }}
-            title="Select (V)"
-          >
+          <Button variant={activeTool === "select" ? "secondary" : "ghost"} size="icon" onClick={() => setActiveTool("select")} title="Select">
             <MousePointer2 className="w-4 h-4" />
           </Button>
           <Button
             variant={activeTool === "panel" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => {
-              setActiveTool("panel");
-              setSelectedElement(null);
-            }}
-            title="Add Panel (P)"
+            onClick={() => { setActiveTool("panel"); setSelectedElement(null); setEditingElement(null); }}
+            title="Add Panel"
           >
             <Square className="w-4 h-4" />
           </Button>
           <Button
             variant={activeTool === "text" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => {
-              setActiveTool("text");
-              setSelectedElement(null);
-            }}
-            title="Add Text (T)"
+            onClick={() => { setActiveTool("text"); setSelectedElement(null); setEditingElement(null); }}
+            title="Add Text"
           >
             <Type className="w-4 h-4" />
           </Button>
           <Button
             variant={activeTool === "draw" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => {
-              setActiveTool("draw");
-              setSelectedElement(null);
-            }}
-            title="Draw (D)"
+            onClick={() => { setActiveTool("draw"); setSelectedElement(null); setEditingElement(null); }}
+            title="Draw"
           >
             <Pencil className="w-4 h-4" />
           </Button>
-          <Button
-            variant={activeTool === "connect" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => {
-              setActiveTool("connect");
-              setSelectedElement(null);
-              setConnectingFrom(null);
-            }}
-            title="Connect (C)"
-          >
-            <Link2 className="w-4 h-4" />
-          </Button>
         </div>
 
-        {/* Draw color picker */}
         {activeTool === "draw" && (
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" title="Draw Color">
-                <div
-                  className="w-4 h-4 rounded-full border border-white/20"
-                  style={{ backgroundColor: drawColor }}
-                />
+                <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: drawColor }} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2">
               <div className="grid grid-cols-5 gap-1">
                 {TEXT_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color }}
-                    onClick={() => setDrawColor(color)}
-                  />
+                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => setDrawColor(color)} />
                 ))}
               </div>
             </PopoverContent>
           </Popover>
         )}
 
-        {/* Element formatting (when selected with select tool) */}
         {selectedEl && activeTool === "select" && (
           <>
             <div className="h-6 w-px bg-white/10" />
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <div
-                    className="w-4 h-4 rounded border border-white/20"
-                    style={{ backgroundColor: selectedEl.background_color }}
-                  />
+                  <div className="w-4 h-4 rounded border border-white/20" style={{ backgroundColor: selectedEl.background_color }} />
                   <span className="text-xs">Fill</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {COLORS.map((color) => (
-                    <button
-                      key={color}
-                      className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform"
-                      style={{ backgroundColor: color }}
-                      onClick={() => updateElementColor(selectedEl.id, "background_color", color)}
-                    />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "background_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
@@ -603,22 +508,14 @@ export default function IdeaPage() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <div
-                    className="w-4 h-4 rounded border-2"
-                    style={{ borderColor: selectedEl.border_color }}
-                  />
+                  <div className="w-4 h-4 rounded border-2" style={{ borderColor: selectedEl.border_color }} />
                   <span className="text-xs">Border</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {COLORS.map((color) => (
-                    <button
-                      key={color}
-                      className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform"
-                      style={{ backgroundColor: color }}
-                      onClick={() => updateElementColor(selectedEl.id, "border_color", color)}
-                    />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "border_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
@@ -633,278 +530,175 @@ export default function IdeaPage() {
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {TEXT_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform"
-                      style={{ backgroundColor: color }}
-                      onClick={() => updateElementColor(selectedEl.id, "text_color", color)}
-                    />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "text_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
             </Popover>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-red-400 hover:text-red-300"
-              onClick={() => deleteElement(selectedEl.id)}
-              title="Delete"
-            >
+            <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-300" onClick={() => deleteElement(selectedEl.id)} title="Delete">
               <Trash2 className="w-4 h-4" />
             </Button>
           </>
         )}
 
-        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Undo/Redo */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={undo}
-          disabled={historyIndex <= 0}
-          title="Undo (Ctrl+Z)"
-        >
+        <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0} title="Undo">
           <Undo className="w-4 h-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={redo}
-          disabled={historyIndex >= history.length - 1}
-          title="Redo (Ctrl+Y)"
-        >
+        <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
           <Redo className="w-4 h-4" />
         </Button>
 
         <div className="h-6 w-px bg-white/10" />
 
-        {/* Zoom controls */}
-        <Button variant="ghost" size="icon" onClick={zoomOut} title="Zoom Out">
+        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z / 1.2, 0.3))} title="Zoom Out">
           <ZoomOut className="w-4 h-4" />
         </Button>
-        <span className="text-xs text-muted-foreground w-12 text-center">
-          {Math.round(zoom * 100)}%
-        </span>
-        <Button variant="ghost" size="icon" onClick={zoomIn} title="Zoom In">
+        <span className="text-xs text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
+        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(z * 1.2, 3))} title="Zoom In">
           <ZoomIn className="w-4 h-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={resetView} title="Reset View">
+        <Button variant="ghost" size="icon" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} title="Reset View">
           <Maximize2 className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Canvas */}
       <div
         ref={canvasRef}
-        className="flex-1 relative overflow-hidden cursor-crosshair"
+        className="flex-1 relative overflow-hidden"
         style={{
           background: "radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%)",
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-          `,
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
+          cursor: activeTool === "draw" ? "crosshair" : activeTool === "select" ? "default" : "crosshair",
         }}
-        onMouseDown={(e) => {
-          const target = e.target as HTMLElement;
-          
-          // If clicking on an element, don't do canvas actions
-          if (target.closest('[data-element]')) {
-            return;
-          }
-          
-          // Middle click or alt+click to pan
-          if (e.button === 1 || (e.button === 0 && e.altKey)) {
-            setIsPanning(true);
-            setPanStart({ x: e.clientX, y: e.clientY });
-            return;
-          }
-          
-          const pos = getCanvasPosition(e);
-          
-          if (activeTool === "draw") {
-            setIsDrawing(true);
-            setDrawPath(`M ${pos.x} ${pos.y}`);
-          } else if (activeTool === "panel") {
-            saveElement({
-              element_type: "panel",
-              x: pos.x,
-              y: pos.y,
-              width: 200,
-              height: 150,
-              background_color: "#1a1a2e",
-              border_color: "#ffffff20",
-              text_color: "#ffffff",
-              font_size: 14,
-              title: "New Panel",
-              content: "",
-              z_index: elements.length,
-            });
-          } else if (activeTool === "text") {
-            saveElement({
-              element_type: "text",
-              x: pos.x,
-              y: pos.y,
-              width: null,
-              height: null,
-              background_color: "transparent",
-              border_color: "transparent",
-              text_color: "#ffffff",
-              font_size: 16,
-              title: null,
-              content: "New text",
-              z_index: elements.length,
-            });
-          } else if (activeTool === "select") {
-            setSelectedElement(null);
-            setConnectingFrom(null);
-          }
-        }}
+        onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleCanvasMouseUp}
-        onMouseLeave={handleCanvasMouseUp}
-        onWheel={(e) => {
-          e.preventDefault();
-          const delta = e.deltaY > 0 ? 0.9 : 1.1;
-          setZoom((z) => Math.min(Math.max(z * delta, 0.3), 3));
-        }}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={(e) => { e.preventDefault(); setZoom((z) => Math.min(Math.max(z * (e.deltaY > 0 ? 0.9 : 1.1), 0.3), 3)); }}
       >
-        {/* Transform container */}
-        <div
-          className="pointer-events-none"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: "0 0",
-          }}
-        >
-          {/* Connection Lines */}
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            style={{ overflow: "visible" }}
-          >
+        <div className="pointer-events-none" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
+          <svg className="absolute inset-0 pointer-events-none" style={{ overflow: "visible" }}>
             <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff60" />
               </marker>
             </defs>
-            {connections.map((connection) => (
-              <path
-                key={connection.id}
-                d={getConnectionPath(connection)}
-                stroke={connection.line_color}
-                strokeWidth={connection.line_width}
-                fill="none"
-                markerEnd={connection.target_arrow ? "url(#arrowhead)" : undefined}
-                style={{
-                  strokeDasharray:
-                    connection.line_style === "dashed"
-                      ? "8 4"
-                      : connection.line_style === "dotted"
-                      ? "2 2"
-                      : undefined,
-                }}
-              />
+            {connections.map((c) => (
+              <path key={c.id} d={getConnectionPath(c)} stroke={c.line_color} strokeWidth={c.line_width} fill="none" markerEnd="url(#arrowhead)" />
             ))}
-            {/* Current drawing path */}
-            {drawPath && (
-              <path
-                d={drawPath}
-                stroke={drawColor}
-                strokeWidth={2}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            )}
+            {connectingFrom && connectionPreview && (() => {
+              const el = elements.find((e) => e.id === connectingFrom.elementId);
+              if (!el) return null;
+              const handles = getHandlePositions(el);
+              const p = handles[connectingFrom.side as keyof typeof handles];
+              return <line x1={p.x} y1={p.y} x2={connectionPreview.x} y2={connectionPreview.y} stroke="#ffffff60" strokeWidth={2} strokeDasharray="5 5" />;
+            })()}
+            {drawPath && <path d={drawPath} stroke={drawColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
           </svg>
 
-          {/* Elements */}
-          {elements.map((element) => (
-            <div
-              key={element.id}
-              data-element="true"
-              className={`absolute transition-shadow pointer-events-auto ${
-                selectedElement === element.id
-                  ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent"
-                  : ""
-              } ${connectingFrom === element.id ? "ring-2 ring-green-500" : ""}`}
-              style={{
-                left: element.x,
-                top: element.y,
-                width: element.width || "auto",
-                height: element.height || "auto",
-                backgroundColor: element.background_color,
-                borderColor: element.border_color,
-                borderWidth: element.element_type === "panel" ? 1 : 0,
-                borderRadius: element.element_type === "panel" ? 8 : 0,
-                cursor: activeTool === "select" ? "move" : "pointer",
-                zIndex: element.z_index,
-              }}
-              onClick={(e) => handleElementClick(e, element.id)}
-              onMouseDown={(e) => handleElementMouseDown(e, element)}
-            >
-              {element.element_type === "panel" && (
-                <div className="p-3 h-full">
-                  <textarea
-                    value={element.content || ""}
-                    onChange={(e) => updateElementContent(element.id, e.target.value)}
-                    className="w-full h-full bg-transparent border-none outline-none resize-none text-sm"
-                    style={{ color: element.text_color, fontSize: element.font_size }}
-                    placeholder="Add notes..."
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
-              {element.element_type === "text" && (
-                <textarea
-                  value={element.content || ""}
-                  onChange={(e) => updateElementContent(element.id, e.target.value)}
-                  className="bg-transparent border-none outline-none resize-none min-w-[100px]"
-                  style={{
-                    color: element.text_color,
-                    fontSize: element.font_size,
-                  }}
-                  placeholder="Type here..."
-                  onClick={(e) => e.stopPropagation()}
-                />
-              )}
-              {element.element_type === "drawing" && (
-                <svg
-                  className="pointer-events-none"
-                  style={{ overflow: "visible", position: "absolute", left: 0, top: 0 }}
-                >
-                  <path
-                    d={element.content || ""}
-                    stroke={element.border_color}
-                    strokeWidth={element.font_size}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </div>
-          ))}
+          {elements.map((element) => {
+            const isSelected = selectedElement === element.id;
+            const isEditing = editingElement === element.id;
+            const isHovered = hoveredElement === element.id;
+            const showHandles = (isSelected || isHovered) && activeTool === "select" && !isDragging && !connectingFrom;
+            const handles = getHandlePositions(element);
+            const size = getElementSize(element);
+
+            return (
+              <div
+                key={element.id}
+                data-element="true"
+                data-element-id={element.id}
+                className={`absolute pointer-events-auto ${isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : ""}`}
+                style={{
+                  left: element.x,
+                  top: element.y,
+                  width: element.element_type === "panel" ? size.w : "auto",
+                  minHeight: element.element_type === "panel" ? size.h : "auto",
+                  backgroundColor: element.background_color,
+                  borderColor: element.border_color,
+                  borderWidth: element.element_type === "panel" ? 1 : 0,
+                  borderRadius: element.element_type === "panel" ? 8 : 0,
+                  cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default",
+                  zIndex: element.z_index,
+                }}
+                onMouseDown={(e) => handleElementMouseDown(e, element)}
+                onMouseEnter={() => setHoveredElement(element.id)}
+                onMouseLeave={() => setHoveredElement(null)}
+              >
+                {element.element_type === "panel" && (
+                  <div className="p-2">
+                    {isEditing ? (
+                      <textarea
+                        autoFocus
+                        value={element.content || ""}
+                        onChange={(e) => updateElementContent(element.id, e.target.value)}
+                        onBlur={() => setEditingElement(null)}
+                        className="w-full bg-transparent border-none outline-none resize-none text-sm"
+                        style={{ color: element.text_color, fontSize: element.font_size, minHeight: 20 }}
+                        placeholder="Type here..."
+                        onMouseDown={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <div className="text-sm whitespace-pre-wrap" style={{ color: element.text_color, fontSize: element.font_size, minHeight: 20 }}>
+                        {element.content || <span className="opacity-40">Click to edit</span>}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {element.element_type === "text" &&
+                  (isEditing ? (
+                    <textarea
+                      autoFocus
+                      value={element.content || ""}
+                      onChange={(e) => updateElementContent(element.id, e.target.value)}
+                      onBlur={() => setEditingElement(null)}
+                      className="bg-transparent border-none outline-none resize-none"
+                      style={{ color: element.text_color, fontSize: element.font_size, minWidth: 50 }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <div className="whitespace-pre-wrap" style={{ color: element.text_color, fontSize: element.font_size }}>
+                      {element.content || "Text"}
+                    </div>
+                  ))}
+                {element.element_type === "drawing" && (
+                  <svg className="pointer-events-none" style={{ overflow: "visible", position: "absolute", left: 0, top: 0 }}>
+                    <path d={element.content || ""} stroke={element.border_color} strokeWidth={element.font_size} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+
+                {showHandles && element.element_type !== "drawing" && (
+                  <>
+                    {(["top", "right", "bottom", "left"] as const).map((side) => {
+                      const pos = handles[side];
+                      return (
+                        <div
+                          key={side}
+                          data-handle="true"
+                          className="absolute w-3 h-3 bg-primary rounded-full border-2 border-white cursor-crosshair hover:scale-125 transition-transform"
+                          style={{ left: pos.x - element.x - 6, top: pos.y - element.y - 6 }}
+                          onMouseDown={(e) => handleHandleMouseDown(e, element.id, side)}
+                        />
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Connection mode hint */}
-        {activeTool === "connect" && connectingFrom && (
+        {connectingFrom && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass rounded-lg text-sm">
-            Click another panel to connect, or click canvas to cancel
+            Drag to another element to connect
           </div>
         )}
 
-        {/* Empty state */}
         {elements.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
@@ -912,9 +706,7 @@ export default function IdeaPage() {
                 <Plus className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Start brainstorming</h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
-                Click on the canvas to add panels and text, or use the draw tool to sketch ideas.
-              </p>
+              <p className="text-muted-foreground text-sm max-w-xs">Click to add panels. Hover to see connection handles.</p>
             </div>
           </div>
         )}
