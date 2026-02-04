@@ -168,17 +168,26 @@ function RedeemPageContent() {
   };
 
   if (!user) {
+    const redirectUrl = encodeURIComponent(`/redeem?key=${key}`);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800">
         <div className="glass-card p-8 max-w-md w-full mx-4 text-center">
           <Key className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Redeem Your Key</h1>
           <p className="text-muted-foreground mb-6">
-            Please sign in to redeem your plan key.
+            Sign in or create an account to redeem your plan key.
           </p>
-          <Link href={`/sign-in?redirect=${encodeURIComponent(`/redeem?key=${key}`)}`}>
-            <Button className="w-full">Sign In</Button>
-          </Link>
+          <div className="space-y-3">
+            <Link href={`/auth/login?redirect=${redirectUrl}`}>
+              <Button className="w-full">Sign In</Button>
+            </Link>
+            <Link href={`/auth/sign-up?redirect=${redirectUrl}`}>
+              <Button variant="outline" className="w-full">Create Account</Button>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Don't have an account? Create one to get started.
+          </p>
         </div>
       </div>
     );

@@ -41,9 +41,10 @@ interface PlanKey {
   redeemed_org?: { name: string } | null;
   assigned_org?: { name: string } | null;
   redeemed_user?: { email: string } | null;
+  is_active?: boolean; // Whether this key is the org's current active subscription
 }
 
-type KeyStatus = "available" | "sent" | "used";
+type KeyStatus = "available" | "sent" | "active" | "expired";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -82,7 +83,7 @@ export default function AdminKeysPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const [filter, setFilter] = useState<"all" | "available" | "sent" | "used">("all");
+  const [filter, setFilter] = useState<"all" | "available" | "sent" | "active" | "expired">("all");
 
   // Selection state
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -108,14 +109,17 @@ export default function AdminKeysPage() {
 
   // Helper to get key status
   const getKeyStatus = (key: PlanKey): KeyStatus => {
-    if (key.redeemed_at) return "used";
-    if (key.sent_to_email || key.assigned_org_id) return "sent";
-    return "available";
+    if (!key.redeemed_at) {
+      if (key.sent_to_email || key.assigned_org_id) return "sent";
+      return "available";
+    }
+    // Redeemed - check if active or expired
+    return key.is_active ? "active" : "expired";
   };
 
   // Get status breakdown for selected keys
   const getSelectedStatusBreakdown = () => {
-    const breakdown = { available: 0, sent: 0, used: 0 };
+    const breakdown = { available: 0, sent: 0, active: 0, expired: 0 };
     keys.forEach(key => {
       if (selectedKeys.has(key.id)) {
         breakdown[getKeyStatus(key)]++;
@@ -158,14 +162,15 @@ export default function AdminKeysPage() {
       .order("created_at", { ascending: false })
       .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
-    // Filter logic
+    // Filter logic - active/expired need to be filtered client-side after checking subscriptions
     if (filter === "available") {
       countQuery = countQuery.is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
       dataQuery = dataQuery.is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
     } else if (filter === "sent") {
       countQuery = countQuery.is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
       dataQuery = dataQuery.is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
-    } else if (filter === "used") {
+    } else if (filter === "active" || filter === "expired") {
+      // For active/expired, we need redeemed keys
       countQuery = countQuery.not("redeemed_at", "is", null);
       dataQuery = dataQuery.not("redeemed_at", "is", null);
     }
@@ -185,21 +190,54 @@ export default function AdminKeysPage() {
       const allOrgIds = [...new Set([...redeemedOrgIds, ...assignedOrgIds])];
       const userIds = data.filter(k => k.redeemed_by).map(k => k.redeemed_by!);
 
-      const [{ data: orgs }, { data: users }] = await Promise.all([
+      // Also get subscription info to determine if key is active
+      const [{ data: orgs }, { data: users }, { data: subscriptions }] = await Promise.all([
         allOrgIds.length > 0 
           ? supabase.from("organizations").select("id, name").in("id", allOrgIds)
           : { data: [] },
         userIds.length > 0 
           ? supabase.from("profiles").select("id, email").in("id", userIds)
           : { data: [] },
+        redeemedOrgIds.length > 0
+          ? supabase.from("subscriptions").select("organization_id, plan, source, status").in("organization_id", redeemedOrgIds)
+          : { data: [] },
       ]);
 
-      setKeys(data.map(key => ({
-        ...key,
-        redeemed_org: orgs?.find(o => o.id === key.redeemed_org_id) || null,
-        assigned_org: orgs?.find(o => o.id === key.assigned_org_id) || null,
-        redeemed_user: users?.find(u => u.id === key.redeemed_by) || null,
-      })));
+      // Build a map of org_id -> active subscription info
+      const orgSubscriptions = new Map<string, { plan: string; source: string; status: string }>();
+      subscriptions?.forEach(sub => {
+        orgSubscriptions.set(sub.organization_id, { plan: sub.plan, source: sub.source, status: sub.status });
+      });
+
+      let mappedKeys = data.map(key => {
+        // A key is "active" if:
+        // 1. It's redeemed to an org
+        // 2. That org's current subscription source is 'key' AND plan matches
+        let isActive = false;
+        if (key.redeemed_org_id && key.redeemed_at) {
+          const sub = orgSubscriptions.get(key.redeemed_org_id);
+          if (sub && sub.source === "key" && sub.plan === key.plan && sub.status === "active") {
+            isActive = true;
+          }
+        }
+        
+        return {
+          ...key,
+          redeemed_org: orgs?.find(o => o.id === key.redeemed_org_id) || null,
+          assigned_org: orgs?.find(o => o.id === key.assigned_org_id) || null,
+          redeemed_user: users?.find(u => u.id === key.redeemed_by) || null,
+          is_active: isActive,
+        };
+      });
+
+      // Client-side filter for active/expired
+      if (filter === "active") {
+        mappedKeys = mappedKeys.filter(k => k.redeemed_at && k.is_active);
+      } else if (filter === "expired") {
+        mappedKeys = mappedKeys.filter(k => k.redeemed_at && !k.is_active);
+      }
+
+      setKeys(mappedKeys);
     }
 
     setLoading(false);
@@ -236,12 +274,37 @@ export default function AdminKeysPage() {
   }
 
   async function handleDeleteKey(keyId: string) {
-    if (!confirm("Are you sure you want to delete this key?")) return;
-
-    const supabase = createClient();
-    await supabase.from("plan_keys").delete().eq("id", keyId);
+    const keyToDelete = keys.find(k => k.id === keyId);
+    const status = keyToDelete ? getKeyStatus(keyToDelete) : "available";
     
-    toast.success("Key deleted");
+    const message = status === "active" 
+      ? "This key is currently active. Deleting it will revoke the subscription. Continue?"
+      : "Are you sure you want to delete this key?";
+    
+    if (!confirm(message)) return;
+
+    try {
+      const response = await fetch("/api/admin/delete-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyIds: [keyId] }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        toast.error(result.error || "Failed to delete key");
+      } else {
+        if (result.revoked > 0) {
+          toast.success("Key deleted, subscription revoked");
+        } else {
+          toast.success("Key deleted");
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to delete key");
+    }
+    
     loadKeys();
   }
 
@@ -249,17 +312,27 @@ export default function AdminKeysPage() {
     if (selectedKeys.size === 0) return;
     
     setDeleting(true);
-    const supabase = createClient();
     
-    const { error } = await supabase
-      .from("plan_keys")
-      .delete()
-      .in("id", Array.from(selectedKeys));
-    
-    if (error) {
-      toast.error("Failed to delete some keys");
-    } else {
-      toast.success(`Deleted ${selectedKeys.size} key(s)`);
+    try {
+      const response = await fetch("/api/admin/delete-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyIds: Array.from(selectedKeys) }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        toast.error(result.error || "Failed to delete keys");
+      } else {
+        if (result.revoked > 0) {
+          toast.success(`Deleted ${result.deleted} key(s), revoked ${result.revoked} subscription(s)`);
+        } else {
+          toast.success(`Deleted ${result.deleted} key(s)`);
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to delete keys");
     }
     
     setDeleting(false);
@@ -379,7 +452,8 @@ export default function AdminKeysPage() {
             { value: "all", label: "All" },
             { value: "available", label: "Available" },
             { value: "sent", label: "Sent" },
-            { value: "used", label: "Used" },
+            { value: "active", label: "Active" },
+            { value: "expired", label: "Expired" },
           ] as const).map((f) => (
             <button
               key={f.value}
@@ -487,9 +561,13 @@ export default function AdminKeysPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      {status === "used" ? (
+                      {status === "active" ? (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                          Used
+                          Active
+                        </span>
+                      ) : status === "expired" ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-zinc-500/20 text-zinc-400">
+                          Expired
                         </span>
                       ) : status === "sent" ? (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 flex items-center gap-1 w-fit">
@@ -503,7 +581,7 @@ export default function AdminKeysPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      {status === "used" && key.redeemed_org ? (
+                      {(status === "active" || status === "expired") && key.redeemed_org ? (
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-muted-foreground" />
                           <div>
@@ -755,25 +833,34 @@ export default function AdminKeysPage() {
                       <span className="text-muted-foreground">{breakdown.sent}</span>
                     </div>
                   )}
-                  {breakdown.used > 0 && (
+                  {breakdown.active > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-green-400" />
-                        Used
+                        Active
                       </span>
-                      <span className="text-muted-foreground">{breakdown.used}</span>
+                      <span className="text-muted-foreground">{breakdown.active}</span>
+                    </div>
+                  )}
+                  {breakdown.expired > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                        Expired
+                      </span>
+                      <span className="text-muted-foreground">{breakdown.expired}</span>
                     </div>
                   )}
                 </div>
               );
             })()}
 
-            {getSelectedStatusBreakdown().used > 0 && (
+            {getSelectedStatusBreakdown().active > 0 && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-sm text-red-300 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
-                  Warning: {getSelectedStatusBreakdown().used} key(s) have already been redeemed.
-                  Deleting them will not revoke the subscription.
+                  Warning: {getSelectedStatusBreakdown().active} key(s) are currently active.
+                  Deleting them will revoke the subscription and downgrade to Free.
                 </p>
               </div>
             )}
