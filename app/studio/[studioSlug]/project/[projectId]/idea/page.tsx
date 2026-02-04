@@ -1031,48 +1031,55 @@ export default function IdeaPage() {
         {/* Onboarding hints - only show when canvas is empty */}
         {elements.length === 0 && (
           <>
-            {/* LEFT SIDE */}
+            {/* LEFT SIDE - toolbar starts at left-4 (16px), px-2 padding (8px) */}
+            {/* Mode toggle center: 16 + 8 + 32 = 56px = 3.5rem */}
+            {/* Panel button center: ~108px = 6.75rem */}
+            {/* Text button center: ~148px = 9.25rem */}
             
-            {/* Select or Draw - nearly straight down, slight curve right */}
-            <svg className="absolute top-14 left-10 w-16 h-14 pointer-events-none">
-              <path d="M8 0 C10 20, 14 35, 16 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
+            {/* Select or Draw - center at 3.5rem */}
+            <svg className="absolute top-14 left-[3.5rem] w-16 h-14 pointer-events-none">
+              <path d="M0 0 C2 20, 6 35, 8 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
             </svg>
             <p className="absolute top-28 left-2 text-xs text-primary/70 font-medium pointer-events-none">Select or Draw</p>
             
-            {/* Add panel - longer, diagonal down-right - start more right */}
-            <svg className="absolute top-14 left-[7rem] w-20 h-28 pointer-events-none">
-              <path d="M4 0 C10 30, 30 60, 45 95" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
+            {/* Add panel - center at 6.75rem */}
+            <svg className="absolute top-14 left-[6.75rem] w-20 h-28 pointer-events-none">
+              <path d="M0 0 C6 30, 26 60, 40 95" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
             </svg>
             <p className="absolute top-44 left-32 text-xs text-primary/70 font-medium pointer-events-none">Add panel</p>
             
-            {/* Add text - short, mostly right, barely down - start more right */}
-            <svg className="absolute top-14 left-[9.5rem] w-20 h-12 pointer-events-none">
+            {/* Add text - center at 9.25rem */}
+            <svg className="absolute top-14 left-[9.25rem] w-20 h-12 pointer-events-none">
               <path d="M0 0 C15 5, 40 15, 55 35" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
             </svg>
             <p className="absolute top-24 left-56 text-xs text-primary/70 font-medium pointer-events-none">Add text</p>
 
-            {/* RIGHT SIDE */}
+            {/* RIGHT SIDE - toolbar at right-4 (16px), px-2 padding (8px) */}
+            {/* Animate center: 16 + 8 + 18 = 42px = 2.625rem from right */}
+            {/* Reset view center: ~82px = 5.125rem from right */}
+            {/* 100%/Zoom center: ~142px = 8.875rem from right */}
+            {/* Undo/Redo center: ~222px = 13.875rem from right */}
             
-            {/* Undo/Redo - nearly entirely to left - start between buttons */}
-            <svg className="absolute top-14 right-[15.5rem] w-20 h-12 pointer-events-none">
+            {/* Undo/Redo - center at 13.875rem from right */}
+            <svg className="absolute top-14 right-[13.875rem] w-20 h-12 pointer-events-none">
               <path d="M55 0 C40 5, 15 15, 0 35" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
-            <p className="absolute top-24 right-72 text-xs text-muted-foreground/50 pointer-events-none">Undo / Redo</p>
+            <p className="absolute top-24 right-[15rem] text-xs text-muted-foreground/50 pointer-events-none">Undo / Redo</p>
             
-            {/* Zoom - more left than down - start under 100% */}
-            <svg className="absolute top-14 right-[8.5rem] w-16 h-16 pointer-events-none">
+            {/* Zoom - center at 8.875rem from right */}
+            <svg className="absolute top-14 right-[8.875rem] w-16 h-16 pointer-events-none">
               <path d="M50 0 C35 15, 15 30, 0 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
             <p className="absolute top-28 right-44 text-xs text-muted-foreground/50 pointer-events-none">Zoom</p>
             
-            {/* Reset view - diagonal down-left, longer - start from center of button */}
-            <svg className="absolute top-14 right-[3.5rem] w-16 h-28 pointer-events-none">
+            {/* Reset view - center at 5.125rem from right */}
+            <svg className="absolute top-14 right-[5.125rem] w-16 h-28 pointer-events-none">
               <path d="M45 0 C35 30, 15 60, 0 95" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
-            <p className="absolute top-44 right-20 text-xs text-muted-foreground/50 pointer-events-none">Reset view</p>
+            <p className="absolute top-44 right-24 text-xs text-muted-foreground/50 pointer-events-none">Reset view</p>
             
-            {/* Animate - nearly fully down, slight left - bit to the left */}
-            <svg className="absolute top-14 right-3 w-12 h-14 pointer-events-none">
+            {/* Animate - center at 2.625rem from right */}
+            <svg className="absolute top-14 right-[2.625rem] w-12 h-14 pointer-events-none">
               <path d="M25 0 C22 20, 18 35, 15 50" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
             </svg>
             <p className="absolute top-28 right-1 text-xs text-muted-foreground/50 pointer-events-none">Animate</p>
