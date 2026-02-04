@@ -1028,71 +1028,28 @@ export default function IdeaPage() {
           </div>
         )}
 
-        {/* Onboarding tooltips - only show when canvas is empty */}
+        {/* Onboarding hints - only show when canvas is empty */}
         {elements.length === 0 && (
           <>
-            {/* Left toolbar tooltips */}
-            <div className="absolute top-16 left-4 pointer-events-none animate-fade-in">
-              {/* Arrow pointing up */}
-              <svg className="w-6 h-8 text-primary/60 ml-6" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="bg-primary/20 border border-primary/30 rounded-lg px-3 py-2 backdrop-blur-sm">
-                <p className="text-xs font-medium text-primary">Select or Draw</p>
-              </div>
-            </div>
-            
-            <div className="absolute top-16 left-[7.5rem] pointer-events-none animate-fade-in" style={{ animationDelay: "100ms" }}>
-              <svg className="w-6 h-8 text-primary/60 ml-4" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="bg-primary/20 border border-primary/30 rounded-lg px-3 py-2 backdrop-blur-sm">
-                <p className="text-xs font-medium text-primary">Add Panel</p>
-              </div>
-            </div>
-            
-            <div className="absolute top-16 left-[10rem] pointer-events-none animate-fade-in" style={{ animationDelay: "200ms" }}>
-              <svg className="w-6 h-8 text-primary/60 ml-4" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="bg-primary/20 border border-primary/30 rounded-lg px-3 py-2 backdrop-blur-sm">
-                <p className="text-xs font-medium text-primary">Add Text</p>
-              </div>
+            {/* Left toolbar labels */}
+            <div className="absolute top-14 left-4 pointer-events-none flex items-start gap-1 text-[10px] text-muted-foreground/60">
+              <span className="w-[76px] text-center">Mode</span>
+              <span className="w-9 text-center">Panel</span>
+              <span className="w-9 text-center">Text</span>
             </div>
 
-            {/* Right toolbar tooltips */}
-            <div className="absolute top-16 right-[12.5rem] pointer-events-none animate-fade-in" style={{ animationDelay: "300ms" }}>
-              <svg className="w-6 h-8 text-muted-foreground/50 ml-4" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="glass rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Undo / Redo</p>
-              </div>
-            </div>
-            
-            <div className="absolute top-16 right-[5.5rem] pointer-events-none animate-fade-in" style={{ animationDelay: "400ms" }}>
-              <svg className="w-6 h-8 text-muted-foreground/50 ml-6" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="glass rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Zoom</p>
-              </div>
-            </div>
-            
-            <div className="absolute top-16 right-4 pointer-events-none animate-fade-in" style={{ animationDelay: "500ms" }}>
-              <svg className="w-6 h-8 text-muted-foreground/50 ml-2" viewBox="0 0 24 32">
-                <path d="M12 28 L12 8 M12 8 L6 14 M12 8 L18 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="glass rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Flow Animation</p>
-              </div>
+            {/* Right toolbar labels */}
+            <div className="absolute top-14 right-4 pointer-events-none flex items-start gap-1 text-[10px] text-muted-foreground/60">
+              <span className="w-[72px] text-center">History</span>
+              <span className="w-[120px] text-center">Zoom</span>
+              <span className="w-9 text-center">Flow</span>
             </div>
 
             {/* Center hint */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-fade-in" style={{ animationDelay: "600ms" }}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
               <div className="text-center">
-                <p className="text-muted-foreground/50 text-sm">Click anywhere to start</p>
-                <p className="text-muted-foreground/30 text-xs mt-1">or add a panel from the toolbar</p>
+                <p className="text-muted-foreground/40 text-sm">Click a button above to add elements</p>
+                <p className="text-muted-foreground/25 text-xs mt-1">Double-click to edit · Drag to move · Shift+click to multi-select</p>
               </div>
             </div>
           </>
