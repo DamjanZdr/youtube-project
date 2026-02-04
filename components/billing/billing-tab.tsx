@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { plans, type Plan } from "@/config/subscriptions";
-import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift, Users } from "lucide-react";
+import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
 import { createClient } from "@/lib/supabase/client";
@@ -53,6 +54,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const [redeemLoading, setRedeemLoading] = useState(false);
   const [redeemError, setRedeemError] = useState<string | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
   const redeemInputRef = useRef<HTMLInputElement>(null);
 
   // Pending Keys State
@@ -223,8 +225,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     }
   };
 
-  const handleRedeemKey = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRedeemKey = async () => {
     setRedeemLoading(true);
     setRedeemError(null);
     setRedeemSuccess(null);
@@ -232,7 +233,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       const res = await fetch("/api/keys/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: redeemKey, organization_id: studioId }),
+        body: JSON.stringify({ key: redeemKey.trim().toUpperCase(), organization_id: studioId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -252,7 +253,8 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
         }
         setRedeemSuccess(successMsg);
         setRedeemKey("");
-        if (redeemInputRef.current) redeemInputRef.current.value = "";
+        setShowKeyInput(false);
+        toast.success(successMsg);
         // Optionally, refresh the page or subscription info
         window.location.reload();
       }
@@ -821,25 +823,37 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       )}
 
       {/* Redeem Key Section (below plans, above billing history) */}
-      <Card className="glass-card max-w-2xl mx-auto mt-10 p-6 flex flex-col items-center">
-        <h3 className="text-lg font-semibold mb-4">Redeem a Plan Key</h3>
-        <form onSubmit={handleRedeemKey} className="w-full flex flex-col md:flex-row items-start md:items-center gap-2">
-          <input
-            ref={redeemInputRef}
-            type="text"
-            placeholder="Enter key to redeem..."
-            className="input input-bordered w-full md:w-64 px-3 py-2 rounded border border-border bg-background text-foreground"
-            value={redeemKey}
-            onChange={e => setRedeemKey(e.target.value)}
-            disabled={redeemLoading}
-            required
-          />
-          <Button type="submit" disabled={redeemLoading || !redeemKey} className="w-full md:w-auto">
-            {redeemLoading ? "Redeeming..." : "Redeem Key"}
+      <Card className="glass-card max-w-md mx-auto mt-10 p-6">
+        {showKeyInput ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-muted-foreground">Redeem Key</label>
+              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setShowKeyInput(false); setRedeemKey(""); setRedeemError(null); }}>
+                Cancel
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                ref={redeemInputRef}
+                value={redeemKey}
+                onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setRedeemError(null); }}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                className="font-mono text-sm bg-white/5"
+                disabled={redeemLoading}
+              />
+              <Button size="sm" onClick={handleRedeemKey} disabled={redeemLoading || !redeemKey.trim()}>
+                {redeemLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+              </Button>
+            </div>
+            {redeemError && <p className="text-xs text-red-400">{redeemError}</p>}
+            {redeemSuccess && <p className="text-xs text-green-400">{redeemSuccess}</p>}
+          </div>
+        ) : (
+          <Button variant="outline" className="w-full gap-2 h-11 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => setShowKeyInput(true)}>
+            <Key className="w-4 h-4" />
+            Have a plan key?
           </Button>
-        </form>
-        {redeemError && <div className="text-red-500 text-sm mt-2">{redeemError}</div>}
-        {redeemSuccess && <div className="text-green-500 text-sm mt-2">{redeemSuccess}</div>}
+        )}
       </Card>
 
       {/* Billing History */}
