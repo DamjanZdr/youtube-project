@@ -681,8 +681,63 @@ export default function IdeaPage() {
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
         }}
-        onClick={handleCanvasClick}
-        onMouseDown={handleCanvasMouseDown}
+        onMouseDown={(e) => {
+          // Handle all mouse interactions here
+          const target = e.target as HTMLElement;
+          
+          // If clicking on an element, don't do canvas actions
+          if (target.closest('[data-element]')) {
+            return;
+          }
+          
+          // Middle click or alt+click to pan
+          if (e.button === 1 || (e.button === 0 && e.altKey)) {
+            setIsPanning(true);
+            setPanStart({ x: e.clientX, y: e.clientY });
+            return;
+          }
+          
+          const pos = getCanvasPosition(e);
+          console.log("Canvas mousedown at:", pos, "with tool:", activeTool);
+          
+          if (activeTool === "draw") {
+            setIsDrawing(true);
+            setDrawPath(`M ${pos.x} ${pos.y}`);
+          } else if (activeTool === "panel") {
+            saveElement({
+              element_type: "panel",
+              x: pos.x,
+              y: pos.y,
+              width: 200,
+              height: 150,
+              background_color: "#1a1a2e",
+              border_color: "#ffffff20",
+              text_color: "#ffffff",
+              font_size: 14,
+              title: "New Panel",
+              content: "",
+              z_index: elements.length,
+            });
+          } else if (activeTool === "text") {
+            saveElement({
+              element_type: "text",
+              x: pos.x,
+              y: pos.y,
+              width: null,
+              height: null,
+              background_color: "transparent",
+              border_color: "transparent",
+              text_color: "#ffffff",
+              font_size: 16,
+              title: null,
+              content: "New text",
+              z_index: elements.length,
+            });
+          } else if (activeTool === "select") {
+            setSelectedElement(null);
+            setConnectingFrom(null);
+          }
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleCanvasMouseUp}
         onMouseLeave={handleCanvasMouseUp}
