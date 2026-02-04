@@ -519,22 +519,24 @@ export default function AdminKeysPage() {
               </th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Key</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Duration</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Sent To / Redeemed By</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Created</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Activated</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center">
+                <td colSpan={9} className="p-8 text-center">
                   <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto" />
                 </td>
               </tr>
             ) : keys.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                <td colSpan={9} className="p-8 text-center text-muted-foreground">
                   No keys found
                 </td>
               </tr>
@@ -571,6 +573,11 @@ export default function AdminKeysPage() {
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${planInfo?.color || "bg-zinc-500/20"}`}>
                         {key.plan}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm text-muted-foreground capitalize">
+                        {key.duration === "month" ? "Monthly" : key.duration === "year" ? "Yearly" : "Lifetime"}
                       </span>
                     </td>
                     <td className="p-4">
@@ -633,6 +640,16 @@ export default function AdminKeysPage() {
                         <Calendar className="w-4 h-4" />
                         <span>{formatDistanceToNow(new Date(key.created_at), { addSuffix: true })}</span>
                       </div>
+                    </td>
+                    <td className="p-4">
+                      {key.redeemed_at ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Check className="w-4 h-4 text-green-400" />
+                          <span>{formatDistanceToNow(new Date(key.redeemed_at), { addSuffix: true })}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">
