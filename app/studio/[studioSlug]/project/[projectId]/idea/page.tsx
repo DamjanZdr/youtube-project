@@ -628,18 +628,25 @@ export default function IdeaPage() {
     }
 
     if (isDrawing && drawPath) {
-      // Extract the starting point from the path to store as the element's origin
+      // Extract the starting point from the path
       const pathMatch = drawPath.match(/^M\s*([\d.]+)\s+([\d.]+)/);
       const startX = pathMatch ? parseFloat(pathMatch[1]) : 0;
       const startY = pathMatch ? parseFloat(pathMatch[2]) : 0;
       
+      // Normalize the path to start at 0,0 (make all coords relative to start)
+      // This allows x/y to be used as the actual position for dragging
+      const normalizedPath = drawPath.replace(
+        /([ML])\s*([\d.]+)\s+([\d.]+)/g,
+        (_, cmd, x, y) => `${cmd} ${parseFloat(x) - startX} ${parseFloat(y) - startY}`
+      );
+      
       createElement({
         element_type: "drawing",
-        x: startX,  // Store original start position
-        y: startY,  // This enables proper drag offset calculation
+        x: startX,  // Position of the stroke
+        y: startY,
         width: null,
         height: null,
-        content: drawPath,
+        content: normalizedPath,  // Path is now relative to 0,0
         background_color: "transparent",
         border_color: drawColor,
         text_color: drawColor,
@@ -845,16 +852,7 @@ export default function IdeaPage() {
             const bounds = getElementBounds(el);
 
             if (el.element_type === "drawing") {
-              // Extract original start position from path (M x y ...)
-              // The path contains absolute coords, el.x/y stores the original start point
-              // We calculate offset from original position to enable dragging
-              const pathMatch = el.content?.match(/^M\s*([\d.]+)\s+([\d.]+)/);
-              const origX = pathMatch ? parseFloat(pathMatch[1]) : el.x;
-              const origY = pathMatch ? parseFloat(pathMatch[2]) : el.y;
-              // Offset = how much the element has moved from its original position
-              const offsetX = el.x - origX;
-              const offsetY = el.y - origY;
-              
+              // Path is normalized (relative to 0,0), so just position using x/y
               return (
                 <svg
                   key={el.id}
@@ -863,8 +861,8 @@ export default function IdeaPage() {
                   className="absolute pointer-events-auto"
                   style={{ 
                     overflow: "visible", 
-                    left: 0, 
-                    top: 0,
+                    left: el.x, 
+                    top: el.y,
                     cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default" 
                   }}
                   onMouseDown={(e) => {
@@ -899,28 +897,26 @@ export default function IdeaPage() {
                     }
                   }}
                 >
-                  <g style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}>
-                    {/* Invisible wider path for easier clicking/dragging */}
-                    <path
-                      d={el.content || ""}
-                      stroke="transparent"
-                      strokeWidth={Math.max(el.font_size * 6, 16)}
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ pointerEvents: "stroke" }}
-                    />
-                    {/* Visible path */}
-                    <path
-                      d={el.content || ""}
-                      stroke={isSelected ? "#60a5fa" : el.border_color}
-                      strokeWidth={el.font_size}
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ pointerEvents: "none" }}
-                    />
-                  </g>
+                  {/* Invisible wider path for easier clicking/dragging */}
+                  <path
+                    d={el.content || ""}
+                    stroke="transparent"
+                    strokeWidth={Math.max(el.font_size * 6, 16)}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ pointerEvents: "stroke" }}
+                  />
+                  {/* Visible path */}
+                  <path
+                    d={el.content || ""}
+                    stroke={isSelected ? "#60a5fa" : el.border_color}
+                    strokeWidth={el.font_size}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ pointerEvents: "none" }}
+                  />
                 </svg>
               );
             }
@@ -1032,20 +1028,34 @@ export default function IdeaPage() {
           </div>
         )}
 
-        {/* Empty state */}
-        {elements.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Start brainstorming</h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
-                Click the + button to add boxes. Double-click to edit. Drag to select multiple.
-              </p>
-            </div>
+        {/* Empty state instructions - fades when canvas has elements */}
+        <div 
+          className={`absolute top-4 left-48 flex items-start gap-3 pointer-events-none transition-opacity duration-500 ${
+            elements.length === 0 ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {/* Arrow pointing to toolbar */}
+          <svg className="w-12 h-8 text-muted-foreground/50 mt-2" viewBox="0 0 48 32">
+            <path 
+              d="M40 20 L8 20 L14 14 M8 20 L14 26" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              fill="none" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div className="text-left">
+            <p className="text-sm text-muted-foreground">
+              <span className="text-foreground font-medium">□</span> Add panel &nbsp;·&nbsp; 
+              <span className="text-foreground font-medium">T</span> Add text &nbsp;·&nbsp;
+              <span className="text-foreground font-medium">✎</span> Draw
+            </p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              Double-click to edit · Drag to select multiple
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Floating Toolbar - Left */}
