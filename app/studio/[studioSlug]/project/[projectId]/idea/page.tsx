@@ -383,14 +383,22 @@ export default function IdeaPage() {
   }
 
   function handleCanvasMouseDown(e: React.MouseEvent) {
-    const target = e.target as HTMLElement;
-
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    // Middle mouse button - ONLY panning, nothing else
+    if (e.button === 1) {
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+    
+    // Alt+click also pans
+    if (e.button === 0 && e.altKey) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
 
+    const target = e.target as HTMLElement;
     if (target.closest("[data-element]") || target.closest("[data-resize]") || target.closest("[data-connector]") || target.closest("[data-connection]")) {
       return;
     }
@@ -432,6 +440,8 @@ export default function IdeaPage() {
   }
 
   function handleElementMouseDown(e: React.MouseEvent, el: WhiteboardElement) {
+    // Middle mouse should only pan, not interact with elements
+    if (e.button === 1) return;
     if (activeTool !== "select") return;
     e.stopPropagation();
 
@@ -618,10 +628,15 @@ export default function IdeaPage() {
     }
 
     if (isDrawing && drawPath) {
+      // Extract the starting point from the path to store as the element's origin
+      const pathMatch = drawPath.match(/^M\s*([\d.]+)\s+([\d.]+)/);
+      const startX = pathMatch ? parseFloat(pathMatch[1]) : 0;
+      const startY = pathMatch ? parseFloat(pathMatch[2]) : 0;
+      
       createElement({
         element_type: "drawing",
-        x: 0,
-        y: 0,
+        x: startX,  // Store original start position
+        y: startY,  // This enables proper drag offset calculation
         width: null,
         height: null,
         content: drawPath,
@@ -687,7 +702,28 @@ export default function IdeaPage() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onWheel={(e) => { e.preventDefault(); setZoom((z) => Math.min(Math.max(z * (e.deltaY > 0 ? 0.9 : 1.1), 0.25), 3)); }}
+        onWheel={(e) => {
+          e.preventDefault();
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (!rect) return;
+          
+          // Mouse position relative to canvas
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          
+          // Calculate new zoom
+          const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+          const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.25), 3);
+          
+          // Adjust pan so that the point under the mouse stays in place
+          // Formula: mouseX = worldX * newZoom + newPanX  AND  mouseX = worldX * oldZoom + oldPanX
+          // So: newPanX = mouseX - (mouseX - oldPanX) * (newZoom / oldZoom)
+          const newPanX = mouseX - (mouseX - pan.x) * (newZoom / zoom);
+          const newPanY = mouseY - (mouseY - pan.y) * (newZoom / zoom);
+          
+          setZoom(newZoom);
+          setPan({ x: newPanX, y: newPanY });
+        }}
       >
         <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
           {/* SVG Connections */}
@@ -832,6 +868,8 @@ export default function IdeaPage() {
                     cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default" 
                   }}
                   onMouseDown={(e) => {
+                    // Middle mouse should only pan, not interact
+                    if (e.button === 1) return;
                     if (activeTool === "select") {
                       e.stopPropagation();
                       const pos = getCanvasPos(e);
@@ -862,6 +900,17 @@ export default function IdeaPage() {
                   }}
                 >
                   <g style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}>
+                    {/* Invisible wider path for easier clicking/dragging */}
+                    <path
+                      d={el.content || ""}
+                      stroke="transparent"
+                      strokeWidth={Math.max(el.font_size * 6, 16)}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ pointerEvents: "stroke" }}
+                    />
+                    {/* Visible path */}
                     <path
                       d={el.content || ""}
                       stroke={isSelected ? "#60a5fa" : el.border_color}
@@ -869,6 +918,7 @@ export default function IdeaPage() {
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      style={{ pointerEvents: "none" }}
                     />
                   </g>
                 </svg>
