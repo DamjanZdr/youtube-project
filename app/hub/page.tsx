@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Users, FolderKanban, Bell, Check, X } from "lucide-react";
+import { Plus, Play, Users, FolderKanban, Bell, Check, X, Youtube } from "lucide-react";
 import Link from "next/link";
 import { CreateStudioDialog } from "./create-studio-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ interface Studio {
   logo_url?: string;
   memberCount?: number;
   projectCount?: number;
+  subscriberCount?: number;
 }
 
 interface PendingInvite {
@@ -38,6 +39,17 @@ interface PendingInvite {
     email: string;
   };
   joined_at: string;
+}
+
+// Format subscriber count with abbreviations (1.2K, 45.6K, 1.2M, etc.)
+function formatSubscriberCount(count: number): string {
+  if (count >= 1000000) {
+    return (count / 1000000).toFixed(count >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  }
+  if (count >= 1000) {
+    return (count / 1000).toFixed(count >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  }
+  return count.toLocaleString();
 }
 
 export default function HubPage() {
@@ -114,6 +126,13 @@ export default function HubPage() {
             .select("*", { count: "exact", head: true })
             .eq("organization_id", org.id);
 
+          // Get subscriber count from channel
+          const { data: channelData } = await supabase
+            .from("channels")
+            .select("subscriber_count")
+            .eq("organization_id", org.id)
+            .single();
+
           return {
             id: org.id,
             name: org.name,
@@ -121,6 +140,7 @@ export default function HubPage() {
             logo_url: org.logo_url,
             memberCount: memberCount || 1,
             projectCount: projectCount || 0,
+            subscriberCount: channelData?.subscriber_count || 0,
           };
         })
       );
@@ -345,11 +365,27 @@ export default function HubPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <FolderKanban className="w-4 h-4" />
-                        {studio.projectCount || 0} projects
+                        {studio.projectCount || 0}
                       </span>
                     </div>
                   </div>
                 </div>
+                {/* Subscriber Count Badge */}
+                {(studio.subscriberCount ?? 0) > 0 && (
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
+                        <Youtube className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-foreground">
+                          {formatSubscriberCount(studio.subscriberCount || 0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">subscribers</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </Link>
             ))}
             

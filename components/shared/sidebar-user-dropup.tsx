@@ -80,17 +80,9 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
       <DropdownMenuContent 
         align={collapsed ? "center" : "start"} 
         side="top" 
-        className="w-64 mb-2 z-[100]"
+        className="w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"
         sideOffset={8}
       >
-        {/* User info */}
-        <div className="px-3 py-2">
-          <p className="text-sm font-medium">{displayName}</p>
-          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-        </div>
-        
-        <DropdownMenuSeparator />
-        
         {/* Accept Invites Toggle */}
         <div 
           className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer rounded-sm"
