@@ -16,6 +16,8 @@ import {
   Maximize2,
   Play,
   Pause,
+  MousePointer2,
+  Square,
 } from "lucide-react";
 import {
   Popover,
@@ -692,7 +694,7 @@ export default function IdeaPage() {
           <svg className="absolute inset-0" style={{ overflow: "visible", pointerEvents: "none" }}>
             <defs>
               <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff80" />
               </marker>
               <marker id="arrow-hover" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
@@ -725,7 +727,7 @@ export default function IdeaPage() {
                   {/* Visible path */}
                   <path
                     d={path}
-                    stroke={isHovered ? "#ef4444" : "#60a5fa"}
+                    stroke={isHovered ? "#ef4444" : "#ffffff80"}
                     strokeWidth={2}
                     fill="none"
                     strokeDasharray="8 4"
@@ -736,7 +738,7 @@ export default function IdeaPage() {
                       <animate
                         attributeName="stroke-dashoffset"
                         values={`${length};0`}
-                        dur="2s"
+                        dur="20s"
                         repeatCount="indefinite"
                       />
                     )}
@@ -761,13 +763,13 @@ export default function IdeaPage() {
                         y1={sy}
                         x2={connectMousePos.x}
                         y2={connectMousePos.y}
-                        stroke={connectTarget ? "#22c55e" : "#60a5fa"}
+                        stroke={connectTarget ? "#22c55e" : "#ffffff80"}
                         strokeWidth={2}
                         strokeDasharray={connectTarget ? undefined : "6 4"}
                         markerEnd={connectTarget ? "url(#arrow-active)" : undefined}
                       />
                       {!connectTarget && (
-                        <circle cx={connectMousePos.x} cy={connectMousePos.y} r={5} fill="#60a5fa">
+                        <circle cx={connectMousePos.x} cy={connectMousePos.y} r={5} fill="#ffffff80">
                           <animate attributeName="r" values="5;7;5" dur="0.8s" repeatCount="indefinite" />
                         </circle>
                       )}
@@ -813,18 +815,39 @@ export default function IdeaPage() {
                   data-element="true"
                   data-element-id={el.id}
                   className="absolute pointer-events-auto"
-                  style={{ overflow: "visible", left: 0, top: 0, cursor: activeTool === "select" ? "pointer" : "default" }}
-                  onClick={(e) => {
+                  style={{ 
+                    overflow: "visible", 
+                    left: el.x, 
+                    top: el.y, 
+                    cursor: activeTool === "select" ? (isDragging ? "grabbing" : "grab") : "default" 
+                  }}
+                  onMouseDown={(e) => {
                     if (activeTool === "select") {
                       e.stopPropagation();
+                      const pos = getCanvasPos(e);
+                      
                       if (e.shiftKey) {
                         const newSel = new Set(selectedElements);
                         if (newSel.has(el.id)) newSel.delete(el.id);
                         else newSel.add(el.id);
                         setSelectedElements(newSel);
-                      } else {
+                        return;
+                      }
+                      
+                      if (!selectedElements.has(el.id)) {
                         setSelectedElements(new Set([el.id]));
                       }
+                      
+                      setIsDragging(true);
+                      const offsets = new Map<string, { x: number; y: number }>();
+                      selectedElements.forEach((id) => {
+                        const elem = elements.find((e) => e.id === id);
+                        if (elem) {
+                          offsets.set(id, { x: elem.x - pos.x, y: elem.y - pos.y });
+                        }
+                      });
+                      offsets.set(el.id, { x: el.x - pos.x, y: el.y - pos.y });
+                      setDragElementOffsets(offsets);
                     }
                   }}
                 >
@@ -835,6 +858,7 @@ export default function IdeaPage() {
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    style={{ transform: `translate(${-el.x}px, ${-el.y}px)` }}
                   />
                 </svg>
               );
@@ -921,15 +945,17 @@ export default function IdeaPage() {
                       );
                     })}
 
-                    {/* Connector button */}
-                    <div
-                      data-connector="true"
-                      className="absolute w-5 h-5 bg-primary rounded-full border-2 border-white shadow-md cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
-                      style={{ right: -10, top: "50%", marginTop: -10, zIndex: 20 }}
-                      onMouseDown={(e) => handleConnectorMouseDown(e, el.id)}
-                    >
-                      <Plus className="w-3 h-3 text-white" />
-                    </div>
+                    {/* Connector button - only for panels */}
+                    {el.element_type === "panel" && (
+                      <div
+                        data-connector="true"
+                        className="absolute w-5 h-5 bg-primary rounded-full border-2 border-white shadow-md cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
+                        style={{ right: -10, top: "50%", marginTop: -10, zIndex: 20 }}
+                        onMouseDown={(e) => handleConnectorMouseDown(e, el.id)}
+                      >
+                        <Plus className="w-3 h-3 text-white" />
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -963,17 +989,39 @@ export default function IdeaPage() {
 
       {/* Floating Toolbar - Left */}
       <div className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1.5 glass rounded-xl border border-white/10">
-        {/* Add Panel Button */}
-        <Button 
-          size="icon" 
-          className="bg-primary hover:bg-primary/90 text-white"
-          onClick={addPanelAtCenter}
-          title="Add Box"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
+        {/* Mode Toggle - Segmented control */}
+        <div className="flex items-center rounded-lg bg-white/5 p-0.5">
+          <button
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
+              activeTool === "select" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTool("select")}
+            title="Select Mode"
+          >
+            <MousePointer2 className="w-4 h-4" />
+          </button>
+          <button
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
+              activeTool === "draw" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTool("draw")}
+            title="Draw Mode"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </div>
         
         <div className="h-6 w-px bg-white/10" />
+        
+        {/* Add Panel Button */}
+        <Button 
+          variant="ghost"
+          size="icon" 
+          onClick={addPanelAtCenter}
+          title="Add Panel"
+        >
+          <Square className="w-4 h-4" />
+        </Button>
         
         {/* Add Text */}
         <Button 
@@ -984,23 +1032,13 @@ export default function IdeaPage() {
         >
           <Type className="w-4 h-4" />
         </Button>
-        
-        {/* Draw Mode Toggle */}
-        <Button 
-          variant={activeTool === "draw" ? "secondary" : "ghost"} 
-          size="icon" 
-          onClick={() => setActiveTool(activeTool === "draw" ? "select" : "draw")}
-          title="Draw Mode"
-        >
-          <Pencil className="w-4 h-4" />
-        </Button>
 
         {activeTool === "draw" && (
           <>
             <div className="h-6 w-px bg-white/10" />
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" title="Draw Color">
+                <Button variant="ghost" size="icon" title="Stroke Color">
                   <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: drawColor }} />
                 </Button>
               </PopoverTrigger>
@@ -1019,51 +1057,81 @@ export default function IdeaPage() {
       {/* Selection Toolbar - appears when element selected */}
       {selectedEl && !editingElement && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 glass rounded-xl border border-white/10">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 h-8">
-                <div className="w-4 h-4 rounded border border-white/20" style={{ backgroundColor: selectedEl.background_color }} />
-                <span className="text-xs">Fill</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2">
-              <div className="grid grid-cols-5 gap-1">
-                {COLORS.map((color) => (
-                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "background_color", color)} />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 h-8">
-                <div className="w-4 h-4 rounded border-2" style={{ borderColor: selectedEl.border_color }} />
-                <span className="text-xs">Border</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2">
-              <div className="grid grid-cols-5 gap-1">
-                {COLORS.map((color) => (
-                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "border_color", color)} />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 h-8">
-                <Type className="w-3 h-3" style={{ color: selectedEl.text_color }} />
-                <span className="text-xs">Text</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2">
-              <div className="grid grid-cols-5 gap-1">
-                {TEXT_COLORS.map((color) => (
-                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "text_color", color)} />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* Drawing: only show Color */}
+          {selectedEl.element_type === "drawing" ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 h-8">
+                  <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: selectedEl.border_color }} />
+                  <span className="text-xs">Color</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2">
+                <div className="grid grid-cols-5 gap-1">
+                  {TEXT_COLORS.map((color) => (
+                    <button 
+                      key={color} 
+                      className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" 
+                      style={{ backgroundColor: color }} 
+                      onClick={() => {
+                        updateColor(selectedEl.id, "border_color", color);
+                        updateColor(selectedEl.id, "text_color", color);
+                      }} 
+                    />
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            /* Panel/Text: show Fill, Border, Text */
+            <>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 h-8">
+                    <div className="w-4 h-4 rounded border border-white/20" style={{ backgroundColor: selectedEl.background_color }} />
+                    <span className="text-xs">Fill</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                  <div className="grid grid-cols-5 gap-1">
+                    {COLORS.map((color) => (
+                      <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "background_color", color)} />
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 h-8">
+                    <div className="w-4 h-4 rounded border-2" style={{ borderColor: selectedEl.border_color }} />
+                    <span className="text-xs">Border</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                  <div className="grid grid-cols-5 gap-1">
+                    {COLORS.map((color) => (
+                      <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "border_color", color)} />
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 h-8">
+                    <Type className="w-3 h-3" style={{ color: selectedEl.text_color }} />
+                    <span className="text-xs">Text</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                  <div className="grid grid-cols-5 gap-1">
+                    {TEXT_COLORS.map((color) => (
+                      <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "text_color", color)} />
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
           <div className="h-6 w-px bg-white/10" />
           <Button 
             variant="ghost" 
