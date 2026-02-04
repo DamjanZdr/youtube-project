@@ -146,8 +146,9 @@ export async function POST(req: NextRequest) {
     current_period_end: expiresAt ? expiresAt.toISOString() : null,
   };
 
-  // If upgrading from a Stripe paid plan, store the previous info so we can resume if key expires
-  if (isUpgrade && sub.source === "stripe" && sub.plan !== "free") {
+  // If they're on a paid Stripe plan, store the previous info so we can resume when key expires
+  // This applies to both upgrades AND same-plan keys
+  if (sub.source === "stripe" && sub.plan !== "free" && sub.stripe_subscription_id) {
     subscriptionUpdate.previous_plan = sub.plan;
     subscriptionUpdate.previous_stripe_subscription_id = sub.stripe_subscription_id;
     // Note: We should ideally pause the Stripe subscription here
