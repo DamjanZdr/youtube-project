@@ -71,10 +71,7 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
                   <span className="text-sm font-medium">{initials}</span>
                 )}
               </div>
-              <div className="text-left min-w-0">
-                <p className="text-sm font-medium truncate">{displayName}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              </div>
+              <p className="text-sm font-medium truncate">{displayName}</p>
             </div>
             <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
           </Button>
@@ -83,7 +80,7 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
       <DropdownMenuContent 
         align={collapsed ? "center" : "start"} 
         side="top" 
-        className="w-64 mb-2"
+        className="w-64 mb-2 z-[100]"
         sideOffset={8}
       >
         {/* User info */}
