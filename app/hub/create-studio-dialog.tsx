@@ -192,52 +192,45 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="glass-strong border-white/10 w-[95vw] max-w-[1600px] p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="flex flex-col lg:flex-row">
-          {/* Left Side - Studio Details */}
-          <div className="lg:w-[380px] p-8 border-b lg:border-b-0 lg:border-r border-white/10 bg-muted/20 flex-shrink-0">
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-1">Create Studio</h2>
-              <p className="text-sm text-muted-foreground">
-                Set up your YouTube workspace
-              </p>
-            </div>
+      <DialogContent className="glass-strong border-white/10 max-w-5xl p-0 overflow-hidden max-h-[90vh]">
+        <div className="overflow-y-auto max-h-[90vh] p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-1">Create Studio</h2>
+            <p className="text-muted-foreground">Set up your YouTube workspace</p>
+          </div>
 
+          {/* Studio Details Row */}
+          <div className="flex flex-col sm:flex-row gap-6 mb-8 pb-8 border-b border-white/10">
             {/* Logo Upload */}
-            <div className="mb-6">
-              <label className="text-sm font-medium mb-3 block">Studio Logo</label>
-              <div 
-                onClick={() => logoInputRef.current?.click()}
-                className="w-24 h-24 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity group relative mx-auto"
-              >
-                {logoPreview ? (
-                  <>
-                    <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5 text-white" />
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <ImageIcon className="w-8 h-8 text-white/70 mx-auto mb-1" />
-                    <span className="text-[10px] text-white/70">Click to upload</span>
+            <div 
+              onClick={() => logoInputRef.current?.click()}
+              className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity group relative flex-shrink-0"
+            >
+              {logoPreview ? (
+                <>
+                  <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5 text-white" />
                   </div>
-                )}
-              </div>
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleLogoChange}
-              />
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                PNG or JPG, 256×256px
-              </p>
+                </>
+              ) : (
+                <div className="text-center">
+                  <ImageIcon className="w-6 h-6 text-white/70 mx-auto" />
+                  <span className="text-[8px] text-white/70">Upload</span>
+                </div>
+              )}
             </div>
-
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoChange}
+            />
+            
             {/* Studio Name */}
-            <div className="mb-6">
+            <div className="flex-1 max-w-md">
               <label htmlFor="studio-name" className="text-sm font-medium mb-2 block">
                 Studio Name <span className="text-red-500">*</span>
               </label>
@@ -250,18 +243,149 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 autoFocus
               />
             </div>
+          </div>
 
-            {error && (
-              <p className="text-sm text-red-500 mt-4">{error}</p>
-            )}
+          {/* Plan Selection Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold">Choose a Plan</h3>
+              
+              {/* Billing Interval Toggle */}
+              <div className="flex items-center gap-2 glass-card p-1.5 rounded-lg">
+                <button
+                  onClick={() => setBillingInterval("monthly")}
+                  className={`px-4 py-1.5 rounded-md text-sm transition-all ${
+                    billingInterval === "monthly"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingInterval("yearly")}
+                  className={`px-4 py-1.5 rounded-md text-sm transition-all ${
+                    billingInterval === "yearly"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Yearly
+                  <span className="ml-1.5 text-xs bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded-full">
+                    -17%
+                  </span>
+                </button>
+              </div>
+            </div>
 
-            {/* Create Button - Mobile only */}
-            <div className="mt-6 lg:hidden">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={loading || !name.trim()}
-                className="w-full"
-              >
+            {/* Plan Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {plans.map((plan) => {
+                const isSelected = selectedPlan === plan.id;
+                const isKeyPlan = keyInfo?.plan === plan.id;
+                const isDisabled = keyInfo && !isKeyPlan;
+                const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
+                
+                return (
+                  <Card
+                    key={plan.id}
+                    onClick={() => !isDisabled && setSelectedPlan(plan.id)}
+                    className={`glass-card p-5 relative flex flex-col cursor-pointer transition-all ${
+                      plan.popular && !keyInfo ? "ring-2 ring-primary" : ""
+                    } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/5" : ""} ${
+                      isDisabled ? "opacity-40 cursor-not-allowed" : "hover:border-white/30"
+                    }`}
+                  >
+                    {plan.popular && !keyInfo && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">Popular</Badge>
+                      </div>
+                    )}
+                    {isKeyPlan && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-green-500 text-white text-xs px-2 py-0.5">
+                          <Key className="w-3 h-3 mr-1" /> Key
+                        </Badge>
+                      </div>
+                    )}
+
+                    <div className="mb-4">
+                      <h4 className="font-bold mb-1">{plan.name}</h4>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold">${price}</span>
+                        <span className="text-xs text-muted-foreground">
+                          /{billingInterval === "monthly" ? "mo" : "yr"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-1.5 text-sm">
+                      {plan.features.slice(0, 5).map((feature, i) => (
+                        <li key={i} className="flex items-start gap-1.5">
+                          {feature.included ? (
+                            <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-green-500" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          )}
+                          <span className={`text-xs leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
+                            {feature.name}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-white/10">
+            {/* Key Redemption */}
+            <div>
+              {keyInfo ? (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <Key className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-green-500">Key Applied:</span>
+                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-xs">
+                    {keyInfo.plan}
+                  </Badge>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+                    {formatDuration(keyInfo.duration)}
+                  </Badge>
+                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={clearKey}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : showKeyInput ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={redeemKey}
+                    onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    className="font-mono text-sm w-48"
+                  />
+                  <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
+                    {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowKeyInput(false)}>Cancel</Button>
+                  {keyError && <span className="text-xs text-red-500">{keyError}</span>}
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowKeyInput(true)}>
+                  <Key className="w-4 h-4" />
+                  Have a plan key?
+                </Button>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              {error && <span className="text-sm text-red-500">{error}</span>}
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={loading || !name.trim()}>
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -273,188 +397,6 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                   "Continue to Checkout"
                 )}
               </Button>
-            </div>
-          </div>
-
-          {/* Right Side - Plan Selection (Same as Billing Tab) */}
-          <div className="flex-1 p-8 overflow-y-auto">
-            {/* Billing Interval Toggle */}
-            <div className="flex items-center justify-center gap-4 glass-card p-3 w-fit mx-auto mb-8">
-              <button
-                onClick={() => setBillingInterval("monthly")}
-                className={`px-4 py-2 rounded-lg transition-all ${
-                  billingInterval === "monthly"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingInterval("yearly")}
-                className={`px-4 py-2 rounded-lg transition-all ${
-                  billingInterval === "yearly"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Yearly
-                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">
-                  Save 17%
-                </span>
-              </button>
-            </div>
-
-            {/* Plan Cards - Same styling as Billing Tab */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-              {plans.map((plan) => {
-                const isSelected = selectedPlan === plan.id;
-                const isKeyPlan = keyInfo?.plan === plan.id;
-                const isDisabled = keyInfo && !isKeyPlan;
-                const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
-                
-                return (
-                  <Card
-                    key={plan.id}
-                    onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                    className={`glass-card p-6 relative flex flex-col min-h-[380px] cursor-pointer transition-all ${
-                      plan.popular && !keyInfo ? "ring-2 ring-primary" : ""
-                    } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/5" : ""} ${
-                      isDisabled ? "opacity-40 cursor-not-allowed" : "hover:border-white/30"
-                    }`}
-                  >
-                    {plan.popular && !keyInfo && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-primary text-primary-foreground px-3 py-1">Most Popular</Badge>
-                      </div>
-                    )}
-                    {isKeyPlan && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-green-500 text-white px-3 py-1">
-                          <Key className="w-3 h-3 mr-1" /> Key Applied
-                        </Badge>
-                      </div>
-                    )}
-
-                    <div className="mb-6">
-                      <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
-                      <div className="flex items-baseline gap-1 mb-2">
-                        <span className="text-3xl font-bold">${price}</span>
-                        <span className="text-sm text-muted-foreground">
-                          /{billingInterval === "monthly" ? "mo" : "yr"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-tight">{plan.description}</p>
-                    </div>
-
-                    <ul className="space-y-2.5 flex-1">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          {feature.included ? (
-                            <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
-                          ) : (
-                            <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          )}
-                          <span className={`text-sm leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
-                            {feature.name}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Footer - Key redemption + Action Buttons */}
-            <div className="hidden lg:flex items-center justify-between gap-4 pt-6 mt-6 border-t border-white/10">
-              {/* Key Redemption */}
-              <div className="flex-1 max-w-md">
-                {keyInfo ? (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Key className="w-4 h-4 text-green-500" />
-                        <span className="text-sm font-medium text-green-500">Key Applied</span>
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize">
-                          {keyInfo.plan}
-                        </Badge>
-                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                          {formatDuration(keyInfo.duration)}
-                        </Badge>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        className="h-6 w-6 p-0"
-                        onClick={clearKey}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : showKeyInput ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={redeemKey}
-                      onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
-                      className="font-mono text-sm max-w-[200px]"
-                    />
-                    <Button 
-                      size="sm"
-                      onClick={validateKey}
-                      disabled={validatingKey || !redeemKey.trim()}
-                    >
-                      {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => setShowKeyInput(false)}
-                    >
-                      Cancel
-                    </Button>
-                    {keyError && <span className="text-xs text-red-500">{keyError}</span>}
-                  </div>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                    onClick={() => setShowKeyInput(true)}
-                  >
-                    <Key className="w-4 h-4" />
-                    Have a plan key?
-                  </Button>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setOpen(false)}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={loading || !name.trim()}
-                  className="min-w-[160px]"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : selectedPlan === "free" || keyInfo ? (
-                    "Create Studio"
-                  ) : (
-                    "Continue to Checkout"
-                  )}
-                </Button>
-              </div>
             </div>
           </div>
         </div>
