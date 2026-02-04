@@ -672,6 +672,7 @@ export default function IdeaPage() {
       >
         {/* Transform container */}
         <div
+          className="pointer-events-none"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "0 0",
@@ -730,7 +731,7 @@ export default function IdeaPage() {
             <div
               key={element.id}
               data-element="true"
-              className={`absolute transition-shadow ${
+              className={`absolute transition-shadow pointer-events-auto ${
                 selectedElement === element.id
                   ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent"
                   : ""
