@@ -240,7 +240,9 @@ export default function IdeaPage() {
 
   // Canvas click handler
   function handleCanvasClick(e: React.MouseEvent) {
-    if (e.target !== canvasRef.current) return;
+    // Only handle clicks on the canvas background, not on elements
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-element]')) return;
 
     const pos = getCanvasPosition(e);
 
@@ -727,6 +729,7 @@ export default function IdeaPage() {
           {elements.map((element) => (
             <div
               key={element.id}
+              data-element="true"
               className={`absolute transition-shadow ${
                 selectedElement === element.id
                   ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent"
