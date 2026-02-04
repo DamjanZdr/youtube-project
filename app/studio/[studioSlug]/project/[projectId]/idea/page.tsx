@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,7 @@ interface WhiteboardConnection {
 }
 
 type Tool = "select" | "panel" | "text" | "draw";
+type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 const COLORS = [
   "#1a1a2e", "#2d2d44", "#3d3d5c",
@@ -69,8 +70,10 @@ const TEXT_COLORS = [
   "#93c5fd", "#c4b5fd", "#f0abfc",
 ];
 
-const DRAG_THRESHOLD = 5;
-const HANDLE_SIZE = 10;
+const MIN_WIDTH = 80;
+const MIN_HEIGHT = 40;
+const DEFAULT_WIDTH = 140;
+const DEFAULT_HEIGHT = 60;
 
 export default function IdeaPage() {
   const params = useParams();
@@ -78,6 +81,8 @@ export default function IdeaPage() {
   const supabase = createClient();
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const [elements, setElements] = useState<WhiteboardElement[]>([]);
   const [connections, setConnections] = useState<WhiteboardConnection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,33 +90,49 @@ export default function IdeaPage() {
   const [activeTool, setActiveTool] = useState<Tool>("select");
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [editingElement, setEditingElement] = useState<string | null>(null);
-  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
-  
 
-  const [connectingFrom, setConnectingFrom] = useState<{ elementId: string; side: string; startX: number; startY: number } | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [hoverTargetId, setHoverTargetId] = useState<string | null>(null);
+  // Drag state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
+  // Resize state
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 0, h: 0, ex: 0, ey: 0 });
+
+  // Connection state
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [connectMousePos, setConnectMousePos] = useState({ x: 0, y: 0 });
+  const [connectTarget, setConnectTarget] = useState<string | null>(null);
+
+  // Viewport state
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
+  // Drawing state
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawPath, setDrawPath] = useState<string>("");
   const [drawColor, setDrawColor] = useState("#ffffff");
 
-  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
-  const [mouseDownElement, setMouseDownElement] = useState<WhiteboardElement | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
+  // History
   const [history, setHistory] = useState<WhiteboardElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  // Load whiteboard
   useEffect(() => {
     loadWhiteboard();
   }, [projectId]);
+
+  // Debounced auto-save
+  const debouncedSave = useCallback((element: Partial<WhiteboardElement> & { id: string }) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      await supabase.from("project_whiteboard_elements").update(element).eq("id", element.id);
+    }, 500);
+  }, [supabase]);
 
   async function loadWhiteboard() {
     setLoading(true);
@@ -142,27 +163,23 @@ export default function IdeaPage() {
     }
   }
 
-  async function saveElement(element: Partial<WhiteboardElement> & { id?: string }) {
-    if (element.id) {
-      await supabase.from("project_whiteboard_elements").update(element).eq("id", element.id);
-    } else {
-      const tempId = crypto.randomUUID();
-      const tempElement = { ...element, id: tempId } as WhiteboardElement;
-      setElements((prev) => [...prev, tempElement]);
+  async function createElement(element: Partial<WhiteboardElement>) {
+    const tempId = crypto.randomUUID();
+    const tempElement = { ...element, id: tempId } as WhiteboardElement;
+    setElements((prev) => [...prev, tempElement]);
 
-      const { data, error } = await supabase
-        .from("project_whiteboard_elements")
-        .insert({ ...element, project_id: projectId })
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from("project_whiteboard_elements")
+      .insert({ ...element, project_id: projectId })
+      .select()
+      .single();
 
-      if (error) {
-        toast.error("Failed to create element");
-        setElements((prev) => prev.filter((el) => el.id !== tempId));
-      } else if (data) {
-        setElements((prev) => prev.map((el) => (el.id === tempId ? data : el)));
-        pushHistory([...elements, data]);
-      }
+    if (error) {
+      toast.error("Failed to create element");
+      setElements((prev) => prev.filter((el) => el.id !== tempId));
+    } else if (data) {
+      setElements((prev) => prev.map((el) => (el.id === tempId ? data : el)));
+      pushHistory([...elements.filter(el => el.id !== tempId), data]);
     }
   }
 
@@ -215,7 +232,7 @@ export default function IdeaPage() {
     }
   }
 
-  function getCanvasPosition(e: React.MouseEvent | MouseEvent): { x: number; y: number } {
+  function getCanvasPos(e: React.MouseEvent | MouseEvent): { x: number; y: number } {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     return {
@@ -224,178 +241,141 @@ export default function IdeaPage() {
     };
   }
 
-  async function updateElementContent(id: string, content: string) {
-    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, content } : el)));
-    await supabase.from("project_whiteboard_elements").update({ content }).eq("id", id);
+  function getElementBounds(el: WhiteboardElement) {
+    const w = el.width ?? DEFAULT_WIDTH;
+    const h = el.height ?? DEFAULT_HEIGHT;
+    return { x: el.x, y: el.y, w, h };
   }
 
-  async function updateElementColor(id: string, colorKey: string, color: string) {
-    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, [colorKey]: color } : el)));
-    await supabase.from("project_whiteboard_elements").update({ [colorKey]: color }).eq("id", id);
-  }
-
-  function getElementSize(element: WhiteboardElement): { w: number; h: number } {
-    if (element.element_type === "panel") {
-      const content = element.content || "";
-      if (!content.trim()) {
-        return { w: 70, h: 34 };
-      }
-      const lines = content.split("\n");
-      const maxLineLength = Math.max(...lines.map((l) => l.length), 1);
-      const w = Math.max(70, Math.min(280, maxLineLength * 8 + 24));
-      const h = Math.max(34, lines.length * 18 + 16);
-      return { w, h };
-    }
-    return { w: element.width || 80, h: element.height || 28 };
-  }
-
-  function getElementCenter(element: WhiteboardElement): { x: number; y: number } {
-    const size = getElementSize(element);
-    return { x: element.x + size.w / 2, y: element.y + size.h / 2 };
-  }
-
-  function getHandlePosition(element: WhiteboardElement, side: string): { x: number; y: number } {
-    const size = getElementSize(element);
-    switch (side) {
-      case "top": return { x: element.x + size.w / 2, y: element.y };
-      case "right": return { x: element.x + size.w, y: element.y + size.h / 2 };
-      case "bottom": return { x: element.x + size.w / 2, y: element.y + size.h };
-      case "left": return { x: element.x, y: element.y + size.h / 2 };
-      default: return { x: element.x, y: element.y };
-    }
-  }
-
-  function getBestConnectionPoints(source: WhiteboardElement, target: WhiteboardElement): { start: { x: number; y: number }; end: { x: number; y: number } } {
-    const sourceCenter = getElementCenter(source);
-    const targetCenter = getElementCenter(target);
-    const sourceSize = getElementSize(source);
-    const targetSize = getElementSize(target);
-
-    // Determine best sides based on relative position
-    const dx = targetCenter.x - sourceCenter.x;
-    const dy = targetCenter.y - sourceCenter.y;
-
-    let startSide: string, endSide: string;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      startSide = dx > 0 ? "right" : "left";
-      endSide = dx > 0 ? "left" : "right";
-    } else {
-      startSide = dy > 0 ? "bottom" : "top";
-      endSide = dy > 0 ? "top" : "bottom";
-    }
-
-    return {
-      start: getHandlePosition(source, startSide),
-      end: getHandlePosition(target, endSide),
-    };
-  }
-
-  function getConnectionPath(connection: WhiteboardConnection): string {
-    const source = elements.find((el) => el.id === connection.source_element_id);
-    const target = elements.find((el) => el.id === connection.target_element_id);
+  function getConnectionPath(conn: WhiteboardConnection): string {
+    const source = elements.find((el) => el.id === conn.source_element_id);
+    const target = elements.find((el) => el.id === conn.target_element_id);
     if (!source || !target) return "";
 
-    const { start, end } = getBestConnectionPoints(source, target);
+    const s = getElementBounds(source);
+    const t = getElementBounds(target);
 
-    // Smooth bezier curve
-    const midX = (start.x + end.x) / 2;
-    const midY = (start.y + end.y) / 2;
-    const dx = Math.abs(end.x - start.x);
-    const dy = Math.abs(end.y - start.y);
-    const curve = Math.min(dx, dy) * 0.5;
+    const sx = s.x + s.w / 2;
+    const sy = s.y + s.h / 2;
+    const tx = t.x + t.w / 2;
+    const ty = t.y + t.h / 2;
 
-    if (dx > dy) {
-      return `M ${start.x} ${start.y} C ${start.x + curve} ${start.y}, ${end.x - curve} ${end.y}, ${end.x} ${end.y}`;
+    // Bezier curve
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const ctrl = Math.min(Math.abs(dx), Math.abs(dy), 80);
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return `M ${sx} ${sy} C ${sx + ctrl * Math.sign(dx)} ${sy}, ${tx - ctrl * Math.sign(dx)} ${ty}, ${tx} ${ty}`;
     } else {
-      return `M ${start.x} ${start.y} C ${start.x} ${start.y + curve}, ${end.x} ${end.y - curve}, ${end.x} ${end.y}`;
+      return `M ${sx} ${sy} C ${sx} ${sy + ctrl * Math.sign(dy)}, ${tx} ${ty - ctrl * Math.sign(dy)}, ${tx} ${ty}`;
     }
   }
 
-  function getHandlePositions(element: WhiteboardElement) {
-    const size = getElementSize(element);
-    return {
-      top: { x: element.x + size.w / 2, y: element.y },
-      right: { x: element.x + size.w, y: element.y + size.h / 2 },
-      bottom: { x: element.x + size.w / 2, y: element.y + size.h },
-      left: { x: element.x, y: element.y + size.h / 2 },
-    };
-  }
-
+  // Canvas handlers
   function handleCanvasMouseDown(e: React.MouseEvent) {
     const target = e.target as HTMLElement;
 
+    // Pan with middle click or alt+click
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
 
-    if (!target.closest("[data-element]") && !target.closest("[data-handle]")) {
-      const pos = getCanvasPosition(e);
+    // Ignore if clicking on element or handle
+    if (target.closest("[data-element]") || target.closest("[data-resize]") || target.closest("[data-connector]")) {
+      return;
+    }
 
-      if (activeTool === "draw") {
-        setIsDrawing(true);
-        setDrawPath(`M ${pos.x} ${pos.y}`);
-      } else if (activeTool === "panel") {
-        saveElement({
-          element_type: "panel",
-          x: pos.x,
-          y: pos.y,
-          width: null,
-          height: null,
-          background_color: "#1a1a2e",
-          border_color: "#ffffff20",
-          text_color: "#ffffff",
-          font_size: 14,
-          title: null,
-          content: "",
-          z_index: elements.length,
-        });
-      } else if (activeTool === "text") {
-        saveElement({
-          element_type: "text",
-          x: pos.x,
-          y: pos.y,
-          width: null,
-          height: null,
-          background_color: "transparent",
-          border_color: "transparent",
-          text_color: "#ffffff",
-          font_size: 16,
-          title: null,
-          content: "Text",
-          z_index: elements.length,
-        });
-      } else if (activeTool === "select") {
-        setSelectedElement(null);
-        setEditingElement(null);
-        if (connectingFrom) {
-          setConnectingFrom(null);
-          setHoverTargetId(null);
-        }
+    const pos = getCanvasPos(e);
+
+    if (activeTool === "draw") {
+      setIsDrawing(true);
+      setDrawPath(`M ${pos.x} ${pos.y}`);
+    } else if (activeTool === "panel") {
+      createElement({
+        element_type: "panel",
+        x: pos.x - DEFAULT_WIDTH / 2,
+        y: pos.y - DEFAULT_HEIGHT / 2,
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT,
+        background_color: "#1a1a2e",
+        border_color: "#ffffff20",
+        text_color: "#ffffff",
+        font_size: 14,
+        title: null,
+        content: "",
+        z_index: elements.length,
+      });
+    } else if (activeTool === "text") {
+      createElement({
+        element_type: "text",
+        x: pos.x,
+        y: pos.y,
+        width: null,
+        height: null,
+        background_color: "transparent",
+        border_color: "transparent",
+        text_color: "#ffffff",
+        font_size: 16,
+        title: null,
+        content: "Text",
+        z_index: elements.length,
+      });
+    } else if (activeTool === "select") {
+      setSelectedElement(null);
+      setEditingElement(null);
+      if (isConnecting) {
+        setIsConnecting(false);
+        setConnectFrom(null);
+        setConnectTarget(null);
       }
     }
   }
 
-  function handleElementMouseDown(e: React.MouseEvent, element: WhiteboardElement) {
+  function handleElementMouseDown(e: React.MouseEvent, el: WhiteboardElement) {
     if (activeTool !== "select") return;
     e.stopPropagation();
 
-    const pos = getCanvasPosition(e);
-    setMouseDownPos(pos);
-    setMouseDownElement(element);
-    setDragOffset({ x: element.x - pos.x, y: element.y - pos.y });
+    // If connecting, complete connection
+    if (isConnecting && connectFrom && connectFrom !== el.id) {
+      saveConnection(connectFrom, el.id);
+      setIsConnecting(false);
+      setConnectFrom(null);
+      setConnectTarget(null);
+      return;
+    }
+
+    setSelectedElement(el.id);
+    setIsDragging(true);
+    const pos = getCanvasPos(e);
+    setDragOffset({ x: el.x - pos.x, y: el.y - pos.y });
   }
 
-  function handleHandleMouseDown(e: React.MouseEvent, elementId: string, side: string) {
+  function handleElementDoubleClick(e: React.MouseEvent, el: WhiteboardElement) {
+    if (activeTool !== "select") return;
     e.stopPropagation();
-    e.preventDefault();
-    const pos = getCanvasPosition(e);
-    const element = elements.find(el => el.id === elementId);
-    if (!element) return;
-    const handlePos = getHandlePosition(element, side);
-    setConnectingFrom({ elementId, side, startX: handlePos.x, startY: handlePos.y });
-    setMousePos(pos);
+    if (el.element_type !== "drawing") {
+      setEditingElement(el.id);
+    }
+  }
+
+  function handleResizeMouseDown(e: React.MouseEvent, el: WhiteboardElement, handle: ResizeHandle) {
+    e.stopPropagation();
+    setSelectedElement(el.id);
+    setIsResizing(true);
+    setResizeHandle(handle);
+    const pos = getCanvasPos(e);
+    const bounds = getElementBounds(el);
+    setResizeStart({ x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h, ex: pos.x, ey: pos.y });
+  }
+
+  function handleConnectorMouseDown(e: React.MouseEvent, elId: string) {
+    e.stopPropagation();
+    setIsConnecting(true);
+    setConnectFrom(elId);
+    setConnectMousePos(getCanvasPos(e));
   }
 
   function handleMouseMove(e: React.MouseEvent) {
@@ -405,70 +385,94 @@ export default function IdeaPage() {
       return;
     }
 
-    if (connectingFrom) {
-      const pos = getCanvasPosition(e);
-      setMousePos(pos);
-      
-      // Check if hovering over a potential target element
+    const pos = getCanvasPos(e);
+
+    if (isConnecting) {
+      setConnectMousePos(pos);
+      // Check hover target
       const target = e.target as HTMLElement;
-      const elementDiv = target.closest("[data-element]");
-      if (elementDiv) {
-        const targetId = elementDiv.getAttribute("data-element-id");
-        if (targetId && targetId !== connectingFrom.elementId) {
-          setHoverTargetId(targetId);
+      const elDiv = target.closest("[data-element]");
+      if (elDiv) {
+        const targetId = elDiv.getAttribute("data-element-id");
+        if (targetId && targetId !== connectFrom) {
+          setConnectTarget(targetId);
         } else {
-          setHoverTargetId(null);
+          setConnectTarget(null);
         }
       } else {
-        setHoverTargetId(null);
+        setConnectTarget(null);
       }
       return;
     }
 
     if (isDrawing && activeTool === "draw") {
-      const pos = getCanvasPosition(e);
       setDrawPath((prev) => `${prev} L ${pos.x} ${pos.y}`);
       return;
     }
 
-    if (mouseDownPos && mouseDownElement && !isDragging) {
-      const pos = getCanvasPosition(e);
-      const dist = Math.sqrt(Math.pow(pos.x - mouseDownPos.x, 2) + Math.pow(pos.y - mouseDownPos.y, 2));
-      if (dist > DRAG_THRESHOLD) {
-        setIsDragging(true);
-        setSelectedElement(mouseDownElement.id);
-        setEditingElement(null);
+    if (isResizing && selectedElement && resizeHandle) {
+      const el = elements.find((e) => e.id === selectedElement);
+      if (!el) return;
+
+      const dx = pos.x - resizeStart.ex;
+      const dy = pos.y - resizeStart.ey;
+      let newX = resizeStart.x;
+      let newY = resizeStart.y;
+      let newW = resizeStart.w;
+      let newH = resizeStart.h;
+
+      // Handle resize directions
+      if (resizeHandle.includes("e")) newW = Math.max(MIN_WIDTH, resizeStart.w + dx);
+      if (resizeHandle.includes("w")) {
+        const dw = Math.min(dx, resizeStart.w - MIN_WIDTH);
+        newX = resizeStart.x + dw;
+        newW = resizeStart.w - dw;
       }
+      if (resizeHandle.includes("s")) newH = Math.max(MIN_HEIGHT, resizeStart.h + dy);
+      if (resizeHandle.includes("n")) {
+        const dh = Math.min(dy, resizeStart.h - MIN_HEIGHT);
+        newY = resizeStart.y + dh;
+        newH = resizeStart.h - dh;
+      }
+
+      setElements((prev) =>
+        prev.map((item) =>
+          item.id === selectedElement
+            ? { ...item, x: newX, y: newY, width: newW, height: newH }
+            : item
+        )
+      );
+      return;
     }
 
-    if (isDragging && mouseDownElement) {
-      const pos = getCanvasPosition(e);
+    if (isDragging && selectedElement) {
       setElements((prev) =>
-        prev.map((el) => (el.id === mouseDownElement.id ? { ...el, x: pos.x + dragOffset.x, y: pos.y + dragOffset.y } : el))
+        prev.map((item) =>
+          item.id === selectedElement
+            ? { ...item, x: pos.x + dragOffset.x, y: pos.y + dragOffset.y }
+            : item
+        )
       );
     }
   }
 
-  function handleMouseUp(e: React.MouseEvent) {
-    if (connectingFrom) {
-      if (hoverTargetId) {
-        saveConnection(connectingFrom.elementId, hoverTargetId);
-      }
-      setConnectingFrom(null);
-      setHoverTargetId(null);
-      return;
+  function handleMouseUp() {
+    if (isConnecting && connectFrom && connectTarget) {
+      saveConnection(connectFrom, connectTarget);
     }
 
-    if (isDragging && mouseDownElement) {
-      const element = elements.find((el) => el.id === mouseDownElement.id);
-      if (element) saveElement({ id: element.id, x: element.x, y: element.y });
-    } else if (mouseDownElement && !isDragging) {
-      setSelectedElement(mouseDownElement.id);
-      setEditingElement(mouseDownElement.id);
+    if (isDragging && selectedElement) {
+      const el = elements.find((e) => e.id === selectedElement);
+      if (el) debouncedSave({ id: el.id, x: el.x, y: el.y });
+    }
+
+    if (isResizing && selectedElement) {
+      const el = elements.find((e) => e.id === selectedElement);
+      if (el) debouncedSave({ id: el.id, x: el.x, y: el.y, width: el.width, height: el.height });
     }
 
     if (isDrawing && drawPath) {
-      saveElement({
+      createElement({
         element_type: "drawing",
         x: 0,
         y: 0,
@@ -487,9 +491,22 @@ export default function IdeaPage() {
 
     setIsPanning(false);
     setIsDragging(false);
+    setIsResizing(false);
+    setResizeHandle(null);
     setIsDrawing(false);
-    setMouseDownPos(null);
-    setMouseDownElement(null);
+    setIsConnecting(false);
+    setConnectFrom(null);
+    setConnectTarget(null);
+  }
+
+  async function updateContent(id: string, content: string) {
+    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, content } : el)));
+    debouncedSave({ id, content });
+  }
+
+  async function updateColor(id: string, key: string, color: string) {
+    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, [key]: color } : el)));
+    debouncedSave({ id, [key]: color });
   }
 
   if (loading) {
@@ -502,35 +519,27 @@ export default function IdeaPage() {
 
   const selectedEl = elements.find((el) => el.id === selectedElement);
 
+  // Resize handle cursors
+  const cursorMap: Record<ResizeHandle, string> = {
+    n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize",
+    ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize",
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
+      {/* Toolbar */}
       <div className="glass-strong border-b border-white/5 p-2 flex items-center gap-2">
         <div className="flex items-center gap-1 px-2 border-r border-white/10">
-          <Button variant={activeTool === "select" ? "secondary" : "ghost"} size="icon" onClick={() => setActiveTool("select")} title="Select">
+          <Button variant={activeTool === "select" ? "secondary" : "ghost"} size="icon" onClick={() => setActiveTool("select")} title="Select (V)">
             <MousePointer2 className="w-4 h-4" />
           </Button>
-          <Button
-            variant={activeTool === "panel" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => { setActiveTool("panel"); setSelectedElement(null); setEditingElement(null); }}
-            title="Add Panel"
-          >
+          <Button variant={activeTool === "panel" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("panel"); setSelectedElement(null); }} title="Add Box (B)">
             <Square className="w-4 h-4" />
           </Button>
-          <Button
-            variant={activeTool === "text" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => { setActiveTool("text"); setSelectedElement(null); setEditingElement(null); }}
-            title="Add Text"
-          >
+          <Button variant={activeTool === "text" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("text"); setSelectedElement(null); }} title="Add Text (T)">
             <Type className="w-4 h-4" />
           </Button>
-          <Button
-            variant={activeTool === "draw" ? "secondary" : "ghost"}
-            size="icon"
-            onClick={() => { setActiveTool("draw"); setSelectedElement(null); setEditingElement(null); }}
-            title="Draw"
-          >
+          <Button variant={activeTool === "draw" ? "secondary" : "ghost"} size="icon" onClick={() => { setActiveTool("draw"); setSelectedElement(null); }} title="Draw (D)">
             <Pencil className="w-4 h-4" />
           </Button>
         </div>
@@ -545,7 +554,7 @@ export default function IdeaPage() {
             <PopoverContent className="w-auto p-2">
               <div className="grid grid-cols-5 gap-1">
                 {TEXT_COLORS.map((color) => (
-                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => setDrawColor(color)} />
+                  <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setDrawColor(color)} />
                 ))}
               </div>
             </PopoverContent>
@@ -565,7 +574,7 @@ export default function IdeaPage() {
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "background_color", color)} />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "background_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
@@ -580,7 +589,7 @@ export default function IdeaPage() {
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "border_color", color)} />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "border_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
@@ -595,7 +604,7 @@ export default function IdeaPage() {
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
                   {TEXT_COLORS.map((color) => (
-                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110" style={{ backgroundColor: color }} onClick={() => updateElementColor(selectedEl.id, "text_color", color)} />
+                    <button key={color} className="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => updateColor(selectedEl.id, "text_color", color)} />
                   ))}
                 </div>
               </PopoverContent>
@@ -614,10 +623,8 @@ export default function IdeaPage() {
         <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
           <Redo className="w-4 h-4" />
         </Button>
-
         <div className="h-6 w-px bg-white/10" />
-
-        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z / 1.2, 0.3))} title="Zoom Out">
+        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z / 1.2, 0.25))} title="Zoom Out">
           <ZoomOut className="w-4 h-4" />
         </Button>
         <span className="text-xs text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
@@ -629,168 +636,196 @@ export default function IdeaPage() {
         </Button>
       </div>
 
+      {/* Canvas */}
       <div
         ref={canvasRef}
-        className="flex-1 relative overflow-hidden"
+        className="flex-1 relative overflow-hidden select-none"
         style={{
           background: "radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%)",
           backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
-          cursor: connectingFrom 
-            ? "crosshair" 
-            : activeTool === "draw" 
-              ? "crosshair" 
-              : activeTool === "select" 
-                ? "default" 
-                : "crosshair",
+          cursor: isConnecting ? "crosshair" : activeTool === "draw" ? "crosshair" : activeTool === "select" ? "default" : "crosshair",
         }}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onWheel={(e) => { e.preventDefault(); setZoom((z) => Math.min(Math.max(z * (e.deltaY > 0 ? 0.9 : 1.1), 0.3), 3)); }}
+        onWheel={(e) => { e.preventDefault(); setZoom((z) => Math.min(Math.max(z * (e.deltaY > 0 ? 0.9 : 1.1), 0.25), 3)); }}
       >
-        <div className="pointer-events-none" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
+        <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
+          {/* SVG Connections */}
           <svg className="absolute inset-0 pointer-events-none" style={{ overflow: "visible" }}>
             <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff60" />
+              <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ffffff50" />
               </marker>
-              <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <marker id="arrow-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
               </marker>
             </defs>
             {connections.map((c) => (
-              <path key={c.id} d={getConnectionPath(c)} stroke={c.line_color} strokeWidth={c.line_width} fill="none" markerEnd="url(#arrowhead)" />
+              <path key={c.id} d={getConnectionPath(c)} stroke="#ffffff50" strokeWidth={2} fill="none" markerEnd="url(#arrow)" />
             ))}
-            {connectingFrom && (
+            {/* Connection preview */}
+            {isConnecting && connectFrom && (
               <g>
-                {/* Connection line from handle to cursor */}
-                <line 
-                  x1={connectingFrom.startX} 
-                  y1={connectingFrom.startY} 
-                  x2={mousePos.x} 
-                  y2={mousePos.y} 
-                  stroke={hoverTargetId ? "#22c55e" : "#60a5fa"} 
-                  strokeWidth={2} 
-                  strokeDasharray={hoverTargetId ? "none" : "6 3"}
-                  markerEnd={hoverTargetId ? "url(#arrowhead-active)" : undefined}
-                />
-                {/* Animated circle at cursor when not over target */}
-                {!hoverTargetId && (
-                  <circle cx={mousePos.x} cy={mousePos.y} r={6} fill="#60a5fa" opacity={0.6}>
-                    <animate attributeName="r" values="6;8;6" dur="1s" repeatCount="indefinite" />
-                  </circle>
-                )}
+                {(() => {
+                  const fromEl = elements.find((e) => e.id === connectFrom);
+                  if (!fromEl) return null;
+                  const b = getElementBounds(fromEl);
+                  const sx = b.x + b.w / 2;
+                  const sy = b.y + b.h / 2;
+                  return (
+                    <>
+                      <line
+                        x1={sx}
+                        y1={sy}
+                        x2={connectMousePos.x}
+                        y2={connectMousePos.y}
+                        stroke={connectTarget ? "#22c55e" : "#60a5fa"}
+                        strokeWidth={2}
+                        strokeDasharray={connectTarget ? undefined : "6 4"}
+                        markerEnd={connectTarget ? "url(#arrow-active)" : undefined}
+                      />
+                      {!connectTarget && (
+                        <circle cx={connectMousePos.x} cy={connectMousePos.y} r={5} fill="#60a5fa">
+                          <animate attributeName="r" values="5;7;5" dur="0.8s" repeatCount="indefinite" />
+                        </circle>
+                      )}
+                    </>
+                  );
+                })()}
               </g>
             )}
-            {drawPath && <path d={drawPath} stroke={drawColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+            {/* Draw preview */}
+            {drawPath && (
+              <path d={drawPath} stroke={drawColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            )}
           </svg>
 
-          {elements.map((element) => {
-            const isSelected = selectedElement === element.id;
-            const isEditing = editingElement === element.id;
-            const isHovered = hoveredElement === element.id;
-            const isConnectSource = connectingFrom?.elementId === element.id;
-            const isConnectTarget = connectingFrom && connectingFrom.elementId !== element.id;
-            const isHoverTarget = hoverTargetId === element.id;
-            const showHandles = (isSelected || isHovered) && activeTool === "select" && !isDragging && !connectingFrom;
-            const handles = getHandlePositions(element);
-            const size = getElementSize(element);
+          {/* Elements */}
+          {elements.map((el) => {
+            const isSelected = selectedElement === el.id;
+            const isEditing = editingElement === el.id;
+            const isConnectSrc = connectFrom === el.id;
+            const isConnectTgt = isConnecting && connectFrom !== el.id;
+            const isHoverTgt = connectTarget === el.id;
+            const bounds = getElementBounds(el);
+
+            if (el.element_type === "drawing") {
+              return (
+                <svg
+                  key={el.id}
+                  data-element="true"
+                  data-element-id={el.id}
+                  className="absolute pointer-events-auto"
+                  style={{ overflow: "visible", left: 0, top: 0, cursor: activeTool === "select" ? "pointer" : "default" }}
+                  onClick={() => activeTool === "select" && setSelectedElement(el.id)}
+                >
+                  <path
+                    d={el.content || ""}
+                    stroke={isSelected ? "#60a5fa" : el.border_color}
+                    strokeWidth={el.font_size}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              );
+            }
 
             return (
               <div
-                key={element.id}
+                key={el.id}
                 data-element="true"
-                data-element-id={element.id}
-                className={`absolute pointer-events-auto transition-all duration-150 ${
-                  isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : ""
-                } ${isConnectSource ? "ring-2 ring-blue-400 opacity-50" : ""} ${
-                  isHoverTarget ? "ring-2 ring-green-500 scale-105" : ""
-                } ${isConnectTarget && !isHoverTarget ? "opacity-70" : ""}`}
+                data-element-id={el.id}
+                className={`absolute pointer-events-auto transition-shadow ${
+                  isSelected ? "shadow-lg shadow-primary/20" : ""
+                } ${isConnectSrc ? "ring-2 ring-blue-400 opacity-60" : ""} ${
+                  isHoverTgt ? "ring-2 ring-green-500 shadow-lg shadow-green-500/30" : ""
+                } ${isConnectTgt && !isHoverTgt ? "opacity-80" : ""}`}
                 style={{
-                  left: element.x,
-                  top: element.y,
-                  width: element.element_type === "panel" ? size.w : "auto",
-                  minHeight: element.element_type === "panel" ? size.h : "auto",
-                  backgroundColor: element.background_color,
-                  borderColor: isHoverTarget ? "#22c55e" : element.border_color,
-                  borderWidth: element.element_type === "panel" ? (isHoverTarget ? 2 : 1) : 0,
-                  borderRadius: element.element_type === "panel" ? 8 : 0,
-                  cursor: connectingFrom 
-                    ? (isConnectTarget ? "pointer" : "not-allowed")
-                    : activeTool === "select" 
-                      ? (isDragging ? "grabbing" : "grab") 
-                      : "default",
-                  zIndex: isHoverTarget ? 1000 : element.z_index,
+                  left: bounds.x,
+                  top: bounds.y,
+                  width: bounds.w,
+                  height: bounds.h,
+                  backgroundColor: el.background_color,
+                  border: `1px solid ${isHoverTgt ? "#22c55e" : isSelected ? "#60a5fa" : el.border_color}`,
+                  borderRadius: 8,
+                  cursor: isConnecting ? (isConnectTgt ? "pointer" : "not-allowed") : isDragging ? "grabbing" : "grab",
+                  zIndex: isHoverTgt ? 1000 : el.z_index,
                 }}
-                onMouseDown={(e) => handleElementMouseDown(e, element)}
-                onMouseEnter={() => setHoveredElement(element.id)}
-                onMouseLeave={() => setHoveredElement(null)}
+                onMouseDown={(e) => handleElementMouseDown(e, el)}
+                onDoubleClick={(e) => handleElementDoubleClick(e, el)}
               >
-                {element.element_type === "panel" && (
-                  <div className="p-2">
-                    {isEditing ? (
-                      <textarea
-                        autoFocus
-                        value={element.content || ""}
-                        onChange={(e) => updateElementContent(element.id, e.target.value)}
-                        onBlur={() => setEditingElement(null)}
-                        className="w-full bg-transparent border-none outline-none resize-none text-sm"
-                        style={{ color: element.text_color, fontSize: element.font_size, minHeight: 20 }}
-                        placeholder="Type here..."
-                        onMouseDown={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <div className="text-sm whitespace-pre-wrap" style={{ color: element.text_color, fontSize: element.font_size, minHeight: 20 }}>
-                        {element.content || <span className="opacity-40">Click to edit</span>}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {element.element_type === "text" &&
-                  (isEditing ? (
+                {/* Content */}
+                <div className="w-full h-full p-2 overflow-hidden">
+                  {isEditing ? (
                     <textarea
                       autoFocus
-                      value={element.content || ""}
-                      onChange={(e) => updateElementContent(element.id, e.target.value)}
+                      value={el.content || ""}
+                      onChange={(e) => updateContent(el.id, e.target.value)}
                       onBlur={() => setEditingElement(null)}
-                      className="bg-transparent border-none outline-none resize-none"
-                      style={{ color: element.text_color, fontSize: element.font_size, minWidth: 50 }}
+                      onKeyDown={(e) => e.key === "Escape" && setEditingElement(null)}
+                      className="w-full h-full bg-transparent border-none outline-none resize-none text-sm"
+                      style={{ color: el.text_color, fontSize: el.font_size }}
+                      placeholder="Type here..."
                       onMouseDown={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <div className="whitespace-pre-wrap" style={{ color: element.text_color, fontSize: element.font_size }}>
-                      {element.content || "Text"}
+                    <div
+                      className="w-full h-full text-sm whitespace-pre-wrap overflow-hidden"
+                      style={{ color: el.text_color, fontSize: el.font_size }}
+                    >
+                      {el.content || <span className="opacity-40">Double-click to edit</span>}
                     </div>
-                  ))}
-                {element.element_type === "drawing" && (
-                  <svg className="pointer-events-none" style={{ overflow: "visible", position: "absolute", left: 0, top: 0 }}>
-                    <path d={element.content || ""} stroke={element.border_color} strokeWidth={element.font_size} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
+                  )}
+                </div>
 
-                {showHandles && element.element_type !== "drawing" && (
+                {/* Resize handles (8 points) - only when selected */}
+                {isSelected && !isEditing && (
                   <>
-                    {(["top", "right", "bottom", "left"] as const).map((side) => {
-                      const pos = handles[side];
-                      const offset = HANDLE_SIZE / 2;
+                    {(["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeHandle[]).map((handle) => {
+                      const style: React.CSSProperties = {
+                        position: "absolute",
+                        width: 8,
+                        height: 8,
+                        backgroundColor: "#60a5fa",
+                        border: "2px solid white",
+                        borderRadius: 2,
+                        cursor: cursorMap[handle],
+                        zIndex: 10,
+                      };
+                      // Position handles
+                      if (handle === "n") { style.top = -4; style.left = "50%"; style.marginLeft = -4; }
+                      if (handle === "s") { style.bottom = -4; style.left = "50%"; style.marginLeft = -4; }
+                      if (handle === "e") { style.right = -4; style.top = "50%"; style.marginTop = -4; }
+                      if (handle === "w") { style.left = -4; style.top = "50%"; style.marginTop = -4; }
+                      if (handle === "ne") { style.top = -4; style.right = -4; }
+                      if (handle === "nw") { style.top = -4; style.left = -4; }
+                      if (handle === "se") { style.bottom = -4; style.right = -4; }
+                      if (handle === "sw") { style.bottom = -4; style.left = -4; }
+
                       return (
                         <div
-                          key={side}
-                          data-handle="true"
-                          className="absolute bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-crosshair hover:bg-blue-400 hover:scale-125 transition-all z-50"
-                          style={{ 
-                            width: HANDLE_SIZE, 
-                            height: HANDLE_SIZE,
-                            left: pos.x - element.x - offset, 
-                            top: pos.y - element.y - offset,
-                          }}
-                          onMouseDown={(e) => handleHandleMouseDown(e, element.id, side)}
+                          key={handle}
+                          data-resize={handle}
+                          style={style}
+                          onMouseDown={(e) => handleResizeMouseDown(e, el, handle)}
                         />
                       );
                     })}
+
+                    {/* Connector button (center right) */}
+                    <div
+                      data-connector="true"
+                      className="absolute w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-md cursor-crosshair hover:scale-110 transition-transform flex items-center justify-center"
+                      style={{ right: -10, top: "50%", marginTop: -10, zIndex: 20 }}
+                      onMouseDown={(e) => handleConnectorMouseDown(e, el.id)}
+                    >
+                      <Plus className="w-3 h-3 text-white" />
+                    </div>
                   </>
                 )}
               </div>
@@ -798,13 +833,15 @@ export default function IdeaPage() {
           })}
         </div>
 
-        {connectingFrom && (
+        {/* Connection hint */}
+        {isConnecting && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass rounded-lg text-sm flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${hoverTargetId ? "bg-green-500" : "bg-blue-400 animate-pulse"}`} />
-            {hoverTargetId ? "Release to connect" : "Drag to another panel to connect"}
+            <div className={`w-2 h-2 rounded-full ${connectTarget ? "bg-green-500" : "bg-blue-400 animate-pulse"}`} />
+            {connectTarget ? "Release to connect" : "Drag to another box to connect"}
           </div>
         )}
 
+        {/* Empty state */}
         {elements.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
@@ -812,7 +849,9 @@ export default function IdeaPage() {
                 <Plus className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Start brainstorming</h3>
-              <p className="text-muted-foreground text-sm max-w-xs">Click to add panels. Hover to see connection handles.</p>
+              <p className="text-muted-foreground text-sm max-w-xs">
+                Click to add boxes. Double-click to edit. Drag the green connector to link boxes.
+              </p>
             </div>
           </div>
         )}
