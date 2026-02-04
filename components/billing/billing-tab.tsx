@@ -49,6 +49,15 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     message: "",
   });
 
+  // Key Activation Confirmation Dialog
+  const [keyConfirmDialog, setKeyConfirmDialog] = useState<{
+    open: boolean;
+    pendingKey: PendingKey | null;
+  }>({
+    open: false,
+    pendingKey: null,
+  });
+
   // Redeem Key State
   const [redeemKey, setRedeemKey] = useState("");
   const [redeemLoading, setRedeemLoading] = useState(false);
@@ -263,6 +272,80 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
     } finally {
       setRedeemLoading(false);
     }
+  };
+
+  const openKeyConfirmDialog = (pendingKey: PendingKey) => {
+    setKeyConfirmDialog({ open: true, pendingKey });
+  };
+
+  const handleConfirmKeyActivation = async () => {
+    if (!keyConfirmDialog.pendingKey) return;
+    
+    const key = keyConfirmDialog.pendingKey.key;
+    setKeyConfirmDialog({ open: false, pendingKey: null });
+    setRedeemLoading(true);
+    
+    try {
+      const res = await fetch("/api/keys/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, organization_id: studioId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to redeem key");
+      } else {
+        // Build success message
+        let successMsg = data.message || `Activated ${data.plan} plan`;
+        if (data.extended) {
+          toast.success(`🎉 ${successMsg} - Time extended!`);
+        } else if (data.upgraded) {
+          toast.success(`🚀 ${successMsg}`);
+        } else {
+          toast.success(successMsg);
+        }
+        window.location.reload();
+      }
+    } catch (err) {
+      toast.error("Failed to redeem key");
+    } finally {
+      setRedeemLoading(false);
+    }
+  };
+
+  // Helper to get what happens when activating a key
+  const getKeyActivationDetails = (pendingKey: PendingKey) => {
+    const keyPlan = plans.find(p => p.id === pendingKey.plan);
+    const currentPlanName = currentPlan?.name || "Free";
+    const keyPlanName = keyPlan?.name || pendingKey.plan;
+    
+    // Calculate dates
+    const startDate = new Date();
+    let endDate: Date | null = null;
+    if (pendingKey.duration === "month") {
+      endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (pendingKey.duration === "year") {
+      endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+    
+    // Determine what happens to current plan
+    const isCurrentlyPaid = subscription?.plan && subscription.plan !== "free";
+    const isSamePlan = subscription?.plan === pendingKey.plan;
+    const isUpgrade = keyPlan && currentPlan && 
+      (keyPlan.price.yearly > currentPlan.price.yearly);
+    
+    return {
+      keyPlanName,
+      currentPlanName,
+      startDate,
+      endDate,
+      isLifetime: pendingKey.duration === "lifetime",
+      isCurrentlyPaid,
+      isSamePlan,
+      isUpgrade,
+    };
   };
 
   const handleRedeemPendingKey = async (key: string) => {
@@ -809,7 +892,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => handleRedeemPendingKey(pendingKey.key)}
+                  onClick={() => openKeyConfirmDialog(pendingKey)}
                   disabled={redeemLoading}
                   className="bg-green-600 hover:bg-green-700"
                 >
@@ -898,6 +981,115 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               disabled={loading !== null}
             >
               {loading ? "Processing..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Key Activation Confirmation Dialog */}
+      <Dialog open={keyConfirmDialog.open} onOpenChange={(open) => setKeyConfirmDialog({ ...keyConfirmDialog, open })}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-green-500" />
+              Activate Plan Key
+            </DialogTitle>
+          </DialogHeader>
+          
+          {keyConfirmDialog.pendingKey && (() => {
+            const details = getKeyActivationDetails(keyConfirmDialog.pendingKey);
+            return (
+              <div className="space-y-4 py-4">
+                {/* Key Info */}
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-sm px-3 py-1">
+                      {details.keyPlanName}
+                    </Badge>
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm px-3 py-1">
+                      {formatDuration(keyConfirmDialog.pendingKey.duration)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Key: <code className="font-mono bg-muted px-2 py-0.5 rounded">{keyConfirmDialog.pendingKey.key}</code>
+                  </p>
+                </div>
+
+                {/* What will happen */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">What will happen:</h4>
+                  
+                  <div className="space-y-2 text-sm">
+                    {/* Duration */}
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>
+                        {details.isLifetime ? (
+                          <>Your studio will be upgraded to <strong>{details.keyPlanName}</strong> permanently</>
+                        ) : (
+                          <>
+                            Your studio will have <strong>{details.keyPlanName}</strong> from{" "}
+                            <strong>{details.startDate.toLocaleDateString()}</strong> to{" "}
+                            <strong>{details.endDate?.toLocaleDateString()}</strong>
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Current plan handling */}
+                    {details.isCurrentlyPaid && (
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {details.isSamePlan ? (
+                            <>Your current {details.currentPlanName} subscription time will be <strong>extended</strong></>
+                          ) : details.isUpgrade ? (
+                            <>Your current {details.currentPlanName} plan will be <strong>upgraded</strong> to {details.keyPlanName}</>
+                          ) : (
+                            <>Your current {details.currentPlanName} subscription will be <strong>replaced</strong> with this key</>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* After expiry */}
+                    {!details.isLifetime && (
+                      <div className="flex items-start gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">
+                          After the key expires, your studio will revert to the <strong>Free</strong> plan unless you subscribe
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setKeyConfirmDialog({ open: false, pendingKey: null })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmKeyActivation}
+              disabled={redeemLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {redeemLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Activating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Activate Key
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
