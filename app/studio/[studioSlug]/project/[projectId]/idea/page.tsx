@@ -289,7 +289,7 @@ export default function IdeaPage() {
         border_color: "#ffffff20",
         text_color: "#ffffff",
         font_size: 14,
-        title: "New Panel",
+        title: null,
         content: "",
         z_index: elements.length,
       });
@@ -493,7 +493,9 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "select" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => setActiveTool("select")}
+            onClick={() => {
+              setActiveTool("select");
+            }}
             title="Select (V)"
           >
             <MousePointer2 className="w-4 h-4" />
@@ -501,7 +503,10 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "panel" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => setActiveTool("panel")}
+            onClick={() => {
+              setActiveTool("panel");
+              setSelectedElement(null);
+            }}
             title="Add Panel (P)"
           >
             <Square className="w-4 h-4" />
@@ -509,7 +514,10 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "text" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => setActiveTool("text")}
+            onClick={() => {
+              setActiveTool("text");
+              setSelectedElement(null);
+            }}
             title="Add Text (T)"
           >
             <Type className="w-4 h-4" />
@@ -517,7 +525,10 @@ export default function IdeaPage() {
           <Button
             variant={activeTool === "draw" ? "secondary" : "ghost"}
             size="icon"
-            onClick={() => setActiveTool("draw")}
+            onClick={() => {
+              setActiveTool("draw");
+              setSelectedElement(null);
+            }}
             title="Draw (D)"
           >
             <Pencil className="w-4 h-4" />
@@ -527,6 +538,7 @@ export default function IdeaPage() {
             size="icon"
             onClick={() => {
               setActiveTool("connect");
+              setSelectedElement(null);
               setConnectingFrom(null);
             }}
             title="Connect (C)"
@@ -561,8 +573,8 @@ export default function IdeaPage() {
           </Popover>
         )}
 
-        {/* Element formatting (when selected) */}
-        {selectedEl && (
+        {/* Element formatting (when selected with select tool) */}
+        {selectedEl && activeTool === "select" && (
           <>
             <div className="h-6 w-px bg-white/10" />
             <Popover>
@@ -754,6 +766,11 @@ export default function IdeaPage() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleCanvasMouseUp}
         onMouseLeave={handleCanvasMouseUp}
+        onWheel={(e) => {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? 0.9 : 1.1;
+          setZoom((z) => Math.min(Math.max(z * delta, 0.3), 3));
+        }}
       >
         {/* Transform container */}
         <div
@@ -837,22 +854,11 @@ export default function IdeaPage() {
               onMouseDown={(e) => handleElementMouseDown(e, element)}
             >
               {element.element_type === "panel" && (
-                <div className="p-3 h-full flex flex-col">
-                  {/* Panel Title */}
-                  <input
-                    type="text"
-                    value={element.title || ""}
-                    onChange={(e) => updateElementTitle(element.id, e.target.value)}
-                    className="bg-transparent border-none outline-none font-semibold text-sm mb-2"
-                    style={{ color: element.text_color }}
-                    placeholder="Panel title..."
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  {/* Panel Content */}
+                <div className="p-3 h-full">
                   <textarea
                     value={element.content || ""}
                     onChange={(e) => updateElementContent(element.id, e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none resize-none text-sm"
+                    className="w-full h-full bg-transparent border-none outline-none resize-none text-sm"
                     style={{ color: element.text_color, fontSize: element.font_size }}
                     placeholder="Add notes..."
                     onClick={(e) => e.stopPropagation()}
