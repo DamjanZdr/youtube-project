@@ -11,7 +11,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Check, Key, Sparkles, X, Upload, ImageIcon } from "lucide-react";
+import { Plus, Loader2, Check, Key, Sparkles, X, ImageIcon } from "lucide-react";
 import { createStudio } from "@/lib/actions/studio";
 import { plans as allPlans } from "@/config/subscriptions";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
   // Plan selection
   const [selectedPlan, setSelectedPlan] = useState("free");
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
   const [redeemKey, setRedeemKey] = useState("");
   const [validatingKey, setValidatingKey] = useState(false);
   const [keyInfo, setKeyInfo] = useState<{ plan: string; duration: string } | null>(null);
@@ -157,6 +158,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
     setLogo(null);
     setLogoPreview(null);
     setSelectedPlan("free");
+    setBillingInterval("yearly");
     setRedeemKey("");
     setKeyInfo(null);
     setKeyError("");
@@ -190,11 +192,11 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="glass-strong border-white/10 sm:max-w-[900px] p-0 overflow-hidden">
+      <DialogContent className="glass-strong border-white/10 sm:max-w-[1100px] p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col lg:flex-row">
           {/* Left Side - Studio Details */}
-          <div className="lg:w-[320px] p-6 border-b lg:border-b-0 lg:border-r border-white/10 bg-muted/30">
-            <div className="mb-6">
+          <div className="lg:w-[300px] p-6 border-b lg:border-b-0 lg:border-r border-white/10 bg-muted/20 flex-shrink-0">
+            <div className="mb-8">
               <h2 className="text-xl font-bold mb-1">Create Studio</h2>
               <p className="text-sm text-muted-foreground">
                 Set up your YouTube workspace
@@ -204,41 +206,34 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             {/* Logo Upload */}
             <div className="mb-6">
               <label className="text-sm font-medium mb-3 block">Studio Logo</label>
-              <div className="flex items-center gap-4">
-                <div 
-                  onClick={() => logoInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity group relative"
-                >
-                  {logoPreview ? (
-                    <>
-                      <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Upload className="w-5 h-5 text-white" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center">
-                      <ImageIcon className="w-6 h-6 text-white/70 mx-auto mb-1" />
-                      <span className="text-[10px] text-white/70">Click to upload</span>
+              <div 
+                onClick={() => logoInputRef.current?.click()}
+                className="w-24 h-24 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity group relative mx-auto"
+              >
+                {logoPreview ? (
+                  <>
+                    <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-white" />
                     </div>
-                  )}
-                </div>
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoChange}
-                />
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">
-                    PNG or JPG, max 2MB
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    256×256px recommended
-                  </p>
-                </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <ImageIcon className="w-8 h-8 text-white/70 mx-auto mb-1" />
+                    <span className="text-[10px] text-white/70">Click to upload</span>
+                  </div>
+                )}
               </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoChange}
+              />
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                PNG or JPG, 256×256px
+              </p>
             </div>
 
             {/* Studio Name */}
@@ -328,102 +323,120 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             {error && (
               <p className="text-sm text-red-500 mt-4">{error}</p>
             )}
+
+            {/* Create Button - Mobile only */}
+            <div className="mt-6 lg:hidden">
+              <Button 
+                onClick={handleSubmit} 
+                disabled={loading || !name.trim()}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : selectedPlan === "free" || keyInfo ? (
+                  "Create Studio"
+                ) : (
+                  "Continue to Checkout"
+                )}
+              </Button>
+            </div>
           </div>
 
-          {/* Right Side - Plan Selection */}
-          <div className="flex-1 p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-1">Choose Your Plan</h3>
-              <p className="text-sm text-muted-foreground">
-                Start free or upgrade for more features
-              </p>
+          {/* Right Side - Plan Selection (Same as Billing Tab) */}
+          <div className="flex-1 p-6 overflow-y-auto">
+            {/* Billing Interval Toggle */}
+            <div className="flex items-center justify-center gap-4 glass-card p-3 w-fit mx-auto mb-6">
+              <button
+                onClick={() => setBillingInterval("monthly")}
+                className={`px-4 py-2 rounded-lg transition-all ${
+                  billingInterval === "monthly"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingInterval("yearly")}
+                className={`px-4 py-2 rounded-lg transition-all ${
+                  billingInterval === "yearly"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Yearly
+                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">
+                  Save 17%
+                </span>
+              </button>
             </div>
 
-            {/* Plan Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* Plan Cards - Same styling as Billing Tab */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {plans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 const isKeyPlan = keyInfo?.plan === plan.id;
                 const isDisabled = keyInfo && !isKeyPlan;
+                const price = billingInterval === "monthly" ? plan.price.monthly : plan.price.yearly;
                 
                 return (
                   <Card
                     key={plan.id}
                     onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                    className={`p-4 cursor-pointer transition-all relative ${
-                      isSelected 
-                        ? "ring-2 ring-blue-500 bg-blue-500/10" 
-                        : "border-white/10 hover:border-white/30"
-                    } ${isDisabled ? "opacity-40 cursor-not-allowed" : ""} ${
-                      plan.popular ? "border-primary/50" : ""
+                    className={`glass-card p-6 relative flex flex-col min-h-[380px] cursor-pointer transition-all ${
+                      plan.popular && !keyInfo ? "ring-2 ring-primary" : ""
+                    } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/5" : ""} ${
+                      isDisabled ? "opacity-40 cursor-not-allowed" : "hover:border-white/30"
                     }`}
                   >
-                    {isSelected && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                        <Check className="w-4 h-4 text-white" />
+                    {plan.popular && !keyInfo && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground px-3 py-1">Most Popular</Badge>
                       </div>
                     )}
                     {isKeyPlan && (
-                      <Badge className="absolute -top-2 left-2 bg-green-500 text-white text-[10px] px-1.5">
-                        <Key className="w-3 h-3 mr-0.5" /> Key
-                      </Badge>
-                    )}
-                    {plan.popular && !keyInfo && (
-                      <Badge className="absolute -top-2 left-2 bg-primary text-primary-foreground text-[10px] px-1.5">
-                        Popular
-                      </Badge>
-                    )}
-                    
-                    <div className="mb-3">
-                      <h4 className="font-semibold text-base">{plan.name}</h4>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">
-                          {plan.price.yearly === 0 ? "Free" : `$${plan.price.yearly}`}
-                        </span>
-                        {plan.price.yearly > 0 && (
-                          <span className="text-xs text-muted-foreground">/year</span>
-                        )}
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-green-500 text-white px-3 py-1">
+                          <Key className="w-3 h-3 mr-1" /> Key Applied
+                        </Badge>
                       </div>
+                    )}
+
+                    <div className="mb-6">
+                      <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
+                      <div className="flex items-baseline gap-1 mb-2">
+                        <span className="text-3xl font-bold">${price}</span>
+                        <span className="text-sm text-muted-foreground">
+                          /{billingInterval === "monthly" ? "mo" : "yr"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-tight">{plan.description}</p>
                     </div>
-                    
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                      {plan.description}
-                    </p>
-                    
-                    <ul className="space-y-1.5">
+
+                    <ul className="space-y-2.5 flex-1">
                       {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
+                        <li key={i} className="flex items-start gap-2">
                           {feature.included ? (
-                            <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-green-500" />
+                            <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
                           ) : (
-                            <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-muted-foreground/50" />
+                            <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           )}
-                          <span className={`text-xs ${!feature.included ? 'text-muted-foreground/50' : ''}`}>
+                          <span className={`text-sm leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
                             {feature.name}
                           </span>
                         </li>
                       ))}
                     </ul>
-
-                    {/* Limits Badge */}
-                    <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-1.5">
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        {plan.limits.projects === -1 ? "∞" : plan.limits.projects} projects
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        {plan.limits.teamMembers === -1 ? "∞" : plan.limits.teamMembers} members
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        {plan.limits.storageGb === -1 ? "∞" : plan.limits.storageGb}GB
-                      </Badge>
-                    </div>
                   </Card>
                 );
               })}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+            {/* Action Buttons - Desktop only */}
+            <div className="hidden lg:flex items-center justify-end gap-3 pt-6 mt-6 border-t border-white/10">
               <Button
                 variant="ghost"
                 onClick={() => setOpen(false)}
@@ -434,7 +447,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               <Button 
                 onClick={handleSubmit} 
                 disabled={loading || !name.trim()}
-                className="min-w-[140px]"
+                className="min-w-[160px]"
               >
                 {loading ? (
                   <>
@@ -447,9 +460,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     Create Studio
                   </>
                 ) : (
-                  <>
-                    Continue to Checkout
-                  </>
+                  "Continue to Checkout"
                 )}
               </Button>
             </div>
