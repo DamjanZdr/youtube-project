@@ -192,8 +192,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="glass-strong border-white/10 max-w-5xl p-0 overflow-hidden max-h-[90vh]">
-        <div className="overflow-y-auto max-h-[90vh] p-8">
+      <DialogContent className="glass-strong border-white/10 w-[95vw] h-[90vh] max-w-none p-0 overflow-hidden">
+        <div className="overflow-y-auto h-full p-8">
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-1">Create Studio</h2>
