@@ -712,6 +712,8 @@ export default function IdeaPage() {
           `,
           backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
           backgroundPosition: `${pan.x}px ${pan.y}px`,
+          minHeight: "400px",
+          border: "3px solid red",
         }}
         onClick={(e) => {
           console.log("CANVAS CLICKED!", e.target);
