@@ -1031,127 +1031,55 @@ export default function IdeaPage() {
         {/* Onboarding hints - only show when canvas is empty */}
         {elements.length === 0 && (
           <>
-            {/* LEFT TOOLBAR - arrows curve DOWN from buttons to tooltips */}
+            {/* LEFT SIDE TOOLTIPS */}
             
-            {/* Mode toggle - arrow curves down-left */}
-            <div className="absolute top-14 left-4 pointer-events-none">
-              <svg className="w-24 h-20 overflow-visible" viewBox="0 0 96 80">
-                <path 
-                  d="M48 0 Q48 30 16 55" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-primary/50"
-                  strokeLinecap="round"
-                />
-                <path d="M20 50 L14 58 L22 58" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 left-0 text-xs text-primary/70 font-medium whitespace-nowrap">Select or Draw</p>
-            </div>
+            {/* Mode toggle (cursor/pencil) - positioned at ~50px from left */}
+            <p className="absolute top-24 left-2 text-xs text-primary/70 font-medium pointer-events-none">Select or Draw</p>
+            <svg className="absolute top-14 left-12 w-12 h-10 pointer-events-none overflow-visible">
+              <path d="M6 0 C6 20, 0 30, 0 40" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
+            </svg>
             
-            {/* Panel button - arrow curves down */}
-            <div className="absolute top-14 left-24 pointer-events-none">
-              <svg className="w-20 h-32 overflow-visible" viewBox="0 0 80 128">
-                <path 
-                  d="M24 0 Q24 50 40 100" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-primary/50"
-                  strokeLinecap="round"
-                />
-                <path d="M35 96 L40 106 L45 96" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 left-4 text-xs text-primary/70 font-medium whitespace-nowrap">Add panel</p>
-            </div>
+            {/* Panel button (square icon) - at ~112px from left */}
+            <p className="absolute top-36 left-20 text-xs text-primary/70 font-medium pointer-events-none">Add panel</p>
+            <svg className="absolute top-14 left-28 w-8 h-24 pointer-events-none overflow-visible">
+              <path d="M4 0 C4 40, 4 60, 4 80" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
+            </svg>
             
-            {/* Text button - arrow curves down-right */}
-            <div className="absolute top-14 left-36 pointer-events-none">
-              <svg className="w-28 h-20 overflow-visible" viewBox="0 0 112 80">
-                <path 
-                  d="M0 0 Q0 30 70 55" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-primary/50"
-                  strokeLinecap="round"
-                />
-                <path d="M64 50 L72 58 L72 48" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 right-0 text-xs text-primary/70 font-medium whitespace-nowrap">Add text</p>
-            </div>
+            {/* Text button (T icon) - at ~152px from left */}
+            <p className="absolute top-24 left-44 text-xs text-primary/70 font-medium pointer-events-none">Add text</p>
+            <svg className="absolute top-14 left-40 w-12 h-10 pointer-events-none overflow-visible">
+              <path d="M6 0 C6 20, 24 30, 24 40" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-primary/50" strokeLinecap="round" />
+            </svg>
 
-            {/* RIGHT TOOLBAR - arrows curve DOWN from buttons to tooltips */}
+            {/* RIGHT SIDE TOOLTIPS */}
             
-            {/* Undo/Redo - arrow curves down-left */}
-            <div className="absolute top-14 right-64 pointer-events-none">
-              <svg className="w-24 h-20 overflow-visible" viewBox="0 0 96 80">
-                <path 
-                  d="M80 0 Q80 30 24 55" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-muted-foreground/40"
-                  strokeLinecap="round"
-                />
-                <path d="M28 50 L22 58 L32 56" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 left-0 text-xs text-muted-foreground/50 whitespace-nowrap">Undo / Redo</p>
-            </div>
+            {/* Undo/Redo buttons */}
+            <p className="absolute top-24 right-[17rem] text-xs text-muted-foreground/50 pointer-events-none">Undo / Redo</p>
+            <svg className="absolute top-14 right-[18.5rem] w-12 h-10 pointer-events-none overflow-visible">
+              <path d="M30 0 C30 20, 40 30, 40 40" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
+            </svg>
             
-            {/* Zoom - arrow curves down */}
-            <div className="absolute top-14 right-36 pointer-events-none">
-              <svg className="w-20 h-32 overflow-visible" viewBox="0 0 80 128">
-                <path 
-                  d="M40 0 Q40 50 40 100" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-muted-foreground/40"
-                  strokeLinecap="round"
-                />
-                <path d="M35 96 L40 106 L45 96" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs text-muted-foreground/50 whitespace-nowrap">Zoom</p>
-            </div>
+            {/* Zoom controls */}
+            <p className="absolute top-36 right-32 text-xs text-muted-foreground/50 pointer-events-none">Zoom</p>
+            <svg className="absolute top-14 right-36 w-8 h-24 pointer-events-none overflow-visible">
+              <path d="M16 0 C16 40, 16 60, 16 80" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
+            </svg>
             
-            {/* Reset view - arrow curves down-right */}
-            <div className="absolute top-14 right-16 pointer-events-none">
-              <svg className="w-24 h-20 overflow-visible" viewBox="0 0 96 80">
-                <path 
-                  d="M16 0 Q16 30 72 55" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-muted-foreground/40"
-                  strokeLinecap="round"
-                />
-                <path d="M66 50 L74 58 L74 48" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 right-0 text-xs text-muted-foreground/50 whitespace-nowrap">Reset view</p>
-            </div>
+            {/* Reset view button */}
+            <p className="absolute top-24 right-14 text-xs text-muted-foreground/50 pointer-events-none">Reset view</p>
+            <svg className="absolute top-14 right-20 w-12 h-10 pointer-events-none overflow-visible">
+              <path d="M18 0 C18 20, 0 30, 0 40" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
+            </svg>
             
-            {/* Flow animation - arrow curves down-right further */}
-            <div className="absolute top-14 right-4 pointer-events-none">
-              <svg className="w-16 h-28 overflow-visible" viewBox="0 0 64 112">
-                <path 
-                  d="M0 0 Q0 40 48 85" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  fill="none" 
-                  className="text-muted-foreground/40"
-                  strokeLinecap="round"
-                />
-                <path d="M42 80 L50 90 L52 80" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="absolute bottom-0 right-0 text-xs text-muted-foreground/50 whitespace-nowrap">Animate</p>
-            </div>
+            {/* Animate button */}
+            <p className="absolute top-36 right-2 text-xs text-muted-foreground/50 pointer-events-none">Animate</p>
+            <svg className="absolute top-14 right-5 w-10 h-24 pointer-events-none overflow-visible">
+              <path d="M20 0 C20 40, 28 60, 28 80" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-muted-foreground/40" strokeLinecap="round" />
+            </svg>
 
             {/* Center hint */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-              <div className="text-center">
-                <p className="text-muted-foreground/30 text-sm">Click a tool to get started</p>
-              </div>
+              <p className="text-muted-foreground/30 text-sm">Click a tool to get started</p>
             </div>
           </>
         )}
