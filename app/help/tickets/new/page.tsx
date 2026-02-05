@@ -68,9 +68,13 @@ export default function NewTicketPage() {
       .eq("status", "active");
 
     if (orgs) {
-      const studioList = orgs
-        .map((o) => o.organization)
-        .filter((o): o is { id: string; name: string } => o !== null && !Array.isArray(o));
+      const studioList: Studio[] = [];
+      for (const o of orgs) {
+        const org = o.organization;
+        if (org && !Array.isArray(org)) {
+          studioList.push({ id: org.id, name: org.name });
+        }
+      }
       setStudios(studioList);
     }
 
