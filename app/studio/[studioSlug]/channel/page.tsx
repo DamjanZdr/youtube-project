@@ -1016,22 +1016,22 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
 
 function MobilePreview({ channel, openDialog }: PreviewProps) {
   // Mobile shows only the center "All Devices" safe area (1235 x 338)
-  // The full banner is 2560 x 338, so we need to zoom to ~207% to show only center 48%
-  const bannerZoom = 2560 / 1235; // ≈ 2.07
+  // The full banner is 2560 wide, safe area is 1235 = 48.24% of width
+  // We scale by 2560/1235 ≈ 2.07 to zoom into center
   
   return (
     <div className="w-[375px]">
-      {/* Banner - Mobile shows only center safe area by zooming in */}
+      {/* Banner - Mobile shows only center safe area by scaling from center */}
       <div className="px-4 pt-4">
         <div className="w-full aspect-[3.65/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg overflow-hidden">
           {channel.banner ? (
             <img 
               src={channel.banner} 
               alt="Banner" 
-              className="h-full object-cover rounded-lg"
+              className="w-full rounded-lg"
               style={{ 
-                width: `${bannerZoom * 100}%`,
-                maxWidth: 'none'
+                transform: 'scale(2.07)',
+                transformOrigin: 'center center'
               }}
             />
           ) : (
