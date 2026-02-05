@@ -70,7 +70,7 @@ export default function NewTicketPage() {
     if (orgs) {
       const studioList = orgs
         .map((o) => o.organization)
-        .filter((o): o is Studio => o !== null);
+        .filter((o): o is { id: string; name: string } => o !== null && !Array.isArray(o));
       setStudios(studioList);
     }
 
