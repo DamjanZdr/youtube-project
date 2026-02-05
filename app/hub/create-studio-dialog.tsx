@@ -35,7 +35,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
   // Plan selection
   const [selectedPlan, setSelectedPlan] = useState("free");
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [redeemKey, setRedeemKey] = useState("");
   const [validatingKey, setValidatingKey] = useState(false);
   const [keyInfo, setKeyInfo] = useState<{ plan: string; duration: string } | null>(null);
@@ -158,7 +158,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
     setLogo(null);
     setLogoPreview(null);
     setSelectedPlan("free");
-    setBillingInterval("yearly");
+    setBillingInterval("monthly");
     setRedeemKey("");
     setKeyInfo(null);
     setKeyError("");

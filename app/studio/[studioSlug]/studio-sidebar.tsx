@@ -47,25 +47,33 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                 <TooltipTrigger asChild>
                   <button 
                     onClick={() => setCollapsed(false)}
-                    className={`${logoPadding} bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer hover:border-white/20 transition-colors`}
+                    className={`${logoPadding} bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer hover:border-white/20 transition-colors overflow-hidden`}
                   >
-                    <img
-                      src={studio.logo_url || "/bplogo.png"}
-                      alt={studio.name}
-                      className="w-full h-full object-cover bg-white/0"
-                    />
+                    {studio.logo_url ? (
+                      <img
+                        src={studio.logo_url}
+                        alt={studio.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg font-bold">{studio.name[0]}</span>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right">Expand sidebar</TooltipContent>
               </Tooltip>
             ) : (
               <>
-                <div className={`${logoPadding} bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0`}>
-                  <img
-                    src={studio.logo_url || "/bplogo.png"}
-                    alt={studio.name}
-                    className="w-full h-full object-cover bg-white/0"
-                  />
+                <div className={`${logoPadding} bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0 overflow-hidden`}>
+                  {studio.logo_url ? (
+                    <img
+                      src={studio.logo_url}
+                      alt={studio.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-bold">{studio.name[0]}</span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0 flex items-center justify-between">
                   <div className="min-w-0 overflow-hidden px-1">
