@@ -605,12 +605,28 @@ export default function ThreadPage() {
               </div>
             </div>
 
-            {/* Author edit button (non-admin) */}
+            {/* Author edit/delete dropdown (non-admin) */}
             {canEditThread && !isAdmin && (
-              <Button variant="ghost" size="sm" onClick={startEditThread}>
-                <Pencil className="w-4 h-4 mr-1" />
-                Edit
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={startEditThread}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Thread
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteThreadDialog(true)}
+                    className="text-red-400 focus:text-red-400"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Thread
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
           <article className="prose prose-neutral dark:prose-invert max-w-none
