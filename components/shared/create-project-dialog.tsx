@@ -28,12 +28,10 @@ export function CreateProjectDialog({
   const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
-    if (!title.trim()) return;
-
     setCreating(true);
     setError(null);
     try {
-      await onCreateProject({ title, description, videoType });
+      await onCreateProject({ title: title.trim() || "Untitled Project", description, videoType });
       // Reset form
       setTitle("");
       setDescription("");
@@ -72,11 +70,11 @@ export function CreateProjectDialog({
           )}
           
           <div>
-            <label className="text-sm font-medium mb-2 block">Project Title</label>
+            <label className="text-sm font-medium mb-2 block">Project Title (optional)</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Awesome Video"
+              placeholder="Untitled Project"
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
@@ -125,7 +123,7 @@ export function CreateProjectDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={!title.trim() || creating}>
+            <Button onClick={handleCreate} disabled={creating}>
               {creating ? "Creating..." : "Create Project"}
             </Button>
           </div>

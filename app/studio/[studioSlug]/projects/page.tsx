@@ -225,8 +225,8 @@ export default function ProjectsPage() {
       throw error;
     } else if (project) {
       setProjects([project, ...projects]);
-      // Navigate to the new project
-      router.push(`/studio/${studioSlug}/project/${project.id}`);
+      // Navigate to the new project's idea board
+      router.push(`/studio/${studioSlug}/project/${project.id}/idea`);
     }
   };
 

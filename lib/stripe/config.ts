@@ -21,10 +21,10 @@ export const stripeConfig = {
   // Success and cancel URLs for Checkout
   getCheckoutUrls: (baseUrl: string, studioSlug?: string) => ({
     successUrl: studioSlug 
-      ? `${baseUrl}/studio/${studioSlug}/settings?success=true`
+      ? `${baseUrl}/studio/${studioSlug}/settings?tab=billing&success=true`
       : `${baseUrl}/dashboard/billing?success=true`,
     cancelUrl: studioSlug
-      ? `${baseUrl}/studio/${studioSlug}/settings?canceled=true`
+      ? `${baseUrl}/studio/${studioSlug}/settings?tab=billing&canceled=true`
       : `${baseUrl}/dashboard/billing?canceled=true`,
   }),
   
