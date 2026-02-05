@@ -41,7 +41,7 @@ interface Message {
   is_admin: boolean;
   created_at: string;
   sender: {
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
 }
@@ -129,7 +129,7 @@ export default function TicketDetailPage() {
         content,
         is_admin,
         created_at,
-        sender:profiles!sender_id(display_name, avatar_url)
+        sender:profiles!sender_id(full_name, avatar_url)
       `)
       .eq("ticket_id", ticketId)
       .order("created_at", { ascending: true });
@@ -262,7 +262,7 @@ export default function TicketDetailPage() {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium">
-                        {message.is_admin ? "Support Team" : message.sender?.display_name || "You"}
+                        {message.is_admin ? "Support Team" : message.sender?.full_name || "You"}
                       </span>
                       {message.is_admin && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">

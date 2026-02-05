@@ -52,7 +52,7 @@ interface Ticket {
   user: {
     id: string;
     email: string;
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
   related_studio: {
@@ -73,7 +73,7 @@ interface Message {
   is_admin: boolean;
   created_at: string;
   sender: {
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
 }
@@ -121,7 +121,7 @@ export default function AdminTicketsPage() {
       .from("support_tickets")
       .select(`
         *,
-        user:profiles!user_id(id, email, display_name, avatar_url),
+        user:profiles!user_id(id, email, full_name, avatar_url),
         related_studio:organizations(id, name)
       `)
       .order("updated_at", { ascending: false });
@@ -173,7 +173,7 @@ export default function AdminTicketsPage() {
         content,
         is_admin,
         created_at,
-        sender:profiles!sender_id(display_name, avatar_url)
+        sender:profiles!sender_id(full_name, avatar_url)
       `)
       .eq("ticket_id", ticketId)
       .order("created_at", { ascending: true });
@@ -258,7 +258,7 @@ export default function AdminTicketsPage() {
     return (
       ticket.subject.toLowerCase().includes(query) ||
       ticket.user?.email?.toLowerCase().includes(query) ||
-      ticket.user?.display_name?.toLowerCase().includes(query) ||
+      ticket.user?.full_name?.toLowerCase().includes(query) ||
       ticket.ticket_number.toString().includes(query)
     );
   });
@@ -359,7 +359,7 @@ export default function AdminTicketsPage() {
                           <h3 className="font-medium text-sm truncate">{ticket.subject}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-muted-foreground truncate">
-                              {ticket.user?.display_name || ticket.user?.email || "Unknown"}
+                              {ticket.user?.full_name || ticket.user?.email || "Unknown"}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
                             <span className="text-xs text-muted-foreground">
@@ -414,7 +414,7 @@ export default function AdminTicketsPage() {
                     <h2 className="text-lg font-semibold truncate">{selectedTicket.subject}</h2>
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                       <User className="w-4 h-4" />
-                      <span>{selectedTicket.user?.display_name}</span>
+                      <span>{selectedTicket.user?.full_name}</span>
                       <span className="text-xs">({selectedTicket.user?.email})</span>
                     </div>
                   </div>

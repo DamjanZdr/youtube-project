@@ -34,7 +34,7 @@ interface Thread {
   reply_count: number;
   created_at: string;
   author: {
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
 }
@@ -88,7 +88,7 @@ export default function CategoryPage() {
         view_count,
         reply_count,
         created_at,
-        author:profiles!author_id(display_name, avatar_url)
+        author:profiles!author_id(full_name, avatar_url)
       `)
       .eq("category_id", cat.id)
       .order("is_pinned", { ascending: false })
@@ -196,7 +196,7 @@ export default function CategoryPage() {
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>
-                      by {thread.author?.display_name || "Unknown"}
+                      by {thread.author?.full_name || "Unknown"}
                     </span>
                     <span>
                       {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}

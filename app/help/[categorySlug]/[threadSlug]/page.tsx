@@ -34,7 +34,7 @@ interface Thread {
   created_at: string;
   author: {
     id: string;
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
   category: {
@@ -50,7 +50,7 @@ interface Reply {
   created_at: string;
   author: {
     id: string;
-    display_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
 }
@@ -106,7 +106,7 @@ export default function ThreadPage() {
         view_count,
         reply_count,
         created_at,
-        author:profiles!author_id(id, display_name, avatar_url)
+        author:profiles!author_id(id, full_name, avatar_url)
       `)
       .eq("category_id", cat.id)
       .eq("slug", threadSlug)
@@ -133,7 +133,7 @@ export default function ThreadPage() {
         content,
         is_official,
         created_at,
-        author:profiles!author_id(id, display_name, avatar_url)
+        author:profiles!author_id(id, full_name, avatar_url)
       `)
       .eq("thread_id", threadData.id)
       .order("created_at", { ascending: true });
@@ -253,7 +253,7 @@ export default function ThreadPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {thread.author?.display_name || "Unknown"}
+                  {thread.author?.full_name || "Unknown"}
                 </span>
                 {thread.is_official && (
                   <Shield className="w-4 h-4 text-primary" />
@@ -307,7 +307,7 @@ export default function ThreadPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">
-                          {reply.author?.display_name || "Unknown"}
+                          {reply.author?.full_name || "Unknown"}
                         </span>
                         {reply.is_official && (
                           <span className="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
