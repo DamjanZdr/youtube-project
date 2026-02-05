@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
   Rocket,
   Folder,
@@ -63,7 +64,8 @@ export default function HelpCenterPage() {
   const [recentThreads, setRecentThreads] = useState<Thread[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
+  const [acceptInvites, setAcceptInvites] = useState(true);
 
   const supabase = createClient();
 
@@ -73,8 +75,24 @@ export default function HelpCenterPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, accept_invites")
+        .eq("id", authUser.id)
+        .single();
+      
+      setUser({
+        id: authUser.id,
+        email: authUser.email || "",
+        full_name: profile?.full_name,
+        avatar_url: profile?.avatar_url,
+      });
+      setAcceptInvites(profile?.accept_invites ?? true);
+    } else {
+      setUser(null);
+    }
   };
 
   const loadData = async () => {
@@ -132,7 +150,39 @@ export default function HelpCenterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Top Navigation - Same as Hub */}
+      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-16 px-2">
+            <img
+              src="/bplogo.png"
+              alt="Logo"
+              className="max-h-12 object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)", width: 'auto', height: '100%' }}
+            />
+          </Link>
+          
+          <div className="flex items-center gap-4">
+            {user ? (
+              <UserProfileDropdown 
+                user={user} 
+                initialAcceptInvites={acceptInvites} 
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">Sign in</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Header */}
       <div className="border-b border-white/10 bg-gradient-to-b from-primary/5 to-transparent">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="text-center mb-8">

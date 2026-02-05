@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
   ChevronLeft,
   ChevronRight,
@@ -46,7 +47,8 @@ export default function CategoryPage() {
   const [category, setCategory] = useState<Category | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
+  const [acceptInvites, setAcceptInvites] = useState(true);
 
   const supabase = createClient();
 
@@ -56,8 +58,24 @@ export default function CategoryPage() {
   }, [categorySlug]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, accept_invites")
+        .eq("id", authUser.id)
+        .single();
+      
+      setUser({
+        id: authUser.id,
+        email: authUser.email || "",
+        full_name: profile?.full_name,
+        avatar_url: profile?.avatar_url,
+      });
+      setAcceptInvites(profile?.accept_invites ?? true);
+    } else {
+      setUser(null);
+    }
   };
 
   const loadData = async () => {
@@ -90,12 +108,24 @@ export default function CategoryPage() {
         created_at,
         author:profiles!author_id(full_name, avatar_url)
       `)
-      .eq("category_id", cat.id)
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false });
+      .eq("category_id", cat.id);
 
     if (threadData) {
-      setThreads(threadData as unknown as Thread[]);
+      // Sort: pinned first (oldest pinned on top), then unpinned (newest first)
+      const sorted = [...threadData].sort((a, b) => {
+        // Pinned articles come first
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        
+        // Within pinned: oldest first (ascending)
+        if (a.is_pinned && b.is_pinned) {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+        
+        // Within unpinned: newest first (descending)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setThreads(sorted as unknown as Thread[]);
     }
 
     setLoading(false);
@@ -124,7 +154,39 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Top Navigation - Same as Hub */}
+      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-16 px-2">
+            <img
+              src="/bplogo.png"
+              alt="Logo"
+              className="max-h-12 object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)", width: 'auto', height: '100%' }}
+            />
+          </Link>
+          
+          <div className="flex items-center gap-4">
+            {user ? (
+              <UserProfileDropdown 
+                user={user} 
+                initialAcceptInvites={acceptInvites} 
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">Sign in</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Category Header */}
       <div className="border-b border-white/10">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <Link

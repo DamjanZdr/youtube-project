@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,8 +91,9 @@ export default function ThreadPage() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string; email?: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [acceptInvites, setAcceptInvites] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -123,19 +125,22 @@ export default function ThreadPage() {
 
     if (authUser) {
       // Fetch user profile with admin status
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
-        .select("is_admin, full_name, avatar_url")
+        .select("is_admin, full_name, avatar_url, accept_invites")
         .eq("id", authUser.id)
         .single();
 
+      console.log("Profile data:", profile, "Error:", error);
+
       setUser({
         id: authUser.id,
-        email: authUser.email,
+        email: authUser.email || "",
         full_name: profile?.full_name,
         avatar_url: profile?.avatar_url,
       });
-      setIsAdmin(profile?.is_admin || false);
+      setIsAdmin(profile?.is_admin === true);
+      setAcceptInvites(profile?.accept_invites ?? true);
     } else {
       setUser(null);
     }
@@ -408,36 +413,26 @@ export default function ThreadPage() {
     );
   }
 
-  const displayName = user?.full_name || user?.email?.split("@")[0] || "User";
-  const initials = displayName.charAt(0).toUpperCase();
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-5xl mx-auto px-8 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-14 py-2">
+      {/* Top Navigation - Same as Hub */}
+      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-16 px-2">
             <img
               src="/bplogo.png"
-              alt="Blueprint"
-              className="h-8 w-auto object-contain"
+              alt="Logo"
+              className="max-h-12 object-contain bg-white/0"
+              style={{ boxShadow: "0 2px 8px 0 rgba(8, 138, 250, 0.08)", width: 'auto', height: '100%' }}
             />
           </Link>
-          <div className="flex items-center gap-2">
-            <ThemeSwitcher />
+          
+          <div className="flex items-center gap-4">
             {user ? (
-              <Link href="/hub">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-medium">{initials}</span>
-                    )}
-                  </div>
-                  <span className="text-sm hidden sm:inline-block">{displayName}</span>
-                </Button>
-              </Link>
+              <UserProfileDropdown 
+                user={user} 
+                initialAcceptInvites={acceptInvites} 
+              />
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/auth/login">
@@ -450,7 +445,7 @@ export default function ThreadPage() {
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Breadcrumb Header */}
       <div className="border-b border-white/10">
