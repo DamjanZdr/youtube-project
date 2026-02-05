@@ -568,11 +568,23 @@ export default function ThreadPage() {
               </Button>
             )}
           </div>
-          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-normal prose-headings:tracking-tight prose-headings:text-foreground/90 prose-h1:text-base prose-h1:mb-3 prose-h2:text-[15px] prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-[14px] prose-h3:mt-4 prose-h3:mb-1.5 prose-p:text-muted-foreground prose-p:text-[13px] prose-p:leading-relaxed prose-li:text-muted-foreground prose-li:text-[13px] prose-strong:font-medium prose-strong:text-foreground/80 prose-a:text-primary prose-a:font-normal prose-table:text-[13px]">
+          <article className="prose prose-neutral dark:prose-invert max-w-none
+            prose-headings:font-normal prose-headings:text-foreground
+            prose-h1:text-xl prose-h1:mt-0 prose-h1:mb-4
+            prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-3
+            prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2
+            prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-p:my-4
+            prose-li:text-[15px] prose-li:leading-7 prose-li:text-muted-foreground prose-li:my-1
+            prose-ul:my-4 prose-ol:my-4
+            prose-strong:font-medium prose-strong:text-foreground
+            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+            prose-table:text-sm prose-th:font-medium
+            prose-code:text-sm prose-code:font-normal
+          ">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {thread.content}
             </ReactMarkdown>
-          </div>
+          </article>
           <div className="flex items-center gap-4 mt-6 pt-4 border-t border-white/10 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
@@ -678,7 +690,7 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-invert prose-sm max-w-none prose-p:text-muted-foreground prose-p:text-[13px] prose-li:text-muted-foreground prose-li:text-[13px]">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {reply.content}
                     </ReactMarkdown>
