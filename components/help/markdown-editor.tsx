@@ -16,6 +16,7 @@ import {
   Minus,
   Eye,
   Edit3,
+  WrapText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -134,6 +135,12 @@ export function MarkdownEditor({
       label: "Code",
       action: () => insertText("`", "`", "code"),
       shortcut: "`x`",
+    },
+    {
+      icon: WrapText,
+      label: "Empty Line",
+      action: () => insertText("\n\n", "", ""),
+      shortcut: "↵↵",
     },
     {
       icon: Minus,
