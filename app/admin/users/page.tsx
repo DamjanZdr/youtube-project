@@ -445,7 +445,7 @@ export default function AdminUsersPage() {
 
       {/* Send Key Dialog */}
       <Dialog open={sendKeyOpen} onOpenChange={setSendKeyOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {generatedKey ? "Key Generated!" : "Generate Plan Key"}
@@ -463,13 +463,14 @@ export default function AdminUsersPage() {
               {/* Generated Key Display */}
               <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30">
                 <p className="text-xs text-muted-foreground mb-2">Plan Key</p>
-                <div className="flex items-center justify-between">
-                  <code className="text-xl font-bold font-mono tracking-wider">
+                <div className="flex items-center justify-between gap-2">
+                  <code className="text-xl font-bold font-mono tracking-wider truncate">
                     {generatedKey.key}
                   </code>
                   <Button 
                     size="sm" 
                     variant="ghost"
+                    className="shrink-0"
                     onClick={() => copyToClipboard(generatedKey.key, "Key")}
                   >
                     <Copy className="w-4 h-4" />
@@ -478,7 +479,7 @@ export default function AdminUsersPage() {
               </div>
 
               {/* Redemption Link */}
-              <div className="p-3 rounded-lg bg-muted/50">
+              <div className="p-3 rounded-lg bg-muted/50 overflow-hidden">
                 <p className="text-xs text-muted-foreground mb-2">Redemption Link</p>
                 <div className="flex items-center gap-2">
                   <code className="text-xs flex-1 truncate">
@@ -487,6 +488,7 @@ export default function AdminUsersPage() {
                   <Button 
                     size="sm" 
                     variant="ghost"
+                    className="shrink-0"
                     onClick={() => copyToClipboard(generatedKey.redeemUrl, "Link")}
                   >
                     <Link className="w-4 h-4" />
