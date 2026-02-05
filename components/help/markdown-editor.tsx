@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface MarkdownEditorProps {
   value: string;
@@ -212,7 +213,7 @@ export function MarkdownEditor({
           >
             {value.trim() ? (
               <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-medium prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h5:text-sm prose-h5:mt-4 prose-h5:mb-2 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-primary/50 prose-blockquote:text-muted-foreground prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                   {value}
                 </ReactMarkdown>
               </div>
