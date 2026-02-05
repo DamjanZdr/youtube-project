@@ -228,7 +228,7 @@ export default function ThreadPage() {
               </span>
             )}
           </div>
-          <h1 className="text-xl font-semibold">{thread.title}</h1>
+          <h1 className="text-lg font-normal text-foreground/90">{thread.title}</h1>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ export default function ThreadPage() {
               </span>
             </div>
           </div>
-          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-medium prose-h1:text-lg prose-h1:mb-4 prose-h2:text-base prose-h2:mt-6 prose-h2:mb-3 prose-h3:text-sm prose-h3:mt-4 prose-h3:mb-2 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary prose-table:text-sm">
+          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-normal prose-headings:tracking-tight prose-headings:text-foreground/90 prose-h1:text-base prose-h1:mb-3 prose-h2:text-[15px] prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-[14px] prose-h3:mt-4 prose-h3:mb-1.5 prose-p:text-muted-foreground prose-p:text-[13px] prose-p:leading-relaxed prose-li:text-muted-foreground prose-li:text-[13px] prose-strong:font-medium prose-strong:text-foreground/80 prose-a:text-primary prose-a:font-normal prose-table:text-[13px]">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {thread.content}
             </ReactMarkdown>
