@@ -185,12 +185,12 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-white/5">
+      <footer className="py-8 px-6 border-t border-white/5 relative z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
           <p>© 2026 myBlueprint</p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
           </div>
         </div>
       </footer>
