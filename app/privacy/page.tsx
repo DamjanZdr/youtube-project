@@ -63,11 +63,13 @@ export default function PrivacyPage() {
               When you access our Service, we may automatically collect:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
-              <li><strong className="text-foreground">Device Information:</strong> Browser type, operating system, device identifiers</li>
-              <li><strong className="text-foreground">Log Data:</strong> IP address, access times, pages viewed, referring URLs</li>
-              <li><strong className="text-foreground">Usage Data:</strong> Features used, actions taken, time spent on pages</li>
-              <li><strong className="text-foreground">Cookies:</strong> Session cookies, authentication cookies, preference cookies</li>
+              <li><strong className="text-foreground">Device Information:</strong> Browser type, operating system (anonymized, via Vercel Analytics)</li>
+              <li><strong className="text-foreground">Usage Data:</strong> Page views, performance metrics (anonymized, aggregated)</li>
+              <li><strong className="text-foreground">Authentication Cookies:</strong> Session cookies required for login and security</li>
             </ul>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              We use Vercel Analytics, which is privacy-friendly and does not track individual users, use cookies for analytics, or collect personal data.
+            </p>
 
             <h3 className="text-xl font-medium mb-3 mt-6">2.3 Third-Party Information</h3>
             <p className="text-muted-foreground leading-relaxed">
@@ -214,16 +216,15 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">8. Cookies and Tracking Technologies</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              We use cookies and similar tracking technologies to:
+              We use minimal cookies and privacy-friendly analytics:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
-              <li><strong className="text-foreground">Essential Cookies:</strong> Required for the Service to function (authentication, security)</li>
-              <li><strong className="text-foreground">Preference Cookies:</strong> Remember your settings and preferences</li>
-              <li><strong className="text-foreground">Analytics Cookies:</strong> Understand how users interact with our Service</li>
+              <li><strong className="text-foreground">Essential Cookies:</strong> Required for the Service to function (authentication, security). These are strictly necessary and do not require consent.</li>
+              <li><strong className="text-foreground">Analytics:</strong> We use Vercel Analytics, a privacy-friendly analytics service that does not use cookies, does not track personal data, and does not require consent under GDPR/CCPA. It only collects anonymous, aggregated data about page views and performance.</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              You can control cookies through your browser settings. Note that disabling certain cookies may affect 
-              the functionality of our Service.
+              We do <strong className="text-foreground">not</strong> use third-party tracking cookies, advertising cookies, or cross-site tracking. 
+              You can control essential cookies through your browser settings, but note that disabling them may prevent you from logging in.
             </p>
           </section>
 
