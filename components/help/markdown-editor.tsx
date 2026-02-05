@@ -16,7 +16,6 @@ import {
   Minus,
   Eye,
   Edit3,
-  WrapText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -137,12 +136,6 @@ export function MarkdownEditor({
       shortcut: "`x`",
     },
     {
-      icon: WrapText,
-      label: "Empty Line",
-      action: () => insertText("\n\n", "", ""),
-      shortcut: "↵↵",
-    },
-    {
       icon: Minus,
       label: "Divider",
       action: () => insertText("\n---\n", "", ""),
@@ -220,8 +213,19 @@ export function MarkdownEditor({
           >
             {value.trim() ? (
               <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-medium prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h5:text-sm prose-h5:mt-4 prose-h5:mb-2 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-primary/50 prose-blockquote:text-muted-foreground prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                  {value}
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    p: ({ children }) => {
+                      // Check if children is empty or just whitespace
+                      if (!children || (typeof children === 'string' && !children.trim())) {
+                        return <p className="h-4">&nbsp;</p>;
+                      }
+                      return <p>{children}</p>;
+                    }
+                  }}
+                >
+                  {value.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
                 </ReactMarkdown>
               </div>
             ) : (

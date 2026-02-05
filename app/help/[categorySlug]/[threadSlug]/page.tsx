@@ -646,8 +646,18 @@ export default function ThreadPage() {
             prose-table:text-sm prose-th:font-normal prose-th:text-foreground/80
             prose-code:text-sm prose-code:font-normal
           ">
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-              {thread.content}
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              components={{
+                p: ({ children }) => {
+                  if (!children || (typeof children === 'string' && !children.trim())) {
+                    return <p className="h-4">&nbsp;</p>;
+                  }
+                  return <p>{children}</p>;
+                }
+              }}
+            >
+              {thread.content.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
             </ReactMarkdown>
           </article>
           <div className="flex items-center gap-4 mt-6 pt-4 border-t border-white/10 text-sm text-muted-foreground">
@@ -758,8 +768,18 @@ export default function ThreadPage() {
                     )}
                   </div>
                   <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-normal prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground">
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                      {reply.content}
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkBreaks]}
+                      components={{
+                        p: ({ children }) => {
+                          if (!children || (typeof children === 'string' && !children.trim())) {
+                            return <p className="h-4">&nbsp;</p>;
+                          }
+                          return <p>{children}</p>;
+                        }
+                      }}
+                    >
+                      {reply.content.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
                     </ReactMarkdown>
                   </div>
                   </>
