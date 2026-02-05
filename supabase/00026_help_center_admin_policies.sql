@@ -17,12 +17,15 @@ END $$;
 -- Drop existing update policies to recreate with admin override
 DROP POLICY IF EXISTS "Users can update own threads" ON help_threads;
 DROP POLICY IF EXISTS "Users can update own replies" ON help_thread_replies;
+DROP POLICY IF EXISTS "Users and admins can update threads" ON help_threads;
+DROP POLICY IF EXISTS "Users and admins can update replies" ON help_thread_replies;
 
 -- Create admin-aware update policy for threads
--- Admins can update ANY thread, users can only update their own
+-- Admins can update ANY thread (including official ones with NULL author_id)
+-- Users can only update their own threads
 CREATE POLICY "Users and admins can update threads" ON help_threads
   FOR UPDATE USING (
-    author_id = auth.uid() 
+    (author_id IS NOT NULL AND author_id = auth.uid()) 
     OR EXISTS (
       SELECT 1 FROM profiles 
       WHERE profiles.id = auth.uid() AND profiles.is_admin = TRUE
@@ -32,7 +35,7 @@ CREATE POLICY "Users and admins can update threads" ON help_threads
 -- Create admin-aware update policy for replies
 CREATE POLICY "Users and admins can update replies" ON help_thread_replies
   FOR UPDATE USING (
-    author_id = auth.uid() 
+    (author_id IS NOT NULL AND author_id = auth.uid()) 
     OR EXISTS (
       SELECT 1 FROM profiles 
       WHERE profiles.id = auth.uid() AND profiles.is_admin = TRUE
@@ -43,7 +46,7 @@ CREATE POLICY "Users and admins can update replies" ON help_thread_replies
 DROP POLICY IF EXISTS "Users and admins can delete threads" ON help_threads;
 CREATE POLICY "Users and admins can delete threads" ON help_threads
   FOR DELETE USING (
-    author_id = auth.uid() 
+    (author_id IS NOT NULL AND author_id = auth.uid()) 
     OR EXISTS (
       SELECT 1 FROM profiles 
       WHERE profiles.id = auth.uid() AND profiles.is_admin = TRUE
@@ -54,7 +57,7 @@ CREATE POLICY "Users and admins can delete threads" ON help_threads
 DROP POLICY IF EXISTS "Users and admins can delete replies" ON help_thread_replies;
 CREATE POLICY "Users and admins can delete replies" ON help_thread_replies
   FOR DELETE USING (
-    author_id = auth.uid() 
+    (author_id IS NOT NULL AND author_id = auth.uid()) 
     OR EXISTS (
       SELECT 1 FROM profiles 
       WHERE profiles.id = auth.uid() AND profiles.is_admin = TRUE
