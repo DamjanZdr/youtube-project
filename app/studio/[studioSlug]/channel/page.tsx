@@ -924,9 +924,9 @@ function TVPreview({ channel, openDialog }: PreviewProps) {
 function DesktopPreview({ channel, openDialog }: PreviewProps) {
   return (
     <div className="p-6">
-      {/* Banner - Desktop shows ~6.2:1 aspect ratio (center strip of the 16:9 upload) */}
+      {/* Banner - Desktop shows 2560 x 338 = ~7.57:1 aspect ratio */}
       <div>
-        <div className="w-full aspect-[6.2/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl overflow-hidden">
+        <div className="w-full aspect-[7.57/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-xl overflow-hidden">
           {channel.banner ? (
             <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-xl" />
           ) : (
@@ -938,8 +938,8 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
       {/* Channel Info */}
       <div>
         <div className="flex gap-6 items-center pt-6">
-          {/* Icon */}
-          <div className="w-[180px] h-[180px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+          {/* Icon - slightly smaller than banner would be at this width */}
+          <div className="w-[160px] h-[160px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center shrink-0 overflow-hidden">
             {channel.icon ? (
               <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
             ) : (
@@ -1017,9 +1017,9 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
 function MobilePreview({ channel, openDialog }: PreviewProps) {
   return (
     <div className="w-[375px]">
-      {/* Banner - Mobile shows ~6.2:1 aspect ratio (same as desktop, center crop of 16:9) */}
+      {/* Banner - Mobile shows "All Devices" safe area (1235 x 338) = ~3.65:1 aspect ratio */}
       <div className="px-4 pt-4">
-        <div className="w-full aspect-[6.2/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg overflow-hidden">
+        <div className="w-full aspect-[3.65/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg overflow-hidden">
           {channel.banner ? (
             <img src={channel.banner} alt="Banner" className="w-full h-full object-cover rounded-lg" />
           ) : (
@@ -1031,26 +1031,26 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
       {/* Channel Info */}
       <div className="px-4">
         {/* Profile Image and Stats Row */}
-        <div className="flex gap-3 pt-4">
-          {/* Icon */}
-          <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center overflow-hidden shrink-0">
+        <div className="flex gap-3 pt-3">
+          {/* Icon - slightly smaller than banner height */}
+          <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center overflow-hidden shrink-0">
             {channel.icon ? (
               <img src={channel.icon} alt="Icon" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-bold text-muted-foreground/50">C</span>
+              <span className="text-xl font-bold text-muted-foreground/50">C</span>
             )}
           </div>
 
           {/* Stats */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold truncate">{channel.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{channel.handle}</p>
-            <p className="text-sm text-muted-foreground mt-1">{channel.subs} • {channel.videos}</p>
+            <h1 className="text-base font-bold truncate">{channel.name}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{channel.handle}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{channel.subs} • {channel.videos}</p>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-muted-foreground mt-4">
+        <p className="text-xs text-muted-foreground mt-3">
           {channel.description || "Welcome to my channel!"}
           {channel.description && channel.description.length > 80 && (
             <button className="text-blue-400 ml-1">...more</button>
@@ -1058,29 +1058,29 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
         </p>
 
         {/* Links */}
-        <div className="flex flex-col gap-1 mt-3">
+        <div className="flex flex-col gap-0.5 mt-2">
           {channel.links.length > 0 ? (
             channel.links.map((link) => (
-              <a key={link.id} href={link.url} className="text-sm text-blue-400 hover:underline truncate">
+              <a key={link.id} href={link.url} className="text-xs text-blue-400 hover:underline truncate">
                 {link.url}
               </a>
             ))
           ) : (
-            <span className="text-sm text-muted-foreground">No links added</span>
+            <span className="text-xs text-muted-foreground">No links added</span>
           )}
         </div>
 
-        <Button className="bg-white text-black hover:bg-white/90 rounded-full w-full mt-4">
+        <Button className="bg-white text-black hover:bg-white/90 rounded-full w-full mt-3 h-9 text-sm">
           Subscribe
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-6 px-4 border-b border-white/10 overflow-x-auto">
+      <div className="flex items-center gap-6 px-4 border-b border-white/10 overflow-x-auto mt-3">
         {["Home", "Videos", "Shorts", "Playlists"].map((tab, i) => (
           <button 
             key={tab}
-            className={`text-sm font-medium py-3 whitespace-nowrap ${i === 0 ? "text-white border-b-2 border-white" : "text-muted-foreground"}`}
+            className={`text-xs font-medium py-2.5 whitespace-nowrap ${i === 0 ? "text-white border-b-2 border-white" : "text-muted-foreground"}`}
           >
             {tab}
           </button>
@@ -1089,14 +1089,14 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
 
       {/* Video Section */}
       <div className="p-4">
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-3">
-              <div className="w-[160px] aspect-video rounded-lg bg-white/5 shrink-0" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-3 rounded bg-white/10 w-full" />
-                <div className="h-3 rounded bg-white/10 w-3/4" />
-                <div className="h-2 rounded bg-white/5 w-1/2 mt-2" />
+              <div className="w-[140px] aspect-video rounded-lg bg-white/5 shrink-0" />
+              <div className="flex-1 space-y-1.5 py-1">
+                <div className="h-2.5 rounded bg-white/10 w-full" />
+                <div className="h-2.5 rounded bg-white/10 w-3/4" />
+                <div className="h-2 rounded bg-white/5 w-1/2 mt-1.5" />
               </div>
             </div>
           ))}
