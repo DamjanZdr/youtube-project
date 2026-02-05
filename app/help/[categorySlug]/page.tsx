@@ -14,6 +14,7 @@ import {
   Plus,
   MessageCircle,
   Eye,
+  LayoutGrid,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -166,19 +167,27 @@ export default function CategoryPage() {
             />
           </Link>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {user ? (
-              <UserProfileDropdown 
-                user={user} 
-                initialAcceptInvites={acceptInvites} 
-              />
+              <>
+                <Link href="/hub">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    Hub
+                  </Button>
+                </Link>
+                <UserProfileDropdown 
+                  user={user} 
+                  initialAcceptInvites={acceptInvites} 
+                />
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">Sign in</Button>
+                  <Button variant="ghost" size="sm">Login</Button>
                 </Link>
                 <Link href="/auth/sign-up">
-                  <Button size="sm">Sign up</Button>
+                  <Button size="sm">Register</Button>
                 </Link>
               </div>
             )}

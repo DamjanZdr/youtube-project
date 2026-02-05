@@ -48,10 +48,10 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
   const initials = displayName.charAt(0).toUpperCase();
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-white/10">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
             {user.avatar_url ? (
               <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
             ) : (
@@ -59,10 +59,10 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
             )}
           </div>
           <span className="text-sm hidden sm:inline-block max-w-[150px] truncate">{displayName}</span>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
         {/* Accept Invites Toggle */}
         <div 
           className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer"
