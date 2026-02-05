@@ -258,7 +258,7 @@ export default function CategoryPage() {
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>
-                      by {thread.author?.full_name || "Unknown"}
+                      by {thread.author?.full_name || (thread.is_official ? "System" : "Unknown")}
                     </span>
                     <span>
                       {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}

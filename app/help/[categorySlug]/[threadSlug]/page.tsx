@@ -595,7 +595,7 @@ export default function ThreadPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">
-                    {thread.author?.full_name || "Unknown"}
+                    {thread.author?.full_name || (thread.is_official ? "System" : "Unknown")}
                   </span>
                   {thread.is_official && (
                     <Shield className="w-4 h-4 text-primary" />
@@ -729,7 +729,7 @@ export default function ThreadPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">
-                            {reply.author?.full_name || "Unknown"}
+                            {reply.author?.full_name || (reply.is_official ? "System" : "Unknown")}
                           </span>
                           {reply.is_official && (
                             <span className="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
