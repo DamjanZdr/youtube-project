@@ -79,6 +79,9 @@ interface BillingEvent {
   amount_cents: number | null;
   source: string;
   created_at: string;
+  stripe_invoice_id: string | null;
+  stripe_payment_intent_id: string | null;
+  metadata: Record<string, any> | null;
   user?: { email: string; full_name: string | null };
 }
 
@@ -113,6 +116,13 @@ export default function AdminStudiosPage() {
   const [billingHistory, setBillingHistory] = useState<BillingEvent[]>([]);
   const [totalPaid, setTotalPaid] = useState(0);
   const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
+
+  // Refund Dialog
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundEvent, setRefundEvent] = useState<BillingEvent | null>(null);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("requested_by_customer");
+  const [refunding, setRefunding] = useState(false);
 
   useEffect(() => {
     async function loadStudios() {
@@ -234,6 +244,8 @@ export default function AdminStudiosPage() {
         return <DollarSign className="w-4 h-4 text-green-500" />;
       case "payment_failed":
         return <XCircle className="w-4 h-4 text-red-500" />;
+      case "refund":
+        return <ArrowDownCircle className="w-4 h-4 text-red-500" />;
       case "key_redeemed":
       case "key_upgrade":
       case "key_extended":
@@ -256,6 +268,48 @@ export default function AdminStudiosPage() {
       .split("_")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  };
+
+  const openRefundDialog = (event: BillingEvent) => {
+    setRefundEvent(event);
+    setRefundAmount(event.amount_cents ? (event.amount_cents / 100).toFixed(2) : "");
+    setRefundReason("requested_by_customer");
+    setRefundOpen(true);
+  };
+
+  const handleRefund = async () => {
+    if (!refundEvent) return;
+
+    setRefunding(true);
+    try {
+      const response = await fetch("/api/admin/refund", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          billingEventId: refundEvent.id,
+          amount: refundAmount ? parseFloat(refundAmount) : undefined,
+          reason: refundReason,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to process refund");
+      }
+
+      toast.success(`Refund of $${(result.refund.amount / 100).toFixed(2)} processed successfully`);
+      setRefundOpen(false);
+      
+      // Reload billing history
+      if (detailsStudio) {
+        loadStudioDetails(detailsStudio);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to process refund");
+    } finally {
+      setRefunding(false);
+    }
   };
 
   const handleSendKey = async () => {
@@ -695,11 +749,16 @@ export default function AdminStudiosPage() {
                         <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                           {getEventIcon(event.event_type)}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-sm">{formatEventType(event.event_type)}</span>
                               {event.amount_cents && event.amount_cents > 0 && (
                                 <Badge variant="outline" className="text-green-500 border-green-500/30">
                                   ${(event.amount_cents / 100).toFixed(2)}
+                                </Badge>
+                              )}
+                              {event.amount_cents && event.amount_cents < 0 && (
+                                <Badge variant="outline" className="text-red-500 border-red-500/30">
+                                  -${(Math.abs(event.amount_cents) / 100).toFixed(2)}
                                 </Badge>
                               )}
                             </div>
@@ -714,10 +773,35 @@ export default function AdminStudiosPage() {
                                 <span className="mr-2">• by {event.user.email}</span>
                               )}
                             </div>
+                            {/* Stripe Invoice ID */}
+                            {event.stripe_invoice_id && (
+                              <div className="text-xs mt-1">
+                                <a 
+                                  href={`https://dashboard.stripe.com/invoices/${event.stripe_invoice_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1 w-fit"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  {event.stripe_invoice_id.slice(0, 20)}...
+                                </a>
+                              </div>
+                            )}
                             <p className="text-xs text-muted-foreground mt-1">
                               {format(new Date(event.created_at), "PPp")}
                             </p>
                           </div>
+                          {/* Refund button for payment_success events */}
+                          {event.event_type === "payment_success" && event.amount_cents && event.amount_cents > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 shrink-0"
+                              onClick={() => openRefundDialog(event)}
+                            >
+                              Refund
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -834,6 +918,101 @@ export default function AdminStudiosPage() {
           </div>
         </div>
       )}
+
+      {/* Refund Dialog */}
+      <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-500">Process Refund</DialogTitle>
+            <DialogDescription>
+              Refund payment for {detailsStudio?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {refundEvent && (
+            <div className="space-y-4 py-4">
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Original Payment</span>
+                  <span className="font-medium text-green-500">
+                    ${refundEvent.amount_cents ? (refundEvent.amount_cents / 100).toFixed(2) : "0.00"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Date</span>
+                  <span className="text-sm">{format(new Date(refundEvent.created_at), "PPp")}</span>
+                </div>
+                {refundEvent.stripe_invoice_id && (
+                  <div className="flex justify-between mt-2">
+                    <span className="text-sm text-muted-foreground">Invoice</span>
+                    <a 
+                      href={`https://dashboard.stripe.com/invoices/${refundEvent.stripe_invoice_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      View in Stripe
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Refund Amount (leave empty for full refund)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder={refundEvent.amount_cents ? (refundEvent.amount_cents / 100).toFixed(2) : "0.00"}
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Reason</Label>
+                <Select value={refundReason} onValueChange={setRefundReason}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="requested_by_customer">Requested by customer</SelectItem>
+                    <SelectItem value="duplicate">Duplicate payment</SelectItem>
+                    <SelectItem value="fraudulent">Fraudulent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <p className="text-xs text-red-400">
+                  <strong>Warning:</strong> Refunds are processed through Stripe and cannot be undone. 
+                  The refund will appear in the customer's account within 5-10 business days.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRefundOpen(false)} disabled={refunding}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleRefund} 
+              disabled={refunding}
+            >
+              {refunding ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>Process Refund</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
