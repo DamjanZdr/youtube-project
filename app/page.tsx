@@ -1,10 +1,9 @@
 import { AuthButton } from "@/components/auth-button";
 import { Button } from "@/components/ui/button";
-import { hasEnvVars } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Play, Sparkles, Layout, Eye, FolderKanban, FileText, Users } from "lucide-react";
+import { Sparkles, Layout, Eye, FolderKanban, FileText, Users } from "lucide-react";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -28,11 +27,9 @@ export default async function Home() {
             />
           </Link>
           <div className="flex items-center gap-4">
-            {hasEnvVars && (
-              <Suspense fallback={<div className="w-20 h-9" />}>
-                <AuthButton />
-              </Suspense>
-            )}
+            <Suspense fallback={<div className="w-20 h-9" />}>
+              <AuthButton />
+            </Suspense>
           </div>
         </div>
       </nav>
