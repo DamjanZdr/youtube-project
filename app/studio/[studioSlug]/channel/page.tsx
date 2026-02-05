@@ -33,11 +33,7 @@ import {
   Trash2,
   Plus,
   X,
-  GripVertical,
-  Youtube,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
+  GripVertical
 } from "lucide-react";
 
 type ViewMode = "landscape" | "portrait" | "tv";
@@ -80,12 +76,6 @@ export default function ChannelPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [channelId, setChannelId] = useState<string | null>(null);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
-  
-  // YouTube connection state
-  const [youtubeConnected, setYoutubeConnected] = useState(false);
-  const [applyingToYoutube, setApplyingToYoutube] = useState(false);
-  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   
   // Channel data state
   const [channel, setChannel] = useState({
@@ -138,17 +128,6 @@ export default function ChannelPage() {
       setLoading(false);
       return;
     }
-
-    setOrganizationId(org.id);
-    
-    // Check if YouTube is connected
-    const { data: ytConnection } = await supabase
-      .from("youtube_connections")
-      .select("id")
-      .eq("organization_id", org.id)
-      .single();
-    
-    setYoutubeConnected(!!ytConnection);
 
     // Get or create channel
     let { data: channelData } = await supabase
@@ -455,53 +434,6 @@ export default function ChannelPage() {
     setEditDialog(type);
   };
 
-  // Apply branding to YouTube
-  const applyToYoutube = async () => {
-    if (!organizationId) return;
-    
-    setApplyingToYoutube(true);
-    
-    try {
-      const response = await fetch('/api/youtube/channel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organizationId,
-          name: channel.name,
-          description: channel.description,
-          bannerUrl: channel.banner,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to apply branding');
-      }
-      
-      // Show results
-      const applied = [];
-      if (data.results?.name) applied.push('name');
-      if (data.results?.description) applied.push('description');
-      if (data.results?.banner) applied.push('banner');
-      
-      if (applied.length > 0) {
-        toast.success(`Applied to YouTube: ${applied.join(', ')}`);
-      }
-      
-      if (data.errors && data.errors.length > 0) {
-        data.errors.forEach((err: string) => toast.error(err));
-      }
-      
-      setApplyDialogOpen(false);
-    } catch (error) {
-      console.error('Error applying to YouTube:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to apply branding to YouTube');
-    } finally {
-      setApplyingToYoutube(false);
-    }
-  };
-
   // Toolbar buttons config
   const toolbarButtons = [
     { id: "banner" as const, icon: Image, label: "Banner" },
@@ -564,22 +496,6 @@ export default function ChannelPage() {
               {btn.label}
             </Button>
           ))}
-          
-          {/* Apply to YouTube button - only show if connected */}
-          {youtubeConnected && (
-            <>
-              <div className="w-px h-6 bg-white/10 mx-2" />
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setApplyDialogOpen(true)}
-                className="gap-2 bg-red-600 hover:bg-red-700"
-              >
-                <Youtube className="w-4 h-4" />
-                Apply to YouTube
-              </Button>
-            </>
-          )}
         </div>
       </div>
 
@@ -896,92 +812,6 @@ export default function ChannelPage() {
               setEditDialog(null);
             }}>
               Apply
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Apply to YouTube Dialog */}
-      <Dialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Youtube className="w-5 h-5 text-red-500" />
-              Apply to YouTube
-            </DialogTitle>
-            <DialogDescription>
-              Push your channel branding to your connected YouTube channel.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* What will be updated */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">The following will be updated:</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Channel Name: <span className="text-muted-foreground">{channel.name}</span></span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Description: <span className="text-muted-foreground">{channel.description ? `${channel.description.substring(0, 50)}...` : "(empty)"}</span></span>
-                </div>
-                {channel.banner && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    <span>Banner Image</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* What cannot be updated */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Cannot be updated via API:</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-500" />
-                  <span>Handle - can only be changed in YouTube Studio</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-500" />
-                  <span>Profile Picture - linked to your Google account</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-500" />
-                  <span>Channel Links - managed in YouTube Studio</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <p className="text-xs text-yellow-400">
-                <strong>Note:</strong> Changes may take a few minutes to appear on YouTube.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setApplyDialogOpen(false)} disabled={applyingToYoutube}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={applyToYoutube} 
-              disabled={applyingToYoutube}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {applyingToYoutube ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Applying...
-                </>
-              ) : (
-                <>
-                  <Youtube className="w-4 h-4 mr-2" />
-                  Apply Changes
-                </>
-              )}
             </Button>
           </DialogFooter>
         </DialogContent>
