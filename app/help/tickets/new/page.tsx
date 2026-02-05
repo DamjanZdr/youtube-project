@@ -96,7 +96,7 @@ export default function NewTicketPage() {
         user_id: user.id,
         subject: subject.trim(),
         category,
-        related_studio_id: relatedStudioId || null,
+        related_studio_id: relatedStudioId && relatedStudioId !== "none" ? relatedStudioId : null,
       })
       .select()
       .single();
@@ -182,10 +182,7 @@ export default function NewTicketPage() {
               <SelectContent>
                 {categories.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
-                    <div>
-                      <div className="font-medium">{cat.label}</div>
-                      <div className="text-xs text-muted-foreground">{cat.description}</div>
-                    </div>
+                    {cat.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -203,7 +200,7 @@ export default function NewTicketPage() {
                   <SelectValue placeholder="Select a studio if relevant" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {studios.map((studio) => (
                     <SelectItem key={studio.id} value={studio.id}>
                       {studio.name}
