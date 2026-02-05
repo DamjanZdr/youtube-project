@@ -70,8 +70,8 @@ export default function NewTicketPage() {
     if (orgs) {
       const studioList: Studio[] = [];
       for (const o of orgs) {
-        const org = o.organization;
-        if (org && !Array.isArray(org)) {
+        const org = o.organization as { id: string; name: string } | null;
+        if (org) {
           studioList.push({ id: org.id, name: org.name });
         }
       }
