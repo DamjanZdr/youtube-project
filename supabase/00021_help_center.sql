@@ -83,7 +83,8 @@ CREATE INDEX idx_help_replies_author ON help_thread_replies(author_id);
 
 -- Ticket status enum
 CREATE TYPE support_ticket_status AS ENUM (
-  'awaiting_response',  -- Waiting for admin to respond
+  'new',                -- Brand new ticket, never responded to
+  'awaiting_response',  -- Ongoing: waiting for admin to respond
   'responded',          -- Admin has responded, waiting for user
   'resolved',           -- Issue resolved
   'archived'            -- Old/closed tickets
@@ -108,7 +109,7 @@ CREATE TABLE support_tickets (
   
   subject VARCHAR(255) NOT NULL,
   category support_ticket_category NOT NULL DEFAULT 'other',
-  status support_ticket_status NOT NULL DEFAULT 'awaiting_response',
+  status support_ticket_status NOT NULL DEFAULT 'new',
   
   -- Optional context
   related_studio_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
@@ -221,12 +222,12 @@ CREATE OR REPLACE FUNCTION update_ticket_status_on_message()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.is_admin THEN
-    -- Admin replied, set to responded
+    -- Admin replied, set to responded (whether from 'new' or 'awaiting_response')
     UPDATE support_tickets 
     SET status = 'responded', updated_at = NOW() 
-    WHERE id = NEW.ticket_id AND status = 'awaiting_response';
+    WHERE id = NEW.ticket_id AND status IN ('new', 'awaiting_response');
   ELSE
-    -- User replied, set back to awaiting response
+    -- User replied to an ongoing ticket, set to awaiting response
     UPDATE support_tickets 
     SET status = 'awaiting_response', updated_at = NOW() 
     WHERE id = NEW.ticket_id AND status = 'responded';
