@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,7 +90,7 @@ export default function ThreadPage() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -118,18 +119,25 @@ export default function ThreadPage() {
   }, [categorySlug, threadSlug]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
 
-    if (user) {
-      // Check if user is admin
+    if (authUser) {
+      // Fetch user profile with admin status
       const { data: profile } = await supabase
         .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
+        .select("is_admin, full_name, avatar_url")
+        .eq("id", authUser.id)
         .single();
 
+      setUser({
+        id: authUser.id,
+        email: authUser.email,
+        full_name: profile?.full_name,
+        avatar_url: profile?.avatar_url,
+      });
       setIsAdmin(profile?.is_admin || false);
+    } else {
+      setUser(null);
     }
   };
 
@@ -400,9 +408,51 @@ export default function ThreadPage() {
     );
   }
 
+  const displayName = user?.full_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName.charAt(0).toUpperCase();
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Top Navigation */}
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-5xl mx-auto px-8 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 py-2">
+            <img
+              src="/bplogo.png"
+              alt="Blueprint"
+              className="h-8 w-auto object-contain"
+            />
+          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            {user ? (
+              <Link href="/hub">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-medium">{initials}</span>
+                    )}
+                  </div>
+                  <span className="text-sm hidden sm:inline-block">{displayName}</span>
+                </Button>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">Sign in</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Breadcrumb Header */}
       <div className="border-b border-white/10">
         <div className="max-w-5xl mx-auto px-8 py-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -569,16 +619,18 @@ export default function ThreadPage() {
             )}
           </div>
           <article className="prose prose-neutral dark:prose-invert max-w-none
-            prose-headings:font-normal prose-headings:text-foreground
-            prose-h1:text-xl prose-h1:mt-0 prose-h1:mb-4
-            prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-3
-            prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2
+            prose-headings:font-normal prose-headings:text-foreground/90
+            prose-h1:text-lg prose-h1:mt-0 prose-h1:mb-6
+            prose-h2:text-[15px] prose-h2:mt-8 prose-h2:mb-3 prose-h2:text-foreground/80
+            prose-h3:text-[14px] prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-foreground/70
+            prose-h4:text-[14px] prose-h4:mt-4 prose-h4:mb-2 prose-h4:text-foreground/70
+            prose-h5:text-[13px] prose-h5:mt-4 prose-h5:mb-2 prose-h5:text-foreground/60
             prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-p:my-4
             prose-li:text-[15px] prose-li:leading-7 prose-li:text-muted-foreground prose-li:my-1
             prose-ul:my-4 prose-ol:my-4
-            prose-strong:font-medium prose-strong:text-foreground
+            prose-strong:font-medium prose-strong:text-foreground/90
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-            prose-table:text-sm prose-th:font-medium
+            prose-table:text-sm prose-th:font-normal prose-th:text-foreground/80
             prose-code:text-sm prose-code:font-normal
           ">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -690,7 +742,7 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-normal prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {reply.content}
                     </ReactMarkdown>
