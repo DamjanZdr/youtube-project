@@ -57,10 +57,9 @@ export async function POST(request: Request) {
 
     if (!paymentIntentId && event.stripe_invoice_id) {
       const invoice = await stripe.invoices.retrieve(event.stripe_invoice_id);
-      if (invoice.payment_intent) {
-        paymentIntentId = typeof invoice.payment_intent === 'string' 
-          ? invoice.payment_intent 
-          : invoice.payment_intent.id;
+      const pi = (invoice as { payment_intent?: string | { id: string } }).payment_intent;
+      if (pi) {
+        paymentIntentId = typeof pi === 'string' ? pi : pi.id;
       }
     }
 
