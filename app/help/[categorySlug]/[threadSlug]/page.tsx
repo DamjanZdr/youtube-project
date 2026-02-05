@@ -205,7 +205,7 @@ export default function ThreadPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-6 py-6">
+        <div className="max-w-5xl mx-auto px-8 py-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Link href="/help" className="hover:text-foreground">
               Help Center
@@ -228,11 +228,11 @@ export default function ThreadPage() {
               </span>
             )}
           </div>
-          <h1 className="text-2xl font-bold">{thread.title}</h1>
+          <h1 className="text-xl font-semibold">{thread.title}</h1>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-8 py-8">
         {/* Original Post */}
         <div className="mb-8 p-6 rounded-xl bg-white/5 border border-white/10">
           <div className="flex items-center gap-3 mb-4">
@@ -257,7 +257,7 @@ export default function ThreadPage() {
               </span>
             </div>
           </div>
-          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary">
+          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-medium prose-h1:text-lg prose-h1:mb-4 prose-h2:text-base prose-h2:mt-6 prose-h2:mb-3 prose-h3:text-sm prose-h3:mt-4 prose-h3:mb-2 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary prose-table:text-sm">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {thread.content}
             </ReactMarkdown>
