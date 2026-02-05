@@ -749,7 +749,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
       {/* Invite Member Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
           </DialogHeader>
@@ -792,7 +792,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
       {/* Remove Member Dialog */}
       <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Remove Team Member</DialogTitle>
           </DialogHeader>
@@ -816,7 +816,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
       {/* Delete Studio Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Studio</DialogTitle>
           </DialogHeader>
@@ -874,7 +874,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
       {/* Transfer Ownership Dialog */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-amber-500" />
