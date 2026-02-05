@@ -325,18 +325,49 @@ export default function HubPage() {
             />
           </Link>
           
-          <div className="flex items-center gap-4">
-            {user && (
+          <div className="flex items-center gap-3">
+            {user ? (
               <UserProfileDropdown 
                 user={user} 
                 initialAcceptInvites={acceptInvites} 
               />
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">Login</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Register</Button>
+                </Link>
+              </>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Not logged in state */}
+      {!user ? (
+        <main className="max-w-7xl mx-auto px-6 py-10 flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center mb-6">
+              <FolderKanban className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-2">You're not logged in</h2>
+            <p className="text-muted-foreground max-w-md mb-6">
+              To create a studio and manage your YouTube projects, you need to log in or create an account.
+            </p>
+            <div className="flex items-center gap-3">
+              <Link href="/auth/login">
+                <Button variant="outline" size="lg">Login</Button>
+              </Link>
+              <Link href="/auth/sign-up">
+                <Button size="lg" className="glow-primary">Register</Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+      ) : (
+      /* Main Content */
       <main className="max-w-7xl mx-auto px-6 py-10">
 
         {/* Page Header */}
@@ -498,6 +529,7 @@ export default function HubPage() {
           </div>
         )}
       </main>
+      )}
     </div>
   );
 }
