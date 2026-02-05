@@ -62,6 +62,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [transferEmail, setTransferEmail] = useState("");
   const [transferring, setTransferring] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState<any>(null);
+  const [cancellingTransfer, setCancellingTransfer] = useState(false);
 
   useEffect(() => {
     // Get tab from URL or default to studio
@@ -137,6 +139,23 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       if (subData) {
         setSubscription(subData);
       }
+
+      // Fetch pending transfer invite (if any)
+      const { data: transferData } = await supabase
+        .from("organization_members")
+        .select(`
+          id,
+          user_id,
+          status,
+          joined_at,
+          user:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
+        `)
+        .eq("organization_id", studioData.id)
+        .eq("is_transfer", true)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      setPendingTransfer(transferData);
     }
     
     setLoading(false);
@@ -400,6 +419,34 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     return null;
   };
 
+  // Check if the current plan's member limit would allow keeping the old owner after transfer
+  const willOldOwnerBeKicked = () => {
+    const limit = getMemberLimit();
+    // If limit is 1, old owner will be kicked (since new owner takes the only slot)
+    return limit <= 1;
+  };
+
+  const handleCancelTransfer = async () => {
+    if (!pendingTransfer) return;
+    
+    setCancellingTransfer(true);
+    
+    const { error } = await supabase
+      .from('organization_members')
+      .delete()
+      .eq('id', pendingTransfer.id);
+
+    if (error) {
+      console.error('Error cancelling transfer:', error);
+      toast.error('Failed to cancel transfer');
+    } else {
+      toast.success('Transfer cancelled');
+      setPendingTransfer(null);
+    }
+    
+    setCancellingTransfer(false);
+  };
+
   const handleInitiateTransfer = async () => {
     if (!transferEmail || !studio || !user) return;
     
@@ -478,7 +525,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     }
 
     // Create new transfer invite
-    const { error } = await supabase
+    const { data: newTransfer, error } = await supabase
       .from('organization_members')
       .insert({
         organization_id: studio.id,
@@ -487,13 +534,22 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         status: 'pending',
         is_transfer: true,
         invited_by: user.id
-      });
+      })
+      .select(`
+        id,
+        user_id,
+        status,
+        joined_at,
+        user:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
+      `)
+      .single();
 
     if (error) {
       console.error('Error creating transfer invite:', error);
       toast.error('Failed to send transfer invite');
     } else {
       toast.success(`Transfer invite sent to ${existingUser.email}`);
+      setPendingTransfer(newTransfer);
       setShowTransferDialog(false);
       setTransferEmail("");
     }
@@ -630,19 +686,75 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Enter the email address of the user you want to transfer ownership to. They must have an account.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
-                  onClick={() => setShowTransferDialog(true)}
-                >
-                  <Crown className="w-4 h-4" />
-                  Initiate Transfer
-                </Button>
-              </div>
+              {/* Pending Transfer */}
+              {pendingTransfer ? (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                          {pendingTransfer.user?.avatar_url ? (
+                            <img 
+                              src={pendingTransfer.user.avatar_url} 
+                              alt="" 
+                              className="w-full h-full object-cover rounded-full" 
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-amber-500">
+                              {pendingTransfer.user?.email?.[0]?.toUpperCase() || '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {pendingTransfer.user?.full_name || pendingTransfer.user?.email}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Transfer pending • Sent {new Date(pendingTransfer.joined_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelTransfer}
+                        disabled={cancellingTransfer}
+                        className="text-red-500 border-red-500/30 hover:bg-red-500/10"
+                      >
+                        {cancellingTransfer ? 'Cancelling...' : 'Cancel Transfer'}
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Waiting for {pendingTransfer.user?.full_name || pendingTransfer.user?.email} to accept or decline.
+                    You can cancel this transfer at any time.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Enter the email address of the user you want to transfer ownership to. They must have an account.
+                  </p>
+                  {willOldOwnerBeKicked() && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <p className="text-sm text-red-500 font-medium">
+                        ⚠️ You will lose access
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Your current plan only allows 1 member. If the transfer is accepted, you will be removed from the studio entirely.
+                      </p>
+                    </div>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                    onClick={() => setShowTransferDialog(true)}
+                  >
+                    <Crown className="w-4 h-4" />
+                    Initiate Transfer
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -895,14 +1007,27 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <p className="text-muted-foreground">
               Send an ownership transfer invite for <span className="font-semibold">{studio?.name}</span>.
             </p>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <p className="text-sm text-amber-600 font-medium">
-                ⚠️ Important
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                The recipient can accept or decline this transfer. If they accept, you will become a regular member and they will have full control of the studio, including the ability to remove you.
-              </p>
-            </div>
+            {willOldOwnerBeKicked() ? (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <p className="text-sm text-red-500 font-medium">
+                  ⚠️ You will lose access
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your current plan ({subscription?.plan || 'free'}) only allows 1 member. If the recipient accepts, 
+                  <span className="font-semibold text-red-400"> you will be removed from the studio entirely</span> and 
+                  lose all access.
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-sm text-amber-600 font-medium">
+                  ⚠️ Important
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The recipient can accept or decline this transfer. If they accept, you will become a regular member and they will have full control of the studio, including the ability to remove you.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium">Email Address</label>
               <Input
