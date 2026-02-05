@@ -10,7 +10,8 @@ import {
   Key, 
   CreditCard,
   LogOut,
-  Shield
+  Shield,
+  TicketIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/admin/studios", label: "Studios", icon: Building2 },
   { href: "/admin/keys", label: "Keys", icon: Key },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

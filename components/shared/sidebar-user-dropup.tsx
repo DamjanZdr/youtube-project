@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, ChevronUp, Home } from "lucide-react";
+import { Settings, LogOut, ChevronUp, Home, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -115,6 +115,14 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
           <Link href="/account" className="flex items-center gap-2 cursor-pointer">
             <Settings className="w-4 h-4" />
             Account Settings
+          </Link>
+        </DropdownMenuItem>
+        
+        {/* Help Center */}
+        <DropdownMenuItem asChild>
+          <Link href="/help" className="flex items-center gap-2 cursor-pointer">
+            <HelpCircle className="w-4 h-4" />
+            Help Center
           </Link>
         </DropdownMenuItem>
         
