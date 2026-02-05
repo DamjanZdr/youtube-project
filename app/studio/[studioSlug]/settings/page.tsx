@@ -363,12 +363,22 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
   // Check if studio can be deleted based on subscription
   const getDeleteBlockReason = () => {
-    if (!subscription || subscription.plan === 'free' || !subscription.current_period_end) {
+    if (!subscription || subscription.plan === 'free') {
       return null; // Can delete free plans anytime
     }
 
-    const periodEnd = new Date(subscription.current_period_end);
+    // Check if we have valid period end date
+    const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
     const now = new Date();
+    
+    // If no valid period end, or if the date is in the past or invalid (e.g., 1970), show a generic warning
+    if (!periodEnd || periodEnd.getFullYear() < 2020 || periodEnd <= now) {
+      return {
+        blocked: false,
+        message: `You have an active ${subscription.plan} plan. Deleting this studio means you'll lose access to your paid subscription.`,
+      };
+    }
+
     const daysRemaining = Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     // Yearly subscriptions: can only delete in the last 30 days (last month)
