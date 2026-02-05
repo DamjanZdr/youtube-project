@@ -4,11 +4,13 @@
  */
 
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly', // List videos
   'https://www.googleapis.com/auth/youtube.force-ssl', // Update video metadata
   'https://www.googleapis.com/auth/youtube.upload', // Upload thumbnails
+  'https://www.googleapis.com/auth/youtube.channel-memberships.creator', // Channel management
 ];
 
 export function getOAuth2Client() {
@@ -323,4 +325,123 @@ export async function getVideoPlaylistItem(
   });
   
   return response.data.items?.[0]?.id || null;
+}
+
+/**
+ * Update channel branding (name and description)
+ * Note: Handle cannot be changed via API - it's set during channel creation
+ */
+export async function updateChannelBranding(
+  accessToken: string,
+  data: {
+    title?: string;
+    description?: string;
+  }
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  // Get current channel data
+  const current = await youtube.channels.list({
+    part: ['snippet', 'brandingSettings'],
+    mine: true,
+  });
+  
+  const channel = current.data.items?.[0];
+  if (!channel) {
+    throw new Error('No channel found');
+  }
+  
+  // Update channel
+  const response = await youtube.channels.update({
+    part: ['brandingSettings'],
+    requestBody: {
+      id: channel.id!,
+      brandingSettings: {
+        channel: {
+          title: data.title ?? channel.brandingSettings?.channel?.title,
+          description: data.description ?? channel.brandingSettings?.channel?.description,
+        },
+      },
+    },
+  });
+  
+  return response.data;
+}
+
+/**
+ * Upload/update channel banner (cover photo)
+ * Image requirements: 2560 x 1440 px, max 6MB
+ */
+export async function updateChannelBanner(
+  accessToken: string,
+  imageBuffer: Buffer,
+  mimeType: string
+) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  // First upload the banner image
+  const uploadResponse = await youtube.channelBanners.insert({
+    media: {
+      mimeType,
+      body: Readable.from(imageBuffer),
+    },
+  });
+  
+  const bannerUrl = uploadResponse.data.url;
+  if (!bannerUrl) {
+    throw new Error('Failed to upload banner image');
+  }
+  
+  // Then set it as the channel banner
+  const current = await youtube.channels.list({
+    part: ['brandingSettings'],
+    mine: true,
+  });
+  
+  const channel = current.data.items?.[0];
+  if (!channel) {
+    throw new Error('No channel found');
+  }
+  
+  const response = await youtube.channels.update({
+    part: ['brandingSettings'],
+    requestBody: {
+      id: channel.id!,
+      brandingSettings: {
+        image: {
+          bannerExternalUrl: bannerUrl,
+        },
+      },
+    },
+  });
+  
+  return response.data;
+}
+
+/**
+ * Get full channel branding info
+ */
+export async function getChannelBranding(accessToken: string) {
+  const youtube = getYouTubeClient(accessToken);
+  
+  const response = await youtube.channels.list({
+    part: ['snippet', 'brandingSettings', 'statistics'],
+    mine: true,
+  });
+  
+  const channel = response.data.items?.[0];
+  if (!channel) {
+    throw new Error('No channel found');
+  }
+  
+  return {
+    id: channel.id!,
+    title: channel.snippet?.title || '',
+    description: channel.snippet?.description || '',
+    customUrl: channel.snippet?.customUrl || '', // This is the handle like @channelname
+    thumbnail: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url || null,
+    banner: channel.brandingSettings?.image?.bannerExternalUrl || null,
+    subscriberCount: parseInt(channel.statistics?.subscriberCount || '0', 10),
+    videoCount: parseInt(channel.statistics?.videoCount || '0', 10),
+  };
 }
