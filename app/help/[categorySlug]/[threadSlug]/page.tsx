@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
+import { MarkdownToolbar } from "@/components/help/markdown-toolbar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +97,11 @@ export default function ThreadPage() {
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Refs for markdown toolbar
+  const editThreadTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const editReplyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const newReplyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Edit states
   const [editingThread, setEditingThread] = useState(false);
@@ -556,13 +562,21 @@ export default function ThreadPage() {
               placeholder="Title"
               className="mb-4"
             />
-            <Textarea
-              value={editThreadContent}
-              onChange={(e) => setEditThreadContent(e.target.value)}
-              placeholder="Content (supports Markdown)"
-              rows={16}
-              className="mb-4 font-mono text-sm"
-            />
+            <div className="mb-4">
+              <MarkdownToolbar
+                textareaRef={editThreadTextareaRef}
+                value={editThreadContent}
+                onChange={setEditThreadContent}
+              />
+              <Textarea
+                ref={editThreadTextareaRef}
+                value={editThreadContent}
+                onChange={(e) => setEditThreadContent(e.target.value)}
+                placeholder="Content (supports Markdown)"
+                rows={16}
+                className="font-mono text-sm rounded-t-none border-t-0"
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setEditingThread(false)}>
                 Cancel
@@ -679,12 +693,20 @@ export default function ThreadPage() {
                 >
                   {editingReplyId === reply.id ? (
                     <div>
-                      <Textarea
-                        value={editReplyContent}
-                        onChange={(e) => setEditReplyContent(e.target.value)}
-                        rows={4}
-                        className="mb-3"
-                      />
+                      <div className="mb-3">
+                        <MarkdownToolbar
+                          textareaRef={editReplyTextareaRef}
+                          value={editReplyContent}
+                          onChange={setEditReplyContent}
+                        />
+                        <Textarea
+                          ref={editReplyTextareaRef}
+                          value={editReplyContent}
+                          onChange={(e) => setEditReplyContent(e.target.value)}
+                          rows={4}
+                          className="rounded-t-none border-t-0"
+                        />
+                      </div>
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -770,13 +792,21 @@ export default function ThreadPage() {
         {user && !thread.is_locked ? (
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
-            <Textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="Write your reply..."
-              rows={4}
-              className="mb-4"
-            />
+            <div className="mb-4">
+              <MarkdownToolbar
+                textareaRef={newReplyTextareaRef}
+                value={replyContent}
+                onChange={setReplyContent}
+              />
+              <Textarea
+                ref={newReplyTextareaRef}
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                placeholder="Write your reply... (supports Markdown)"
+                rows={4}
+                className="rounded-t-none border-t-0"
+              />
+            </div>
             <div className="flex justify-end">
               <Button
                 onClick={submitReply}
