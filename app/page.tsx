@@ -3,18 +3,23 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Sparkles, Layout, Eye, FolderKanban, FileText, Users } from "lucide-react";
+import { Sparkles, Layout, Eye, FolderKanban, FileText, Users, LayoutGrid } from "lucide-react";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col relative">
+      {/* Background gradient - fixed to viewport */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -26,23 +31,36 @@ export default async function Home() {
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
-          <div className="flex items-center gap-4">
-            <Suspense fallback={<div className="w-20 h-9" />}>
-              <AuthButton />
-            </Suspense>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <Link href="/hub">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    Hub
+                  </Button>
+                </Link>
+                <Suspense fallback={<div className="w-9 h-9" />}>
+                  <AuthButton />
+                </Suspense>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">Login</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Register</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-20">
-        {/* Background gradient */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-20 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -88,7 +106,7 @@ export default async function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
             Everything you need to create
