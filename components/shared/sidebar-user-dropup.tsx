@@ -83,6 +83,16 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
         className="w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"
         sideOffset={8}
       >
+        {/* Back to Hub - at top */}
+        <DropdownMenuItem asChild>
+          <Link href="/hub" className="flex items-center gap-2 cursor-pointer">
+            <Home className="w-4 h-4" />
+            Back to Hub
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         {/* Accept Invites Toggle */}
         <div 
           className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer rounded-sm"
@@ -99,16 +109,6 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        
-        <DropdownMenuSeparator />
-        
-        {/* Back to Hub */}
-        <DropdownMenuItem asChild>
-          <Link href="/hub" className="flex items-center gap-2 cursor-pointer">
-            <Home className="w-4 h-4" />
-            Back to Hub
-          </Link>
-        </DropdownMenuItem>
         
         {/* Account Settings */}
         <DropdownMenuItem asChild>

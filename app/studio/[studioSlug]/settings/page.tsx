@@ -361,6 +361,35 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     return membership?.role === 'owner';
   };
 
+  // Check if studio can be deleted based on subscription
+  const getDeleteBlockReason = () => {
+    if (!subscription || subscription.plan === 'free' || !subscription.current_period_end) {
+      return null; // Can delete free plans anytime
+    }
+
+    const periodEnd = new Date(subscription.current_period_end);
+    const now = new Date();
+    const daysRemaining = Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Yearly subscriptions: can only delete in the last 30 days (last month)
+    if (subscription.interval === 'year' && daysRemaining > 30) {
+      return {
+        blocked: true,
+        message: `You have a yearly subscription with ${daysRemaining} days remaining. You can only delete this studio during the last 30 days of your billing cycle (after ${new Date(periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}).`,
+      };
+    }
+
+    // Monthly or yearly in last month: warn about wasted time
+    if (daysRemaining > 0) {
+      return {
+        blocked: false,
+        message: `You have ${daysRemaining} days remaining on your ${subscription.plan} plan (until ${periodEnd.toLocaleDateString()}). Deleting now means you'll lose access to this paid time.`,
+      };
+    }
+
+    return null;
+  };
+
   const handleInitiateTransfer = async () => {
     if (!transferEmail || !studio || !user) return;
     
@@ -792,6 +821,24 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <DialogTitle>Delete Studio</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Subscription warning/block */}
+            {getDeleteBlockReason()?.blocked && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <p className="text-sm text-red-400 font-medium">🚫 Deletion Blocked</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getDeleteBlockReason()?.message}
+                </p>
+              </div>
+            )}
+            {getDeleteBlockReason() && !getDeleteBlockReason()?.blocked && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-sm text-amber-500 font-medium">⚠️ Active Subscription</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getDeleteBlockReason()?.message}
+                </p>
+              </div>
+            )}
+            
             <p className="text-muted-foreground">
               This action <span className="font-semibold text-red-500">cannot be undone</span>. 
               This will permanently delete the studio, all projects, documents, and data.
@@ -804,6 +851,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="Type DELETE to confirm"
               className="font-mono"
+              disabled={getDeleteBlockReason()?.blocked}
             />
           </div>
           <DialogFooter>
@@ -816,7 +864,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Button 
               variant="destructive" 
               onClick={handleDeleteStudio} 
-              disabled={deleteConfirmText !== "DELETE" || deleting}
+              disabled={deleteConfirmText !== "DELETE" || deleting || getDeleteBlockReason()?.blocked}
             >
               {deleting ? 'Deleting...' : 'Delete Studio'}
             </Button>
