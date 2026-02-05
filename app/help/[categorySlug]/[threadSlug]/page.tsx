@@ -21,6 +21,8 @@ import {
   User,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Thread {
   id: string;
@@ -170,21 +172,12 @@ export default function ThreadPage() {
     setSubmitting(false);
   };
 
-  // Simple markdown-like renderer (for demo - you'd want a proper markdown lib)
-  const renderContent = (content: string) => {
-    // Handle YouTube embeds [youtube:VIDEO_ID]
-    let rendered = content.replace(
+  // Render YouTube embeds in content
+  const processYouTubeEmbeds = (content: string) => {
+    return content.replace(
       /\[youtube:([a-zA-Z0-9_-]+)\]/g,
-      '<div class="my-4 aspect-video"><iframe class="w-full h-full rounded-lg" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe></div>'
+      '\n\n<youtube-embed video-id="$1"></youtube-embed>\n\n'
     );
-    
-    // Convert line breaks to paragraphs
-    rendered = rendered
-      .split('\n\n')
-      .map(p => `<p class="mb-4">${p}</p>`)
-      .join('');
-    
-    return rendered;
   };
 
   if (loading) {
@@ -264,10 +257,11 @@ export default function ThreadPage() {
               </span>
             </div>
           </div>
-          <div
-            className="prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: renderContent(thread.content) }}
-          />
+          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {thread.content}
+            </ReactMarkdown>
+          </div>
           <div className="flex items-center gap-4 mt-6 pt-4 border-t border-white/10 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
@@ -320,10 +314,11 @@ export default function ThreadPage() {
                       </span>
                     </div>
                   </div>
-                  <div
-                    className="text-sm"
-                    dangerouslySetInnerHTML={{ __html: renderContent(reply.content) }}
-                  />
+                  <div className="prose prose-invert prose-sm max-w-none prose-p:text-muted-foreground prose-li:text-muted-foreground">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {reply.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ))}
             </div>
