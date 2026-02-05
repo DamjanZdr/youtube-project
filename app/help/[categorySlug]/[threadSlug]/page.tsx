@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
-import { MarkdownToolbar } from "@/components/help/markdown-toolbar";
+import { MarkdownEditor } from "@/components/help/markdown-editor";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,11 +96,6 @@ export default function ThreadPage() {
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Refs for markdown toolbar
-  const editThreadTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const editReplyTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const newReplyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Edit states
   const [editingThread, setEditingThread] = useState(false);
@@ -563,18 +557,11 @@ export default function ThreadPage() {
               className="mb-4"
             />
             <div className="mb-4">
-              <MarkdownToolbar
-                textareaRef={editThreadTextareaRef}
+              <MarkdownEditor
                 value={editThreadContent}
                 onChange={setEditThreadContent}
-              />
-              <Textarea
-                ref={editThreadTextareaRef}
-                value={editThreadContent}
-                onChange={(e) => setEditThreadContent(e.target.value)}
                 placeholder="Content (supports Markdown)"
                 rows={16}
-                className="font-mono text-sm rounded-t-none border-t-0"
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -694,17 +681,11 @@ export default function ThreadPage() {
                   {editingReplyId === reply.id ? (
                     <div>
                       <div className="mb-3">
-                        <MarkdownToolbar
-                          textareaRef={editReplyTextareaRef}
+                        <MarkdownEditor
                           value={editReplyContent}
                           onChange={setEditReplyContent}
-                        />
-                        <Textarea
-                          ref={editReplyTextareaRef}
-                          value={editReplyContent}
-                          onChange={(e) => setEditReplyContent(e.target.value)}
-                          rows={4}
-                          className="rounded-t-none border-t-0"
+                          placeholder="Edit your reply..."
+                          rows={6}
                         />
                       </div>
                       <div className="flex justify-end gap-2">
@@ -793,18 +774,11 @@ export default function ThreadPage() {
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
             <div className="mb-4">
-              <MarkdownToolbar
-                textareaRef={newReplyTextareaRef}
+              <MarkdownEditor
                 value={replyContent}
                 onChange={setReplyContent}
-              />
-              <Textarea
-                ref={newReplyTextareaRef}
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Write your reply... (supports Markdown)"
-                rows={4}
-                className="rounded-t-none border-t-0"
+                placeholder="Write your reply..."
+                rows={6}
               />
             </div>
             <div className="flex justify-end">
