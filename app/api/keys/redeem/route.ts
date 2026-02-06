@@ -156,16 +156,20 @@ export async function POST(req: NextRequest) {
     // For now, the admin should manually pause/cancel via Stripe dashboard
   }
 
-  const { error: subUpdateError } = await supabase
+  const { error: subUpdateError, data: updatedSub } = await supabase
     .from("subscriptions")
     .update(subscriptionUpdate)
-    .eq("id", sub.id);
+    .eq("id", sub.id)
+    .select()
+    .single();
   if (subUpdateError) {
     console.error("Failed to update subscription:", subUpdateError);
     return NextResponse.json({ error: "Failed to update subscription", details: subUpdateError.message }, { status: 500 });
   }
   
-  console.log(`Key redeemed: org=${organization_id}, plan=${planKey.plan}, expires=${expiresAt?.toISOString()}, update=`, subscriptionUpdate);
+  // Verify the update worked
+  console.log(`Key redeemed: org=${organization_id}, plan=${planKey.plan}, expires=${expiresAt?.toISOString()}`);
+  console.log(`Updated subscription:`, updatedSub);
 
   // Log billing event
   const eventType = isSamePlan && sub.source === "key" 
