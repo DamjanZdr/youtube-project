@@ -79,12 +79,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       setLoadingPendingKeys(true);
       const supabase = createClient();
       
-      // Get keys assigned to this org that haven't been redeemed
+      // Get keys assigned to this org that haven't been redeemed and aren't deactivated
       const { data: keys } = await supabase
         .from("plan_keys")
         .select("id, key, plan, duration, sent_at")
         .eq("assigned_org_id", studioId)
         .is("redeemed_at", null)
+        .is("deactivated_at", null)
         .order("sent_at", { ascending: false });
       
       if (keys) {

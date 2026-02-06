@@ -52,8 +52,14 @@ export async function POST(req: NextRequest) {
     .select("*")
     .eq("key", key)
     .single();
+  
+  console.log("Fetched planKey:", planKey);
+  
   if (keyError || !planKey) {
     return NextResponse.json({ error: "Invalid or expired key" }, { status: 404 });
+  }
+  if (planKey.deactivated_at) {
+    return NextResponse.json({ error: "This key has been deactivated" }, { status: 410 });
   }
   if (planKey.redeemed_at) {
     return NextResponse.json({ error: "Key already redeemed" }, { status: 409 });
@@ -138,6 +144,8 @@ export async function POST(req: NextRequest) {
 
   // Build the subscription update
   // Only backup previous plan if this is an upgrade AND they were on a Stripe plan
+  console.log(`Building subscription update: planKey.plan=${planKey.plan}, sub.id=${sub.id}`);
+  
   const subscriptionUpdate: Record<string, any> = {
     plan: planKey.plan,
     source: "key",
@@ -146,6 +154,8 @@ export async function POST(req: NextRequest) {
     current_period_start: isSamePlan && sub.source === "key" ? sub.current_period_start : now.toISOString(),
     current_period_end: expiresAt ? expiresAt.toISOString() : null,
   };
+  
+  console.log("Subscription update object:", JSON.stringify(subscriptionUpdate));
 
   // If they're on a paid Stripe plan, store the previous info so we can resume when key expires
   // This applies to both upgrades AND same-plan keys
