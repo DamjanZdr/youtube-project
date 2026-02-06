@@ -134,14 +134,18 @@ export default function StudioHomePage() {
     }
 
     // Get or create channel for this studio
-    let { data: channel } = await supabase
+    const { data: channels } = await supabase
       .from("channels")
       .select("id")
       .eq("organization_id", studio.id)
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (!channel) {
+    let channelId: string;
+    
+    if (channels && channels.length > 0) {
+      channelId = channels[0].id;
+    } else {
+      // No channel exists - create one
       const { data: newChannel, error: channelError } = await supabase
         .from("channels")
         .insert({
@@ -151,8 +155,11 @@ export default function StudioHomePage() {
         .select("id")
         .single();
 
-      if (channelError) throw channelError;
-      channel = newChannel;
+      if (channelError) {
+        console.error("Channel creation error:", channelError);
+        throw new Error("Failed to create channel. Please try again.");
+      }
+      channelId = newChannel.id;
     }
 
     // Get the first board status to assign
@@ -171,7 +178,7 @@ export default function StudioHomePage() {
         title: data.title,
         description: data.description || null,
         organization_id: studio.id,
-        channel_id: channel.id,
+        channel_id: channelId,
         video_type: data.videoType,
         board_status_id: firstStatus?.id,
       })
