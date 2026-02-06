@@ -156,17 +156,24 @@ export async function POST(req: NextRequest) {
     status: "active", // Ensure subscription is marked active
     current_period_start: isSamePlan && sub.source === "key" ? sub.current_period_start : now.toISOString(),
     current_period_end: expiresAt ? expiresAt.toISOString() : null,
+    // Clear pending changes when redeeming a key
+    pending_plan: null,
+    pending_price_id: null,
+    pending_interval: null,
   };
   
   console.log("Subscription update object:", JSON.stringify(subscriptionUpdate));
 
   // If they're on a paid Stripe plan, store the previous info so we can resume when key expires
-  // This applies to both upgrades AND same-plan keys
   if (sub.source === "stripe" && sub.plan !== "free" && sub.stripe_subscription_id) {
     subscriptionUpdate.previous_plan = sub.plan;
     subscriptionUpdate.previous_stripe_subscription_id = sub.stripe_subscription_id;
     // Note: We should ideally pause the Stripe subscription here
     // For now, the admin should manually pause/cancel via Stripe dashboard
+  } else {
+    // Clear any stale previous plan data if they weren't on a paid Stripe plan
+    subscriptionUpdate.previous_plan = null;
+    subscriptionUpdate.previous_stripe_subscription_id = null;
   }
 
   const { error: subUpdateError } = await adminClient
