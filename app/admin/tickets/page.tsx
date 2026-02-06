@@ -112,6 +112,7 @@ export default function AdminTicketsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   
   // Selected ticket state
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -119,12 +120,16 @@ export default function AdminTicketsPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
+  // Dialog states
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
     loadTickets();
-  }, [filter]);
+  }, [filter, showArchived]);
 
   const loadTickets = async () => {
     setLoading(true);
@@ -138,8 +143,15 @@ export default function AdminTicketsPage() {
       `)
       .order("updated_at", { ascending: false });
 
-    if (filter !== "all") {
+    // Filter archived tickets
+    if (!showArchived) {
+      query = query.neq("status", "archived");
+    }
+
+    if (filter !== "all" && filter !== "archived") {
       query = query.eq("status", filter);
+    } else if (filter === "archived") {
+      query = query.eq("status", "archived");
     }
 
     const { data } = await query;
@@ -242,25 +254,83 @@ export default function AdminTicketsPage() {
   };
 
   const updateStatus = async (ticketId: string, newStatus: string) => {
-    const updates: Record<string, unknown> = { status: newStatus };
-    
-    if (newStatus === "resolved") {
-      updates.resolved_at = new Date().toISOString();
+    // Don't allow changing to resolved/archived through dropdown
+    if (newStatus === "resolved" || newStatus === "archived") {
+      return;
     }
-
+    
     const { error } = await supabase
       .from("support_tickets")
-      .update(updates)
+      .update({ status: newStatus })
       .eq("id", ticketId);
 
     if (error) {
       toast.error("Failed to update status");
     } else {
-      toast.success(`Ticket marked as ${statusConfig[newStatus]?.label || newStatus}`);
+      toast.success(`Status updated to ${statusConfig[newStatus]?.label || newStatus}`);
       await loadTickets();
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null);
       }
+    }
+  };
+
+  const resolveTicket = async () => {
+    if (!selectedTicket) return;
+    
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({ 
+        status: "resolved",
+        resolved_at: new Date().toISOString()
+      })
+      .eq("id", selectedTicket.id);
+
+    if (error) {
+      toast.error("Failed to resolve ticket");
+    } else {
+      toast.success("Ticket marked as resolved");
+      setShowResolveDialog(false);
+      await loadTickets();
+      setSelectedTicket(prev => prev ? { ...prev, status: "resolved" } : null);
+    }
+  };
+
+  const archiveTicket = async () => {
+    if (!selectedTicket) return;
+    
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({ status: "archived" })
+      .eq("id", selectedTicket.id);
+
+    if (error) {
+      toast.error("Failed to archive ticket");
+    } else {
+      toast.success("Ticket archived");
+      setShowArchiveDialog(false);
+      setSelectedTicket(null);
+      await loadTickets();
+    }
+  };
+
+  const reopenTicket = async () => {
+    if (!selectedTicket) return;
+    
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({ 
+        status: "awaiting_response",
+        resolved_at: null
+      })
+      .eq("id", selectedTicket.id);
+
+    if (error) {
+      toast.error("Failed to reopen ticket");
+    } else {
+      toast.success("Ticket reopened");
+      await loadTickets();
+      setSelectedTicket(prev => prev ? { ...prev, status: "awaiting_response" } : null);
     }
   };
 
@@ -310,7 +380,7 @@ export default function AdminTicketsPage() {
                 variant={filter === "all" ? "default" : "outline"}
                 onClick={() => setFilter("all")}
               >
-                All ({tickets.length})
+                All ({tickets.filter(t => t.status !== "archived").length})
               </Button>
               {["new", "awaiting_response", "responded", "resolved"].map((status) => {
                 const config = statusConfig[status];
@@ -328,6 +398,20 @@ export default function AdminTicketsPage() {
                 );
               })}
             </div>
+            {/* Archived Toggle */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setShowArchived(!showArchived);
+                if (!showArchived) setFilter("archived");
+                else setFilter("all");
+              }}
+              className={`gap-1 w-full justify-start ${showArchived ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              <Archive className="w-3 h-3" />
+              {showArchived ? "Hide Archived" : "Show Archived"} ({statusCounts["archived"] || 0})
+            </Button>
           </div>
 
           {/* Ticket List */}
@@ -450,24 +534,81 @@ export default function AdminTicketsPage() {
                       <span className="text-xs">({selectedTicket.user?.email})</span>
                     </div>
                   </div>
-                  <Select
-                    value={selectedTicket.status}
-                    onValueChange={(value) => updateStatus(selectedTicket.id, value)}
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(statusConfig).map(([value, config]) => (
-                        <SelectItem key={value} value={value}>
-                          <div className="flex items-center gap-2">
-                            <config.icon className={`w-4 h-4 ${config.color}`} />
-                            {config.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    {/* Status dropdown - only for tracking statuses */}
+                    {selectedTicket.status !== "resolved" && selectedTicket.status !== "archived" && (
+                      <Select
+                        value={selectedTicket.status}
+                        onValueChange={(value) => updateStatus(selectedTicket.id, value)}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["new", "awaiting_response", "responded"].map((status) => {
+                            const config = statusConfig[status];
+                            return (
+                              <SelectItem key={status} value={status}>
+                                <div className="flex items-center gap-2">
+                                  <config.icon className={`w-4 h-4 ${config.color}`} />
+                                  {config.label}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    
+                    {/* Resolved badge */}
+                    {selectedTicket.status === "resolved" && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-400/20 text-emerald-400">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Resolved</span>
+                      </div>
+                    )}
+                    
+                    {/* Archived badge */}
+                    {selectedTicket.status === "archived" && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-400/20 text-gray-400">
+                        <Archive className="w-4 h-4" />
+                        <span className="text-sm font-medium">Archived</span>
+                      </div>
+                    )}
+                    
+                    {/* Action buttons */}
+                    {selectedTicket.status === "resolved" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={reopenTicket}
+                      >
+                        Reopen
+                      </Button>
+                    )}
+                    {selectedTicket.status !== "archived" && selectedTicket.status !== "resolved" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-emerald-400 border-emerald-400/30 hover:bg-emerald-400/10"
+                        onClick={() => setShowResolveDialog(true)}
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Resolve
+                      </Button>
+                    )}
+                    {selectedTicket.status !== "archived" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-gray-400 border-gray-400/30 hover:bg-gray-400/10"
+                        onClick={() => setShowArchiveDialog(true)}
+                      >
+                        <Archive className="w-4 h-4 mr-1" />
+                        Archive
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -552,6 +693,56 @@ export default function AdminTicketsPage() {
           )}
         </div>
       </div>
+
+      {/* Resolve Confirmation Dialog */}
+      <Dialog open={showResolveDialog} onOpenChange={setShowResolveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resolve Ticket</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to resolve this ticket? The user will no longer be able to reply directly, 
+              but they can reactivate it if the issue isn't actually resolved.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowResolveDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-emerald-600 hover:bg-emerald-700"
+              onClick={resolveTicket}
+            >
+              Resolve Ticket
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-orange-400">Archive Ticket</DialogTitle>
+            <DialogDescription>
+              <span className="text-orange-300/80 font-medium">Warning: This action is permanent.</span>
+              <br /><br />
+              Archiving will permanently close this ticket. It will be hidden from the main list and cannot be reopened 
+              by you or the user. Only use this for spam, duplicate tickets, or tickets that should never be revisited.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowArchiveDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={archiveTicket}
+            >
+              Archive Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

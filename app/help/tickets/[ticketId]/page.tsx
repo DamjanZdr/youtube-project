@@ -6,6 +6,14 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -75,6 +83,9 @@ export default function TicketDetailPage() {
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showReactivateDialog, setShowReactivateDialog] = useState(false);
+  const [reactivateReason, setReactivateReason] = useState("");
+  const [reactivating, setReactivating] = useState(false);
 
   const supabase = createClient();
 
@@ -174,6 +185,61 @@ export default function TicketDetailPage() {
     }
 
     setSubmitting(false);
+  };
+
+  const reactivateTicket = async () => {
+    if (!user || !ticket || !reactivateReason.trim()) return;
+
+    setReactivating(true);
+
+    // Update ticket status back to "new"
+    const { error: ticketError } = await supabase
+      .from("support_tickets")
+      .update({
+        status: "new",
+        resolved_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ticket.id);
+
+    if (ticketError) {
+      toast.error("Failed to reactivate ticket");
+      console.error(ticketError);
+      setReactivating(false);
+      return;
+    }
+
+    // Add a message explaining why the ticket was reactivated
+    const { error: messageError } = await supabase
+      .from("support_ticket_messages")
+      .insert({
+        ticket_id: ticket.id,
+        sender_id: user.id,
+        content: `**Ticket Reactivated**\n\nReason: ${reactivateReason.trim()}`,
+        is_admin: false,
+      });
+
+    if (messageError) {
+      console.error(messageError);
+    }
+
+    toast.success("Ticket reactivated");
+    setShowReactivateDialog(false);
+    setReactivateReason("");
+    
+    // Refresh ticket and messages
+    const { data: updatedTicket } = await supabase
+      .from("support_tickets")
+      .select(`*, related_studio:organizations(name)`)
+      .eq("id", ticket.id)
+      .single();
+    
+    if (updatedTicket) {
+      setTicket(updatedTicket as Ticket);
+    }
+    
+    await loadMessages();
+    setReactivating(false);
   };
 
   if (loading) {
@@ -317,11 +383,36 @@ export default function TicketDetailPage() {
             </p>
           </div>
         </div>
+      ) : ticket.status === "resolved" ? (
+        <div className="border-t border-white/10 shrink-0">
+          <div className="max-w-4xl mx-auto px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p className="text-muted-foreground text-center">
+                This ticket has been resolved.
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReactivateDialog(true)}
+                >
+                  Issue not resolved?
+                </Button>
+                <span className="text-muted-foreground">or</span>
+                <Link href="/help/tickets/new">
+                  <Button variant="outline" size="sm">
+                    Create new ticket
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="border-t border-white/10 shrink-0">
           <div className="max-w-4xl mx-auto px-6 py-4 text-center">
             <p className="text-muted-foreground">
-              This ticket has been resolved. Need more help?{" "}
+              This ticket has been archived and is no longer active.{" "}
               <Link href="/help/tickets/new" className="text-primary hover:underline">
                 Create a new ticket
               </Link>
@@ -329,6 +420,41 @@ export default function TicketDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Reactivate Dialog */}
+      <Dialog open={showReactivateDialog} onOpenChange={setShowReactivateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reactivate Ticket</DialogTitle>
+            <DialogDescription>
+              If your issue wasn't actually resolved, please explain what's still wrong so our team can help you further.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reactivateReason}
+            onChange={(e) => setReactivateReason(e.target.value)}
+            placeholder="Please explain why this ticket needs to be reopened..."
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => {
+              setShowReactivateDialog(false);
+              setReactivateReason("");
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={reactivateTicket}
+              disabled={reactivating || !reactivateReason.trim()}
+            >
+              {reactivating ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Reactivate Ticket
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
