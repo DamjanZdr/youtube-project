@@ -202,6 +202,31 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Video Demo Section */}
+      <section className="py-20 px-6 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-4">See it in action</h2>
+            <p className="text-muted-foreground text-lg">
+              Watch a quick walkthrough of how Blueprint helps you plan, create, and ship videos faster.
+            </p>
+          </div>
+          
+          {/* Video Embed */}
+          <div className="relative rounded-2xl overflow-hidden glass-card p-2">
+            <div className="relative pt-[56.25%] rounded-xl overflow-hidden">
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src="https://www.youtube.com/embed/DCLvDhxFX58"
+                title="Blueprint Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-white/5 relative z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
