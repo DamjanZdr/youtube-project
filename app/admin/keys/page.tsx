@@ -144,110 +144,27 @@ export default function AdminKeysPage() {
 
   async function loadKeys() {
     setLoading(true);
-    const supabase = createClient();
 
-    // Build query
-    let countQuery = supabase.from("plan_keys").select("*", { count: "exact", head: true });
-    let dataQuery = supabase
-      .from("plan_keys")
-      .select(`
-        id,
-        key,
-        plan,
-        duration,
-        created_at,
-        redeemed_at,
-        redeemed_by,
-        redeemed_org_id,
-        assigned_org_id,
-        sent_to_email,
-        sent_at,
-        expires_at,
-        deactivated_at
-      `)
-      .order("created_at", { ascending: false })
-      .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-
-    // Filter logic - active/expired need to be filtered client-side after checking subscriptions
-    if (filter === "deactivated") {
-      countQuery = countQuery.not("deactivated_at", "is", null);
-      dataQuery = dataQuery.not("deactivated_at", "is", null);
-    } else if (filter === "available") {
-      countQuery = countQuery.is("deactivated_at", null).is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
-      dataQuery = dataQuery.is("deactivated_at", null).is("redeemed_at", null).is("sent_to_email", null).is("assigned_org_id", null);
-    } else if (filter === "sent") {
-      countQuery = countQuery.is("deactivated_at", null).is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
-      dataQuery = dataQuery.is("deactivated_at", null).is("redeemed_at", null).or("sent_to_email.not.is.null,assigned_org_id.not.is.null");
-    } else if (filter === "active" || filter === "expired") {
-      // For active/expired, we need redeemed keys that are not deactivated
-      countQuery = countQuery.is("deactivated_at", null).not("redeemed_at", "is", null);
-      dataQuery = dataQuery.is("deactivated_at", null).not("redeemed_at", "is", null);
-    }
-    // "all" filter shows everything
-
-    if (search) {
-      dataQuery = dataQuery.ilike("key", `%${search}%`);
-    }
-
-    const [{ count }, { data }] = await Promise.all([countQuery, dataQuery]);
-
-    setTotalCount(count || 0);
-
-    if (data) {
-      // Get org and user info for redeemed/assigned keys
-      const redeemedOrgIds = data.filter(k => k.redeemed_org_id).map(k => k.redeemed_org_id!);
-      const assignedOrgIds = data.filter(k => k.assigned_org_id).map(k => k.assigned_org_id!);
-      const allOrgIds = [...new Set([...redeemedOrgIds, ...assignedOrgIds])];
-      const userIds = data.filter(k => k.redeemed_by).map(k => k.redeemed_by!);
-
-      // Also get subscription info to determine if key is active
-      const [{ data: orgs }, { data: users }, { data: subscriptions }] = await Promise.all([
-        allOrgIds.length > 0 
-          ? supabase.from("organizations").select("id, name").in("id", allOrgIds)
-          : { data: [] },
-        userIds.length > 0 
-          ? supabase.from("profiles").select("id, email").in("id", userIds)
-          : { data: [] },
-        redeemedOrgIds.length > 0
-          ? supabase.from("subscriptions").select("organization_id, plan, source, status").in("organization_id", redeemedOrgIds)
-          : { data: [] },
-      ]);
-
-      // Build a map of org_id -> active subscription info
-      const orgSubscriptions = new Map<string, { plan: string; source: string; status: string }>();
-      subscriptions?.forEach(sub => {
-        orgSubscriptions.set(sub.organization_id, { plan: sub.plan, source: sub.source, status: sub.status });
+    try {
+      // Use API route that bypasses RLS
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: ITEMS_PER_PAGE.toString(),
+        filter,
+        search,
       });
-
-      let mappedKeys = data.map(key => {
-        // A key is "active" if:
-        // 1. It's redeemed to an org
-        // 2. That org's current subscription source is 'key' AND plan matches
-        let isActive = false;
-        if (key.redeemed_org_id && key.redeemed_at) {
-          const sub = orgSubscriptions.get(key.redeemed_org_id);
-          if (sub && sub.source === "key" && sub.plan === key.plan && sub.status === "active") {
-            isActive = true;
-          }
-        }
-        
-        return {
-          ...key,
-          redeemed_org: orgs?.find(o => o.id === key.redeemed_org_id) || null,
-          assigned_org: orgs?.find(o => o.id === key.assigned_org_id) || null,
-          redeemed_user: users?.find(u => u.id === key.redeemed_by) || null,
-          is_active: isActive,
-        };
-      });
-
-      // Client-side filter for active/expired
-      if (filter === "active") {
-        mappedKeys = mappedKeys.filter(k => k.redeemed_at && k.is_active);
-      } else if (filter === "expired") {
-        mappedKeys = mappedKeys.filter(k => k.redeemed_at && !k.is_active);
+      
+      const response = await fetch(`/api/admin/keys?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch keys");
       }
-
+      
+      const { keys: mappedKeys, totalCount: count } = await response.json();
       setKeys(mappedKeys);
+      setTotalCount(count);
+    } catch (error) {
+      console.error("Failed to load keys:", error);
+      toast.error("Failed to load keys");
     }
 
     setLoading(false);

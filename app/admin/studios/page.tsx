@@ -127,61 +127,33 @@ export default function AdminStudiosPage() {
   useEffect(() => {
     async function loadStudios() {
       setLoading(true);
-      const supabase = createClient();
 
-      // Get total count
-      const { count } = await supabase
-        .from("organizations")
-        .select("*", { count: "exact", head: true });
-
-      setTotalCount(count || 0);
-
-      // Get studios
-      let query = supabase
-        .from("organizations")
-        .select(`
-          id,
-          name,
-          slug,
-          created_at,
-          last_activity_at,
-          owner_id
-        `)
-        .order("created_at", { ascending: false })
-        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-
-      if (search) {
-        query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%`);
-      }
-
-      const { data: orgs } = await query;
-
-      if (orgs) {
-        const orgIds = orgs.map(o => o.id);
-        const ownerIds = orgs.map(o => o.owner_id).filter(Boolean);
-
-        // Get additional data in parallel
-        const [
-          { data: owners },
-          { data: subscriptions },
-          { data: members },
-          { data: projects },
-        ] = await Promise.all([
-          supabase.from("profiles").select("id, email, full_name").in("id", ownerIds),
-          supabase.from("subscriptions").select("organization_id, plan, status, source").in("organization_id", orgIds),
-          supabase.from("organization_members").select("organization_id").in("organization_id", orgIds),
-          supabase.from("projects").select("organization_id").in("organization_id", orgIds),
-        ]);
-
-        const studiosWithData = orgs.map(org => ({
-          ...org,
-          owner: owners?.find(o => o.id === org.owner_id) || null,
-          subscription: subscriptions?.find(s => s.organization_id === org.id) || null,
-          member_count: members?.filter(m => m.organization_id === org.id).length || 0,
-          project_count: projects?.filter(p => p.organization_id === org.id).length || 0,
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: ITEMS_PER_PAGE.toString(),
+          search,
+        });
+        
+        const response = await fetch(`/api/admin/studios?${params}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch studios");
+        }
+        
+        const { studios: studiosWithDetails, totalCount: count } = await response.json();
+        
+        // Map to expected format
+        const studiosWithData = studiosWithDetails.map((s: any) => ({
+          ...s,
+          subscription: s.subscription || null,
+          member_count: s.member_count || 0,
+          project_count: 0, // Can be added to API if needed
         }));
-
+        
         setStudios(studiosWithData);
+        setTotalCount(count);
+      } catch (error) {
+        console.error("Failed to load studios:", error);
       }
 
       setLoading(false);

@@ -107,55 +107,24 @@ export default function AdminUsersPage() {
   useEffect(() => {
     async function loadUsers() {
       setLoading(true);
-      const supabase = createClient();
 
-      // Get total count
-      const { count } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-
-      setTotalCount(count || 0);
-
-      // Get users with their organizations
-      let query = supabase
-        .from("profiles")
-        .select(`
-          id,
-          email,
-          full_name,
-          avatar_url,
-          created_at,
-          last_active_at
-        `)
-        .order("created_at", { ascending: false })
-        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-
-      if (search) {
-        query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
-      }
-
-      const { data: profiles } = await query;
-
-      if (profiles) {
-        // Get organizations for each user
-        const userIds = profiles.map(p => p.id);
-        const { data: memberships } = await supabase
-          .from("organization_members")
-          .select(`
-            user_id,
-            organizations:organization_id (id, name, slug)
-          `)
-          .in("user_id", userIds);
-
-        const usersWithOrgs = profiles.map(profile => ({
-          ...profile,
-          organizations: memberships
-            ?.filter(m => m.user_id === profile.id)
-            .map(m => m.organizations as any)
-            .filter(Boolean) || [],
-        }));
-
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: ITEMS_PER_PAGE.toString(),
+          search,
+        });
+        
+        const response = await fetch(`/api/admin/users?${params}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        
+        const { users: usersWithOrgs, totalCount: count } = await response.json();
         setUsers(usersWithOrgs);
+        setTotalCount(count);
+      } catch (error) {
+        console.error("Failed to load users:", error);
       }
 
       setLoading(false);
