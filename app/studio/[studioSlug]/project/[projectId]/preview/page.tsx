@@ -33,13 +33,13 @@ async function fetchChannel(projectId: string): Promise<Channel | null> {
 
   if (!project?.channel_id) return null;
 
-  const { data: channel } = await supabase
+  const { data: channels } = await supabase
     .from("channels")
     .select("*")
     .eq("id", project.channel_id)
-    .single();
+    .limit(1);
 
-  return channel;
+  return channels?.[0] || null;
 }
 
 async function fetchVideoType(projectId: string): Promise<string> {

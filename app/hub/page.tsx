@@ -132,12 +132,12 @@ export default function HubPage() {
             }
           } catch (e) {
             // YouTube not connected - try from cached channel data
-            const { data: channelData } = await supabase
+            const { data: channelsData } = await supabase
               .from("channels")
               .select("subscriber_count")
               .eq("organization_id", org.id)
-              .single();
-            subscriberCount = channelData?.subscriber_count || 0;
+              .limit(1);
+            subscriberCount = channelsData?.[0]?.subscriber_count || 0;
           }
 
           return {

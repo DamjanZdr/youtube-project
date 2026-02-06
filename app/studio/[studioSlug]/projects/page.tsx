@@ -178,23 +178,26 @@ export default function ProjectsPage() {
     }
 
     // Get or create default channel
-    let { data: channel } = await supabase
+    const { data: existingChannels } = await supabase
       .from("channels")
       .select("id")
       .eq("organization_id", org.id)
-      .single();
+      .limit(1);
 
-    if (!channel) {
-      const { data: newChannel } = await supabase
+    let channelId: string;
+    if (existingChannels && existingChannels.length > 0) {
+      channelId = existingChannels[0].id;
+    } else {
+      const { data: newChannel, error: channelError } = await supabase
         .from("channels")
         .insert({ organization_id: org.id, name: "Main Channel" })
         .select("id")
         .single();
-      channel = newChannel;
-    }
-
-    if (!channel) {
-      return;
+      if (channelError || !newChannel) {
+        console.error("Failed to create channel:", channelError);
+        return;
+      }
+      channelId = newChannel.id;
     }
 
     // Get the first board status (default to first status column)
@@ -211,7 +214,7 @@ export default function ProjectsPage() {
       .from("projects")
       .insert({
         organization_id: org.id,
-        channel_id: channel.id,
+        channel_id: channelId,
         title: data.title,
         description: data.description || null,
         video_type: data.videoType,

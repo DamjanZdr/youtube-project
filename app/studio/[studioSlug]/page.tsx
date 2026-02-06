@@ -85,13 +85,13 @@ export default function StudioHomePage() {
       setProjects(projectData || []);
 
       // Fetch subscriber count - first from DB, then try to sync live from YouTube
-      const { data: channelData } = await supabase
+      const { data: channelsForCount } = await supabase
         .from("channels")
         .select("subscriber_count")
         .eq("organization_id", studioData?.id)
-        .single();
+        .limit(1);
 
-      setSubscriberCount(channelData?.subscriber_count || 0);
+      setSubscriberCount(channelsForCount?.[0]?.subscriber_count || 0);
 
       // Try to fetch live stats from YouTube if connected
       try {

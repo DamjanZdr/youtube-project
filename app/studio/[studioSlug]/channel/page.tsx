@@ -130,15 +130,17 @@ export default function ChannelPage() {
     }
 
     // Get or create channel
-    let { data: channelData } = await supabase
+    const { data: existingChannels } = await supabase
       .from("channels")
       .select("*")
       .eq("organization_id", org.id)
-      .single();
+      .limit(1);
+
+    let channelData = existingChannels?.[0] || null;
 
     // If no channel exists, create one
     if (!channelData) {
-      const { data: newChannel } = await supabase
+      const { data: newChannel, error: channelError } = await supabase
         .from("channels")
         .insert({ 
           organization_id: org.id, 
@@ -147,6 +149,9 @@ export default function ChannelPage() {
         })
         .select()
         .single();
+      if (channelError) {
+        console.error("Failed to create channel:", channelError);
+      }
       channelData = newChannel;
     }
 
