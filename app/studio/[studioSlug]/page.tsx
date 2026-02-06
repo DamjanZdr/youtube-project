@@ -133,35 +133,6 @@ export default function StudioHomePage() {
       throw new Error(`Project limit reached for ${plan} plan (${limit} projects). Upgrade to create more projects.`);
     }
 
-    // Get or create channel for this studio
-    const { data: channels } = await supabase
-      .from("channels")
-      .select("id")
-      .eq("organization_id", studio.id)
-      .limit(1);
-
-    let channelId: string;
-    
-    if (channels && channels.length > 0) {
-      channelId = channels[0].id;
-    } else {
-      // No channel exists - create one
-      const { data: newChannel, error: channelError } = await supabase
-        .from("channels")
-        .insert({
-          organization_id: studio.id,
-          name: "Main Channel",
-        })
-        .select("id")
-        .single();
-
-      if (channelError) {
-        console.error("Channel creation error:", channelError);
-        throw new Error("Failed to create channel. Please try again.");
-      }
-      channelId = newChannel.id;
-    }
-
     // Get the first board status to assign
     const { data: firstStatus } = await supabase
       .from("board_statuses")
@@ -178,7 +149,6 @@ export default function StudioHomePage() {
         title: data.title,
         description: data.description || null,
         organization_id: studio.id,
-        channel_id: channelId,
         video_type: data.videoType,
         board_status_id: firstStatus?.id,
       })

@@ -89,7 +89,7 @@ export type VideoType = 'long' | 'short';
 export interface Project {
   id: string;
   organization_id: string;
-  channel_id: string;
+  channel_id: string | null;          // Optional - only used for channel preview
   title: string;                      // Default/working title
   description: string | null;
   status: ProjectStatus;

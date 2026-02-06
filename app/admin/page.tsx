@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { 
   Users, 
   Building2, 
@@ -37,41 +36,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadStats() {
-      const supabase = createClient();
-
-      // Get counts
-      const [
-        { count: userCount },
-        { count: studioCount },
-        { count: projectCount },
-        { count: keyCount },
-        { count: usedKeyCount },
-        { data: subscriptions },
-        { count: weeklySignups },
-      ] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("organizations").select("*", { count: "exact", head: true }),
-        supabase.from("projects").select("*", { count: "exact", head: true }),
-        supabase.from("plan_keys").select("*", { count: "exact", head: true }),
-        supabase.from("plan_keys").select("*", { count: "exact", head: true }).not("redeemed_at", "is", null),
-        supabase.from("subscriptions").select("plan"),
-        supabase.from("profiles").select("*", { count: "exact", head: true })
-          .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-      ]);
-
-      const freeCount = subscriptions?.filter(s => s.plan === "free" || !s.plan).length || 0;
-      const paidCount = subscriptions?.filter(s => s.plan && s.plan !== "free").length || 0;
-
-      setStats({
-        totalUsers: userCount || 0,
-        totalStudios: studioCount || 0,
-        totalProjects: projectCount || 0,
-        totalKeys: keyCount || 0,
-        usedKeys: usedKeyCount || 0,
-        freeStudios: freeCount,
-        paidStudios: paidCount,
-        signupsThisWeek: weeklySignups || 0,
-      });
+      try {
+        const response = await fetch("/api/admin/stats");
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Failed to load admin stats:", error);
+      }
       setLoading(false);
     }
 

@@ -177,29 +177,6 @@ export default function ProjectsPage() {
       throw new Error(`Project limit reached for ${plan} plan (${limit} projects). Upgrade to create more projects.`);
     }
 
-    // Get or create default channel
-    const { data: existingChannels } = await supabase
-      .from("channels")
-      .select("id")
-      .eq("organization_id", org.id)
-      .limit(1);
-
-    let channelId: string;
-    if (existingChannels && existingChannels.length > 0) {
-      channelId = existingChannels[0].id;
-    } else {
-      const { data: newChannel, error: channelError } = await supabase
-        .from("channels")
-        .insert({ organization_id: org.id, name: "Main Channel" })
-        .select("id")
-        .single();
-      if (channelError || !newChannel) {
-        console.error("Failed to create channel:", channelError);
-        return;
-      }
-      channelId = newChannel.id;
-    }
-
     // Get the first board status (default to first status column)
     const { data: firstStatus } = await supabase
       .from("board_statuses")
@@ -214,7 +191,6 @@ export default function ProjectsPage() {
       .from("projects")
       .insert({
         organization_id: org.id,
-        channel_id: channelId,
         title: data.title,
         description: data.description || null,
         video_type: data.videoType,
