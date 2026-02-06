@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Sparkles, Layout, Eye, FolderKanban, FileText, Users, LayoutGrid, Shield } from "lucide-react";
+import { Sparkles, Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Palette } from "lucide-react";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -134,20 +134,20 @@ export default async function Home() {
             {/* Feature Card 1 */}
             <div className="glass-card p-6 hover-lift">
               <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
-                <Layout className="w-6 h-6 text-blue-400" />
+                <Image className="w-6 h-6 text-blue-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Kanban Board</h3>
+              <h3 className="text-lg font-semibold mb-2">Thumbnail & Title Testing</h3>
               <p className="text-muted-foreground">
-                Track your videos from idea to published. Drag and drop projects between stages.
+                Preview how your thumbnails and titles will look in the YouTube feed before publishing.
               </p>
             </div>
             
             {/* Feature Card 2 */}
             <div className="glass-card p-6 hover-lift">
               <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-purple-400" />
+                <PenTool className="w-6 h-6 text-purple-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Storyboard Editor</h3>
+              <h3 className="text-lg font-semibold mb-2">Storyboard Script Writing</h3>
               <p className="text-muted-foreground">
                 Write your script and plan visuals side-by-side. Know exactly what to film.
               </p>
@@ -156,11 +156,11 @@ export default async function Home() {
             {/* Feature Card 3 */}
             <div className="glass-card p-6 hover-lift">
               <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-4">
-                <Eye className="w-6 h-6 text-orange-400" />
+                <Palette className="w-6 h-6 text-orange-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Thumbnail Preview</h3>
+              <h3 className="text-lg font-semibold mb-2">Channel Branding</h3>
               <p className="text-muted-foreground">
-                See how your video will look in the YouTube feed before you publish.
+                Save your brand colors, fonts, and default settings for consistent video packaging.
               </p>
             </div>
           </div>
