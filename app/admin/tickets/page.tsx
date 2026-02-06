@@ -398,24 +398,10 @@ export default function AdminTicketsPage() {
                 );
               })}
             </div>
-            {/* Archived Toggle */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setShowArchived(!showArchived);
-                if (!showArchived) setFilter("archived");
-                else setFilter("all");
-              }}
-              className={`gap-1 w-full justify-start ${showArchived ? "text-foreground" : "text-muted-foreground"}`}
-            >
-              <Archive className="w-3 h-3" />
-              {showArchived ? "Hide Archived" : "Show Archived"} ({statusCounts["archived"] || 0})
-            </Button>
           </div>
 
           {/* Ticket List */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto relative">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -488,6 +474,25 @@ export default function AdminTicketsPage() {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            
+            {/* Archived Toggle - Fixed at bottom */}
+            {(statusCounts["archived"] || 0) > 0 && (
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-background via-background to-transparent pt-8">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowArchived(!showArchived);
+                    if (!showArchived) setFilter("archived");
+                    else setFilter("all");
+                  }}
+                  className={`gap-2 w-full justify-center ${showArchived ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/5"}`}
+                >
+                  <Archive className="w-3 h-3" />
+                  {showArchived ? "Hide Archived" : "Show Archived"} ({statusCounts["archived"]})
+                </Button>
               </div>
             )}
           </div>

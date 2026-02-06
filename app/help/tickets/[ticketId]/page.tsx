@@ -192,11 +192,11 @@ export default function TicketDetailPage() {
 
     setReactivating(true);
 
-    // Update ticket status back to "new"
+    // Update ticket status to awaiting_response (not new, since it's a reactivation)
     const { error: ticketError } = await supabase
       .from("support_tickets")
       .update({
-        status: "new",
+        status: "awaiting_response",
         resolved_at: null,
         updated_at: new Date().toISOString(),
       })
@@ -215,7 +215,7 @@ export default function TicketDetailPage() {
       .insert({
         ticket_id: ticket.id,
         sender_id: user.id,
-        content: `**Ticket Reactivated**\n\nReason: ${reactivateReason.trim()}`,
+        content: `Ticket Reactivated\n\nReason: ${reactivateReason.trim()}`,
         is_admin: false,
       });
 
