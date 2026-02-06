@@ -735,16 +735,6 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                   <p className="text-sm text-muted-foreground">
                     Enter the email address of the user you want to transfer ownership to. They must have an account.
                   </p>
-                  {willOldOwnerBeKicked() && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <p className="text-sm text-red-500 font-medium">
-                        ⚠️ You will lose access
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Your current plan only allows 1 member. If the transfer is accepted, you will be removed from the studio entirely.
-                      </p>
-                    </div>
-                  )}
                   <Button 
                     variant="outline" 
                     className="gap-2 border-amber-500/30 hover:bg-amber-500/10"

@@ -49,7 +49,7 @@ export const plans: Plan[] = [
     features: [
       { name: 'One project', included: true },
       { name: 'Up to 3 wiki documents', included: true },
-      { name: 'Email support', included: false },
+      { name: 'Community support only', included: true },
       { name: 'Collaboration', included: false },
       { name: 'Feature suggestions', included: false },
     ],
@@ -75,7 +75,7 @@ export const plans: Plan[] = [
     features: [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
-      { name: 'Email support', included: true },
+      { name: 'Standard support', included: true },
       { name: 'Collaboration', included: false },
       { name: 'Feature suggestions', included: false },
     ],
@@ -101,7 +101,7 @@ export const plans: Plan[] = [
     features: [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
-      { name: 'Priority email support', included: true },
+      { name: 'Priority support', included: true },
       { name: 'Collaboration (4 members)', included: true },
       { name: 'Feature suggestions', included: true },
     ],
@@ -126,7 +126,7 @@ export const plans: Plan[] = [
     features: [
       { name: 'Unlimited projects', included: true },
       { name: 'Unlimited wiki documents', included: true },
-      { name: 'Instant email support', included: true },
+      { name: 'Priority support (fastest)', included: true },
       { name: 'Collaboration (unlimited)', included: true },
       { name: 'Feature suggestions priority', included: true },
     ],

@@ -58,6 +58,9 @@ interface Ticket {
   related_studio: {
     id: string;
     name: string;
+    subscription?: {
+      plan: string;
+    } | null;
   } | null;
   message_count?: number;
   last_message?: {
@@ -92,7 +95,16 @@ const categoryLabels: Record<string, string> = {
   billing_issue: "Billing",
   account_help: "Account",
   technical_support: "Tech",
+  general_question: "Question",
   other: "Other",
+};
+
+// Plan priority configuration for support
+const planConfig: Record<string, { label: string; color: string; bgColor: string; priority: number }> = {
+  enterprise: { label: "Enterprise", color: "text-amber-400", bgColor: "bg-amber-400/20", priority: 1 },
+  studio: { label: "Studio", color: "text-purple-400", bgColor: "bg-purple-400/20", priority: 2 },
+  creator: { label: "Creator", color: "text-blue-400", bgColor: "bg-blue-400/20", priority: 3 },
+  free: { label: "Free", color: "text-gray-400", bgColor: "bg-gray-400/20", priority: 4 },
 };
 
 export default function AdminTicketsPage() {
@@ -122,7 +134,7 @@ export default function AdminTicketsPage() {
       .select(`
         *,
         user:profiles!user_id(id, email, full_name, avatar_url),
-        related_studio:organizations(id, name)
+        related_studio:organizations(id, name, subscription:subscriptions(plan))
       `)
       .order("updated_at", { ascending: false });
 
@@ -348,13 +360,23 @@ export default function AdminTicketsPage() {
                           <status.icon className={`w-4 h-4 ${status.color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-xs text-muted-foreground">
                               #{ticket.ticket_number}
                             </span>
                             <span className="text-xs px-1.5 py-0.5 rounded bg-white/10">
                               {categoryLabels[ticket.category]}
                             </span>
+                            {/* Plan Badge */}
+                            {(() => {
+                              const plan = (ticket.related_studio?.subscription as unknown as { plan: string } | null)?.plan || 'free';
+                              const config = planConfig[plan] || planConfig.free;
+                              return (
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${config.bgColor} ${config.color}`}>
+                                  {config.label}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <h3 className="font-medium text-sm truncate">{ticket.subject}</h3>
                           <div className="flex items-center gap-2 mt-1">
@@ -395,13 +417,23 @@ export default function AdminTicketsPage() {
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm text-muted-foreground">
                         #{selectedTicket.ticket_number}
                       </span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
                         {categoryLabels[selectedTicket.category]}
                       </span>
+                      {/* Plan Badge */}
+                      {(() => {
+                        const plan = (selectedTicket.related_studio?.subscription as unknown as { plan: string } | null)?.plan || 'free';
+                        const config = planConfig[plan] || planConfig.free;
+                        return (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bgColor} ${config.color}`}>
+                            {config.label}
+                          </span>
+                        );
+                      })()}
                       {selectedTicket.related_studio && (
                         <Link 
                           href={`/admin/studios?search=${selectedTicket.related_studio.name}`}
