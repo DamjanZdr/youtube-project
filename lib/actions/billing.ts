@@ -170,13 +170,26 @@ export async function createCheckoutSession(organizationId: string, priceId: str
 
       const currentInterval = subscription.interval || 'month';
       
-      // Determine if this is an upgrade or downgrade
-      // Upgrade = higher tier OR same/higher tier + monthly->yearly
-      // Downgrade = lower tier OR any tier + yearly->monthly
-      const isUpgrade = newPlanTier > currentPlanTier || 
-                        (newPlanTier >= currentPlanTier && currentInterval === 'month' && newInterval === 'year');
+      // BILLING RULES:
+      // - Monthly → Monthly (upgrade tier): Instant + proration
+      // - Monthly → Monthly (downgrade tier): End of cycle
+      // - Monthly → Yearly (any tier): Instant + proration (yearly commitment is always upgrade)
+      // - Yearly → Monthly (any tier): End of year (yearly is a commitment)
+      // - Yearly → Yearly (upgrade tier): Instant + proration
+      // - Yearly → Yearly (downgrade tier): End of year
       
-      if (isUpgrade) {
+      const isTierUpgrade = newPlanTier > currentPlanTier;
+      const isTierDowngrade = newPlanTier < currentPlanTier;
+      const isMovingToYearly = currentInterval === 'month' && newInterval === 'year';
+      const isMovingToMonthly = currentInterval === 'year' && newInterval === 'month';
+      
+      // Determine if this change should happen immediately
+      const isInstantChange = 
+        isMovingToYearly || // Monthly → Yearly is always instant (commitment)
+        (currentInterval === 'month' && newInterval === 'month' && isTierUpgrade) || // Monthly tier upgrade
+        (currentInterval === 'year' && newInterval === 'year' && isTierUpgrade); // Yearly tier upgrade
+      
+      if (isInstantChange) {
         // UPGRADE: Apply immediately with proration
         await stripe.subscriptions.update(subscription.stripe_subscription_id, {
           items: [{
@@ -199,13 +212,14 @@ export async function createCheckoutSession(organizationId: string, priceId: str
 
         return { url: `${baseUrl}/studio/${org.slug}/settings?tab=billing&upgraded=true` };
       } else {
-        // DOWNGRADE: Check member limits before allowing
+        // SCHEDULED CHANGE: Monthly tier downgrade, yearly→monthly, or yearly tier downgrade
+        // Check member limits before allowing
         const downgradeCheck = await checkDowngradeAllowed(organizationId, newPlan.id);
         if (!downgradeCheck.allowed) {
           throw new Error(downgradeCheck.message);
         }
         
-        // DOWNGRADE: Schedule for end of period
+        // Schedule for end of current billing period
         // Don't touch Stripe subscription yet - just store the pending change
         await supabase
           .from('subscriptions')
