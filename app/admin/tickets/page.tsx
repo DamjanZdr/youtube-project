@@ -120,6 +120,7 @@ export default function AdminTicketsPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [archivedCount, setArchivedCount] = useState(0);
   
   // Dialog states
   const [showResolveDialog, setShowResolveDialog] = useState(false);
@@ -129,7 +130,17 @@ export default function AdminTicketsPage() {
 
   useEffect(() => {
     loadTickets();
+    loadArchivedCount();
   }, [filter, showArchived]);
+
+  const loadArchivedCount = async () => {
+    const { count } = await supabase
+      .from("support_tickets")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "archived");
+    
+    setArchivedCount(count || 0);
+  };
 
   const loadTickets = async () => {
     setLoading(true);
@@ -311,6 +322,7 @@ export default function AdminTicketsPage() {
       setShowArchiveDialog(false);
       setSelectedTicket(null);
       await loadTickets();
+      await loadArchivedCount();
     }
   };
 
@@ -478,7 +490,7 @@ export default function AdminTicketsPage() {
             )}
             
             {/* Archived Toggle - Fixed at bottom */}
-            {(statusCounts["archived"] || 0) > 0 && (
+            {archivedCount > 0 && (
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-background via-background to-transparent pt-8">
                 <Button
                   size="sm"
@@ -491,7 +503,7 @@ export default function AdminTicketsPage() {
                   className={`gap-2 w-full justify-center ${showArchived ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/5"}`}
                 >
                   <Archive className="w-3 h-3" />
-                  {showArchived ? "Hide Archived" : "Show Archived"} ({statusCounts["archived"]})
+                  {showArchived ? "Hide Archived" : "Show Archived"} ({archivedCount})
                 </Button>
               </div>
             )}
