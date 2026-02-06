@@ -20,8 +20,8 @@ const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/studios", label: "Studios", icon: Building2 },
-  { href: "/admin/keys", label: "Keys", icon: Key },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/keys", label: "Keys", icon: Key },
   { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon },
 ];
 
@@ -124,7 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto h-full">
+      <main className="flex-1 overflow-auto h-full p-6">
         {children}
       </main>
     </div>

@@ -202,7 +202,7 @@ export default function AdminSubscriptionsPage() {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${planColors[sub.plan] || planColors.free}`}>
                       {sub.plan}
                     </span>
-                    {sub.interval && (
+                    {sub.interval && sub.plan !== "free" && (
                       <span className="ml-2 text-xs text-muted-foreground">
                         ({sub.interval === "year" ? "yearly" : "monthly"})
                       </span>

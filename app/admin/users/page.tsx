@@ -92,7 +92,7 @@ export default function AdminUsersPage() {
   const [sendKeyOpen, setSendKeyOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [keyPlan, setKeyPlan] = useState("creator");
-  const [keyDuration, setKeyDuration] = useState("year");
+  const [keyDuration, setKeyDuration] = useState("month");
   const [sending, setSending] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<{ key: string; redeemUrl: string } | null>(null);
 
@@ -306,7 +306,7 @@ export default function AdminUsersPage() {
   const openSendKeyDialog = (user: User) => {
     setSelectedUser(user);
     setKeyPlan("creator");
-    setKeyDuration("year");
+    setKeyDuration("month");
     setGeneratedKey(null);
     setSendKeyOpen(true);
   };
