@@ -228,7 +228,7 @@ export default function NewTicketPage() {
                     For full technical support, bug reports, and feature requests, 
                     upgrade to a paid plan.
                   </p>
-                  <Link href="/pricing" className="inline-flex items-center gap-1 text-sm text-primary mt-2 hover:underline">
+                  <Link href="/#pricing" className="inline-flex items-center gap-1 text-sm text-primary mt-2 hover:underline">
                     <Sparkles className="w-4 h-4" />
                     View plans
                   </Link>
