@@ -98,51 +98,71 @@ export async function POST(req: NextRequest) {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a; color: #ffffff; padding: 40px 20px; margin: 0;">
-            <div style="max-width: 480px; margin: 0 auto; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px;">
-              
-              <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">🎁 Your Plan Key</h1>
-                <p style="color: #888; margin: 0; font-size: 14px;">You've received a subscription key</p>
-              </div>
+          <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                    <tr>
+                      <td style="padding: 40px 32px;">
+                        <div style="text-align: center; margin-bottom: 32px;">
+                          <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #ffffff;">🎁 Your Plan Key</h1>
+                          <p style="color: #a1a1aa; margin: 0; font-size: 15px;">You've received a subscription key</p>
+                        </div>
 
-              <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                <p style="color: #888; font-size: 12px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">Your Key</p>
-                <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 20px; letter-spacing: 2px; color: #fff; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                  ${keyData.key}
-                </div>
-              </div>
+                        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                          <p style="color: #a1a1aa; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                          <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #ffffff; margin: 0; font-weight: 700;">
+                            ${keyData.key}
+                          </p>
+                        </div>
 
-              <div style="display: flex; gap: 16px; margin-bottom: 24px;">
-                <div style="flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 16px; text-align: center;">
-                  <p style="color: #888; font-size: 12px; margin: 0 0 4px 0;">Plan</p>
-                  <p style="font-size: 16px; font-weight: 600; margin: 0; color: #818cf8;">${planText}</p>
-                </div>
-                <div style="flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 16px; text-align: center;">
-                  <p style="color: #888; font-size: 12px; margin: 0 0 4px 0;">Duration</p>
-                  <p style="font-size: 16px; font-weight: 600; margin: 0;">${durationText}</p>
-                </div>
-              </div>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+                          <tr>
+                            <td width="48%" style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 16px; text-align: center;">
+                              <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Plan</p>
+                              <p style="font-size: 16px; font-weight: 600; margin: 0; color: #818cf8;">${planText}</p>
+                            </td>
+                            <td width="4%"></td>
+                            <td width="48%" style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 16px; text-align: center;">
+                              <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Duration</p>
+                              <p style="font-size: 16px; font-weight: 600; margin: 0; color: #ffffff;">${durationText}</p>
+                            </td>
+                          </tr>
+                        </table>
 
-              <a href="${redeemUrl}" style="display: block; background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%); color: white; text-decoration: none; padding: 14px 24px; border-radius: 10px; font-weight: 600; text-align: center; margin-bottom: 24px;">
-                Redeem Your Key →
-              </a>
+                        <div style="text-align: center; margin-bottom: 28px;">
+                          <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                            Redeem Your Key →
+                          </a>
+                        </div>
 
-              <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
-                <p style="color: #666; font-size: 12px; margin: 0 0 8px 0;">How to redeem:</p>
-                <ol style="color: #888; font-size: 13px; margin: 0; padding-left: 20px; line-height: 1.8;">
-                  <li>Click the button above or go to your studio settings</li>
-                  <li>Navigate to the Billing tab</li>
-                  <li>Enter your key in the "Have a plan key?" section</li>
-                </ol>
-              </div>
+                        <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;">
+                          <p style="color: #71717a; font-size: 12px; margin: 0 0 10px 0; font-weight: 600;">How to redeem:</p>
+                          <table role="presentation" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">1. Click the button above or go to your studio settings</td>
+                            </tr>
+                            <tr>
+                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">2. Navigate to the Billing tab</td>
+                            </tr>
+                            <tr>
+                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">3. Enter your key in the "Have a plan key?" section</td>
+                            </tr>
+                          </table>
+                        </div>
 
-              <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.05);">
-                <p style="color: #444; font-size: 11px; margin: 0;">
-                  MyBlueprint • Making video planning simple
-                </p>
-              </div>
-            </div>
+                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                          <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                            MyBlueprint • Making video planning simple
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
           </body>
         </html>
       `,

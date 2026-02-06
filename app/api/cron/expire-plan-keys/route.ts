@@ -121,43 +121,62 @@ export async function GET(req: NextRequest) {
                 to: ownerEmail,
                 subject: `Your Gifted Plan Has Expired - Activate ${planName} Now`,
                 html: `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fff;">
-                    <div style="text-align: center; margin-bottom: 32px;">
-                      <h1 style="color: #fff; margin: 0; font-size: 28px;">Your Gift Has Expired</h1>
-                    </div>
-                    
-                    <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                      Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired.
-                    </p>
-                    
-                    <div style="background: linear-gradient(135deg, #1e1e2e 0%, #2d1f3d 100%); border-radius: 12px; padding: 24px; margin: 24px 0;">
-                      <p style="color: #a1a1aa; font-size: 14px; margin: 0 0 16px 0;">
-                        You previously scheduled to continue with:
-                      </p>
-                      <p style="color: #fff; font-size: 24px; font-weight: bold; margin: 0;">
-                        ${planName} ${intervalText}
-                      </p>
-                      <p style="color: #a1a1aa; font-size: 16px; margin: 8px 0 0 0;">
-                        $${price}/${interval === "year" ? "year" : "month"}
-                      </p>
-                    </div>
-                    
-                    <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-                      Click below to complete payment and keep your ${planName} features. Until then, you'll have access to the Free tier.
-                    </p>
-                    
-                    <div style="text-align: center; margin: 32px 0;">
-                      <a href="${checkoutUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                        Activate ${planName} →
-                      </a>
-                    </div>
-                    
-                    <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;" />
-                    
-                    <p style="color: #525252; font-size: 12px; text-align: center;">
-                      © MyBlueprint Studio
-                    </p>
-                  </div>
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                        <tr>
+                          <td align="center" style="padding: 40px 20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                              <tr>
+                                <td style="padding: 40px 32px;">
+                                  <div style="text-align: center; margin-bottom: 32px;">
+                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Your Gift Has Expired</h1>
+                                  </div>
+                                  
+                                  <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                                    Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired.
+                                  </p>
+                                  
+                                  <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                                    <p style="color: #a1a1aa; font-size: 13px; margin: 0 0 12px 0;">
+                                      You previously scheduled to continue with:
+                                    </p>
+                                    <p style="color: #fff; font-size: 22px; font-weight: bold; margin: 0;">
+                                      ${planName} ${intervalText}
+                                    </p>
+                                    <p style="color: #a1a1aa; font-size: 15px; margin: 8px 0 0 0;">
+                                      $${price}/${interval === "year" ? "year" : "month"}
+                                    </p>
+                                  </div>
+                                  
+                                  <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
+                                    Click below to complete payment and keep your ${planName} features. Until then, you'll have access to the Free tier.
+                                  </p>
+                                  
+                                  <div style="text-align: center; margin-bottom: 24px;">
+                                    <a href="${checkoutUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                                      Activate ${planName} →
+                                    </a>
+                                  </div>
+                                  
+                                  <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                                    <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                      © MyBlueprint Studio
+                                    </p>
+                                  </div>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </body>
+                  </html>
                 `,
               });
               emailSent = true;
@@ -231,31 +250,50 @@ export async function GET(req: NextRequest) {
                 to: ownerEmail,
                 subject: `Your ${planConfig?.name || sub.previous_plan} Subscription Has Resumed`,
                 html: `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fff;">
-                    <div style="text-align: center; margin-bottom: 32px;">
-                      <h1 style="color: #fff; margin: 0; font-size: 28px;">Welcome Back! 👋</h1>
-                    </div>
-                    
-                    <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                      Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired, and your previous <strong style="color: #fff;">${planConfig?.name || sub.previous_plan}</strong> subscription has automatically resumed.
-                    </p>
-                    
-                    <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-                      You'll continue to have access to all your ${planConfig?.name || sub.previous_plan} features. Billing will resume on your regular schedule.
-                    </p>
-                    
-                    <div style="text-align: center; margin: 32px 0;">
-                      <a href="${appUrl}/studio/${org.slug}/settings?tab=billing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                        View Billing →
-                      </a>
-                    </div>
-                    
-                    <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;" />
-                    
-                    <p style="color: #525252; font-size: 12px; text-align: center;">
-                      © MyBlueprint Studio
-                    </p>
-                  </div>
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                        <tr>
+                          <td align="center" style="padding: 40px 20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                              <tr>
+                                <td style="padding: 40px 32px;">
+                                  <div style="text-align: center; margin-bottom: 32px;">
+                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Welcome Back! 👋</h1>
+                                  </div>
+                                  
+                                  <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired, and your previous <strong style="color: #fff;">${planConfig?.name || sub.previous_plan}</strong> subscription has automatically resumed.
+                                  </p>
+                                  
+                                  <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
+                                    You'll continue to have access to all your ${planConfig?.name || sub.previous_plan} features. Billing will resume on your regular schedule.
+                                  </p>
+                                  
+                                  <div style="text-align: center; margin-bottom: 24px;">
+                                    <a href="${appUrl}/studio/${org.slug}/settings?tab=billing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                                      View Billing →
+                                    </a>
+                                  </div>
+                                  
+                                  <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                                    <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                      © MyBlueprint Studio
+                                    </p>
+                                  </div>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </body>
+                  </html>
                 `,
               });
               emailSent = true;
@@ -297,31 +335,50 @@ export async function GET(req: NextRequest) {
               to: ownerEmail,
               subject: `Your Gifted Plan Has Expired`,
               html: `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fff;">
-                  <div style="text-align: center; margin-bottom: 32px;">
-                    <h1 style="color: #fff; margin: 0; font-size: 28px;">Your Gift Has Expired</h1>
-                  </div>
-                  
-                  <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                    Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired. You've been moved to the Free tier.
-                  </p>
-                  
-                  <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-                    Want to keep your premium features? Upgrade to a paid plan today!
-                  </p>
-                  
-                  <div style="text-align: center; margin: 32px 0;">
-                    <a href="${appUrl}/studio/${org.slug}/settings?tab=billing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                      View Plans →
-                    </a>
-                  </div>
-                  
-                  <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;" />
-                  
-                  <p style="color: #525252; font-size: 12px; text-align: center;">
-                    © MyBlueprint Studio
-                  </p>
-                </div>
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  </head>
+                  <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                      <tr>
+                        <td align="center" style="padding: 40px 20px;">
+                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                            <tr>
+                              <td style="padding: 40px 32px;">
+                                <div style="text-align: center; margin-bottom: 32px;">
+                                  <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Your Gift Has Expired</h1>
+                                </div>
+                                
+                                <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                                  Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired. You've been moved to the Free tier.
+                                </p>
+                                
+                                <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
+                                  Want to keep your premium features? Upgrade to a paid plan today!
+                                </p>
+                                
+                                <div style="text-align: center; margin-bottom: 24px;">
+                                  <a href="${appUrl}/studio/${org.slug}/settings?tab=billing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                                    View Plans →
+                                  </a>
+                                </div>
+                                
+                                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                                  <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                    © MyBlueprint Studio
+                                  </p>
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </body>
+                </html>
               `,
             });
             emailSent = true;
