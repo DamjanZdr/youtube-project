@@ -92,7 +92,7 @@ export default function AdminKeysPage() {
   // Generate dialog state
   const [showGenerate, setShowGenerate] = useState(false);
   const [genPlan, setGenPlan] = useState("creator");
-  const [genDuration, setGenDuration] = useState("year");
+  const [genDuration, setGenDuration] = useState("month");
   const [genCount, setGenCount] = useState(1);
   const [generating, setGenerating] = useState(false);
   const [generatedKeys, setGeneratedKeys] = useState<string[]>([]);
