@@ -217,7 +217,7 @@ export default async function Home() {
             <div className="relative pt-[56.25%] rounded-xl overflow-hidden">
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src="https://www.youtube.com/embed/4odcTpjDMv0"
+                src="https://www.youtube.com/embed/v2uLDMTNifo"
                 title="Blueprint Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
