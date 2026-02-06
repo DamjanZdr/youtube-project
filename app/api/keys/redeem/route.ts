@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 // Plan hierarchy (higher index = better plan)
 const PLAN_HIERARCHY = ["free", "creator", "studio", "enterprise"];
@@ -20,6 +20,8 @@ function getDurationMonths(duration: string): number {
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
+  const adminClient = createAdminClient(); // Use admin client for updates (bypasses RLS)
+  
   // Get user from Supabase session (adjust if you use a different auth flow)
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -128,8 +130,8 @@ export async function POST(req: NextRequest) {
     expiresAt.setMonth(expiresAt.getMonth() + getDurationMonths(planKey.duration));
   }
 
-  // Update plan_keys as redeemed
-  const { error: redeemError } = await supabase
+  // Update plan_keys as redeemed (use adminClient to bypass RLS)
+  const { error: redeemError } = await adminClient
     .from("plan_keys")
     .update({
       redeemed_org_id: organization_id,
@@ -139,7 +141,8 @@ export async function POST(req: NextRequest) {
     })
     .eq("id", planKey.id);
   if (redeemError) {
-    return NextResponse.json({ error: "Failed to redeem key" }, { status: 500 });
+    console.error("Failed to update plan_key:", redeemError);
+    return NextResponse.json({ error: "Failed to redeem key", details: redeemError.message }, { status: 500 });
   }
 
   // Build the subscription update
@@ -166,7 +169,7 @@ export async function POST(req: NextRequest) {
     // For now, the admin should manually pause/cancel via Stripe dashboard
   }
 
-  const { error: subUpdateError } = await supabase
+  const { error: subUpdateError } = await adminClient
     .from("subscriptions")
     .update(subscriptionUpdate)
     .eq("id", sub.id);
@@ -177,7 +180,7 @@ export async function POST(req: NextRequest) {
   }
   
   // Verify the update worked by fetching it
-  const { data: updatedSub } = await supabase
+  const { data: updatedSub } = await adminClient
     .from("subscriptions")
     .select("*")
     .eq("id", sub.id)
@@ -185,6 +188,12 @@ export async function POST(req: NextRequest) {
     
   console.log(`Key redeemed: org=${organization_id}, plan=${planKey.plan}, expires=${expiresAt?.toISOString()}`);
   console.log(`Updated subscription:`, updatedSub);
+  
+  // VERIFY the plan actually changed
+  if (updatedSub?.plan !== planKey.plan) {
+    console.error(`CRITICAL: Plan update failed! Expected ${planKey.plan}, got ${updatedSub?.plan}`);
+    return NextResponse.json({ error: "Subscription update verification failed" }, { status: 500 });
+  }
 
   // Log billing event
   const eventType = isSamePlan && sub.source === "key" 
