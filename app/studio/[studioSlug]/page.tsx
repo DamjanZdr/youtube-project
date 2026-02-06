@@ -133,12 +133,12 @@ export default function StudioHomePage() {
       throw new Error(`Project limit reached for ${plan} plan (${limit} projects). Upgrade to create more projects.`);
     }
 
-    // Get or create default channel
+    // Get or create channel for this studio
     let { data: channel } = await supabase
       .from("channels")
       .select("id")
       .eq("organization_id", studio.id)
-      .eq("is_default", true)
+      .limit(1)
       .single();
 
     if (!channel) {
@@ -147,7 +147,6 @@ export default function StudioHomePage() {
         .insert({
           organization_id: studio.id,
           name: "Main Channel",
-          is_default: true,
         })
         .select("id")
         .single();
