@@ -74,9 +74,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="h-screen bg-black flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 p-4 flex flex-col">
+      <aside className="w-64 border-r border-white/10 p-4 flex flex-col h-full shrink-0">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8 px-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
@@ -124,10 +124,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          {children}
-        </div>
+      <main className="flex-1 overflow-auto h-full">
+        {children}
       </main>
     </div>
   );
