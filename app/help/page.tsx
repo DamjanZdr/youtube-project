@@ -23,6 +23,7 @@ import {
   FileText,
   Pin,
   LayoutGrid,
+  Shield,
 } from "lucide-react";
 
 // Icon mapping
@@ -67,6 +68,7 @@ export default function HelpCenterPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const supabase = createClient();
 
@@ -80,7 +82,7 @@ export default function HelpCenterPage() {
     if (authUser) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, accept_invites")
+        .select("full_name, avatar_url, accept_invites, role")
         .eq("id", authUser.id)
         .single();
       
@@ -91,6 +93,7 @@ export default function HelpCenterPage() {
         avatar_url: profile?.avatar_url,
       });
       setAcceptInvites(profile?.accept_invites ?? true);
+      setIsAdmin(profile?.role === "admin");
     } else {
       setUser(null);
     }
@@ -172,6 +175,14 @@ export default function HelpCenterPage() {
                     Hub
                   </Button>
                 </Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <UserProfileDropdown 
                   user={user} 
                   initialAcceptInvites={acceptInvites} 

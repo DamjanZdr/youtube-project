@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Sparkles, Layout, Eye, FolderKanban, FileText, Users, LayoutGrid } from "lucide-react";
+import { Sparkles, Layout, Eye, FolderKanban, FileText, Users, LayoutGrid, Shield } from "lucide-react";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -11,6 +11,16 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isAdmin = profile?.role === "admin";
+  }
 
   return (
     <main className="min-h-screen flex flex-col relative">
@@ -40,6 +50,14 @@ export default async function Home() {
                     Hub
                   </Button>
                 </Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <Suspense fallback={<div className="w-9 h-9" />}>
                   <AuthButton />
                 </Suspense>

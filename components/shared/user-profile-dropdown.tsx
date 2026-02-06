@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, ChevronDown, HelpCircle, Shield } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -29,20 +29,6 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
   const supabase = createClient();
   const [acceptInvites, setAcceptInvites] = useState(initialAcceptInvites);
   const [open, setOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    async function checkAdmin() {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      
-      setIsAdmin(profile?.role === "admin");
-    }
-    checkAdmin();
-  }, [user.id]);
 
   async function toggleAcceptInvites(enabled: boolean) {
     const { error } = await supabase
@@ -111,16 +97,6 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
             Help Center
           </Link>
         </DropdownMenuItem>
-        
-        {/* Admin Panel */}
-        {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link href="/admin" className="flex items-center gap-2 cursor-pointer text-orange-400">
-              <Shield className="w-4 h-4" />
-              Admin Panel
-            </Link>
-          </DropdownMenuItem>
-        )}
         
         <DropdownMenuSeparator />
         

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Users, FolderKanban, Bell, Check, X, Youtube } from "lucide-react";
+import { Plus, Play, Users, FolderKanban, Bell, Check, X, Youtube, Shield } from "lucide-react";
 import Link from "next/link";
 import { CreateStudioDialog } from "./create-studio-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,7 @@ export default function HubPage() {
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -72,13 +73,14 @@ export default function HubPage() {
     // Get user profile with invite preference and display info
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, email, full_name, avatar_url, accept_invites")
+      .select("id, email, full_name, avatar_url, accept_invites, role")
       .eq("id", currentUser.id)
       .single();
 
     if (profile) {
       setUser(profile);
       setAcceptInvites(profile.accept_invites ?? true);
+      setIsAdmin(profile.role === "admin");
     } else {
       // Fallback to auth user if profile not found
       setUser({
@@ -327,10 +329,20 @@ export default function HubPage() {
           
           <div className="flex items-center gap-3">
             {user ? (
-              <UserProfileDropdown 
-                user={user} 
-                initialAcceptInvites={acceptInvites} 
-              />
+              <>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <UserProfileDropdown 
+                  user={user} 
+                  initialAcceptInvites={acceptInvites} 
+                />
+              </>
             ) : (
               <>
                 <Link href="/auth/login">
