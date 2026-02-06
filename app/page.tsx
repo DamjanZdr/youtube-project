@@ -160,7 +160,7 @@ export default async function Home() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Channel Branding</h3>
               <p className="text-muted-foreground">
-                Save your brand colors, fonts, and default settings for consistent video packaging.
+                Test different banners, profile pictures, and channel names to perfect your channel's look.
               </p>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default async function Home() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Project Management</h3>
               <p className="text-muted-foreground">
-                Organize multiple videos at once with custom workflows and task automation.
+                Kanban board with customizable statuses and tasks. Track your videos from idea to published.
               </p>
             </div>
             
