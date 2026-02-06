@@ -142,6 +142,7 @@ export async function POST(req: NextRequest) {
     plan: planKey.plan,
     source: "key",
     key_id: planKey.id, // Track which key is active
+    status: "active", // Ensure subscription is marked active
     current_period_start: isSamePlan && sub.source === "key" ? sub.current_period_start : now.toISOString(),
     current_period_end: expiresAt ? expiresAt.toISOString() : null,
   };
@@ -160,8 +161,11 @@ export async function POST(req: NextRequest) {
     .update(subscriptionUpdate)
     .eq("id", sub.id);
   if (subUpdateError) {
-    return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+    console.error("Failed to update subscription:", subUpdateError);
+    return NextResponse.json({ error: "Failed to update subscription", details: subUpdateError.message }, { status: 500 });
   }
+  
+  console.log(`Key redeemed: org=${organization_id}, plan=${planKey.plan}, expires=${expiresAt?.toISOString()}, update=`, subscriptionUpdate);
 
   // Log billing event
   const eventType = isSamePlan && sub.source === "key" 
