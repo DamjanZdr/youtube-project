@@ -534,7 +534,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                         Free Gift
                       </Badge>
                       <span className="font-bold text-muted-foreground line-through">
-                        ${subscription.interval === "month" || !subscription.interval ? currentPlan?.price.yearly : currentPlan?.price.yearly}
+                        ${subscription.interval === "year" ? currentPlan?.price.yearly : currentPlan?.price.monthly}
                       </span>
                     </div>
                   </div>
