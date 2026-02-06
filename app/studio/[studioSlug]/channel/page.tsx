@@ -376,28 +376,23 @@ export default function ChannelPage() {
     setSaving(true);
 
     try {
-      // Delete all existing links
-      const { error: deleteError } = await supabase
-        .from("channel_links")
-        .delete()
-        .eq("channel_id", channelId);
-
-      if (deleteError) throw deleteError;
-
-      // Insert new links
-      if (tempLinks.length > 0) {
-        const linksToInsert = tempLinks.map((link, index) => ({
+      // Use API route to save links (bypasses RLS)
+      const response = await fetch('/api/channels/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           channel_id: channelId,
-          title: link.label,
-          url: link.url,
-          position: index,
-        }));
+          links: tempLinks.map((link, index) => ({
+            label: link.label,
+            url: link.url,
+            position: index,
+          })),
+        }),
+      });
 
-        const { error: insertError } = await supabase
-          .from("channel_links")
-          .insert(linksToInsert);
-
-        if (insertError) throw insertError;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save links');
       }
 
       setChannel(prev => ({ ...prev, links: tempLinks }));
