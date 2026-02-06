@@ -12,6 +12,8 @@ import {
   LogOut,
   Shield,
   TicketIcon,
+  HelpCircle,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -112,7 +114,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-white/10 pt-4 mt-4">
+        <div className="border-t border-white/10 pt-4 mt-4 space-y-1">
+          <Link
+            href="/help"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <HelpCircle className="w-5 h-5" />
+            <span>Help Center</span>
+          </Link>
+          <a
+            href="mailto:support@myblueprint.run"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <Mail className="w-5 h-5" />
+            <span>Contact</span>
+          </a>
           <Link
             href="/"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-white transition-colors"
