@@ -52,18 +52,22 @@ export async function POST(req: NextRequest) {
 
   if (redeemedOrgIds.length > 0) {
     // Get subscriptions for these orgs that are key-based
+    // Match by key_id for accuracy
+    const keyIdsBeingDeactivated = keysToDeactivate.map(k => k.id);
+    
     const { data: subscriptions } = await adminClient
       .from("subscriptions")
-      .select("id, organization_id, plan, source")
+      .select("id, organization_id, plan, source, key_id")
       .in("organization_id", redeemedOrgIds)
       .eq("source", "key");
 
     if (subscriptions && subscriptions.length > 0) {
       // For each subscription that matches a key being deactivated, downgrade to free
       for (const sub of subscriptions) {
-        // Check if this subscription's plan matches any of the keys being deactivated for this org
+        // Match by key_id (more accurate) or by org + plan (fallback)
         const matchingKey = keysToDeactivate.find(
-          k => k.redeemed_org_id === sub.organization_id && k.plan === sub.plan
+          k => k.id === sub.key_id || 
+               (k.redeemed_org_id === sub.organization_id && k.plan === sub.plan)
         );
 
         if (matchingKey) {
@@ -72,7 +76,9 @@ export async function POST(req: NextRequest) {
             .from("subscriptions")
             .update({
               plan: "free",
-              source: "revoked",
+              source: null, // Clear source - no longer key-based
+              key_id: null, // Clear key reference
+              current_period_end: null, // Clear expiration
               updated_at: new Date().toISOString(),
             })
             .eq("id", sub.id);
