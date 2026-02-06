@@ -276,12 +276,13 @@ export async function GET(req: NextRequest) {
           .from("subscriptions")
           .update({
             plan: "free",
-            source: "stripe",
+            source: null, // Clear source - they're on basic free tier now
             key_id: null,
             previous_plan: null,
             previous_stripe_subscription_id: null,
             pending_plan: null,
             pending_interval: null,
+            pending_price_id: null,
             current_period_start: now.toISOString(),
             current_period_end: null,
           })

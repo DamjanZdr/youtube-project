@@ -113,7 +113,8 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
   const isPastDue = subscription?.status === "past_due";
   const isCanceling = subscription?.cancel_at_period_end;
   const hasPendingChange = isCanceling || !!pendingPlan;
-  const isGiftedPlan = subscription?.source === "key";
+  // Only show "Gifted" for non-free plans with key source
+  const isGiftedPlan = subscription?.source === "key" && !isFreePlan;
   const isLifetime = isGiftedPlan && !subscription?.current_period_end;
 
   const handleUpgrade = async (plan: Plan) => {
@@ -759,12 +760,14 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           
           // Button text logic
           let buttonText = "Upgrade";
+          // Free plan is the same regardless of interval toggle - always show Current Plan
+          const isCurrentFree = plan.id === "free" && isFreePlan;
           if (loading === plan.id) {
             buttonText = "Loading...";
-          } else if (isCurrent) {
+          } else if (isCurrent || isCurrentFree) {
             buttonText = "Current Plan";
           } else if (isSamePlan && !isSameInterval) {
-            // Same plan, different interval
+            // Same plan, different interval (but not for free - handled above)
             buttonText = `Switch to ${billingInterval === "monthly" ? "Monthly" : "Yearly"}`;
           } else if (plan.id === "free") {
             buttonText = "Downgrade to Free";
@@ -829,13 +832,13 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               <Button
                 className="w-full mt-auto h-10 text-sm font-semibold"
                 variant={
-                  isCurrent 
+                  (isCurrent || isCurrentFree)
                     ? "outline" 
                     : (plan.popular && !userHasHigherPlan && thisPlanIndex >= currentPlanIndex) 
                       ? "default" 
                       : "outline"
                 }
-                disabled={isCurrent || loading === plan.id || exceedsMemberLimit}
+                disabled={isCurrent || isCurrentFree || loading === plan.id || exceedsMemberLimit}
                 onClick={() => showConfirmation(plan)}
               >
                 {buttonText}
