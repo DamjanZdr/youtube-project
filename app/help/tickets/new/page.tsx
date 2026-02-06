@@ -85,7 +85,7 @@ export default function NewTicketPage() {
         organization:organizations(
           id, 
           name,
-          subscriptions(plan)
+          subscription:subscriptions(plan)
         )
       `)
       .eq("user_id", user.id)
@@ -97,13 +97,13 @@ export default function NewTicketPage() {
         const org = o.organization as unknown as { 
           id: string; 
           name: string;
-          subscriptions: { plan: string }[] | null;
+          subscription: { plan: string } | null;
         } | null;
         if (org) {
           studioList.push({ 
             id: org.id, 
             name: org.name,
-            plan: org.subscriptions?.[0]?.plan || 'free'
+            plan: org.subscription?.plan || 'free'
           });
         }
       }
