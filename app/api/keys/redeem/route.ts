@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing key or organization_id" }, { status: 400 });
   }
 
-  // Fetch the key
-  const { data: planKey, error: keyError } = await supabase
+  // Fetch the key using adminClient (users can't SELECT unredeemed keys due to RLS)
+  const { data: planKey, error: keyError } = await adminClient
     .from("plan_keys")
     .select("*")
     .eq("key", key)

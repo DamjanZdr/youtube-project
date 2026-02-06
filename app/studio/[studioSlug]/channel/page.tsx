@@ -129,30 +129,31 @@ export default function ChannelPage() {
       return;
     }
 
-    // Get or create channel
-    const { data: existingChannels } = await supabase
-      .from("channels")
-      .select("*")
-      .eq("organization_id", org.id)
-      .limit(1);
+    // Get or create channel via API (uses admin client to bypass RLS)
+    let channelData = null;
+    
+    // First try to get existing channel
+    const getResponse = await fetch(`/api/channels?organization_id=${org.id}`);
+    if (getResponse.ok) {
+      channelData = await getResponse.json();
+    }
 
-    let channelData = existingChannels?.[0] || null;
-
-    // If no channel exists, create one
+    // If no channel exists, create one via API
     if (!channelData) {
-      const { data: newChannel, error: channelError } = await supabase
-        .from("channels")
-        .insert({ 
-          organization_id: org.id, 
+      const createResponse = await fetch('/api/channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: org.id,
           name: "My Channel",
           handle: "@mychannel"
         })
-        .select()
-        .single();
-      if (channelError) {
-        console.error("Failed to create channel:", channelError);
+      });
+      if (createResponse.ok) {
+        channelData = await createResponse.json();
+      } else {
+        console.error("Failed to create channel");
       }
-      channelData = newChannel;
     }
 
     if (channelData) {
