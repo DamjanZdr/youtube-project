@@ -78,6 +78,7 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.ticketId as string;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -166,7 +167,9 @@ export default function TicketDetailPage() {
 
   useEffect(() => {
     // Scroll to bottom when messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const checkAuthAndLoad = async () => {
@@ -429,7 +432,7 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Messages - Scrollable */}
-      <div className="flex-1 overflow-auto">
+      <div ref={messagesContainerRef} className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="space-y-4">
             {messages.map((message) => (

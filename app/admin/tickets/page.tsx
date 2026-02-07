@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -125,6 +125,10 @@ export default function AdminTicketsPage() {
   // Dialog states
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
 
@@ -132,6 +136,13 @@ export default function AdminTicketsPage() {
     loadTickets();
     loadArchivedCount();
   }, [filter, showArchived]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0 && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Real-time subscription for new messages and ticket updates
   useEffect(() => {
@@ -148,6 +159,8 @@ export default function AdminTicketsPage() {
         async (payload) => {
           // If viewing this ticket, add the message
           if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
+            const messageId = payload.new.id;
+            
             const { data: newMessage } = await supabase
               .from("support_ticket_messages")
               .select(`
@@ -157,11 +170,19 @@ export default function AdminTicketsPage() {
                 created_at,
                 sender:profiles!sender_id(full_name, avatar_url)
               `)
-              .eq("id", payload.new.id)
+              .eq("id", messageId)
               .single();
             
             if (newMessage) {
-              setMessages(prev => [...prev, newMessage as unknown as Message]);
+              setMessages(prev => {
+                // Check if already exists
+                if (prev.some(m => m.id === messageId)) {
+                  return prev;
+                }
+                // Remove any temp messages
+                const filtered = prev.filter(m => !m.id.startsWith('temp-'));
+                return [...filtered, newMessage as unknown as Message];
+              });
             }
           }
           
@@ -301,6 +322,7 @@ export default function AdminTicketsPage() {
     if (!selectedTicket || !replyContent.trim()) return;
 
     setSubmitting(true);
+    const messageContent = replyContent.trim();
 
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -310,22 +332,51 @@ export default function AdminTicketsPage() {
       return;
     }
 
+    // Optimistic update - add message immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      content: messageContent,
+      is_admin: true,
+      created_at: new Date().toISOString(),
+      sender: null,
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+    setReplyContent("");
+
     // Insert message as admin
-    const { error } = await supabase
+    const { data: insertedMsg, error } = await supabase
       .from("support_ticket_messages")
       .insert({
         ticket_id: selectedTicket.id,
         sender_id: user.id,
-        content: replyContent.trim(),
+        content: messageContent,
         is_admin: true,
-      });
+      })
+      .select(`
+        id,
+        content,
+        is_admin,
+        created_at,
+        sender:profiles!sender_id(full_name, avatar_url)
+      `)
+      .single();
 
     if (error) {
       toast.error("Failed to send reply");
       console.error(error);
-    } else {
-      setReplyContent("");
-      // Realtime subscription will add the message and update status automatically
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setReplyContent(messageContent);
+    } else if (insertedMsg) {
+      // Replace optimistic message with real one
+      setMessages(prev => {
+        const filtered = prev.filter(m => !m.id.startsWith('temp-'));
+        // Check if real message already exists (from realtime)
+        if (filtered.some(m => m.id === insertedMsg.id)) {
+          return filtered;
+        }
+        return [...filtered, insertedMsg as unknown as Message];
+      });
     }
 
     setSubmitting(false);
@@ -697,7 +748,7 @@ export default function AdminTicketsPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-auto p-4">
+              <div ref={messagesContainerRef} className="flex-1 overflow-auto p-4">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center h-32">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -734,6 +785,7 @@ export default function AdminTicketsPage() {
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
                 )}
               </div>
