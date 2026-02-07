@@ -63,6 +63,24 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+        {/* Account Settings */}
+        <DropdownMenuItem asChild>
+          <Link href="/account" className="flex items-center gap-2 cursor-pointer">
+            <Settings className="w-4 h-4" />
+            Account Settings
+          </Link>
+        </DropdownMenuItem>
+        
+        {/* Help Center */}
+        <DropdownMenuItem asChild>
+          <Link href="/help" className="flex items-center gap-2 cursor-pointer">
+            <HelpCircle className="w-4 h-4" />
+            Help Center
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         {/* Accept Invites Toggle */}
         <div 
           className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer"
@@ -79,24 +97,6 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        
-        <DropdownMenuSeparator />
-        
-        {/* Account Settings */}
-        <DropdownMenuItem asChild>
-          <Link href="/account" className="flex items-center gap-2 cursor-pointer">
-            <Settings className="w-4 h-4" />
-            Account Settings
-          </Link>
-        </DropdownMenuItem>
-        
-        {/* Help Center */}
-        <DropdownMenuItem asChild>
-          <Link href="/help" className="flex items-center gap-2 cursor-pointer">
-            <HelpCircle className="w-4 h-4" />
-            Help Center
-          </Link>
-        </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
