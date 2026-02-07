@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ChevronLeft, Send, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { ChevronLeft, Send, Loader2, AlertCircle } from "lucide-react";
 
 // All categories - some restricted by plan
 const allCategories = [
@@ -228,10 +228,6 @@ export default function NewTicketPage() {
                     For full technical support, bug reports, and feature requests, 
                     upgrade to a paid plan.
                   </p>
-                  <Link href="/#pricing" className="inline-flex items-center gap-1 text-sm text-primary mt-2 hover:underline">
-                    <Sparkles className="w-4 h-4" />
-                    View plans
-                  </Link>
                 </div>
               </div>
             </div>
