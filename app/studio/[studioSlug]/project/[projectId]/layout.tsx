@@ -92,8 +92,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const tabs = [
     { href: `/studio/${studioSlug}/project/${projectId}/idea`, icon: Lightbulb, label: "Idea" },
     { href: `/studio/${studioSlug}/project/${projectId}`, icon: Package, label: "Packaging", exact: true },
-    { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard" },
     { href: `/studio/${studioSlug}/project/${projectId}/preview`, icon: Eye, label: "Preview" },
+    { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard" },
     { href: `/studio/${studioSlug}/project/${projectId}/tasks`, icon: ListTodo, label: "Tasks" },
     { href: `/studio/${studioSlug}/project/${projectId}/settings`, icon: Settings, label: "" },
   ];
