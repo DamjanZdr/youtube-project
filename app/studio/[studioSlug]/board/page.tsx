@@ -1004,16 +1004,17 @@ export default function BoardPage() {
                               {(() => {
                                 const assignee = getProjectAssignee(selectedProject.id);
                                 if (assignee) {
+                                  const displayName = assignee.profile.full_name || assignee.profile.email?.split('@')[0] || 'Unknown';
                                   return (
                                     <div className="flex items-center gap-2">
                                       {assignee.profile.avatar_url ? (
                                         <img src={assignee.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
                                       ) : (
-                                        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
-                                          <User className="w-3 h-3" />
+                                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
+                                          {displayName[0].toUpperCase()}
                                         </div>
                                       )}
-                                      <span className="truncate">{assignee.profile.full_name || 'Unknown'}</span>
+                                      <span className="truncate">{displayName}</span>
                                     </div>
                                   );
                                 }
@@ -1137,16 +1138,21 @@ export default function BoardPage() {
                               <SelectTrigger className="w-32 h-7 text-xs bg-transparent border-white/10">
                                 <SelectValue>
                                   {statusAssignee ? (
-                                    <div className="flex items-center gap-1.5">
-                                      {statusAssignee.profile.avatar_url ? (
-                                        <img src={statusAssignee.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
-                                      ) : (
-                                        <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
-                                          <User className="w-2.5 h-2.5" />
+                                    (() => {
+                                      const displayName = statusAssignee.profile.full_name || statusAssignee.profile.email?.split('@')[0] || 'Unknown';
+                                      return (
+                                        <div className="flex items-center gap-1.5">
+                                          {statusAssignee.profile.avatar_url ? (
+                                            <img src={statusAssignee.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                                          ) : (
+                                            <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
+                                              {displayName[0].toUpperCase()}
+                                            </div>
+                                          )}
+                                          <span className="truncate">{displayName.split(' ')[0]}</span>
                                         </div>
-                                      )}
-                                      <span className="truncate">{statusAssignee.profile.full_name?.split(' ')[0] || 'Unknown'}</span>
-                                    </div>
+                                      );
+                                    })()
                                   ) : (
                                     <span className="text-muted-foreground">Assignee</span>
                                   )}
