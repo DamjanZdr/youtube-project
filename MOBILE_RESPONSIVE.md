@@ -17,20 +17,20 @@ This file tracks the progress of making all pages mobile-friendly.
 ## Pages Checklist
 
 ### Public / Landing
-- [ ] `app/page.tsx` - Landing page (homepage)
-- [ ] `app/privacy/page.tsx` - Privacy policy
-- [ ] `app/terms/page.tsx` - Terms of service
+- [x] `app/page.tsx` - Landing page (homepage)
+- [x] `app/privacy/page.tsx` - Privacy policy
+- [x] `app/terms/page.tsx` - Terms of service
 
 ### Authentication
-- [ ] `app/auth/login/page.tsx` - Login page
-- [ ] `app/auth/sign-up/page.tsx` - Sign up page
-- [ ] `app/auth/sign-up-success/page.tsx` - Sign up success
-- [ ] `app/auth/forgot-password/page.tsx` - Forgot password
-- [ ] `app/auth/update-password/page.tsx` - Update password
-- [ ] `app/auth/error/page.tsx` - Auth error page
+- [x] `app/auth/login/page.tsx` - Login page (already responsive)
+- [x] `app/auth/sign-up/page.tsx` - Sign up page (already responsive)
+- [x] `app/auth/sign-up-success/page.tsx` - Sign up success (already responsive)
+- [x] `app/auth/forgot-password/page.tsx` - Forgot password (already responsive)
+- [x] `app/auth/update-password/page.tsx` - Update password (already responsive)
+- [x] `app/auth/error/page.tsx` - Auth error page (already responsive)
 
 ### Hub / Dashboard
-- [ ] `app/hub/page.tsx` - User hub (studio list)
+- [x] `app/hub/page.tsx` - User hub (studio list)
 - [ ] `app/account/page.tsx` - Account settings
 - [ ] `app/redeem/page.tsx` - Redeem codes
 - [ ] `app/(dashboard)/dashboard/page.tsx` - Dashboard (if used)
@@ -97,5 +97,5 @@ These components are used across multiple pages:
 
 ## Progress
 
-**Completed:** 0 / 43 pages
+**Completed:** 10 / 43 pages
 **In Progress:** 0

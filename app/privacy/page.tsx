@@ -9,33 +9,33 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-16 px-2">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-12 object-contain"
+              className="max-h-9 md:max-h-12 object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
           <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button variant="ghost" size="sm" className="gap-1.5 md:gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
           </Link>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8">Last updated: February 5, 2026</p>
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
+        <h1 className="text-2xl md:text-4xl font-bold mb-2">Privacy Policy</h1>
+        <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Last updated: February 5, 2026</p>
 
-        <div className="prose prose-invert max-w-none space-y-8">
+        <div className="prose prose-invert max-w-none space-y-6 md:space-y-8">
           <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">1. Introduction</h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
               myBlueprint ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains 
               how we collect, use, disclose, and safeguard your information when you use our Service. Please read this 
               privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the Service.

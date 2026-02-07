@@ -317,24 +317,24 @@ export default function HubPage() {
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-16 px-2">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-12 object-contain"
+              className="max-h-9 md:max-h-12 object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {user ? (
               <>
                 {isAdmin && (
                   <Link href="/admin">
-                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-2 md:px-3">
+                      <Shield className="w-4 h-4 md:mr-2" />
+                      <span className="hidden md:inline">Admin</span>
                     </Button>
                   </Link>
                 )}
@@ -359,13 +359,13 @@ export default function HubPage() {
 
       {/* Not logged in state */}
       {!user ? (
-        <main className="max-w-7xl mx-auto px-6 py-10 flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center mb-6">
-              <FolderKanban className="w-10 h-10 text-muted-foreground" />
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl glass flex items-center justify-center mb-4 md:mb-6">
+              <FolderKanban className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-semibold mb-2">You're not logged in</h2>
-            <p className="text-muted-foreground max-w-md mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2">You're not logged in</h2>
+            <p className="text-sm md:text-base text-muted-foreground max-w-md mb-4 md:mb-6 px-4">
               To create a studio and manage your YouTube projects, you need to log in or create an account.
             </p>
             <div className="flex items-center gap-3">
@@ -380,13 +380,13 @@ export default function HubPage() {
         </main>
       ) : (
       /* Main Content */
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
 
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Your Studios</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold">Your Studios</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
               Manage your YouTube channels and projects
             </p>
           </div>
@@ -395,12 +395,12 @@ export default function HubPage() {
 
         {/* Studios Grid or Empty State */}
         {studios.length === 0 && pendingInvites.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center mb-6">
-              <FolderKanban className="w-10 h-10 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-12 md:py-20">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl glass flex items-center justify-center mb-4 md:mb-6">
+              <FolderKanban className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">No studios yet</h2>
-            <p className="text-muted-foreground text-center max-w-md mb-6">
+            <h2 className="text-lg md:text-xl font-semibold mb-2">No studios yet</h2>
+            <p className="text-sm md:text-base text-muted-foreground text-center max-w-md mb-4 md:mb-6 px-4">
               Create your first studio to start managing your YouTube channel,
               projects, and content workflow.
             </p>
@@ -414,28 +414,28 @@ export default function HubPage() {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Active Studios */}
             {studios.map((studio) => (
               <Link
                 key={studio.id}
                 href={`/studio/${studio.slug}`}
-                className="glass-card p-6 hover-lift group"
+                className="glass-card p-4 md:p-6 hover-lift group"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 md:gap-4">
                   {studio.logo_url ? (
                     <img 
                       src={studio.logo_url} 
                       alt={studio.name}
-                      className="w-12 h-12 rounded-xl object-cover"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                      <span className="text-lg font-bold">{studio.name[0]}</span>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                      <span className="text-base md:text-lg font-bold">{studio.name[0]}</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
                       {studio.name}
                     </h3>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
@@ -481,25 +481,25 @@ export default function HubPage() {
               const isTransfer = invite.is_transfer === true;
               
               return (
-                <div key={invite.id} className={`glass-card p-6 relative border-2 ${isTransfer ? 'border-amber-500/50' : 'border-amber-500/30'}`}>
-                  <Badge className={`absolute top-3 right-3 ${isTransfer ? 'bg-amber-500/30 text-amber-600 border-amber-500/50' : 'bg-amber-500/20 text-amber-600 border-amber-500/30'}`}>
+                <div key={invite.id} className={`glass-card p-4 md:p-6 relative border-2 ${isTransfer ? 'border-amber-500/50' : 'border-amber-500/30'}`}>
+                  <Badge className={`absolute top-2 right-2 md:top-3 md:right-3 text-xs ${isTransfer ? 'bg-amber-500/30 text-amber-600 border-amber-500/50' : 'bg-amber-500/20 text-amber-600 border-amber-500/30'}`}>
                     <Bell className="w-3 h-3 mr-1" />
                     {isTransfer ? 'Transfer' : 'Pending'}
                   </Badge>
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-start gap-3 md:gap-4 mb-4">
                     {org.logo_url ? (
                       <img
                         src={org.logo_url}
                         alt={org.name}
-                        className="w-12 h-12 rounded-xl object-cover"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="text-lg font-bold">{org.name[0]}</span>
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-base md:text-lg font-bold">{org.name[0]}</span>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">
+                    <div className="flex-1 min-w-0 pr-16 md:pr-20">
+                      <h3 className="font-semibold text-base md:text-lg truncate">
                         {org.name}
                       </h3>
                       {isTransfer ? (
