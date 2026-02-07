@@ -363,11 +363,17 @@ export default function StoryboardPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-8 space-y-4">
           {scenes.map((scene, index) => (
-            <div key={scene.id}>
-              {/* Drop indicator line - shows above this item when dragging */}
-              {dragOverIndex === index && draggedIndex !== null && draggedIndex > index && (
-                <div className="h-1 bg-primary rounded-full mb-4 animate-pulse" />
-              )}
+            <div key={scene.id} className="relative">
+              {/* Drop indicator line - absolute positioned so it doesn't affect layout */}
+              <div 
+                className={`absolute left-0 right-0 h-1 bg-primary rounded-full transition-opacity duration-150 pointer-events-none ${
+                  dragOverIndex === index && draggedIndex !== null && draggedIndex > index
+                    ? "opacity-100 -top-2.5"
+                    : dragOverIndex === index && draggedIndex !== null && draggedIndex < index
+                    ? "opacity-100 -bottom-2.5"
+                    : "opacity-0 -top-2.5"
+                }`}
+              />
               
               <div 
                 className={`glass-card p-4 group transition-all ${
@@ -535,11 +541,6 @@ export default function StoryboardPage() {
                   </div>
                 </div>
               </div>
-              
-              {/* Drop indicator line - shows below this item when dragging */}
-              {dragOverIndex === index && draggedIndex !== null && draggedIndex < index && (
-                <div className="h-1 bg-primary rounded-full mt-4 animate-pulse" />
-              )}
             </div>
           ))}
 
