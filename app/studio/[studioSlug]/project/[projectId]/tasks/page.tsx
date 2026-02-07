@@ -389,7 +389,7 @@ export default function TasksPage() {
                       <img src={member.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
                     ) : (
                       <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
-                        {(member.profile.full_name || member.profile.email || '?')[0].toUpperCase()}
+                        {(member.profile.full_name || '?')[0].toUpperCase()}
                       </div>
                     )}
                     <span>{member.profile.full_name || 'Unknown'}</span>
@@ -488,7 +488,7 @@ export default function TasksPage() {
                               <img src={member.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
                             ) : (
                               <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
-                                {(member.profile.full_name || member.profile.email || '?')[0].toUpperCase()}
+                                {(member.profile.full_name || '?')[0].toUpperCase()}
                               </div>
                             )}
                             <span>{member.profile.full_name || 'Unknown'}</span>
