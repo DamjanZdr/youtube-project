@@ -238,71 +238,71 @@ export default function WikiPage({ params }: WikiPageProps) {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Wiki</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Wiki</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Your team knowledge base and documentation
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowCreateFolder(true)}>
+          <Button variant="outline" onClick={() => setShowCreateFolder(true)} className="flex-1 sm:flex-none">
             <Folder className="w-4 h-4 mr-2" />
-            New Folder
+            <span className="hidden sm:inline">New </span>Folder
           </Button>
-          <Button className="glow-sm" onClick={() => setShowCreateDocument(true)}>
+          <Button className="glow-sm flex-1 sm:flex-none" onClick={() => setShowCreateDocument(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            New Document
+            <span className="hidden sm:inline">New </span>Doc
           </Button>
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative mb-8">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+      <div className="relative mb-6 md:mb-8">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
         <Input 
           placeholder="Search documents..." 
-          className="pl-12 h-12 glass border-white/10 text-base"
+          className="pl-10 md:pl-12 h-10 md:h-12 glass border-white/10 text-sm md:text-base"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
       {folders.length > 0 || recentDocuments.length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {/* Folders */}
           {folders.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">Folders</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Folders</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {folders.map((folder) => (
-                  <div key={folder.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+                  <div key={folder.id} className="glass-card p-3 md:p-4 hover-lift group flex items-center gap-3 md:gap-4">
                     <Link
                       href={`/studio/${studioSlug}/wiki/folder/${folder.id}`}
-                      className="flex items-center gap-4 flex-1 min-w-0"
+                      className="flex items-center gap-3 md:gap-4 flex-1 min-w-0"
                     >
-                      <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                        <Folder className="w-6 h-6 text-yellow-500" />
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                        <Folder className="w-5 h-5 md:w-6 md:h-6 text-yellow-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
                           {folder.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           {folder.document_count || 0} documents
                         </p>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </Link>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-7 w-7 md:h-8 md:w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => setDeleteFolderId(folder.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-400" />
                     </Button>
                   </div>
                 ))}
@@ -313,22 +313,22 @@ export default function WikiPage({ params }: WikiPageProps) {
           {/* Uncategorized Documents */}
           {uncategorizedDocs.length > 0 && !searchQuery && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">Uncategorized Documents</h2>
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Uncategorized Documents</h2>
               <div className="space-y-2">
                 {uncategorizedDocs.map((doc) => (
-                  <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+                  <div key={doc.id} className="glass-card p-3 md:p-4 hover-lift group flex items-center gap-3 md:gap-4">
                     <Link
                       href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
-                      className="flex items-center gap-4 flex-1 min-w-0"
+                      className="flex items-center gap-3 md:gap-4 flex-1 min-w-0"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-blue-500" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
                           {doc.title || "Untitled Document"}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Updated {new Date(doc.updated_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -336,10 +336,10 @@ export default function WikiPage({ params }: WikiPageProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-7 w-7 md:h-8 md:w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => setDeleteDocId(doc.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-400" />
                     </Button>
                   </div>
                 ))}
@@ -350,24 +350,24 @@ export default function WikiPage({ params }: WikiPageProps) {
           {/* Recent Documents (with folders) */}
           {categorizedDocs.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
                 {searchQuery ? "Search Results" : "Recent Documents"}
               </h2>
               <div className="space-y-2">
                 {categorizedDocs.map((doc) => (
-                  <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+                  <div key={doc.id} className="glass-card p-3 md:p-4 hover-lift group flex items-center gap-3 md:gap-4">
                     <Link
                       href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
-                      className="flex items-center gap-4 flex-1 min-w-0"
+                      className="flex items-center gap-3 md:gap-4 flex-1 min-w-0"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-blue-500" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
                           {doc.title || "Untitled Document"}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           {doc.folder_id && (doc.folder as any)?.name && (
                             <span className="inline-flex items-center gap-1 mr-2">
                               <FolderOpen className="w-3 h-3" />
@@ -381,10 +381,10 @@ export default function WikiPage({ params }: WikiPageProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-7 w-7 md:h-8 md:w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => setDeleteDocId(doc.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-400" />
                     </Button>
                   </div>
                 ))}

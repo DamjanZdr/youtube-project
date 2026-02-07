@@ -628,7 +628,7 @@ export default function PackagingPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <input
         ref={thumbnailInputRef}
         type="file"
@@ -639,13 +639,13 @@ export default function PackagingPage() {
 
       <div className="max-w-5xl mx-auto">
         {/* Title & Thumbnail Sets */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-base md:text-lg font-semibold">
                 Title & Thumbnail Sets
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Create up to 6 variations to A/B test • Click to select active set
               </p>
             </div>
@@ -654,7 +654,7 @@ export default function PackagingPage() {
               size="sm"
               onClick={addSet}
               disabled={sets.length >= 6}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4" />
               Add Set ({sets.length}/6)
@@ -662,7 +662,7 @@ export default function PackagingPage() {
           </div>
 
           {/* Sets Grid - YouTube Preview Style */}
-          <div className={`grid gap-4 ${project?.video_type === 'short' ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+          <div className={`grid gap-3 md:gap-4 ${project?.video_type === 'short' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
             {sets.map((set, index) => (
               <div
                 key={set.id}
@@ -797,9 +797,9 @@ export default function PackagingPage() {
         </div>
 
         {/* Description - Full width */}
-        <div className="glass-card p-6 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium flex items-center gap-2">
+        <div className="glass-card p-4 md:p-6 mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <h3 className="font-medium flex items-center gap-2 text-sm md:text-base">
               <Type className="w-4 h-4 text-muted-foreground" />
               Description
             </h3>
@@ -832,16 +832,16 @@ export default function PackagingPage() {
             onChange={(e) => updateDescription(e.target.value)}
             placeholder="Write your video description...&#10;&#10;Include:&#10;• Video summary&#10;• Timestamps&#10;• Links & socials&#10;• Credits"
             rows={6}
-            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none resize-none text-sm"
+            className="w-full px-3 md:px-4 py-2 md:py-3 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none resize-none text-sm"
           />
         </div>
 
         {/* Tags & Playlist - Shared row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Tags */}
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium flex items-center gap-2">
+          <div className="glass-card p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <h3 className="font-medium flex items-center gap-2 text-sm md:text-base">
                 <Hash className="w-4 h-4 text-muted-foreground" />
                 Tags
               </h3>
@@ -904,9 +904,9 @@ export default function PackagingPage() {
           </div>
 
           {/* Playlist - YouTube Playlists */}
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium flex items-center gap-2">
+          <div className="glass-card p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <h3 className="font-medium flex items-center gap-2 text-sm md:text-base">
                 <ListVideo className="w-4 h-4 text-muted-foreground" />
                 YouTube Playlists
               </h3>

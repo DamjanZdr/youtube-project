@@ -168,9 +168,9 @@ export default function WikiDocPage({ params }: DocPageProps) {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Consolidated */}
-      <div className="w-72 border-r border-border p-6 flex flex-col gap-4 overflow-y-auto">
+    <div className="flex flex-col md:flex-row h-screen bg-background">
+      {/* Left Sidebar - Hidden on mobile */}
+      <div className="hidden md:flex w-72 border-r border-border p-6 flex-col gap-4 overflow-y-auto">
         <Link
           href={`/studio/${studioSlug}/wiki`}
           className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors"
@@ -414,18 +414,41 @@ export default function WikiDocPage({ params }: DocPageProps) {
       </div>
 
       {/* Document Container */}
-      <div className="flex-1 flex justify-center overflow-y-auto">
-        <div className="w-full max-w-[900px] h-full">
+      <div className="flex-1 flex flex-col md:justify-center overflow-y-auto">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10">
+          <Link
+            href={`/studio/${studioSlug}/wiki`}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Link>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {saving ? "Saving..." : lastSaved ? "Saved" : ""}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-red-400 h-8 w-8 p-0"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="w-full max-w-[900px] h-full mx-auto">
           {/* Document with Title Inside */}
           <div className="h-full">
-            <div className="p-16 pt-12">
+            <div className="p-4 pt-6 md:p-16 md:pt-12">
               {/* Title */}
               <div className="mb-2 pb-3 border-b border-border">
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Untitled Document"
-                  className="text-4xl font-semibold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/40 mb-2"
+                  className="text-2xl md:text-4xl font-semibold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/40 mb-2"
                 />
                 {createdAt && (
                   <div className="text-sm text-muted-foreground">

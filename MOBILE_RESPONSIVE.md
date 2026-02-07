@@ -46,23 +46,23 @@ This file tracks the progress of making all pages mobile-friendly.
 - [x] `app/help/[categorySlug]/[threadSlug]/page.tsx` - Thread detail
 
 ### Studio
-- [ ] `app/studio/[studioSlug]/page.tsx` - Studio overview/redirect
-- [ ] `app/studio/[studioSlug]/board/page.tsx` - Kanban board
-- [ ] `app/studio/[studioSlug]/channel/page.tsx` - Channel settings
-- [ ] `app/studio/[studioSlug]/projects/page.tsx` - Projects list
-- [ ] `app/studio/[studioSlug]/settings/page.tsx` - Studio settings
-- [ ] `app/studio/[studioSlug]/wiki/page.tsx` - Wiki main
-- [ ] `app/studio/[studioSlug]/wiki/doc/[docId]/page.tsx` - Wiki document
-- [ ] `app/studio/[studioSlug]/wiki/folder/[folderId]/page.tsx` - Wiki folder
+- [x] `app/studio/[studioSlug]/page.tsx` - Studio overview/redirect
+- [x] `app/studio/[studioSlug]/board/page.tsx` - Kanban board
+- [x] `app/studio/[studioSlug]/channel/page.tsx` - Channel settings
+- [x] `app/studio/[studioSlug]/projects/page.tsx` - Projects list
+- [x] `app/studio/[studioSlug]/settings/page.tsx` - Studio settings
+- [x] `app/studio/[studioSlug]/wiki/page.tsx` - Wiki main
+- [x] `app/studio/[studioSlug]/wiki/doc/[docId]/page.tsx` - Wiki document
+- [x] `app/studio/[studioSlug]/wiki/folder/[folderId]/page.tsx` - Wiki folder
 
 ### Project (inside Studio)
-- [ ] `app/studio/[studioSlug]/project/[projectId]/page.tsx` - Project overview
-- [ ] `app/studio/[studioSlug]/project/[projectId]/idea/page.tsx` - Idea/notes
-- [ ] `app/studio/[studioSlug]/project/[projectId]/storyboard/page.tsx` - Storyboard
-- [ ] `app/studio/[studioSlug]/project/[projectId]/tasks/page.tsx` - Project tasks
-- [ ] `app/studio/[studioSlug]/project/[projectId]/packaging/page.tsx` - Packaging
-- [ ] `app/studio/[studioSlug]/project/[projectId]/preview/page.tsx` - Preview
-- [ ] `app/studio/[studioSlug]/project/[projectId]/settings/page.tsx` - Project settings
+- [x] `app/studio/[studioSlug]/project/[projectId]/page.tsx` - Project overview (packaging)
+- [x] `app/studio/[studioSlug]/project/[projectId]/layout.tsx` - Project layout/tabs
+- [x] `app/studio/[studioSlug]/project/[projectId]/idea/page.tsx` - Idea/notes
+- [x] `app/studio/[studioSlug]/project/[projectId]/storyboard/page.tsx` - Storyboard
+- [x] `app/studio/[studioSlug]/project/[projectId]/tasks/page.tsx` - Project tasks
+- [x] `app/studio/[studioSlug]/project/[projectId]/preview/_sections/preview-controls.tsx` - Preview controls
+- [x] `app/studio/[studioSlug]/project/[projectId]/settings/page.tsx` - Project settings
 
 ### Admin (Lower Priority)
 - [ ] `app/admin/page.tsx` - Admin dashboard
@@ -97,5 +97,5 @@ These components are used across multiple pages:
 
 ## Progress
 
-**Completed:** 10 / 43 pages
+**Completed:** 26 / 43 pages (Studio & Project sections complete!)
 **In Progress:** 0

@@ -303,19 +303,19 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <div>
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-4 md:mb-6 flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">Project Tasks</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-base md:text-lg font-semibold">Project Tasks</h2>
+            <p className="text-xs md:text-sm text-muted-foreground">
               Track your progress through each stage
             </p>
           </div>
           
-          <div className="flex items-end gap-4">
+          <div className="flex flex-wrap items-end gap-3 md:gap-4">
             {/* Status Selector */}
-            <div>
+            <div className="flex-1 min-w-[140px]">
               <label className="text-xs text-muted-foreground mb-1.5 block">Status</label>
               <Select
                 value={currentStatusId || ""}
@@ -348,7 +348,7 @@ export default function TasksPage() {
           </div>
 
           {/* Project Assignee */}
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="text-xs text-muted-foreground mb-1.5 block">Project Assignee</label>
             <Select
               value={getProjectAssignee()?.user_id || "unassigned"}
@@ -431,8 +431,8 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Grid layout - 5 columns */}
-      <div className="grid grid-cols-5 gap-3">
+      {/* Grid layout - responsive columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         {statuses.map((status) => {
           const statusTasks = getTasksForStatus(status.id);
           const { completed, total } = getCompletionStats(status.id);

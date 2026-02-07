@@ -127,23 +127,23 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
           <Link
             href={`/studio/${studioSlug}/wiki`}
-            className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors mb-2"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Wiki
           </Link>
-          <div className="flex items-center gap-3">
-            <FolderOpen className="w-8 h-8 text-yellow-500" />
-            <h1 className="text-3xl font-bold">{folderName}</h1>
+          <div className="flex items-center gap-2 md:gap-3">
+            <FolderOpen className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />
+            <h1 className="text-xl md:text-3xl font-bold truncate">{folderName}</h1>
           </div>
         </div>
-        <Button onClick={() => setShowCreateDoc(true)} className="glow-sm">
+        <Button onClick={() => setShowCreateDoc(true)} className="glow-sm w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           New Document
         </Button>
@@ -153,19 +153,19 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
       {documents.length > 0 ? (
         <div className="space-y-2">
           {documents.map((doc) => (
-            <div key={doc.id} className="glass-card p-4 hover-lift group flex items-center gap-4">
+            <div key={doc.id} className="glass-card p-3 md:p-4 hover-lift group flex items-center gap-3 md:gap-4">
               <Link
                 href={`/studio/${studioSlug}/wiki/doc/${doc.id}`}
-                className="flex items-center gap-4 flex-1 min-w-0"
+                className="flex items-center gap-3 md:gap-4 flex-1 min-w-0"
               >
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-blue-500" />
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                  <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
                     {doc.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Updated {new Date(doc.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -173,19 +173,19 @@ export default function WikiFolderPage({ params }: FolderPageProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-7 w-7 md:h-8 md:w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={() => setDeleteDocId(doc.id)}
               >
-                <Trash2 className="w-4 h-4 text-red-400" />
+                <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-400" />
               </Button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="glass-card p-12 text-center">
-          <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No documents yet</h3>
-          <p className="text-muted-foreground mb-4">Create your first document in this folder</p>
+        <div className="glass-card p-8 md:p-12 text-center">
+          <FileText className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-base md:text-lg font-semibold mb-2">No documents yet</h3>
+          <p className="text-sm md:text-base text-muted-foreground mb-4">Create your first document in this folder</p>
           <Button onClick={() => setShowCreateDoc(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Create Document

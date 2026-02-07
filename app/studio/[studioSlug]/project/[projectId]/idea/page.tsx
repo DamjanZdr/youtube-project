@@ -275,10 +275,10 @@ export default function IdeaPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border/50 bg-card/30">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 md:px-6 py-3 border-b border-border/50 bg-card/30">
         <div>
-          <h2 className="text-lg font-semibold">Idea Notes</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-base md:text-lg font-semibold">Idea Notes</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">
             Brainstorm and capture your video ideas
           </p>
         </div>
@@ -299,7 +299,7 @@ export default function IdeaPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-auto p-6 pb-32">
+      <div className="flex-1 overflow-auto p-4 md:p-6 pb-32">
         <div className="max-w-4xl mx-auto">
           <RichTextEditor
             content={content}

@@ -307,25 +307,25 @@ export default function StoryboardPage() {
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header Stats */}
-      <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm">
-            <FileText className="w-4 h-4 text-muted-foreground" />
+      <div className="px-4 md:px-8 py-3 md:py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 md:gap-6 flex-wrap">
+          <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+            <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
             <span className="text-muted-foreground">Words:</span>
             <span className="font-medium">{totalWords.toLocaleString()}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
             <span className="text-muted-foreground">Duration:</span>
             <span className="font-medium">{formatDuration(totalDurationSeconds)}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
             <span className="text-muted-foreground">Scenes:</span>
             <span className="font-medium">{scenes.length}</span>
           </div>
 
           {/* Save Status */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
             {saving ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -339,14 +339,14 @@ export default function StoryboardPage() {
             ) : null}
           </div>
         </div>
-        <Button onClick={addScene} className="gap-2">
+        <Button onClick={addScene} size="sm" className="gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Add Scene
         </Button>
       </div>
 
-      {/* Column Headers */}
-      <div className="px-8 py-3 border-b border-white/5 grid grid-cols-[auto_1fr_1fr_auto] gap-4 shrink-0">
+      {/* Column Headers - Hidden on mobile */}
+      <div className="hidden md:grid px-8 py-3 border-b border-white/5 grid-cols-[auto_1fr_1fr_auto] gap-4 shrink-0">
         <div className="w-16" />
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <FileText className="w-4 h-4" />
@@ -361,7 +361,7 @@ export default function StoryboardPage() {
 
       {/* Scenes */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-8 space-y-4">
+        <div className="p-4 md:p-8 space-y-3 md:space-y-4">
           {scenes.map((scene, index) => {
             // Determine if we should show drop indicator
             // Only show on the target, and position based on drag direction
@@ -380,7 +380,7 @@ export default function StoryboardPage() {
                 )}
                 
                 <div 
-                  className={`glass-card p-4 group transition-all ${
+                  className={`glass-card p-3 md:p-4 group transition-all ${
                     draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
                   } ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
                   draggable
@@ -389,29 +389,42 @@ export default function StoryboardPage() {
                   onDragEnd={handleDragEnd}
                   onDragLeave={() => setDragOverIndex(null)}
                 >
-                <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
-                  {/* Scene Number & Reorder - Centered vertically */}
-                  <div className="flex flex-col items-center justify-center gap-0.5">
+                {/* Mobile: Stacked layout, Desktop: Grid layout */}
+                <div className="flex flex-col md:grid md:grid-cols-[auto_1fr_1fr_auto] gap-3 md:gap-4">
+                  {/* Scene Number & Reorder - Row on mobile, Column on desktop */}
+                  <div className="flex flex-row md:flex-col items-center justify-between md:justify-center gap-2 md:gap-0.5">
+                    <div className="flex md:flex-col items-center gap-1 md:gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        onClick={() => moveScene(index, "up")}
+                        disabled={index === 0}
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <span className="text-xs font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded">
+                        {index + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        onClick={() => moveScene(index, "down")}
+                        disabled={index === scenes.length - 1}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {/* Delete Button on mobile - next to scene number */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => moveScene(index, "up")}
-                      disabled={index === 0}
+                      onClick={() => removeScene(scene.id)}
+                      disabled={scenes.length <= 1}
+                      className="md:hidden h-8 w-8 text-muted-foreground hover:text-red-500"
                     >
-                      <ChevronUp className="w-4 h-4" />
-                    </Button>
-                    <span className="text-xs font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded">
-                      {index + 1}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => moveScene(index, "down")}
-                      disabled={index === scenes.length - 1}
-                    >
-                      <ChevronDown className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
 
@@ -531,8 +544,8 @@ export default function StoryboardPage() {
                     />
                   </div>
 
-                  {/* Delete Button - Centered vertically */}
-                  <div className="flex flex-col items-center justify-center">
+                  {/* Delete Button - Hidden on mobile (shown in scene number row), Centered vertically on desktop */}
+                  <div className="hidden md:flex flex-col items-center justify-center">
                     <Button
                       variant="ghost"
                       size="icon"

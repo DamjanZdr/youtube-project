@@ -131,29 +131,29 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Project Header */}
-      <header className="glass-strong border-b border-white/5 px-6 py-4">
+      <header className="glass-strong border-b border-white/5 px-4 md:px-6 py-3 md:py-4">
         <div className="flex items-center justify-between">
           {/* Left Side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0">
             <Link
               href={`/studio/${studioSlug}/projects`}
-              className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+              className="p-2 rounded-lg hover:bg-white/5 transition-colors shrink-0"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
 
-            {/* Thumbnail Preview */}
-            <div className="w-16 h-10 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 overflow-hidden">
+            {/* Thumbnail Preview - hidden on mobile */}
+            <div className="hidden sm:block w-16 h-10 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 overflow-hidden shrink-0">
               {projectThumbnail ? (
                 <img src={projectThumbnail} alt="" className="w-full h-full object-cover" />
               ) : null}
             </div>
 
-            <div>
-              <h1 className="text-xl font-semibold">{projectTitle}</h1>
-              <div className="flex items-center gap-3 mt-1">
+            <div className="min-w-0">
+              <h1 className="text-base md:text-xl font-semibold truncate">{projectTitle}</h1>
+              <div className="flex items-center gap-2 md:gap-3 mt-0.5 md:mt-1">
                 {/* Type Badge */}
-                <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-white/5 capitalize">
+                <span className="text-[10px] md:text-xs text-muted-foreground px-1.5 md:px-2 py-0.5 rounded-full bg-white/5 capitalize">
                   {project.video_type} form
                 </span>
               </div>
@@ -161,9 +161,9 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
             {project.due_date && (
-              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 {new Date(project.due_date).toLocaleDateString()}
               </span>
@@ -175,17 +175,17 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 href={`https://youtube.com/watch?v=${project.youtube_video_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300"
+                className="hidden sm:flex items-center gap-2 text-sm text-red-400 hover:text-red-300"
               >
                 <ExternalLink className="w-4 h-4" />
-                View on YouTube
+                <span className="hidden md:inline">View on YouTube</span>
               </a>
             )}
 
             {/* More Menu */}
             <div className="relative">
-              <Button variant="ghost" size="icon" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-                <MoreHorizontal className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+                <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
 
               {showMoreMenu && (
@@ -211,20 +211,20 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 mt-4 -mb-4">
+        <nav className="flex items-center gap-1 mt-3 md:mt-4 -mb-3 md:-mb-4 overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => {
             const active = isTabActive(tab);
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
+                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-all whitespace-nowrap shrink-0 ${
                   active
                     ? "text-white border-primary"
                     : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/20"
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 {tab.label}
               </Link>
             );

@@ -87,11 +87,11 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 md:space-y-8">
       {/* Project Details */}
-      <div className="glass-card p-6 space-y-6">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Settings className="w-5 h-5" />
+      <div className="glass-card p-4 md:p-6 space-y-4 md:space-y-6">
+        <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
+          <Settings className="w-4 h-4 md:w-5 md:h-5" />
           Project Settings
         </h2>
 
@@ -106,23 +106,23 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
           />
         </div>
 
-        <Button onClick={saveNotes} disabled={saving} className="glow-sm">
+        <Button onClick={saveNotes} disabled={saving} className="glow-sm w-full sm:w-auto">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 
       {/* Actions */}
-      <div className="glass-card p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Actions</h2>
+      <div className="glass-card p-4 md:p-6 space-y-4">
+        <h2 className="text-base md:text-lg font-semibold">Actions</h2>
         
-        <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 rounded-xl bg-white/5">
           <div>
-            <p className="font-medium">Duplicate Project</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="font-medium text-sm md:text-base">Duplicate Project</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
               Create a copy of this project
             </p>
           </div>
-          <Button variant="outline" onClick={duplicateProject} className="gap-2">
+          <Button variant="outline" onClick={duplicateProject} className="gap-2 w-full sm:w-auto">
             <Copy className="w-4 h-4" />
             Duplicate
           </Button>
@@ -130,20 +130,20 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
       </div>
 
       {/* Danger Zone */}
-      <div className="glass-card p-6 border-red-500/20 space-y-4">
-        <h2 className="text-lg font-semibold text-red-500">Danger Zone</h2>
+      <div className="glass-card p-4 md:p-6 border-red-500/20 space-y-4">
+        <h2 className="text-base md:text-lg font-semibold text-red-500">Danger Zone</h2>
         
-        <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 rounded-xl bg-red-500/5 border border-red-500/10">
           <div>
-            <p className="font-medium">Delete Project</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="font-medium text-sm md:text-base">Delete Project</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
               Permanently delete this project and all its data
             </p>
           </div>
           <Button 
             variant="destructive" 
             onClick={() => setShowDeleteDialog(true)}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <Trash2 className="w-4 h-4" />
             Delete
