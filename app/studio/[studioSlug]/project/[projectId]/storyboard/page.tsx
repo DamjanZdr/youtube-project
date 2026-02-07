@@ -364,7 +364,7 @@ export default function StoryboardPage() {
               onDragEnd={handleDragEnd}
               onDragLeave={() => setDragOverIndex(null)}
             >
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-start">
+              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-center">
                 {/* Scene Number & Reorder */}
                 <div className="flex flex-col items-center gap-1">
                   <div 
@@ -397,17 +397,17 @@ export default function StoryboardPage() {
                 </div>
 
                 {/* Script Column */}
-                <div className="min-h-[200px]">
+                <div>
                   <Textarea
                     value={scene.script_text}
                     onChange={(e) => {
                       updateScene(scene.id, "script_text", e.target.value);
                       // Auto-resize
                       e.target.style.height = "auto";
-                      e.target.style.height = e.target.scrollHeight + "px";
+                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
                     }}
                     placeholder="Write your script here... What will you say in this scene?"
-                    className="min-h-[180px] h-auto glass border-white/10 resize-none"
+                    className="min-h-[72px] h-auto glass border-white/10 resize-none"
                     style={{ overflow: "hidden" }}
                   />
                   <div className="flex items-center justify-between mt-2">
@@ -470,23 +470,23 @@ export default function StoryboardPage() {
                 </div>
 
                 {/* Visual Column */}
-                <div className="min-h-[200px]">
+                <div>
                   <Textarea
                     value={scene.visual_notes}
                     onChange={(e) => {
                       updateScene(scene.id, "visual_notes", e.target.value);
                       // Auto-resize
                       e.target.style.height = "auto";
-                      e.target.style.height = e.target.scrollHeight + "px";
+                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
                     }}
                     placeholder="Visual cues, B-roll ideas, graphics, sound effects..."
-                    className="min-h-[180px] h-auto glass border-white/10 resize-none bg-blue-500/5"
+                    className="min-h-[72px] h-auto glass border-white/10 resize-none bg-blue-500/5"
                     style={{ overflow: "hidden" }}
                   />
                 </div>
 
                 {/* Delete Button */}
-                <div className="pt-2">
+                <div>
                   <Button
                     variant="ghost"
                     size="icon"
