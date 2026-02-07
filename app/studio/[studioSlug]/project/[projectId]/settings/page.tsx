@@ -87,7 +87,7 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6 md:space-y-8">
+    <div className="p-4 md:p-8 pb-20 md:pb-8 max-w-2xl mx-auto space-y-6 md:space-y-8">
       {/* Project Details */}
       <div className="glass-card p-4 md:p-6 space-y-4 md:space-y-6">
         <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">

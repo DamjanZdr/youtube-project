@@ -566,7 +566,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   }
 
   return (
-    <div className="flex justify-center min-h-screen py-6 md:py-8 px-4">
+    <div className="flex justify-center min-h-screen py-6 md:py-8 px-4 pb-20 md:pb-8">
       <div className="w-full max-w-7xl">{/* Page Header */}
         <div className="mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>

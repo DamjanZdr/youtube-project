@@ -149,7 +149,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col pb-16 md:pb-0">
       <PreviewControls
         sets={sets}
         currentSetIndex={state.currentSetIndex}

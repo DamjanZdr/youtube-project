@@ -303,7 +303,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 pb-20 md:pb-6">
       <div>
         <div className="mb-4 md:mb-6 flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div>

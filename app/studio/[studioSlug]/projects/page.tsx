@@ -233,7 +233,7 @@ export default function ProjectsPage() {
   const getStatusConfig = (status: string) => STATUS_CONFIG[status as ProjectStatus] || STATUS_CONFIG.idea;
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 pb-20 md:pb-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>

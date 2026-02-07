@@ -168,7 +168,7 @@ export default function WikiDocPage({ params }: DocPageProps) {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-background">
+    <div className="flex flex-col md:flex-row h-screen pb-16 md:pb-0 bg-background">
       {/* Left Sidebar - Hidden on mobile */}
       <div className="hidden md:flex w-72 border-r border-border p-6 flex-col gap-4 overflow-y-auto">
         <Link

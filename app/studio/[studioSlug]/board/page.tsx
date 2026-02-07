@@ -677,7 +677,7 @@ export default function BoardPage() {
       </div>
 
       {/* Floating Action Bar */}
-      <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-white/10 shadow-lg">
+      <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-white/10 shadow-lg">
         <Button 
           variant={editMode ? "default" : "ghost"} 
           size="sm"
@@ -695,7 +695,7 @@ export default function BoardPage() {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto px-4 md:px-6 pb-20">
+      <div className="flex-1 overflow-x-auto px-4 md:px-6 pb-24 md:pb-20">
         {/* Empty state when no statuses */}
         {statuses.length === 0 ? (
           <div className="h-full flex items-center justify-center">
@@ -719,12 +719,12 @@ export default function BoardPage() {
             </div>
           </div>
         ) : (
-        <div className="flex gap-3 h-full min-w-max">
+        <div className="flex gap-3 h-full md:min-w-max">
           {/* Status Columns */}
           {statuses.map((status) => (
             <div 
               key={status.id} 
-              className={`w-56 flex flex-col bg-white/[0.02] rounded-2xl border transition-colors ${
+              className={`w-[160px] md:w-56 shrink-0 flex flex-col bg-white/[0.02] rounded-2xl border transition-colors ${
                 dragOverStatusId === status.id 
                   ? 'border-primary/50 bg-primary/5' 
                   : 'border-white/5'

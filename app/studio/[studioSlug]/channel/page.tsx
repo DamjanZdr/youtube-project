@@ -501,9 +501,9 @@ export default function ChannelPage() {
       </div>
 
       {/* Preview Container */}
-      <div className="glass-card overflow-hidden p-3 md:p-6 max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-240px)]">
+      <div className="glass-card overflow-hidden p-3 md:p-6 max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-240px)] mb-16 md:mb-0">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full overflow-y-auto lg:overflow-y-visible">
-          <div className="flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
+          <div className="hidden md:flex flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex-col">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Desktop Preview</span>
             </div>
