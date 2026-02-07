@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Timer,
   RotateCcw,
+  GripVertical,
 } from "lucide-react";
 
 interface Scene {
@@ -35,10 +36,10 @@ interface Script {
   estimated_duration: number;
 }
 
-// Calculate duration from word count (150 words per minute)
+// Calculate duration from word count (~195 words per minute - people read faster)
 const calcAutoDuration = (text: string): number => {
   const words = text.split(/\s+/).filter(Boolean).length;
-  return Math.ceil((words / 150) * 60); // seconds
+  return Math.ceil((words / 195) * 60); // seconds
 };
 
 // Format seconds to mm:ss
@@ -59,6 +60,10 @@ export default function StoryboardPage() {
   const [script, setScript] = useState<Script | null>(null);
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [editingDurationId, setEditingDurationId] = useState<string | null>(null);
+  
+  // Drag state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const durationInputRef = useRef<HTMLInputElement>(null);
@@ -241,6 +246,36 @@ export default function StoryboardPage() {
     scheduleSave();
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      const newScenes = [...scenes];
+      const [draggedScene] = newScenes.splice(draggedIndex, 1);
+      newScenes.splice(dragOverIndex, 0, draggedScene);
+      
+      // Update positions
+      newScenes.forEach((scene, i) => {
+        scene.position = i;
+      });
+      
+      setScenes(newScenes);
+      scheduleSave();
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   // Calculate stats
   const totalWords = scenes.reduce(
     (acc, s) => acc + s.script_text.split(/\s+/).filter(Boolean).length,
@@ -318,10 +353,26 @@ export default function StoryboardPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-8 space-y-4">
           {scenes.map((scene, index) => (
-            <div key={scene.id} className="glass-card p-4 group">
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
+            <div 
+              key={scene.id} 
+              className={`glass-card p-4 group transition-all ${
+                draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
+              } ${dragOverIndex === index ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              onDragLeave={() => setDragOverIndex(null)}
+            >
+              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-start">
                 {/* Scene Number & Reorder */}
-                <div className="flex flex-col items-center gap-1 pt-1">
+                <div className="flex flex-col items-center gap-1">
+                  <div 
+                    className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/10 transition-colors"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -346,12 +397,18 @@ export default function StoryboardPage() {
                 </div>
 
                 {/* Script Column */}
-                <div>
+                <div className="min-h-[200px]">
                   <Textarea
                     value={scene.script_text}
-                    onChange={(e) => updateScene(scene.id, "script_text", e.target.value)}
+                    onChange={(e) => {
+                      updateScene(scene.id, "script_text", e.target.value);
+                      // Auto-resize
+                      e.target.style.height = "auto";
+                      e.target.style.height = e.target.scrollHeight + "px";
+                    }}
                     placeholder="Write your script here... What will you say in this scene?"
-                    className="min-h-[150px] glass border-white/10 resize-none"
+                    className="min-h-[180px] h-auto glass border-white/10 resize-none"
+                    style={{ overflow: "hidden" }}
                   />
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-muted-foreground">
@@ -413,12 +470,18 @@ export default function StoryboardPage() {
                 </div>
 
                 {/* Visual Column */}
-                <div>
+                <div className="min-h-[200px]">
                   <Textarea
                     value={scene.visual_notes}
-                    onChange={(e) => updateScene(scene.id, "visual_notes", e.target.value)}
+                    onChange={(e) => {
+                      updateScene(scene.id, "visual_notes", e.target.value);
+                      // Auto-resize
+                      e.target.style.height = "auto";
+                      e.target.style.height = e.target.scrollHeight + "px";
+                    }}
                     placeholder="Visual cues, B-roll ideas, graphics, sound effects..."
-                    className="min-h-[150px] glass border-white/10 resize-none bg-blue-500/5"
+                    className="min-h-[180px] h-auto glass border-white/10 resize-none bg-blue-500/5"
+                    style={{ overflow: "hidden" }}
                   />
                 </div>
 
