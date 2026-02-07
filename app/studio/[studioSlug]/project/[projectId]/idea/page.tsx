@@ -146,7 +146,6 @@ export default function IdeaPage() {
         recognitionRef.current = null;
       }
       setIsListening(false);
-      toast.success("Voice input stopped");
       setInterimText("");
     } else {
       // Start listening
@@ -156,7 +155,6 @@ export default function IdeaPage() {
         try {
           recognition.start();
           setIsListening(true);
-          toast.success("Listening... Speak now");
         } catch (e) {
           toast.error("Failed to start voice input");
         }
