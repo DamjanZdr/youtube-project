@@ -173,7 +173,7 @@ export default function IdeaPage() {
       }
       setIsListening(false);
       
-      // Clean up any remaining interim text (gray italic text)
+      // Clean up any remaining interim text (gray italic text) and add new line
       if (editorRef.current) {
         const editor = editorRef.current;
         const { state } = editor;
@@ -189,6 +189,9 @@ export default function IdeaPage() {
         if (interimPos) {
           editor.chain().focus().deleteRange(interimPos).run();
         }
+        
+        // Add a new line so next voice input starts on a new line
+        editor.commands.insertContent('<p></p>');
       }
     } else {
       // Start listening
