@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -16,33 +16,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing channel_id" }, { status: 400 });
   }
 
-  // Use admin client to get channel and verify org membership
-  const adminClient = createAdminClient();
-  
-  const { data: channel } = await adminClient
+  // RLS will verify user has access to this channel's org
+  const { data: channel, error: channelError } = await supabase
     .from("channels")
-    .select("organization_id")
+    .select("id")
     .eq("id", channel_id)
     .single();
 
-  if (!channel) {
-    return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+  if (channelError || !channel) {
+    return NextResponse.json({ error: "Channel not found or access denied" }, { status: 404 });
   }
 
-  // Verify user is member of the org
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("role")
-    .eq("organization_id", channel.organization_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
-    return NextResponse.json({ error: "Not a member of this organization" }, { status: 403 });
-  }
-
-  // Delete all existing links
-  const { error: deleteError } = await adminClient
+  // Delete all existing links (RLS allows this for org members)
+  const { error: deleteError } = await supabase
     .from("channel_links")
     .delete()
     .eq("channel_id", channel_id);
@@ -62,7 +48,7 @@ export async function POST(req: NextRequest) {
       position: index,
     }));
 
-    const { error: insertError } = await adminClient
+    const { error: insertError } = await supabase
       .from("channel_links")
       .insert(linksToInsert);
 
@@ -90,10 +76,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing channel_id" }, { status: 400 });
   }
 
-  // Use admin client to fetch links (bypasses RLS)
-  const adminClient = createAdminClient();
-
-  const { data: links, error } = await adminClient
+  // RLS will filter to only links user has access to
+  const { data: links, error } = await supabase
     .from("channel_links")
     .select("*")
     .eq("channel_id", channel_id)

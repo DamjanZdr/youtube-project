@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -16,22 +16,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing organization_id" }, { status: 400 });
   }
 
-  // Verify user is member of the org
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("role")
-    .eq("organization_id", organization_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
-    return NextResponse.json({ error: "Not a member of this organization" }, { status: 403 });
-  }
-
-  // Use admin client to create channel (bypasses RLS)
-  const adminClient = createAdminClient();
-
-  const { data: channel, error } = await adminClient
+  // RLS will verify membership - just create the channel
+  const { data: channel, error } = await supabase
     .from("channels")
     .insert({
       organization_id,
@@ -64,10 +50,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing organization_id" }, { status: 400 });
   }
 
-  // Use admin client to fetch channel (bypasses RLS)
-  const adminClient = createAdminClient();
-
-  const { data: channels, error } = await adminClient
+  // RLS will filter to only channels user has access to
+  const { data: channels, error } = await supabase
     .from("channels")
     .select("*")
     .eq("organization_id", organization_id)
