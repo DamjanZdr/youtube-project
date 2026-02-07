@@ -173,21 +173,28 @@ export default function IdeaPage() {
       }
       setIsListening(false);
       
-      // Clean up any remaining interim text (gray italic text) and add new line
+      // Convert any remaining interim text to final text (remove gray/italic styling)
       if (editorRef.current) {
         const editor = editorRef.current;
         const { state } = editor;
         let interimPos: { from: number; to: number } | null = null;
+        let interimText = "";
         
         state.doc.descendants((node: any, pos: number) => {
           if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
             interimPos = { from: pos, to: pos + node.nodeSize };
+            interimText = node.text || "";
             return false;
           }
         });
         
-        if (interimPos) {
-          editor.chain().focus().deleteRange(interimPos).run();
+        // If there's interim text, replace it with normal text (keeping the content)
+        if (interimPos && interimText) {
+          editor.chain()
+            .focus()
+            .deleteRange(interimPos)
+            .insertContent(interimText + " ")
+            .run();
         }
         
         // Add a new line so next voice input starts on a new line
