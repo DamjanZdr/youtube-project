@@ -141,23 +141,23 @@ export default function NewThreadPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-white/10">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <Link
             href={`/help/${categorySlug}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            className="inline-flex items-center gap-2 text-xs md:text-sm text-muted-foreground hover:text-foreground mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to {category.name}
           </Link>
-          <h1 className="text-3xl font-bold">New Thread</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">New Thread</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Start a new discussion in {category.name}
           </p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="space-y-6">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="space-y-5 md:space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-2">Title</label>
@@ -176,7 +176,7 @@ export default function NewThreadPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Provide details, context, or share your thoughts..."
-              rows={12}
+              rows={10}
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground mt-2">
@@ -185,11 +185,14 @@ export default function NewThreadPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
+            <Link href={`/help/${categorySlug}`} className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
+            </Link>
             <Button
               onClick={handleSubmit}
               disabled={submitting || !title.trim() || !content.trim()}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -198,9 +201,6 @@ export default function NewThreadPage() {
               )}
               Create Thread
             </Button>
-            <Link href={`/help/${categorySlug}`}>
-              <Button variant="outline">Cancel</Button>
-            </Link>
           </div>
         </div>
       </div>

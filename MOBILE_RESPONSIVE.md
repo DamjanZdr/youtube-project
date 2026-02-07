@@ -31,19 +31,19 @@ This file tracks the progress of making all pages mobile-friendly.
 
 ### Hub / Dashboard
 - [x] `app/hub/page.tsx` - User hub (studio list)
-- [ ] `app/account/page.tsx` - Account settings
+- [x] `app/account/page.tsx` - Account settings
 - [ ] `app/redeem/page.tsx` - Redeem codes
 - [ ] `app/(dashboard)/dashboard/page.tsx` - Dashboard (if used)
 - [ ] `app/protected/page.tsx` - Protected page
 
 ### Help Center
-- [ ] `app/help/page.tsx` - Help center main
-- [ ] `app/help/tickets/page.tsx` - My tickets list
-- [ ] `app/help/tickets/new/page.tsx` - Create new ticket
-- [ ] `app/help/tickets/[ticketId]/page.tsx` - Ticket detail/chat
-- [ ] `app/help/[categorySlug]/page.tsx` - Help category
-- [ ] `app/help/[categorySlug]/new/page.tsx` - New thread in category
-- [ ] `app/help/[categorySlug]/[threadSlug]/page.tsx` - Thread detail
+- [x] `app/help/page.tsx` - Help center main
+- [x] `app/help/tickets/page.tsx` - My tickets list
+- [x] `app/help/tickets/new/page.tsx` - Create new ticket
+- [x] `app/help/tickets/[ticketId]/page.tsx` - Ticket detail/chat
+- [x] `app/help/[categorySlug]/page.tsx` - Help category
+- [x] `app/help/[categorySlug]/new/page.tsx` - New thread in category
+- [x] `app/help/[categorySlug]/[threadSlug]/page.tsx` - Thread detail
 
 ### Studio
 - [ ] `app/studio/[studioSlug]/page.tsx` - Studio overview/redirect

@@ -395,29 +395,29 @@ export default function TicketDetailPage() {
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Site Header */}
       <header className="glass-strong border-b border-white/5 shrink-0">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-16 px-2">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-12 object-contain"
+              className="max-h-10 md:max-h-12 object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {user && (
               <>
                 <Link href="/hub">
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-2 px-2 md:px-3">
                     <LayoutGrid className="w-4 h-4" />
-                    Hub
+                    <span className="hidden sm:inline">Hub</span>
                   </Button>
                 </Link>
                 <Link href="/help">
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-2 px-2 md:px-3">
                     <MessageCircle className="w-4 h-4" />
-                    Help
+                    <span className="hidden sm:inline">Help</span>
                   </Button>
                 </Link>
                 {userProfile && (
@@ -434,29 +434,29 @@ export default function TicketDetailPage() {
 
       {/* Ticket Header - Sticky */}
       <div className="border-b border-white/10 bg-background/80 backdrop-blur shrink-0">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
               <Link
                 href="/help/tickets"
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground shrink-0"
+                className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground hover:text-foreground shrink-0"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Tickets</span>
               </Link>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">#{ticket.ticket_number}</span>
-                  <h1 className="font-semibold truncate">{ticket.subject}</h1>
+                  <span className="text-xs md:text-sm text-muted-foreground">#{ticket.ticket_number}</span>
+                  <h1 className="text-sm md:text-base font-semibold truncate">{ticket.subject}</h1>
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 inline-block mt-1">
                   {categoryLabels[ticket.category] || ticket.category}
                 </span>
               </div>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shrink-0 ${status.color}`}>
-              <StatusIcon className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:inline">{status.label}</span>
+            <div className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg shrink-0 ${status.color}`}>
+              <StatusIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="text-xs md:text-sm font-medium hidden sm:inline">{status.label}</span>
             </div>
           </div>
         </div>
@@ -464,43 +464,43 @@ export default function TicketDetailPage() {
 
       {/* Messages - Scrollable */}
       <div ref={messagesContainerRef} className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <div className="space-y-4">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-6">
+          <div className="space-y-3 md:space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.is_admin ? "" : "flex-row-reverse"}`}
+                className={`flex gap-2 md:gap-3 ${message.is_admin ? "" : "flex-row-reverse"}`}
               >
-                <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center ${
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full shrink-0 flex items-center justify-center ${
                   message.is_admin ? "bg-primary/20" : "bg-white/10"
                 }`}>
                   {message.is_admin ? (
-                    <Shield className="w-5 h-5 text-primary" />
+                    <Shield className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   ) : message.sender?.avatar_url ? (
                     <img src={message.sender.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <User className="w-5 h-5 text-muted-foreground" />
+                    <User className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
                   )}
                 </div>
-                <div className={`flex-1 max-w-[80%] ${message.is_admin ? "" : "text-right"}`}>
+                <div className={`flex-1 max-w-[85%] md:max-w-[80%] ${message.is_admin ? "" : "text-right"}`}>
                   <div
-                    className={`inline-block p-4 rounded-2xl ${
+                    className={`inline-block p-3 md:p-4 rounded-2xl ${
                       message.is_admin
                         ? "bg-primary/20 rounded-tl-none"
                         : "bg-white/10 rounded-tr-none"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">
+                      <span className="text-xs md:text-sm font-medium">
                         {message.is_admin ? "Support Team" : message.sender?.full_name || "You"}
                       </span>
                       {message.is_admin && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                        <span className="text-xs px-1.5 md:px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                           Staff
                         </span>
                       )}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap text-left">{message.content}</p>
+                    <p className="text-xs md:text-sm whitespace-pre-wrap text-left">{message.content}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
@@ -516,14 +516,14 @@ export default function TicketDetailPage() {
       {/* Reply Input */}
       {!isResolved ? (
         <div className="border-t border-white/10 shrink-0">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex gap-4">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4">
+            <div className="flex gap-3 md:gap-4">
               <Textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Type your message..."
                 rows={2}
-                className="resize-none"
+                className="resize-none text-sm md:text-base"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                     sendReply();
@@ -533,38 +533,39 @@ export default function TicketDetailPage() {
               <Button
                 onClick={sendReply}
                 disabled={submitting || !replyContent.trim()}
-                className="px-6 shrink-0"
+                className="px-4 md:px-6 shrink-0"
               >
                 {submitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 md:w-5 md:h-5" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground mt-2 hidden sm:block">
               Press Ctrl+Enter to send
             </p>
           </div>
         </div>
       ) : ticket.status === "resolved" ? (
         <div className="border-t border-white/10 shrink-0">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <p className="text-muted-foreground text-center">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4">
+              <p className="text-sm md:text-base text-muted-foreground text-center">
                 This ticket has been resolved.
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowReactivateDialog(true)}
+                  className="text-xs md:text-sm"
                 >
                   Issue not resolved?
                 </Button>
-                <span className="text-muted-foreground">or</span>
+                <span className="text-muted-foreground text-sm">or</span>
                 <Link href="/help/tickets/new">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="text-xs md:text-sm">
                     Create new ticket
                   </Button>
                 </Link>
@@ -574,8 +575,8 @@ export default function TicketDetailPage() {
         </div>
       ) : (
         <div className="border-t border-white/10 shrink-0">
-          <div className="max-w-4xl mx-auto px-6 py-4 text-center">
-            <p className="text-muted-foreground">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 text-center">
+            <p className="text-sm md:text-base text-muted-foreground">
               This ticket has been archived and is no longer active.{" "}
               <Link href="/help/tickets/new" className="text-primary hover:underline">
                 Create a new ticket

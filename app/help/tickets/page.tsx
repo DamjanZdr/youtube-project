@@ -96,19 +96,19 @@ export default function TicketsPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <Link
                 href="/help"
-                className="text-sm text-muted-foreground hover:text-foreground mb-2 inline-block"
+                className="text-xs md:text-sm text-muted-foreground hover:text-foreground mb-2 inline-block"
               >
                 ← Back to Help Center
               </Link>
-              <h1 className="text-3xl font-bold">My Support Tickets</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">My Support Tickets</h1>
             </div>
             <Link href="/help/tickets/new">
-              <Button className="gap-2">
+              <Button className="gap-2 w-full sm:w-auto">
                 <Plus className="w-4 h-4" />
                 New Ticket
               </Button>
@@ -117,9 +117,9 @@ export default function TicketsPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           {[
             { key: "all", label: "All Tickets" },
             { key: "open", label: "Open" },
@@ -138,12 +138,12 @@ export default function TicketsPage() {
 
         {/* Tickets List */}
         {filteredTickets.length === 0 ? (
-          <div className="text-center py-16">
-            <TicketIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">
+          <div className="text-center py-12 md:py-16">
+            <TicketIcon className="w-10 h-10 md:w-12 md:h-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-lg md:text-xl font-semibold mb-2">
               {filter === "all" ? "No tickets yet" : `No ${filter} tickets`}
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm md:text-base text-muted-foreground mb-6">
               {filter === "all"
                 ? "Create a new ticket to get help from our support team."
                 : "You don't have any tickets in this category."}
@@ -167,12 +167,22 @@ export default function TicketsPage() {
                 <Link
                   key={ticket.id}
                   href={`/help/tickets/${ticket.id}`}
-                  className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 md:p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
                 >
-                  <div className={`p-2 rounded-lg ${status.color}`}>
-                    <StatusIcon className="w-5 h-5" />
+                  <div className="flex items-center gap-3 sm:contents">
+                    <div className={`p-2 rounded-lg ${status.color} shrink-0`}>
+                      <StatusIcon className="w-4 h-4 md:w-5 md:h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0 sm:hidden">
+                      <h3 className="font-medium text-sm truncate">{ticket.subject}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">#{ticket.ticket_number}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground sm:hidden" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="hidden sm:block flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs text-muted-foreground">
                         #{ticket.ticket_number}
@@ -186,11 +196,15 @@ export default function TicketsPage() {
                       Updated {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="hidden sm:flex items-center gap-2 shrink-0">
                     <span className={`text-xs px-2 py-1 rounded-full ${status.color}`}>
                       {status.label}
                     </span>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground sm:hidden">
+                    <span>{categoryLabels[ticket.category] || ticket.category}</span>
+                    <span>Updated {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}</span>
                   </div>
                 </Link>
               );

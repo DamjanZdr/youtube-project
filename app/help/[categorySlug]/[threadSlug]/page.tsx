@@ -419,23 +419,23 @@ export default function ThreadPage() {
     <div className="min-h-screen bg-background">
       {/* Top Navigation - Same as Hub */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-16 px-2">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-12 object-contain"
+              className="max-h-10 md:max-h-12 object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {user ? (
               <>
                 <Link href="/hub">
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-2 px-2 md:px-3">
                     <LayoutGrid className="w-4 h-4" />
-                    Hub
+                    <span className="hidden sm:inline">Hub</span>
                   </Button>
                 </Link>
                 <UserProfileDropdown 
@@ -459,20 +459,20 @@ export default function ThreadPage() {
 
       {/* Breadcrumb Header */}
       <div className="border-b border-white/10">
-        <div className="max-w-5xl mx-auto px-8 py-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+        <div className="max-w-5xl mx-auto px-4 md:px-8 py-4 md:py-6">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
             <Link href="/help" className="hover:text-foreground">
               Help Center
             </Link>
-            <ChevronRight className="w-4 h-4" />
-            <Link href={`/help/${categorySlug}`} className="hover:text-foreground">
+            <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+            <Link href={`/help/${categorySlug}`} className="hover:text-foreground truncate">
               {thread.category.name}
             </Link>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                {thread.is_pinned && <Pin className="w-4 h-4 text-yellow-500" />}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {thread.is_pinned && <Pin className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-500" />}
                 {thread.is_official && (
                   <span className="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
                     Official Guide
@@ -484,7 +484,7 @@ export default function ThreadPage() {
                   </span>
                 )}
               </div>
-              <h1 className="text-lg font-normal text-foreground/90">{thread.title}</h1>
+              <h1 className="text-base md:text-lg font-normal text-foreground/90">{thread.title}</h1>
             </div>
 
             {/* Admin controls */}
@@ -555,10 +555,10 @@ export default function ThreadPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8">
         {/* Original Post */}
         {editingThread ? (
-          <div className="mb-8 p-6 rounded-xl bg-white/5 border border-white/10">
+          <div className="mb-6 md:mb-8 p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium mb-4">Edit Article</h3>
             <Input
               value={editThreadTitle}
@@ -574,11 +574,11 @@ export default function ThreadPage() {
                 rows={16}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setEditingThread(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+              <Button variant="ghost" onClick={() => setEditingThread(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button onClick={saveThreadEdit} disabled={savingThread}>
+              <Button onClick={saveThreadEdit} disabled={savingThread} className="w-full sm:w-auto">
                 {savingThread ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -591,23 +591,23 @@ export default function ThreadPage() {
             </div>
           </div>
         ) : (
-        <div className="mb-8 p-6 rounded-xl bg-white/5 border border-white/10">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+        <div className="mb-6 md:mb-8 p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
+          <div className="flex items-start justify-between gap-3 md:gap-4 mb-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
                 {thread.author?.avatar_url ? (
                   <img src={thread.author.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 text-primary" />
+                  <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">
+                  <span className="font-medium text-sm md:text-base">
                     {thread.author?.full_name || (thread.is_official ? "System" : "Unknown")}
                   </span>
                   {thread.is_official && (
-                    <Shield className="w-4 h-4 text-primary" />
+                    <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">
@@ -669,13 +669,13 @@ export default function ThreadPage() {
               {thread.content.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
             </ReactMarkdown>
           </article>
-          <div className="flex items-center gap-4 mt-6 pt-4 border-t border-white/10 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 md:gap-4 mt-4 md:mt-6 pt-4 border-t border-white/10 text-xs md:text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Eye className="w-4 h-4" />
+              <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span>{thread.view_count} views</span>
             </div>
             <div className="flex items-center gap-1">
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span>{thread.reply_count} replies</span>
             </div>
           </div>
@@ -684,7 +684,7 @@ export default function ThreadPage() {
 
         {/* Replies */}
         {replies.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <h2 className="text-sm font-medium text-muted-foreground mb-4">
               {replies.length} {replies.length === 1 ? "Reply" : "Replies"}
             </h2>
@@ -801,7 +801,7 @@ export default function ThreadPage() {
 
         {/* Reply Form */}
         {user && !thread.is_locked ? (
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+          <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
             <div className="mb-4">
               <MarkdownEditor
@@ -815,7 +815,7 @@ export default function ThreadPage() {
               <Button
                 onClick={submitReply}
                 disabled={submitting || !replyContent.trim()}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 {submitting ? (
                   <>
@@ -832,13 +832,13 @@ export default function ThreadPage() {
             </div>
           </div>
         ) : thread.is_locked ? (
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10 text-center">
-            <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground text-sm">This thread is locked and no longer accepting replies.</p>
+          <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 text-center">
+            <Lock className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground text-xs md:text-sm">This thread is locked and no longer accepting replies.</p>
           </div>
         ) : (
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10 text-center">
-            <p className="text-muted-foreground mb-4">Sign in to post a reply</p>
+          <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 text-center">
+            <p className="text-muted-foreground text-sm mb-4">Sign in to post a reply</p>
             <Link href="/sign-in">
               <Button>Sign In</Button>
             </Link>

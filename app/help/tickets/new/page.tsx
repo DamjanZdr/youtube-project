@@ -173,23 +173,23 @@ export default function NewTicketPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-white/10">
-        <div className="max-w-2xl mx-auto px-6 py-8">
+        <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <Link
             href="/help/tickets"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+            className="inline-flex items-center gap-1 text-xs md:text-sm text-muted-foreground hover:text-foreground mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Tickets
           </Link>
-          <h1 className="text-3xl font-bold">Contact Support</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Contact Support</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Describe your issue and we'll get back to you as soon as possible.
           </p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <div className="space-y-6">
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="space-y-5 md:space-y-6">
           {/* Studio Selection - FIRST */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
@@ -218,12 +218,12 @@ export default function NewTicketPage() {
 
           {/* Plan-based notice */}
           {!isPaidPlan && (
-            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3 md:p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-start gap-2 md:gap-3">
+                <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm text-amber-400 font-medium">Free Plan - Limited Support</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs md:text-sm text-amber-400 font-medium">Free Plan - Limited Support</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">
                     Free users can submit general questions about plans and pricing. 
                     For full technical support, bug reports, and feature requests, 
                     upgrade to a paid plan.
@@ -290,7 +290,7 @@ export default function NewTicketPage() {
           </div>
 
           {/* Submit */}
-          <div className="flex justify-end gap-4 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-4">
             <Link href="/help/tickets">
               <Button variant="outline">Cancel</Button>
             </Link>
