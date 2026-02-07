@@ -111,6 +111,7 @@ export default function TicketDetailPage() {
           filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
+          console.log('[Realtime] New message received:', payload);
           // Check if message already exists (from optimistic update)
           const messageId = payload.new.id;
           
@@ -140,7 +141,9 @@ export default function TicketDetailPage() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Realtime] Messages channel status:', status);
+      });
 
     // Subscribe to ticket status changes
     const ticketChannel = supabase
@@ -159,9 +162,37 @@ export default function TicketDetailPage() {
       )
       .subscribe();
 
+    // Polling fallback - check for new messages every 5 seconds
+    const pollInterval = setInterval(async () => {
+      const { data: latestMessages } = await supabase
+        .from("support_ticket_messages")
+        .select(`
+          id,
+          content,
+          is_admin,
+          created_at,
+          sender:profiles!sender_id(full_name, avatar_url)
+        `)
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: true });
+      
+      if (latestMessages) {
+        setMessages(prev => {
+          // Only update if there are new messages
+          const prevIds = new Set(prev.filter(m => !m.id.startsWith('temp-')).map(m => m.id));
+          const hasNew = latestMessages.some(m => !prevIds.has(m.id));
+          if (hasNew || latestMessages.length !== prev.filter(m => !m.id.startsWith('temp-')).length) {
+            return latestMessages as unknown as Message[];
+          }
+          return prev;
+        });
+      }
+    }, 5000);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(ticketChannel);
+      clearInterval(pollInterval);
     };
   }, [ticketId]);
 
