@@ -328,57 +328,82 @@ export default function PackagingPage() {
     setShowThumbnailDialog(true);
   };
 
-  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedSetId) return;
+  const handleThumbnailUpload = async (file: File, setId?: string) => {
+    const targetSetId = setId || selectedSetId;
+    if (!file || !targetSetId) return;
 
     setSaving(true);
 
-    // Delete any existing files for this set first
-    const { data: existingFiles } = await supabase.storage
-      .from("thumbnails")
-      .list(`${projectId}`, { search: selectedSetId });
-    
-    if (existingFiles && existingFiles.length > 0) {
-      const filesToDelete = existingFiles
-        .filter(f => f.name.startsWith(selectedSetId))
-        .map(f => `${projectId}/${f.name}`);
-      if (filesToDelete.length > 0) {
-        await supabase.storage.from("thumbnails").remove(filesToDelete);
-      }
-    }
-
-    // Upload to Supabase Storage with timestamp to ensure unique filename
-    const fileExt = file.name.split(".").pop();
-    const timestamp = Date.now();
-    const fileName = `${projectId}/${selectedSetId}_${timestamp}.${fileExt}`;
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("thumbnails")
-      .upload(fileName, file);
-
-    if (uploadError) {
-      console.error("Upload failed:", uploadError);
-      // Fallback to blob URL for now
-      const url = URL.createObjectURL(file);
-      setSets(sets.map((s) => (s.id === selectedSetId ? { ...s, thumbnail_url: url } : s)));
-    } else {
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+    try {
+      // Delete any existing files for this set first
+      const { data: existingFiles } = await supabase.storage
         .from("thumbnails")
-        .getPublicUrl(fileName);
+        .list(projectId);
+      
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles
+          .filter(f => f.name.startsWith(targetSetId))
+          .map(f => `${projectId}/${f.name}`);
+        if (filesToDelete.length > 0) {
+          await supabase.storage.from("thumbnails").remove(filesToDelete);
+        }
+      }
 
-      // Update database
-      await supabase
-        .from("packaging_sets")
-        .update({ thumbnail_url: publicUrl })
-        .eq("id", selectedSetId);
+      // Upload to Supabase Storage with timestamp to ensure unique filename
+      const fileExt = file.name.split(".").pop();
+      const timestamp = Date.now();
+      const fileName = `${projectId}/${targetSetId}_${timestamp}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("thumbnails")
+        .upload(fileName, file);
 
-      setSets(sets.map((s) => (s.id === selectedSetId ? { ...s, thumbnail_url: publicUrl } : s)));
+      if (uploadError) {
+        console.error("Upload failed:", uploadError);
+        // Fallback to blob URL for now
+        const url = URL.createObjectURL(file);
+        setSets(sets.map((s) => (s.id === targetSetId ? { ...s, thumbnail_url: url } : s)));
+      } else {
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from("thumbnails")
+          .getPublicUrl(fileName);
+
+        // Update database
+        await supabase
+          .from("packaging_sets")
+          .update({ thumbnail_url: publicUrl })
+          .eq("id", targetSetId);
+
+        setSets(sets.map((s) => (s.id === targetSetId ? { ...s, thumbnail_url: publicUrl } : s)));
+      }
+    } finally {
+      // Reset file input so same file can be selected again
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = "";
+      }
+      setShowThumbnailDialog(false);
+      setSaving(false);
     }
+  };
 
-    setShowThumbnailDialog(false);
-    setSaving(false);
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleThumbnailUpload(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      handleThumbnailUpload(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const removeThumbnail = async (setId: string) => {
@@ -609,7 +634,7 @@ export default function PackagingPage() {
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={handleThumbnailUpload}
+        onChange={handleFileInputChange}
       />
 
       <div className="max-w-5xl mx-auto">
@@ -735,11 +760,22 @@ export default function PackagingPage() {
                     )}
                   </div>
 
-                  {/* Character count */}
-                  <div className="flex justify-end mt-1">
+                  {/* Character count + Set Active button */}
+                  <div className="flex items-center justify-between mt-1">
                     <span className={`text-[10px] ${set.title.length > 100 ? "text-red-400" : "text-muted-foreground"}`}>
                       {set.title.length}/100
                     </span>
+                    {!set.is_selected && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          selectSet(set.id);
+                        }}
+                        className="text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Set Active
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1009,17 +1045,32 @@ export default function PackagingPage() {
 
           <div className="space-y-4">
             {selectedSetId && sets.find((s) => s.id === selectedSetId)?.thumbnail_url ? (
-              <div className="relative rounded-lg overflow-hidden">
+              <div 
+                className="relative rounded-lg overflow-hidden cursor-pointer group"
+                onClick={() => thumbnailInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+              >
                 <img
                   src={sets.find((s) => s.id === selectedSetId)?.thumbnail_url!}
                   alt="Thumbnail preview"
                   className="w-full aspect-video object-cover"
                 />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                  <Upload className="w-8 h-8 text-white mb-2" />
+                  <span className="text-white text-sm">Click or drop to replace</span>
+                </div>
               </div>
             ) : (
-              <div className="w-full aspect-video rounded-lg bg-white/5 border-2 border-dashed border-white/10 flex flex-col items-center justify-center">
-                <Image className="w-12 h-12 text-muted-foreground/50 mb-2" />
-                <span className="text-muted-foreground">No thumbnail uploaded</span>
+              <div 
+                className="w-full aspect-video rounded-lg bg-white/5 border-2 border-dashed border-white/20 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center cursor-pointer"
+                onClick={() => thumbnailInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+              >
+                <Upload className="w-12 h-12 text-muted-foreground/50 mb-2" />
+                <span className="text-muted-foreground">Click or drag & drop an image</span>
+                <span className="text-muted-foreground/50 text-xs mt-1">PNG, JPG, WebP</span>
               </div>
             )}
 
