@@ -363,167 +363,183 @@ export default function StoryboardPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-8 space-y-4">
           {scenes.map((scene, index) => (
-            <div 
-              key={scene.id} 
-              className={`glass-card p-4 group transition-all ${
-                draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
-              } ${dragOverIndex === index ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
-              ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-              onDragLeave={() => setDragOverIndex(null)}
-            >
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
-                {/* Scene Number & Reorder - Centered vertically */}
-                <div className="flex flex-col items-center justify-center gap-0.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => moveScene(index, "up")}
-                    disabled={index === 0}
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </Button>
-                  <span className="text-xs font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded">
-                    {index + 1}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => moveScene(index, "down")}
-                    disabled={index === scenes.length - 1}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Script Column */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium">Script</span> · {scene.script_text.split(/\s+/).filter(Boolean).length} words
-                    </p>
-                    {/* Duration control */}
-                    <div className="flex items-center gap-2">
-                      <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-                      {editingDurationId === scene.id ? (
-                        <input
-                          ref={durationInputRef}
-                          type="text"
-                          defaultValue={formatDuration(getSceneDuration(scene))}
-                          onBlur={(e) => {
-                            const parts = e.target.value.split(":");
-                            let seconds = 0;
-                            if (parts.length === 2) {
-                              seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                            } else if (parts.length === 1) {
-                              seconds = parseInt(parts[0]);
-                            }
-                            if (!isNaN(seconds) && seconds > 0) {
-                              updateSceneDuration(scene.id, seconds);
-                            }
-                            setEditingDurationId(null);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            } else if (e.key === "Escape") {
-                              setEditingDurationId(null);
-                            }
-                          }}
-                          className="w-14 text-xs text-center bg-white/10 border border-white/20 rounded px-1.5 py-0.5 focus:outline-none focus:border-primary"
-                          placeholder="0:00"
-                        />
-                      ) : (
-                        <button
-                          onClick={() => setEditingDurationId(scene.id)}
-                          className={`text-xs px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors ${
-                            scene.duration_seconds !== null ? "text-primary" : "text-muted-foreground"
-                          }`}
-                          title={scene.duration_seconds !== null ? "Manual duration (click to edit)" : "Auto duration (click to set manually)"}
-                        >
-                          {formatDuration(getSceneDuration(scene))}
-                        </button>
-                      )}
-                      {scene.duration_seconds !== null && (
-                        <button
-                          onClick={() => updateSceneDuration(scene.id, null)}
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                          title="Reset to auto-calculate"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
+            <div key={scene.id}>
+              {/* Drop indicator line - shows above this item when dragging */}
+              {dragOverIndex === index && draggedIndex !== null && draggedIndex > index && (
+                <div className="h-1 bg-primary rounded-full mb-4 animate-pulse" />
+              )}
+              
+              <div 
+                className={`glass-card p-4 group transition-all ${
+                  draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
+                } ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                onDragLeave={() => setDragOverIndex(null)}
+              >
+                <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
+                  {/* Scene Number & Reorder - Centered vertically */}
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => moveScene(index, "up")}
+                      disabled={index === 0}
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                    <span className="text-xs font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded">
+                      {index + 1}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => moveScene(index, "down")}
+                      disabled={index === scenes.length - 1}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Textarea
-                    value={scene.script_text}
-                    onChange={(e) => {
-                      updateScene(scene.id, "script_text", e.target.value);
-                      // Auto-resize
-                      e.target.style.height = "auto";
-                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
-                    }}
-                    placeholder="Write your script here... What will you say in this scene?"
-                    className="min-h-[72px] h-auto glass border-white/10 resize-none"
-                    style={{ overflow: "hidden" }}
-                  />
-                </div>
 
-                {/* Visual Column */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    <span className="font-medium">Editing Notes</span>
-                  </p>
-                  <Textarea
-                    value={scene.visual_notes}
-                    onChange={(e) => {
-                      updateScene(scene.id, "visual_notes", e.target.value);
-                      // Auto-resize
-                      e.target.style.height = "auto";
-                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
-                    }}
-                    placeholder="Visual cues, B-roll ideas, graphics, sound effects..."
-                    className="min-h-[72px] h-auto glass border-white/10 resize-none bg-blue-500/5"
-                    style={{ overflow: "hidden" }}
-                  />
-                </div>
+                  {/* Script Column */}
+                  <div>
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">Script</span> · {scene.script_text.split(/\s+/).filter(Boolean).length} words
+                      </p>
+                      {/* Duration control */}
+                      <div className="flex items-center gap-2">
+                        <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+                        {editingDurationId === scene.id ? (
+                          <input
+                            ref={durationInputRef}
+                            type="text"
+                            defaultValue={formatDuration(getSceneDuration(scene))}
+                            onBlur={(e) => {
+                              const parts = e.target.value.split(":");
+                              let seconds = 0;
+                              if (parts.length === 2) {
+                                seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                              } else if (parts.length === 1) {
+                                seconds = parseInt(parts[0]);
+                              }
+                              if (!isNaN(seconds) && seconds > 0) {
+                                updateSceneDuration(scene.id, seconds);
+                              }
+                              setEditingDurationId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.currentTarget.blur();
+                              } else if (e.key === "Escape") {
+                                setEditingDurationId(null);
+                              }
+                            }}
+                            className="w-14 text-xs text-center bg-white/10 border border-white/20 rounded px-1.5 py-0.5 focus:outline-none focus:border-primary"
+                            placeholder="0:00"
+                          />
+                        ) : (
+                          <button
+                            onClick={() => setEditingDurationId(scene.id)}
+                            className={`text-xs px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors ${
+                              scene.duration_seconds !== null ? "text-primary" : "text-muted-foreground"
+                            }`}
+                            title={scene.duration_seconds !== null ? "Manual duration (click to edit)" : "Auto duration (click to set manually)"}
+                          >
+                            {formatDuration(getSceneDuration(scene))}
+                          </button>
+                        )}
+                        {scene.duration_seconds !== null && (
+                          <button
+                            onClick={() => updateSceneDuration(scene.id, null)}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            title="Reset to auto-calculate"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <Textarea
+                      value={scene.script_text}
+                      onChange={(e) => {
+                        updateScene(scene.id, "script_text", e.target.value);
+                        // Auto-resize
+                        e.target.style.height = "auto";
+                        e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
+                      }}
+                      placeholder="Write your script here... What will you say in this scene?"
+                      className="min-h-[72px] h-auto glass border-white/10 resize-none"
+                      style={{ overflow: "hidden" }}
+                    />
+                  </div>
 
-                {/* Actions - Centered vertically */}
-                <div className="flex flex-col items-center justify-center gap-1">
-                  {/* Mark Complete Toggle */}
-                  <button
-                    onClick={() => toggleSceneComplete(scene.id)}
-                    className={`p-1.5 rounded-md transition-colors ${
-                      scene.is_complete 
-                        ? "text-green-500 hover:bg-green-500/10" 
-                        : "text-muted-foreground hover:text-green-500 hover:bg-white/5 opacity-0 group-hover:opacity-100"
-                    }`}
-                    title={scene.is_complete ? "Mark as incomplete" : "Mark as complete"}
-                  >
-                    {scene.is_complete ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      <Circle className="w-4 h-4" />
-                    )}
-                  </button>
-                  
-                  {/* Delete Button */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeScene(scene.id)}
-                    disabled={scenes.length <= 1}
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {/* Visual Column */}
+                  <div>
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">Editing Notes</span>
+                      </p>
+                      {/* Mark Complete Toggle - always visible */}
+                      <button
+                        onClick={() => toggleSceneComplete(scene.id)}
+                        className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded transition-colors ${
+                          scene.is_complete 
+                            ? "text-green-500 hover:bg-green-500/10" 
+                            : "text-muted-foreground hover:text-green-500 hover:bg-white/5"
+                        }`}
+                        title={scene.is_complete ? "Mark as incomplete" : "Mark as complete"}
+                      >
+                        {scene.is_complete ? (
+                          <>
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>Done</span>
+                          </>
+                        ) : (
+                          <>
+                            <Circle className="w-3.5 h-3.5" />
+                            <span>Done</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <Textarea
+                      value={scene.visual_notes}
+                      onChange={(e) => {
+                        updateScene(scene.id, "visual_notes", e.target.value);
+                        // Auto-resize
+                        e.target.style.height = "auto";
+                        e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
+                      }}
+                      placeholder="Visual cues, B-roll ideas, graphics, sound effects..."
+                      className="min-h-[72px] h-auto glass border-white/10 resize-none bg-blue-500/5"
+                      style={{ overflow: "hidden" }}
+                    />
+                  </div>
+
+                  {/* Delete Button - Centered vertically */}
+                  <div className="flex flex-col items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeScene(scene.id)}
+                      disabled={scenes.length <= 1}
+                      className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
+              
+              {/* Drop indicator line - shows below this item when dragging */}
+              {dragOverIndex === index && draggedIndex !== null && draggedIndex < index && (
+                <div className="h-1 bg-primary rounded-full mt-4 animate-pulse" />
+              )}
             </div>
           ))}
 
