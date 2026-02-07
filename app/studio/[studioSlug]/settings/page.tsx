@@ -566,11 +566,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   }
 
   return (
-    <div className="flex justify-center min-h-screen py-8 px-4">
+    <div className="flex justify-center min-h-screen py-6 md:py-8 px-4">
       <div className="w-full max-w-7xl">{/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground mt-1">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Manage your studio settings and team members
           </p>
         </div>
@@ -579,43 +579,43 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         setActiveTab(value);
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
-        <TabsList className="glass">
-          <TabsTrigger value="studio" className="gap-2">
-            <SettingsIcon className="w-4 h-4" />
-            Studio
+        <TabsList className="glass w-full sm:w-auto overflow-x-auto">
+          <TabsTrigger value="studio" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            <SettingsIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Studio</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="gap-2">
-            <Users className="w-4 h-4" />
-            Members
+          <TabsTrigger value="members" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Members</span>
           </TabsTrigger>
           {/* YouTube Tab - IN DEVELOPMENT: Requires Google OAuth app verification */}
           {/* <TabsTrigger value="youtube" className="gap-2">
             <Youtube className="w-4 h-4" />
             YouTube
           </TabsTrigger> */}
-          <TabsTrigger value="billing" className="gap-2">
-            <CreditCard className="w-4 h-4" />
-            Billing
+          <TabsTrigger value="billing" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Billing</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Studio Settings */}
         <TabsContent value="studio" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
+          <div className="glass-card p-4 md:p-6 space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Studio Profile</h3>
+              <h3 className="text-base md:text-lg font-semibold mb-4">Studio Profile</h3>
               
               {/* Logo Upload */}
-              <div className="flex items-center gap-6 mb-6">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
                   {studio?.logo_url ? (
                     <img src={studio.logo_url} alt={studio.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-3xl font-bold">{name?.[0] || 'S'}</span>
+                    <span className="text-2xl md:text-3xl font-bold">{name?.[0] || 'S'}</span>
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="text-2xl font-bold mb-2">{name || 'Studio Name'}</div>
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="text-xl md:text-2xl font-bold mb-2">{name || 'Studio Name'}</div>
                   <div className="space-y-2">
                     <label htmlFor="logo-upload">
                       <Button variant="outline" className="gap-2" disabled={uploading} asChild>
@@ -632,7 +632,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                       onChange={handleLogoUpload}
                       className="hidden"
                     />
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Recommended: 256x256px, PNG or JPG
                     </p>
                   </div>

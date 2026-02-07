@@ -456,7 +456,7 @@ export default function ChannelPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Hidden file inputs */}
       <input 
         ref={bannerInputRef}
@@ -476,34 +476,34 @@ export default function ChannelPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Channel Preview</h1>
-          <p className="text-muted-foreground">See how your channel looks on YouTube</p>
+          <h1 className="text-xl md:text-2xl font-bold">Channel Preview</h1>
+          <p className="text-sm md:text-base text-muted-foreground">See how your channel looks on YouTube</p>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="glass-card p-4 mb-6">
+      <div className="glass-card p-3 md:p-4 mb-6">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground mr-2">Edit:</span>
+          <span className="text-xs md:text-sm text-muted-foreground mr-2">Edit:</span>
           {toolbarButtons.map((btn) => (
             <Button
               key={btn.id}
               variant="outline"
               size="sm"
               onClick={() => openDialog(btn.id)}
-              className="gap-2"
+              className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3"
             >
-              <btn.icon className="w-4 h-4" />
-              {btn.label}
+              <btn.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">{btn.label}</span>
             </Button>
           ))}
         </div>
       </div>
 
       {/* Preview Container */}
-      <div className="glass-card overflow-hidden p-6 max-h-[calc(100vh-240px)]">
-        <div className="flex gap-6 h-full">
-          <div className="flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+      <div className="glass-card overflow-hidden p-3 md:p-6 max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-240px)]">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full overflow-y-auto lg:overflow-y-visible">
+          <div className="flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Desktop Preview</span>
             </div>
@@ -511,7 +511,7 @@ export default function ChannelPage() {
               <DesktopPreview channel={channel} openDialog={openDialog} />
             </div>
           </div>
-          <div className="shrink-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[calc(100vh-280px)]">
+          <div className="shrink-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col mx-auto lg:mx-0">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mobile Preview</span>
             </div>

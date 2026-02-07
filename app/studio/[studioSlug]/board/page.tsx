@@ -669,33 +669,33 @@ export default function BoardPage() {
   return (
     <div className="h-[calc(100vh-0px)] flex flex-col relative">
       {/* Page Header */}
-      <div className="p-6 pb-4 shrink-0">
-        <h1 className="text-3xl font-bold">Board</h1>
-        <p className="text-muted-foreground mt-1">
+      <div className="p-4 md:p-6 pb-3 md:pb-4 shrink-0">
+        <h1 className="text-2xl md:text-3xl font-bold">Board</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           Visual overview of your content pipeline
         </p>
       </div>
 
       {/* Floating Action Bar */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-white/10 shadow-lg">
+      <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-white/10 shadow-lg">
         <Button 
           variant={editMode ? "default" : "ghost"} 
           size="sm"
           onClick={() => setEditMode(!editMode)}
-          className="rounded-full"
+          className="rounded-full px-3"
         >
-          <Pencil className="w-4 h-4 mr-2" />
-          {editMode ? "Done" : "Edit"}
+          <Pencil className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">{editMode ? "Done" : "Edit"}</span>
         </Button>
         <div className="w-px h-6 bg-white/10" />
-        <Button size="sm" className="rounded-full glow-sm" onClick={() => setShowCreateDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
+        <Button size="sm" className="rounded-full glow-sm px-3" onClick={() => setShowCreateDialog(true)}>
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">New Project</span>
         </Button>
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto px-6 pb-20">
+      <div className="flex-1 overflow-x-auto px-4 md:px-6 pb-20">
         {/* Empty state when no statuses */}
         {statuses.length === 0 ? (
           <div className="h-full flex items-center justify-center">

@@ -173,82 +173,82 @@ export default function StudioHomePage() {
   const inProgressProjects = totalProjects - completedProjects;
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back{user?.full_name ? `, ${user.full_name}` : ''}!</h1>
-          <p className="text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
+          <h1 className="text-xl md:text-2xl font-bold">Welcome back{user?.full_name ? `, ${user.full_name}` : ''}!</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
+        <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto" onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Project
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {/* Subscriber Count - Featured */}
-        <div className="glass-card p-5 border border-red-500/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
-              <Youtube className="w-5 h-5 text-red-500" />
+        <div className="glass-card p-4 md:p-5 border border-red-500/20">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
+              <Youtube className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{formatSubscriberCount(subscriberCount)}</p>
-              <p className="text-sm text-muted-foreground">Subscribers</p>
+              <p className="text-lg md:text-2xl font-bold">{formatSubscriberCount(subscriberCount)}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Subscribers</p>
             </div>
           </div>
         </div>
 
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <Video className="w-5 h-5 text-blue-400" />
+        <div className="glass-card p-4 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <Video className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalProjects}</p>
-              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-lg md:text-2xl font-bold">{totalProjects}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Total</p>
             </div>
           </div>
         </div>
         
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-yellow-400" />
+        <div className="glass-card p-4 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+              <Clock className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{inProgressProjects}</p>
-              <p className="text-sm text-muted-foreground">In Progress</p>
+              <p className="text-lg md:text-2xl font-bold">{inProgressProjects}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">In Progress</p>
             </div>
           </div>
         </div>
         
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-green-400" />
+        <div className="glass-card p-4 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{completedProjects}</p>
-              <p className="text-sm text-muted-foreground">Completed</p>
+              <p className="text-lg md:text-2xl font-bold">{completedProjects}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Completed</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content Pipeline */}
-      <div className="glass-card p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
-        <div className="flex gap-2">
+      <div className="glass-card p-4 md:p-6 mb-6 md:mb-8">
+        <h2 className="text-base md:text-lg font-semibold mb-4">Content Pipeline</h2>
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {boardStatuses.map((status) => {
             const count = projects?.filter(p => p.board_status_id === status.id).length || 0;
             return (
-              <div key={status.id} className="flex-1 text-center">
+              <div key={status.id} className="flex-1 text-center min-w-[60px]">
                 <div className={`h-2 rounded-full ${status.color} mb-2`} />
-                <p className="text-xl font-bold">{count}</p>
-                <p className="text-xs text-muted-foreground">{status.name}</p>
+                <p className="text-lg md:text-xl font-bold">{count}</p>
+                <p className="text-xs text-muted-foreground truncate">{status.name}</p>
               </div>
             );
           })}
@@ -256,32 +256,32 @@ export default function StudioHomePage() {
       </div>
 
       {/* Recent Projects */}
-      <div className="glass-card p-6">
+      <div className="glass-card p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Projects</h2>
+          <h2 className="text-base md:text-lg font-semibold">Recent Projects</h2>
           <Button variant="ghost" size="sm" asChild>
             <a href={`/studio/${studioSlug}/projects`}>View all</a>
           </Button>
         </div>
         
         {projects && projects.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Long-form videos - Left column */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Long-form</h3>
+              <h3 className="text-xs md:text-sm font-medium text-muted-foreground mb-3">Long-form</h3>
               {projects.filter(p => p.video_type === "long").length > 0 ? (
                 projects.filter(p => p.video_type === "long").map((project) => (
-                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                        <Video className="w-4 h-4 text-muted-foreground" />
+                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-2.5 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
+                        <Video className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
                       </div>
-                      <div>
-                        <p className="font-medium">{project.title}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm md:text-base truncate">{project.title}</p>
                         <p className="text-xs text-muted-foreground capitalize">{project.status}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ml-2 ${
                       project.status === "published" ? "bg-green-500/20 text-green-400" :
                       project.status === "scheduled" ? "bg-purple-500/20 text-purple-400" :
                       project.status === "editing" ? "bg-orange-500/20 text-orange-400" :
@@ -300,20 +300,20 @@ export default function StudioHomePage() {
 
             {/* Shorts - Right column */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Shorts</h3>
+              <h3 className="text-xs md:text-sm font-medium text-muted-foreground mb-3">Shorts</h3>
               {projects.filter(p => p.video_type === "short").length > 0 ? (
                 projects.filter(p => p.video_type === "short").map((project) => (
-                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                        <Video className="w-4 h-4 text-muted-foreground" />
+                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-2.5 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
+                        <Video className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
                       </div>
-                      <div>
-                        <p className="font-medium">{project.title}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm md:text-base truncate">{project.title}</p>
                         <p className="text-xs text-muted-foreground capitalize">{project.status}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ml-2 ${
                       project.status === "published" ? "bg-green-500/20 text-green-400" :
                       project.status === "scheduled" ? "bg-purple-500/20 text-purple-400" :
                       project.status === "editing" ? "bg-orange-500/20 text-orange-400" :

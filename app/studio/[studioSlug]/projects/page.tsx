@@ -233,14 +233,14 @@ export default function ProjectsPage() {
   const getStatusConfig = (status: string) => STATUS_CONFIG[status as ProjectStatus] || STATUS_CONFIG.idea;
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground mt-1">Manage your video projects and content pipeline</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Projects</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Manage your video projects and content pipeline</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="glow-sm gap-2">
+        <Button onClick={() => setShowCreateDialog(true)} className="glow-sm gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           New Project
         </Button>
@@ -248,23 +248,23 @@ export default function ProjectsPage() {
 
       {/* Content Pipeline */}
       {projects.length > 0 && (
-        <div className="glass-card p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Content Pipeline</h2>
-          <div className="flex gap-2">
+        <div className="glass-card p-4 md:p-6 mb-6">
+          <h2 className="text-base md:text-lg font-semibold mb-4">Content Pipeline</h2>
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {boardStatuses.map((status) => {
               const count = projects.filter(p => p.board_status_id === status.id).length;
               const isSelected = selectedStatusIds.includes(status.id);
               return (
                 <div 
                   key={status.id} 
-                  className={`flex-1 text-center cursor-pointer transition-all rounded-lg p-2 ${
+                  className={`flex-1 min-w-[60px] text-center cursor-pointer transition-all rounded-lg p-2 ${
                     isSelected ? "bg-white/10 ring-2 ring-white/20" : "hover:bg-white/5"
                   }`}
                   onClick={() => toggleStatusFilter(status.id)}
                 >
                   <div className={`h-2 rounded-full ${status.color} mb-2`} />
-                  <p className="text-xl font-bold">{count}</p>
-                  <p className="text-xs text-muted-foreground">{status.name}</p>
+                  <p className="text-lg md:text-xl font-bold">{count}</p>
+                  <p className="text-xs text-muted-foreground truncate">{status.name}</p>
                 </div>
               );
             })}
@@ -274,8 +274,8 @@ export default function ProjectsPage() {
 
       {/* Toolbar */}
       {projects.length > 0 && (
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -284,7 +284,7 @@ export default function ProjectsPage() {
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none w-64 text-sm"
+                className="pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none w-full sm:w-64 text-sm"
               />
             </div>
 
@@ -292,7 +292,7 @@ export default function ProjectsPage() {
             <div className="flex items-center gap-1 glass rounded-lg p-1">
               <button
                 onClick={() => setTypeFilter("all")}
-                className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm transition-all ${
                   typeFilter === "all" ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white"
                 }`}
               >
@@ -300,7 +300,7 @@ export default function ProjectsPage() {
               </button>
               <button
                 onClick={() => setTypeFilter("long")}
-                className={`px-3 py-1.5 rounded-md text-sm transition-all flex items-center gap-1.5 ${
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm transition-all flex items-center justify-center gap-1.5 ${
                   typeFilter === "long" ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white"
                 }`}
               >
@@ -309,7 +309,7 @@ export default function ProjectsPage() {
               </button>
               <button
                 onClick={() => setTypeFilter("short")}
-                className={`px-3 py-1.5 rounded-md text-sm transition-all flex items-center gap-1.5 ${
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm transition-all flex items-center justify-center gap-1.5 ${
                   typeFilter === "short" ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white"
                 }`}
               >
@@ -320,7 +320,7 @@ export default function ProjectsPage() {
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center gap-1 glass rounded-lg p-1">
+          <div className="flex items-center justify-end gap-1 glass rounded-lg p-1 self-end sm:self-auto">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded-md transition-all ${
