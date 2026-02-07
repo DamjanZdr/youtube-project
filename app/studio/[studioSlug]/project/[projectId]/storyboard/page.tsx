@@ -17,7 +17,6 @@ import {
   ChevronDown,
   Timer,
   RotateCcw,
-  GripVertical,
 } from "lucide-react";
 
 interface Scene {
@@ -364,15 +363,9 @@ export default function StoryboardPage() {
               onDragEnd={handleDragEnd}
               onDragLeave={() => setDragOverIndex(null)}
             >
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-center">
+              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-start">
                 {/* Scene Number & Reorder */}
-                <div className="flex flex-col items-center gap-1">
-                  <div 
-                    className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/10 transition-colors"
-                    title="Drag to reorder"
-                  >
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                  </div>
+                <div className="flex flex-col items-center gap-0.5 pt-6">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -398,19 +391,7 @@ export default function StoryboardPage() {
 
                 {/* Script Column */}
                 <div>
-                  <Textarea
-                    value={scene.script_text}
-                    onChange={(e) => {
-                      updateScene(scene.id, "script_text", e.target.value);
-                      // Auto-resize
-                      e.target.style.height = "auto";
-                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
-                    }}
-                    placeholder="Write your script here... What will you say in this scene?"
-                    className="min-h-[72px] h-auto glass border-white/10 resize-none"
-                    style={{ overflow: "hidden" }}
-                  />
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mb-1.5">
                     <p className="text-xs text-muted-foreground">
                       {scene.script_text.split(/\s+/).filter(Boolean).length} words
                     </p>
@@ -467,10 +448,23 @@ export default function StoryboardPage() {
                       )}
                     </div>
                   </div>
+                  <Textarea
+                    value={scene.script_text}
+                    onChange={(e) => {
+                      updateScene(scene.id, "script_text", e.target.value);
+                      // Auto-resize
+                      e.target.style.height = "auto";
+                      e.target.style.height = Math.max(72, e.target.scrollHeight) + "px";
+                    }}
+                    placeholder="Write your script here... What will you say in this scene?"
+                    className="min-h-[72px] h-auto glass border-white/10 resize-none"
+                    style={{ overflow: "hidden" }}
+                  />
                 </div>
 
                 {/* Visual Column */}
                 <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Editing Notes</p>
                   <Textarea
                     value={scene.visual_notes}
                     onChange={(e) => {
@@ -486,7 +480,7 @@ export default function StoryboardPage() {
                 </div>
 
                 {/* Delete Button */}
-                <div>
+                <div className="pt-6">
                   <Button
                     variant="ghost"
                     size="icon"
