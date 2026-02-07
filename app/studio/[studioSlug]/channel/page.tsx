@@ -967,13 +967,16 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
               )}
             </p>
 
-            <div className="flex flex-col gap-0.5 mt-3">
+            <div className="flex items-center gap-2 mt-3">
               {channel.links.length > 0 ? (
-                channel.links.map((link) => (
-                  <a key={link.id} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">
-                    {link.label || link.url}
+                <>
+                  <a href={channel.links[0].url.startsWith('http') ? channel.links[0].url : `https://${channel.links[0].url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">
+                    {channel.links[0].label || channel.links[0].url}
                   </a>
-                ))
+                  {channel.links.length > 1 && (
+                    <span className="text-sm text-muted-foreground">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
+                  )}
+                </>
               ) : (
                 <span className="text-sm text-muted-foreground">No links added</span>
               )}
@@ -1071,13 +1074,16 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
         </p>
 
         {/* Links */}
-        <div className="flex flex-col gap-0.5 mt-2">
+        <div className="flex items-center gap-2 mt-2">
           {channel.links.length > 0 ? (
-            channel.links.map((link) => (
-              <a key={link.id} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">
-                {link.label || link.url}
+            <>
+              <a href={channel.links[0].url.startsWith('http') ? channel.links[0].url : `https://${channel.links[0].url}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">
+                {channel.links[0].label || channel.links[0].url}
               </a>
-            ))
+              {channel.links.length > 1 && (
+                <span className="text-xs text-muted-foreground">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
+              )}
+            </>
           ) : (
             <span className="text-xs text-muted-foreground">No links added</span>
           )}
