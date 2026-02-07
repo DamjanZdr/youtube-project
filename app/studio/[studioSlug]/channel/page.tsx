@@ -974,7 +974,7 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
                     {channel.links[0].label || channel.links[0].url}
                   </a>
                   {channel.links.length > 1 && (
-                    <span className="text-sm text-muted-foreground">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
+                    <span className="text-sm text-gray-500">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
                   )}
                 </>
               ) : (
@@ -1081,7 +1081,7 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
                 {channel.links[0].label || channel.links[0].url}
               </a>
               {channel.links.length > 1 && (
-                <span className="text-xs text-muted-foreground">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
+                <span className="text-xs text-gray-500">and {channel.links.length - 1} more link{channel.links.length > 2 ? 's' : ''}</span>
               )}
             </>
           ) : (
