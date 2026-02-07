@@ -63,10 +63,8 @@ export default function IdeaPage() {
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const [interimText, setInterimText] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const editorRef = useRef<any>(null);
-  const interimNodeRef = useRef<any>(null);
 
   // Check for speech recognition support
   useEffect(() => {
@@ -97,13 +95,41 @@ export default function IdeaPage() {
         }
       }
 
-      // Update interim text display
-      setInterimText(interimTranscript);
-
-      // Insert final transcript into editor at cursor position
-      if (finalTranscript && editorRef.current) {
-        editorRef.current.commands.insertContent(finalTranscript + " ");
-        setInterimText(""); // Clear interim when we get final
+      // Insert directly into editor
+      if (editorRef.current) {
+        const editor = editorRef.current;
+        
+        // Remove any existing interim text (marked with data-interim attribute)
+        const { state } = editor;
+        let interimPos: { from: number; to: number } | null = null;
+        
+        state.doc.descendants((node: any, pos: number) => {
+          if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
+            interimPos = { from: pos, to: pos + node.nodeSize };
+            return false;
+          }
+        });
+        
+        if (interimPos) {
+          editor.chain().focus().deleteRange(interimPos).run();
+        }
+        
+        // Insert final transcript as normal text
+        if (finalTranscript) {
+          editor.commands.insertContent(finalTranscript + " ");
+        }
+        
+        // Insert interim transcript as gray italic text (will be replaced)
+        if (interimTranscript) {
+          editor.commands.insertContent({
+            type: 'text',
+            text: interimTranscript,
+            marks: [
+              { type: 'textStyle', attrs: { color: '#888888' } },
+              { type: 'italic' }
+            ]
+          });
+        }
       }
     };
 
@@ -146,7 +172,24 @@ export default function IdeaPage() {
         recognitionRef.current = null;
       }
       setIsListening(false);
-      setInterimText("");
+      
+      // Clean up any remaining interim text (gray italic text)
+      if (editorRef.current) {
+        const editor = editorRef.current;
+        const { state } = editor;
+        let interimPos: { from: number; to: number } | null = null;
+        
+        state.doc.descendants((node: any, pos: number) => {
+          if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
+            interimPos = { from: pos, to: pos + node.nodeSize };
+            return false;
+          }
+        });
+        
+        if (interimPos) {
+          editor.chain().focus().deleteRange(interimPos).run();
+        }
+      }
     } else {
       // Start listening
       const recognition = initSpeechRecognition();
@@ -259,19 +302,7 @@ export default function IdeaPage() {
 
       {/* Floating Voice Input Button - Fixed to viewport */}
       {speechSupported && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3">
-          {/* Interim text preview */}
-          {isListening && interimText && (
-            <div 
-              className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-5 py-3 max-w-md text-center shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
-              style={{
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
-              }}
-            >
-              <p className="text-sm text-white/80 italic">{interimText}</p>
-            </div>
-          )}
-          
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           {/* Voice Button */}
           <button
             onClick={toggleListening}
