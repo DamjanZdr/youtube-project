@@ -715,11 +715,11 @@ export default function ChannelPage() {
                   placeholder="Label"
                 />
                 <input
-                  type="url"
+                  type="text"
                   value={link.url}
                   onChange={(e) => updateLink(link.id, "url", e.target.value)}
                   className="flex-1 px-3 py-2 rounded-md bg-white/5 border border-white/10 focus:border-primary focus:outline-none text-sm"
-                  placeholder="https://..."
+                  placeholder="Enter link..."
                 />
                 <Button 
                   variant="ghost" 
@@ -967,11 +967,11 @@ function DesktopPreview({ channel, openDialog }: PreviewProps) {
               )}
             </p>
 
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex flex-col gap-0.5 mt-3">
               {channel.links.length > 0 ? (
                 channel.links.map((link) => (
-                  <a key={link.id} href={link.url} className="text-sm text-blue-400 hover:underline truncate">
-                    {link.url}
+                  <a key={link.id} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">
+                    {link.label || link.url}
                   </a>
                 ))
               ) : (
@@ -1074,8 +1074,8 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
         <div className="flex flex-col gap-0.5 mt-2">
           {channel.links.length > 0 ? (
             channel.links.map((link) => (
-              <a key={link.id} href={link.url} className="text-xs text-blue-400 hover:underline truncate">
-                {link.url}
+              <a key={link.id} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">
+                {link.label || link.url}
               </a>
             ))
           ) : (
