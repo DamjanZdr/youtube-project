@@ -40,6 +40,7 @@ interface OrgMember {
   role: string;
   profile: {
     id: string;
+    email: string;
     full_name: string | null;
     avatar_url: string | null;
   };
@@ -113,7 +114,7 @@ export default function TasksPage() {
         .order("position"),
       supabase
         .from("organization_members")
-        .select("id, user_id, role, profile:profiles(id, full_name, avatar_url)")
+        .select("id, user_id, role, profile:profiles(id, email, full_name, avatar_url)")
         .eq("organization_id", project.organization_id),
       supabase
         .from("project_assignees")
@@ -382,20 +383,22 @@ export default function TasksPage() {
               </SelectTrigger>
             <SelectContent>
               <SelectItem value="unassigned">Unassigned</SelectItem>
-              {orgMembers.map((member) => (
+              {orgMembers.map((member) => {
+                const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
+                return (
                 <SelectItem key={member.user_id} value={member.user_id}>
                   <div className="flex items-center gap-2">
                     {member.profile.avatar_url ? (
                       <img src={member.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
                     ) : (
                       <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
-                        {(member.profile.full_name || '?')[0].toUpperCase()}
+                        {displayName[0].toUpperCase()}
                       </div>
                     )}
-                    <span>{member.profile.full_name || 'Unknown'}</span>
+                    <span>{displayName}</span>
                   </div>
                 </SelectItem>
-              ))}
+              );})}
             </SelectContent>
           </Select>
           </div>
@@ -481,20 +484,22 @@ export default function TasksPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {orgMembers.map((member) => (
+                      {orgMembers.map((member) => {
+                        const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
+                        return (
                         <SelectItem key={member.user_id} value={member.user_id}>
                           <div className="flex items-center gap-2">
                             {member.profile.avatar_url ? (
                               <img src={member.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
                             ) : (
                               <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
-                                {(member.profile.full_name || '?')[0].toUpperCase()}
+                                {displayName[0].toUpperCase()}
                               </div>
                             )}
-                            <span>{member.profile.full_name || 'Unknown'}</span>
+                            <span>{displayName}</span>
                           </div>
                         </SelectItem>
-                      ))}
+                      );})}
                     </SelectContent>
                   </Select>
 

@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Upload, ArrowLeft, User, Mail, Lock, Bell } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AccountSettingsPage() {
   const supabase = createClient();
+  const router = useRouter();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,10 +146,10 @@ export default function AccountSettingsPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/hub" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Hub</span>
-          </Link>
+            <span>Back</span>
+          </button>
         </div>
       </nav>
 
