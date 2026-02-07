@@ -1010,8 +1010,8 @@ export default function PackagingPage() {
             </div>
           </div>
 
-          {/* YouTube Push */}
-          {organizationId && (
+          {/* YouTube Push - IN DEVELOPMENT: Requires Google OAuth app verification */}
+          {/* {organizationId && (
             <div className="glass-card p-6">
               <YouTubePush
                 projectId={projectId}
@@ -1029,7 +1029,7 @@ export default function PackagingPage() {
                 }}
               />
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

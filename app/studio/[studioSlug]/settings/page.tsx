@@ -588,10 +588,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Users className="w-4 h-4" />
             Members
           </TabsTrigger>
-          <TabsTrigger value="youtube" className="gap-2">
+          {/* YouTube Tab - IN DEVELOPMENT: Requires Google OAuth app verification */}
+          {/* <TabsTrigger value="youtube" className="gap-2">
             <Youtube className="w-4 h-4" />
             YouTube
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="w-4 h-4" />
             Billing
@@ -848,14 +849,14 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           <BillingTab subscription={subscription} studioId={studio?.id} />
         </TabsContent>
 
-        {/* YouTube Tab */}
-        <TabsContent value="youtube">
+        {/* YouTube Tab - IN DEVELOPMENT: Requires Google OAuth app verification */}
+        {/* <TabsContent value="youtube">
           <YouTubeTab 
             studioId={studio?.id} 
             studioSlug={studioSlug} 
             isOwner={studio?.owner_id === user?.id}
           />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
       </div>
 
