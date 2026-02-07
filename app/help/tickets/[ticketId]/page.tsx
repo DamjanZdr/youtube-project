@@ -110,6 +110,9 @@ export default function TicketDetailPage() {
           filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
+          // Check if message already exists (from optimistic update)
+          const messageId = payload.new.id;
+          
           // Fetch the full message with sender info
           const { data: newMessage } = await supabase
             .from("support_ticket_messages")
@@ -120,11 +123,19 @@ export default function TicketDetailPage() {
               created_at,
               sender:profiles!sender_id(full_name, avatar_url)
             `)
-            .eq("id", payload.new.id)
+            .eq("id", messageId)
             .single();
           
           if (newMessage) {
-            setMessages(prev => [...prev, newMessage as unknown as Message]);
+            setMessages(prev => {
+              // Check if already exists
+              if (prev.some(m => m.id === messageId)) {
+                return prev;
+              }
+              // Also remove any temp messages with same content (from optimistic updates)
+              const filtered = prev.filter(m => !m.id.startsWith('temp-'));
+              return [...filtered, newMessage as unknown as Message];
+            });
           }
         }
       )
@@ -226,22 +237,50 @@ export default function TicketDetailPage() {
     if (!user || !ticket || !replyContent.trim()) return;
 
     setSubmitting(true);
+    const messageContent = replyContent.trim();
+    setReplyContent("");
 
-    const { error } = await supabase
+    // Optimistic update - add message immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      content: messageContent,
+      is_admin: false,
+      created_at: new Date().toISOString(),
+      sender: {
+        full_name: userProfile?.full_name || null,
+        avatar_url: userProfile?.avatar_url || null,
+      },
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    const { data, error } = await supabase
       .from("support_ticket_messages")
       .insert({
         ticket_id: ticket.id,
         sender_id: user.id,
-        content: replyContent.trim(),
+        content: messageContent,
         is_admin: false,
-      });
+      })
+      .select(`
+        id,
+        content,
+        is_admin,
+        created_at,
+        sender:profiles!sender_id(full_name, avatar_url)
+      `)
+      .single();
 
     if (error) {
       toast.error("Failed to send message");
       console.error(error);
-    } else {
-      setReplyContent("");
-      // Realtime subscription will add the message automatically
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setReplyContent(messageContent);
+    } else if (data) {
+      // Replace optimistic message with real one
+      setMessages(prev => prev.map(m => 
+        m.id === optimisticMessage.id ? (data as unknown as Message) : m
+      ));
     }
 
     setSubmitting(false);
@@ -372,13 +411,13 @@ export default function TicketDetailPage() {
                 <span className="hidden sm:inline">Tickets</span>
               </Link>
               <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">#{ticket.ticket_number}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
-                    {categoryLabels[ticket.category] || ticket.category}
-                  </span>
+                  <h1 className="font-semibold truncate">{ticket.subject}</h1>
                 </div>
-                <h1 className="font-semibold truncate">{ticket.subject}</h1>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 inline-block mt-1">
+                  {categoryLabels[ticket.category] || ticket.category}
+                </span>
               </div>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shrink-0 ${status.color}`}>
