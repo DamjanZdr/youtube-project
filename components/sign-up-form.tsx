@@ -14,6 +14,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -27,6 +28,12 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    if (!displayName.trim()) {
+      setError("Please enter your display name");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -39,6 +46,9 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/hub`,
+          data: {
+            full_name: displayName.trim(),
+          },
         },
       });
       if (error) throw error;
@@ -67,6 +77,18 @@ export function SignUpForm({
         
         <form onSubmit={handleSignUp}>
           <div className="flex flex-col gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="display-name">Display Name</Label>
+              <Input
+                id="display-name"
+                type="text"
+                placeholder="Your name"
+                required
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="glass"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
