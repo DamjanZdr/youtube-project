@@ -64,8 +64,10 @@ export default function IdeaPage() {
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [interimText, setInterimText] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const editorRef = useRef<any>(null);
+  const interimNodeRef = useRef<any>(null);
 
   // Check for speech recognition support
   useEffect(() => {
@@ -85,17 +87,24 @@ export default function IdeaPage() {
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = "";
+      let interimTranscript = "";
       
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
         }
       }
+
+      // Update interim text display
+      setInterimText(interimTranscript);
 
       // Insert final transcript into editor at cursor position
       if (finalTranscript && editorRef.current) {
         editorRef.current.commands.insertContent(finalTranscript + " ");
+        setInterimText(""); // Clear interim when we get final
       }
     };
 
@@ -139,6 +148,7 @@ export default function IdeaPage() {
       }
       setIsListening(false);
       toast.success("Voice input stopped");
+      setInterimText("");
     } else {
       // Start listening
       const recognition = initSpeechRecognition();
@@ -213,7 +223,7 @@ export default function IdeaPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border/50 bg-card/30">
         <div>
@@ -222,47 +232,19 @@ export default function IdeaPage() {
             Brainstorm and capture your video ideas
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Voice Input Button */}
-          {speechSupported && (
-            <Button
-              variant={isListening ? "destructive" : "outline"}
-              size="sm"
-              onClick={toggleListening}
-              className="gap-2"
-            >
-              {isListening ? (
-                <>
-                  <MicOff className="h-4 w-4" />
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                  </span>
-                  Stop
-                </>
-              ) : (
-                <>
-                  <Mic className="h-4 w-4" />
-                  Voice
-                </>
-              )}
-            </Button>
-          )}
-          
-          {/* Save Status */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : lastSaved ? (
-              <>
-                <Check className="h-4 w-4 text-green-500" />
-                <span>Saved {lastSaved.toLocaleTimeString()}</span>
-              </>
-            ) : null}
-          </div>
+        {/* Save Status */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : lastSaved ? (
+            <>
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Saved</span>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -277,6 +259,41 @@ export default function IdeaPage() {
           />
         </div>
       </div>
+
+      {/* Floating Voice Input Button */}
+      {speechSupported && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+          {/* Interim text preview */}
+          {isListening && interimText && (
+            <div className="bg-background/95 backdrop-blur border border-border/50 rounded-lg px-4 py-2 max-w-md text-center shadow-lg">
+              <p className="text-sm text-muted-foreground italic">{interimText}</p>
+            </div>
+          )}
+          
+          <Button
+            variant={isListening ? "destructive" : "default"}
+            size="lg"
+            onClick={toggleListening}
+            className={`gap-2 shadow-lg ${isListening ? "animate-pulse" : ""}`}
+          >
+            {isListening ? (
+              <>
+                <MicOff className="h-5 w-5" />
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                Stop Listening
+              </>
+            ) : (
+              <>
+                <Mic className="h-5 w-5" />
+                Voice Input
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
