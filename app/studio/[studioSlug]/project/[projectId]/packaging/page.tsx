@@ -246,7 +246,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   };
 
   const addSet = async () => {
-    if (sets.length < 5) {
+    if (sets.length < 6) {
       const { data: newSet } = await supabase
         .from("packaging_sets")
         .insert({
@@ -365,12 +365,12 @@ export default function PackagingPage({ params }: PackagingPageProps) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Title & Thumbnail Sets</h2>
-            <p className="text-sm text-muted-foreground">Create up to 5 variations to compare ({sets.length}/5)</p>
+            <p className="text-sm text-muted-foreground">Create up to 6 variations to compare ({sets.length}/6)</p>
           </div>
           <Button 
             variant="outline" 
             onClick={addSet}
-            disabled={sets.length >= 5}
+            disabled={sets.length >= 6}
             className="gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -460,7 +460,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
         </div>
 
         {/* Add Set Button (alternate) */}
-        {sets.length < 5 && (
+        {sets.length < 6 && (
           <button 
             onClick={addSet}
             className="w-full mt-4 p-4 rounded-xl border-2 border-dashed border-white/10 text-muted-foreground hover:border-white/20 hover:bg-white/[0.02] transition-all flex items-center justify-center gap-2"

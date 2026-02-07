@@ -260,7 +260,7 @@ export default function PackagingPage() {
   };
 
   const addSet = async () => {
-    if (sets.length >= 5) return;
+    if (sets.length >= 6) return;
     setSaving(true);
     
     const newSet = await createSet("", false);
