@@ -26,8 +26,10 @@ import {
   MessageCircle,
   Archive,
   AlertCircle,
+  LayoutGrid,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 
 interface Ticket {
   id: string;
@@ -86,6 +88,8 @@ export default function TicketDetailPage() {
   const [showReactivateDialog, setShowReactivateDialog] = useState(false);
   const [reactivateReason, setReactivateReason] = useState("");
   const [reactivating, setReactivating] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [acceptInvites, setAcceptInvites] = useState(true);
 
   const supabase = createClient();
 
@@ -163,6 +167,18 @@ export default function TicketDetailPage() {
     }
 
     setUser(user);
+
+    // Load user profile for header
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    
+    if (profile) {
+      setUserProfile(profile);
+      setAcceptInvites(profile.accept_invites ?? true);
+    }
 
     // Load ticket
     const { data: ticketData } = await supabase
@@ -303,46 +319,77 @@ export default function TicketDetailPage() {
   const isResolved = ["resolved", "archived"].includes(ticket.status);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="border-b border-white/10 shrink-0">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <Link
-            href="/help/tickets"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Tickets
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Site Header */}
+      <header className="glass-strong border-b border-white/5 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-16 px-2">
+            <img
+              src="/bplogo.png"
+              alt="Logo"
+              className="max-h-12 object-contain"
+              style={{ width: 'auto', height: '100%' }}
+            />
           </Link>
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-muted-foreground">
-                  Ticket #{ticket.ticket_number}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
-                  {categoryLabels[ticket.category] || ticket.category}
-                </span>
-                {ticket.related_studio && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                    {ticket.related_studio.name}
-                  </span>
+          
+          <div className="flex items-center gap-3">
+            {user && (
+              <>
+                <Link href="/hub">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    Hub
+                  </Button>
+                </Link>
+                <Link href="/help">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Help
+                  </Button>
+                </Link>
+                {userProfile && (
+                  <UserProfileDropdown 
+                    user={{ ...user, ...userProfile }} 
+                    initialAcceptInvites={acceptInvites} 
+                  />
                 )}
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Ticket Header - Sticky */}
+      <div className="border-b border-white/10 bg-background/80 backdrop-blur shrink-0">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <Link
+                href="/help/tickets"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Tickets</span>
+              </Link>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-muted-foreground">#{ticket.ticket_number}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
+                    {categoryLabels[ticket.category] || ticket.category}
+                  </span>
+                </div>
+                <h1 className="font-semibold truncate">{ticket.subject}</h1>
               </div>
-              <h1 className="text-2xl font-bold truncate">{ticket.subject}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Created {format(new Date(ticket.created_at), "MMM d, yyyy 'at' h:mm a")}
-              </p>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shrink-0 ${status.color}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shrink-0 ${status.color}`}>
               <StatusIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">{status.label}</span>
+              <span className="text-sm font-medium hidden sm:inline">{status.label}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages - Scrollable */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="space-y-4">
