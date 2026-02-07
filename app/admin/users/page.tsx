@@ -348,7 +348,7 @@ export default function AdminUsersPage() {
                         )}
                       </div>
                       <div>
-                        <p className="font-medium">{user.full_name || "No name"}</p>
+                        <p className="font-medium">{user.full_name || user.email?.split('@')[0] || "Unknown"}</p>
                         <p className="text-xs text-muted-foreground">{user.id.slice(0, 8)}...</p>
                       </div>
                     </div>
@@ -481,7 +481,7 @@ export default function AdminUsersPage() {
             <>
               <div className="space-y-4 py-4">
                 <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-sm font-medium">{selectedUser?.full_name || "No name"}</p>
+                  <p className="text-sm font-medium">{selectedUser?.full_name || selectedUser?.email?.split('@')[0] || "Unknown"}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <Mail className="w-3 h-3" />
                     {selectedUser?.email}
@@ -562,7 +562,7 @@ export default function AdminUsersPage() {
                 )}
               </div>
               <div>
-                <p className="font-bold">{detailsUser?.full_name || "No name"}</p>
+                <p className="font-bold">{detailsUser?.full_name || detailsUser?.email?.split('@')[0] || "Unknown"}</p>
                 <p className="text-sm text-muted-foreground font-normal">{detailsUser?.email}</p>
               </div>
             </DialogTitle>

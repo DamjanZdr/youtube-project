@@ -399,7 +399,7 @@ export default function AdminStudiosPage() {
                         <div className="flex items-center gap-2">
                           <Crown className="w-4 h-4 text-yellow-500" />
                           <div>
-                            <p className="text-sm">{studio.owner.full_name || "No name"}</p>
+                            <p className="text-sm">{studio.owner.full_name || studio.owner.email?.split('@')[0] || "Unknown"}</p>
                             <p className="text-xs text-muted-foreground">{studio.owner.email}</p>
                           </div>
                         </div>
