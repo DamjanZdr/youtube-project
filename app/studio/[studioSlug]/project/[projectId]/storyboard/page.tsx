@@ -362,29 +362,33 @@ export default function StoryboardPage() {
       {/* Scenes */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-8 space-y-4">
-          {scenes.map((scene, index) => (
-            <div key={scene.id} className="relative">
-              {/* Drop indicator line - absolute positioned so it doesn't affect layout */}
-              <div 
-                className={`absolute left-0 right-0 h-1 bg-primary rounded-full transition-opacity duration-150 pointer-events-none ${
-                  dragOverIndex === index && draggedIndex !== null && draggedIndex > index
-                    ? "opacity-100 -top-2.5"
-                    : dragOverIndex === index && draggedIndex !== null && draggedIndex < index
-                    ? "opacity-100 -bottom-2.5"
-                    : "opacity-0 -top-2.5"
-                }`}
-              />
-              
-              <div 
-                className={`glass-card p-4 group transition-all ${
-                  draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
-                } ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                onDragLeave={() => setDragOverIndex(null)}
-              >
+          {scenes.map((scene, index) => {
+            // Determine if we should show drop indicator
+            // Only show on the target, and position based on drag direction
+            const showIndicator = dragOverIndex === index && draggedIndex !== null && draggedIndex !== index;
+            const indicatorOnTop = showIndicator && draggedIndex > index;
+            
+            return (
+              <div key={scene.id} className="relative">
+                {/* Drop indicator line - positioned based on drag direction */}
+                {showIndicator && (
+                  <div 
+                    className={`absolute left-0 right-0 h-1 bg-primary rounded-full z-10 ${
+                      indicatorOnTop ? "-top-2.5" : "-bottom-2.5"
+                    }`}
+                  />
+                )}
+                
+                <div 
+                  className={`glass-card p-4 group transition-all ${
+                    draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
+                  } ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDragLeave={() => setDragOverIndex(null)}
+                >
                 <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
                   {/* Scene Number & Reorder - Centered vertically */}
                   <div className="flex flex-col items-center justify-center gap-0.5">
@@ -542,7 +546,8 @@ export default function StoryboardPage() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {/* Add Scene Button */}
           <button
