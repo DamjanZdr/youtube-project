@@ -355,25 +355,25 @@ export default function AdminKeysPage() {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Redemption Keys</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Redemption Keys</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Generate and manage subscription keys
           </p>
         </div>
         <Button onClick={() => {
           setGeneratedKeys([]);
           setShowGenerate(true);
-        }} className="gap-2">
+        }} className="gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Generate Keys
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -386,7 +386,7 @@ export default function AdminKeysPage() {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
           {([
             { value: "all", label: "All" },
             { value: "available", label: "Available" },
@@ -401,7 +401,7 @@ export default function AdminKeysPage() {
                 setFilter(f.value);
                 setPage(0);
               }}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs md:text-sm transition-colors whitespace-nowrap ${
                 filter === f.value
                   ? "bg-white/10 text-white"
                   : "text-muted-foreground hover:bg-white/5"
@@ -414,8 +414,8 @@ export default function AdminKeysPage() {
         
         {/* Bulk Actions */}
         {selectedKeys.size > 0 && (
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <span className="text-xs md:text-sm text-muted-foreground">
               {selectedKeys.size} selected
             </span>
             <Button
@@ -425,7 +425,7 @@ export default function AdminKeysPage() {
               className="gap-2"
             >
               <Ban className="w-4 h-4" />
-              Deactivate Selected
+              <span className="hidden sm:inline">Deactivate</span>
             </Button>
           </div>
         )}

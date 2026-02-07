@@ -118,16 +118,16 @@ export default function AdminSubscriptionsPage() {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Subscriptions</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold">Subscriptions</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           View and manage all subscriptions
         </p>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -140,7 +140,7 @@ export default function AdminSubscriptionsPage() {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
           {["all", "free", "creator", "studio", "enterprise"].map((plan) => (
             <button
               key={plan}
@@ -148,7 +148,7 @@ export default function AdminSubscriptionsPage() {
                 setPlanFilter(plan);
                 setPage(0);
               }}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors capitalize ${
+              className={`px-3 py-1.5 rounded-lg text-xs md:text-sm transition-colors capitalize whitespace-nowrap ${
                 planFilter === plan
                   ? "bg-white/10 text-white"
                   : "text-muted-foreground hover:bg-white/5"
@@ -160,8 +160,8 @@ export default function AdminSubscriptionsPage() {
         </div>
       </div>
 
-      {/* Subscriptions Table */}
-      <div className="glass-card overflow-hidden">
+      {/* Subscriptions Table - Desktop */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">

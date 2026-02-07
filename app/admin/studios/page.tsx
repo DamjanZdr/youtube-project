@@ -329,10 +329,10 @@ export default function AdminStudiosPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Studios</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold">Studios</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           {totalCount.toLocaleString()} total studios (organizations)
         </p>
       </div>
@@ -351,8 +351,8 @@ export default function AdminStudiosPage() {
         />
       </div>
 
-      {/* Studios Table */}
-      <div className="glass-card overflow-hidden">
+      {/* Studios Table - Desktop */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">

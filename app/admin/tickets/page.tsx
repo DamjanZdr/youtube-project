@@ -482,17 +482,17 @@ export default function AdminTicketsPage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Support Tickets</h1>
-          <p className="text-muted-foreground">Manage customer support requests</p>
+          <h1 className="text-xl md:text-2xl font-bold">Support Tickets</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Manage customer support requests</p>
         </div>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-180px)]">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 h-[calc(100vh-140px)] md:h-[calc(100vh-180px)]">
         {/* Ticket List */}
-        <div className="w-[400px] flex flex-col glass-card overflow-hidden">
+        <div className={`w-full md:w-[400px] flex flex-col glass-card overflow-hidden ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
           {/* Filters */}
           <div className="p-4 border-b border-white/10 space-y-3">
             <div className="relative">
@@ -629,15 +629,23 @@ export default function AdminTicketsPage() {
         </div>
 
         {/* Message View */}
-        <div className="flex-1 glass-card flex flex-col overflow-hidden">
+        <div className={`flex-1 glass-card flex flex-col overflow-hidden ${selectedTicket ? 'flex' : 'hidden md:flex'}`}>
           {selectedTicket ? (
             <>
               {/* Ticket Header */}
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+              <div className="p-3 md:p-4 border-b border-white/10">
+                <div className="flex items-start justify-between gap-2 md:gap-4">
+                  <div className="min-w-0 flex-1">
+                    {/* Mobile Back Button */}
+                    <button
+                      onClick={() => setSelectedTicket(null)}
+                      className="md:hidden flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to tickets
+                    </button>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs md:text-sm text-muted-foreground">
                         #{selectedTicket.ticket_number}
                       </span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
@@ -662,21 +670,21 @@ export default function AdminTicketsPage() {
                         </Link>
                       )}
                     </div>
-                    <h2 className="text-lg font-semibold truncate">{selectedTicket.subject}</h2>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <User className="w-4 h-4" />
-                      <span>{selectedTicket.user?.full_name}</span>
-                      <span className="text-xs">({selectedTicket.user?.email})</span>
+                    <h2 className="text-base md:text-lg font-semibold truncate">{selectedTicket.subject}</h2>
+                    <div className="flex items-center gap-2 mt-1 text-xs md:text-sm text-muted-foreground flex-wrap">
+                      <User className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="truncate">{selectedTicket.user?.full_name}</span>
+                      <span className="text-xs hidden sm:inline">({selectedTicket.user?.email})</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2 flex-wrap shrink-0">
                     {/* Status dropdown - only for tracking statuses */}
                     {selectedTicket.status !== "resolved" && selectedTicket.status !== "archived" && (
                       <Select
                         value={selectedTicket.status}
                         onValueChange={(value) => updateStatus(selectedTicket.id, value)}
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="w-[100px] md:w-[140px] text-xs md:text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -686,7 +694,7 @@ export default function AdminTicketsPage() {
                               <SelectItem key={status} value={status}>
                                 <div className="flex items-center gap-2">
                                   <config.icon className={`w-4 h-4 ${config.color}`} />
-                                  {config.label}
+                                  <span className="hidden sm:inline">{config.label}</span>
                                 </div>
                               </SelectItem>
                             );
@@ -697,17 +705,17 @@ export default function AdminTicketsPage() {
                     
                     {/* Resolved badge */}
                     {selectedTicket.status === "resolved" && (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-400/20 text-emerald-400">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span className="text-sm font-medium">Resolved</span>
+                      <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 rounded-lg bg-emerald-400/20 text-emerald-400">
+                        <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="text-xs md:text-sm font-medium">Resolved</span>
                       </div>
                     )}
                     
                     {/* Archived badge */}
                     {selectedTicket.status === "archived" && (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-400/20 text-gray-400">
-                        <Archive className="w-4 h-4" />
-                        <span className="text-sm font-medium">Archived</span>
+                      <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 rounded-lg bg-gray-400/20 text-gray-400">
+                        <Archive className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="text-xs md:text-sm font-medium">Archived</span>
                       </div>
                     )}
                     
@@ -717,6 +725,7 @@ export default function AdminTicketsPage() {
                         size="sm"
                         variant="outline"
                         onClick={reopenTicket}
+                        className="text-xs md:text-sm"
                       >
                         Reopen
                       </Button>
@@ -725,22 +734,22 @@ export default function AdminTicketsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-emerald-400 border-emerald-400/30 hover:bg-emerald-400/10"
+                        className="text-emerald-400 border-emerald-400/30 hover:bg-emerald-400/10 text-xs md:text-sm"
                         onClick={() => setShowResolveDialog(true)}
                       >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Resolve
+                        <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                        <span className="hidden md:inline">Resolve</span>
                       </Button>
                     )}
                     {selectedTicket.status !== "archived" && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-gray-400 border-gray-400/30 hover:bg-gray-400/10"
+                        className="text-gray-400 border-gray-400/30 hover:bg-gray-400/10 text-xs md:text-sm"
                         onClick={() => setShowArchiveDialog(true)}
                       >
-                        <Archive className="w-4 h-4 mr-1" />
-                        Archive
+                        <Archive className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                        <span className="hidden md:inline">Archive</span>
                       </Button>
                     )}
                   </div>
@@ -748,36 +757,36 @@ export default function AdminTicketsPage() {
               </div>
 
               {/* Messages */}
-              <div ref={messagesContainerRef} className="flex-1 overflow-auto p-4">
+              <div ref={messagesContainerRef} className="flex-1 overflow-auto p-3 md:p-4">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center h-32">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex gap-3 ${message.is_admin ? "flex-row-reverse" : ""}`}
+                        className={`flex gap-2 md:gap-3 ${message.is_admin ? "flex-row-reverse" : ""}`}
                       >
-                        <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${
+                        <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full shrink-0 flex items-center justify-center ${
                           message.is_admin ? "bg-primary/20" : "bg-white/10"
                         }`}>
                           {message.sender?.avatar_url ? (
                             <img src={message.sender.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                           ) : (
-                            <User className="w-4 h-4 text-muted-foreground" />
+                            <User className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
                           )}
                         </div>
-                        <div className={`max-w-[70%] ${message.is_admin ? "text-right" : ""}`}>
+                        <div className={`max-w-[80%] md:max-w-[70%] ${message.is_admin ? "text-right" : ""}`}>
                           <div
-                            className={`inline-block p-3 rounded-xl ${
+                            className={`inline-block p-2 md:p-3 rounded-xl ${
                               message.is_admin
                                 ? "bg-primary/20 rounded-tr-none"
                                 : "bg-white/10 rounded-tl-none"
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap text-left">{message.content}</p>
+                            <p className="text-xs md:text-sm whitespace-pre-wrap text-left">{message.content}</p>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
                             {format(new Date(message.created_at), "MMM d, h:mm a")}
@@ -791,14 +800,14 @@ export default function AdminTicketsPage() {
               </div>
 
               {/* Reply Input */}
-              <div className="p-4 border-t border-white/10">
-                <div className="flex gap-3">
+              <div className="p-3 md:p-4 border-t border-white/10">
+                <div className="flex gap-2 md:gap-3">
                   <Textarea
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
                     placeholder="Type your reply..."
                     rows={2}
-                    className="resize-none"
+                    className="resize-none text-sm"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                         sendReply();
@@ -808,7 +817,7 @@ export default function AdminTicketsPage() {
                   <Button
                     onClick={sendReply}
                     disabled={submitting || !replyContent.trim()}
-                    className="px-4 shrink-0"
+                    className="px-3 md:px-4 shrink-0"
                   >
                     {submitting ? (
                       <Loader2 className="w-5 h-5 animate-spin" />

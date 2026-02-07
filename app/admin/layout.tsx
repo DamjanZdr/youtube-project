@@ -76,9 +76,48 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="h-screen bg-black flex overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 p-4 flex flex-col h-full shrink-0">
+    <div className="h-screen bg-black flex flex-col md:flex-row overflow-hidden">
+      {/* Mobile Header */}
+      <header className="md:hidden flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-white" />
+          </div>
+          <h1 className="font-bold text-base">Admin Panel</h1>
+        </div>
+        <Link
+          href="/"
+          className="p-2 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-white transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+        </Link>
+      </header>
+
+      {/* Mobile Navigation Tabs */}
+      <nav className="md:hidden flex overflow-x-auto hide-scrollbar border-b border-white/10 px-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap border-b-2 transition-colors shrink-0",
+                isActive 
+                  ? "border-primary text-white" 
+                  : "border-transparent text-muted-foreground hover:text-white"
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 border-r border-white/10 p-4 flex-col h-full shrink-0">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8 px-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
@@ -140,7 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto h-full p-6">
+      <main className="flex-1 overflow-auto h-full p-4 md:p-6">
         {children}
       </main>
     </div>

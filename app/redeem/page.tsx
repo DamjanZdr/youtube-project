@@ -195,13 +195,13 @@ function RedeemPageContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 p-4">
-      <div className="glass-card p-8 max-w-md w-full">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mb-4">
-            <Key className="w-8 h-8 text-white" />
+      <div className="glass-card p-6 md:p-8 max-w-md w-full">
+        <div className="text-center mb-4 md:mb-6">
+          <div className="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mb-3 md:mb-4">
+            <Key className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold">Redeem Your Key</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl md:text-2xl font-bold">Redeem Your Key</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Enter your plan key to activate your subscription
           </p>
         </div>

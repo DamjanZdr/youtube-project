@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { PanelLeftClose } from "lucide-react";
+import { PanelLeftClose, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -28,17 +28,70 @@ interface StudioSidebarProps {
 
 export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const sidebarWidth = collapsed ? "w-16" : "w-64";
   const headerPadding = collapsed ? "px-2" : "";
   const logoPadding = collapsed ? "w-10 h-10 mx-auto" : "w-10 h-10";
   const navPadding = collapsed ? "p-2" : "p-3";
   const footerPadding = collapsed ? "p-2" : "p-4";
-  const userFlexAlign = collapsed ? "justify-center" : "gap-3";
 
   return (
     <>
-      <aside className={`glass-sidebar border-r border-white/5 flex flex-col fixed h-screen transition-all duration-300 z-40 ${sidebarWidth}`}>
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-background/95 backdrop-blur border-b border-white/5 flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(true)}
+            className="h-9 w-9"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 shrink-0 overflow-hidden">
+              {studio.logo_url ? (
+                <img
+                  src={studio.logo_url}
+                  alt={studio.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-bold">{studio.name[0]}</span>
+              )}
+            </div>
+            <span className="font-semibold text-sm truncate max-w-[200px]">{studio.name}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop fixed, Mobile slide-out */}
+      <aside className={`glass-sidebar border-r border-white/5 flex flex-col fixed h-screen transition-all duration-300 z-50
+        ${sidebarWidth}
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+      `}>
+        {/* Mobile Close Button */}
+        <div className="md:hidden absolute top-3 right-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(false)}
+            className="h-8 w-8"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Sidebar Header */}
         <div className={`p-4 border-b border-white/5 ${headerPadding}`}>
           <div className="flex items-center gap-3">
@@ -85,7 +138,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setCollapsed(true)}
-                        className="h-8 w-8 shrink-0"
+                        className="h-8 w-8 shrink-0 hidden md:flex"
                       >
                         <PanelLeftClose className="w-4 h-4" />
                       </Button>
@@ -100,7 +153,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
 
         {/* Navigation */}
         <nav className={`flex-1 ${navPadding}`}>
-          <NavLinks studioSlug={studioSlug} collapsed={collapsed} />
+          <NavLinks studioSlug={studioSlug} collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
         </nav>
 
         {/* Sidebar Footer */}
@@ -118,8 +171,10 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
           />
         </div>
       </aside>
-      {/* Spacer div that adjusts with sidebar */}
-      <div className={`transition-all duration-300 shrink-0 ${sidebarWidth}`} />
+      {/* Spacer div that adjusts with sidebar - hidden on mobile */}
+      <div className={`hidden md:block transition-all duration-300 shrink-0 ${sidebarWidth}`} />
+      {/* Mobile top spacing for header */}
+      <div className="md:hidden h-14 shrink-0" />
     </>
   );
 }

@@ -26,9 +26,10 @@ interface NavItem {
 interface NavLinksProps {
   studioSlug: string;
   collapsed?: boolean;
+  onNavigate?: () => void;
 }
 
-export function NavLinks({ studioSlug, collapsed = false }: NavLinksProps) {
+export function NavLinks({ studioSlug, collapsed = false, onNavigate }: NavLinksProps) {
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
@@ -56,6 +57,7 @@ export function NavLinks({ studioSlug, collapsed = false }: NavLinksProps) {
         const linkContent = (
           <Link
             href={item.href}
+            onClick={onNavigate}
             className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} ${collapsed ? "px-0" : "px-3"} py-2.5 rounded-xl transition-all duration-200 group border ${
               active 
                 ? "bg-primary/20 text-primary border-primary/30" 

@@ -281,10 +281,10 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Users</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold">Users</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           {totalCount.toLocaleString()} total users
         </p>
       </div>
@@ -303,8 +303,8 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {/* Users Table */}
-      <div className="glass-card overflow-hidden">
+      {/* Users Table - Desktop */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
@@ -410,6 +410,65 @@ export default function AdminUsersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Users Cards - Mobile */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto" />
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground glass-card">
+            No users found
+          </div>
+        ) : (
+          users.map((user) => (
+            <div 
+              key={user.id} 
+              className="glass-card p-4 space-y-3 cursor-pointer"
+              onClick={() => loadUserDetails(user)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-medium">
+                        {(user.full_name || user.email)?.[0]?.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{user.full_name || user.email?.split('@')[0] || "Unknown"}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSendKeyDialog(user);
+                  }}
+                >
+                  <Key className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Building2 className="w-3 h-3" />
+                  {user.organizations.length} studios
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Send Key Dialog */}

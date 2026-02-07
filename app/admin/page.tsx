@@ -67,25 +67,25 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Overview of your platform</p>
+        <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">Overview of your platform</p>
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="glass-card p-5">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <div key={stat.label} className="glass-card p-3 md:p-5">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{stat.value.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-xl md:text-3xl font-bold">{stat.value.toLocaleString()}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
             </div>
@@ -94,9 +94,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Subscription Breakdown */}
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-3 mb-4">
             <CreditCard className="w-5 h-5 text-muted-foreground" />
             <h3 className="font-semibold">Subscriptions</h3>
@@ -123,10 +123,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Keys */}
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-3 mb-4">
             <Key className="w-5 h-5 text-muted-foreground" />
-            <h3 className="font-semibold">Redemption Keys</h3>
+            <h3 className="font-semibold text-sm md:text-base">Redemption Keys</h3>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -145,8 +145,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="glass-card p-5">
-          <h3 className="font-semibold mb-4">Quick Actions</h3>
+        <div className="glass-card p-4 md:p-5">
+          <h3 className="font-semibold text-sm md:text-base mb-4">Quick Actions</h3>
           <div className="space-y-2">
             <a 
               href="/admin/keys" 
