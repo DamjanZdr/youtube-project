@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { Loader2, Check, Mic, MicOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 // Speech Recognition types
@@ -223,7 +222,7 @@ export default function IdeaPage() {
   }
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border/50 bg-card/30">
         <div>
@@ -249,7 +248,7 @@ export default function IdeaPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 pb-32">
         <div className="max-w-4xl mx-auto">
           <RichTextEditor
             content={content}
@@ -260,40 +259,111 @@ export default function IdeaPage() {
         </div>
       </div>
 
-      {/* Floating Voice Input Button */}
+      {/* Floating Voice Input Button - Fixed to viewport */}
       {speechSupported && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3">
           {/* Interim text preview */}
           {isListening && interimText && (
-            <div className="bg-background/95 backdrop-blur border border-border/50 rounded-lg px-4 py-2 max-w-md text-center shadow-lg">
-              <p className="text-sm text-muted-foreground italic">{interimText}</p>
+            <div 
+              className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-5 py-3 max-w-md text-center shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
+              style={{
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+              }}
+            >
+              <p className="text-sm text-white/80 italic">{interimText}</p>
             </div>
           )}
           
-          <Button
-            variant={isListening ? "destructive" : "default"}
-            size="lg"
+          {/* Voice Button */}
+          <button
             onClick={toggleListening}
-            className={`gap-2 shadow-lg ${isListening ? "animate-pulse" : ""}`}
+            className={`
+              group relative overflow-hidden
+              px-6 py-3 rounded-full
+              backdrop-blur-xl border
+              transition-all duration-500 ease-out
+              ${isListening 
+                ? "bg-red-500/20 border-red-400/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]" 
+                : "bg-white/10 border-white/20 hover:bg-white/15 hover:border-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+              }
+            `}
+            style={{
+              boxShadow: isListening 
+                ? "0 8px 32px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 60px rgba(239, 68, 68, 0.2)"
+                : "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+            }}
           >
-            {isListening ? (
+            {/* Animated background gradient */}
+            <div 
+              className={`
+                absolute inset-0 opacity-0 transition-opacity duration-500
+                ${isListening ? "opacity-100" : "group-hover:opacity-50"}
+              `}
+              style={{
+                background: isListening
+                  ? "radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.3) 0%, transparent 70%)"
+                  : "radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)"
+              }}
+            />
+            
+            {/* Ripple rings when listening */}
+            {isListening && (
               <>
-                <MicOff className="h-5 w-5" />
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                </span>
-                Stop Listening
-              </>
-            ) : (
-              <>
-                <Mic className="h-5 w-5" />
-                Voice Input
+                <span className="absolute inset-0 rounded-full border border-red-400/30 animate-ping" />
+                <span className="absolute inset-[-4px] rounded-full border border-red-400/20 animate-ping [animation-delay:150ms]" />
+                <span className="absolute inset-[-8px] rounded-full border border-red-400/10 animate-ping [animation-delay:300ms]" />
               </>
             )}
-          </Button>
+            
+            {/* Content */}
+            <div className="relative flex items-center gap-3">
+              <div className={`
+                relative transition-transform duration-300
+                ${isListening ? "scale-110" : "group-hover:scale-110"}
+              `}>
+                {isListening ? (
+                  <MicOff className="h-5 w-5 text-red-400" />
+                ) : (
+                  <Mic className="h-5 w-5 text-white/80 group-hover:text-white" />
+                )}
+              </div>
+              
+              <span className={`
+                font-medium transition-colors duration-300
+                ${isListening ? "text-red-300" : "text-white/80 group-hover:text-white"}
+              `}>
+                {isListening ? "Stop" : "Voice"}
+              </span>
+              
+              {/* Live indicator dot */}
+              {isListening && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                </span>
+              )}
+            </div>
+
+            {/* Shine effect on hover */}
+            <div 
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background: "linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 60%)",
+                backgroundSize: "200% 100%",
+                animation: "shine 1.5s ease-in-out infinite"
+              }}
+            />
+          </button>
         </div>
       )}
+
+      {/* Keyframes for shine animation */}
+      <style jsx>{`
+        @keyframes shine {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </div>
   );
 }
