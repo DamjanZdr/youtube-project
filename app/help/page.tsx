@@ -24,6 +24,8 @@ import {
   Pin,
   LayoutGrid,
   Shield,
+  Loader2,
+  X,
 } from "lucide-react";
 
 // Icon mapping
@@ -58,6 +60,7 @@ interface Thread {
   created_at: string;
   category: {
     slug: string;
+    name?: string;
   };
 }
 
@@ -65,6 +68,8 @@ export default function HelpCenterPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentThreads, setRecentThreads] = useState<Thread[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Thread[]>([]);
+  const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
@@ -76,6 +81,43 @@ export default function HelpCenterPage() {
     loadData();
     checkUser();
   }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setSearching(true);
+      const query = searchQuery.toLowerCase().trim();
+      
+      const { data: threads } = await supabase
+        .from("help_threads")
+        .select(`
+          id,
+          title,
+          slug,
+          is_pinned,
+          is_official,
+          reply_count,
+          created_at,
+          category:help_categories(slug, name)
+        `)
+        .or(`title.ilike.%${query}%`)
+        .order("is_pinned", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (threads) {
+        setSearchResults(threads as unknown as Thread[]);
+      }
+      setSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const checkUser = async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -222,8 +264,61 @@ export default function HelpCenterPage() {
               placeholder="Search for help..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 text-lg bg-white/5 border-white/10"
+              className="pl-12 pr-10 h-12 text-lg bg-white/5 border-white/10"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            
+            {/* Search Results Dropdown */}
+            {searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-white/10 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                {searching ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    {searchResults.map((thread) => (
+                      <Link
+                        key={thread.id}
+                        href={`/help/${thread.category.slug}/${thread.slug}`}
+                        onClick={() => setSearchQuery("")}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+                      >
+                        <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {thread.is_official && (
+                              <span className="px-1.5 py-0.5 text-[10px] rounded bg-primary/20 text-primary">
+                                Official
+                              </span>
+                            )}
+                            <span className="font-medium truncate">{thread.title}</span>
+                          </div>
+                          {thread.category.name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              in {thread.category.name}
+                            </p>
+                          )}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <p>No results found for "{searchQuery}"</p>
+                    <p className="text-sm mt-1">Try different keywords or browse categories below</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
