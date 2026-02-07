@@ -145,40 +145,40 @@ export default function AccountSettingsPage() {
     <div className="min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <button onClick={() => router.back()} className="flex items-center gap-1.5 md:gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span className="text-sm md:text-base">Back</span>
           </button>
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-10">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Account Settings</h1>
-          <p className="text-muted-foreground mt-1">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold">Account Settings</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Manage your personal account settings
           </p>
         </div>
 
         {/* Profile Section */}
-        <div className="glass-card p-6 space-y-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="glass-card p-4 md:p-6 space-y-4 md:space-y-6 mb-4 md:mb-6">
+          <div className="flex items-center gap-2 mb-2 md:mb-4">
             <User className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Profile</h3>
+            <h3 className="text-base md:text-lg font-semibold">Profile</h3>
           </div>
           
           {/* Profile Picture */}
-          <div className="flex items-center gap-6 mb-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-4 md:mb-6">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-3xl font-bold">{displayName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}</span>
+                <span className="text-2xl md:text-3xl font-bold">{displayName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}</span>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-center sm:text-left">
               <label htmlFor="avatar-upload">
                 <Button variant="outline" className="gap-2" disabled={uploadingAvatar} asChild>
                   <span>
@@ -235,12 +235,12 @@ export default function AccountSettingsPage() {
         </div>
 
         {/* Password Section */}
-        <div className="glass-card p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="glass-card p-4 md:p-6 mb-4 md:mb-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
             <Lock className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Password</h3>
+            <h3 className="text-base md:text-lg font-semibold">Password</h3>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
             Send a password reset email to {user?.email}
           </p>
           <Button 
@@ -253,14 +253,14 @@ export default function AccountSettingsPage() {
         </div>
 
         {/* Notifications Section */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="glass-card p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
             <Bell className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Notifications & Invites</h3>
+            <h3 className="text-base md:text-lg font-semibold">Notifications & Invites</h3>
           </div>
           
           <div className="flex items-center justify-between py-3 border-b border-white/5">
-            <div>
+            <div className="flex-1 pr-4">
               <p className="text-sm font-medium">Accept Studio Invites</p>
               <p className="text-xs text-muted-foreground">
                 Allow other users to invite you to their studios

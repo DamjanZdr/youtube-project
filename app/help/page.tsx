@@ -198,30 +198,30 @@ export default function HelpCenterPage() {
     <div className="min-h-screen bg-background">
       {/* Top Navigation - Same as Hub */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center h-16 px-2">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
               src="/bplogo.png"
               alt="Logo"
-              className="max-h-12 object-contain"
+              className="max-h-9 md:max-h-12 object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {user ? (
               <>
                 <Link href="/hub">
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
                     <LayoutGrid className="w-4 h-4" />
-                    Hub
+                    <span className="hidden sm:inline">Hub</span>
                   </Button>
                 </Link>
                 {isAdmin && (
                   <Link href="/admin">
-                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10">
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-2 md:px-3">
+                      <Shield className="w-4 h-4 md:mr-2" />
+                      <span className="hidden md:inline">Admin</span>
                     </Button>
                   </Link>
                 )}
@@ -246,25 +246,25 @@ export default function HelpCenterPage() {
 
       {/* Hero Header */}
       <div className="border-b border-white/10 bg-gradient-to-b from-primary/5 to-transparent">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
-              <HelpCircle className="w-8 h-8 text-primary" />
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-16">
+          <div className="text-center mb-6 md:mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-primary/20 mb-3 md:mb-4">
+              <HelpCircle className="w-6 h-6 md:w-8 md:h-8 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold mb-2">Help Center</h1>
-            <p className="text-muted-foreground text-lg">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">Help Center</h1>
+            <p className="text-sm md:text-lg text-muted-foreground">
               Find answers, guides, and get support
             </p>
           </div>
 
           {/* Search */}
           <div className="max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
             <Input
               placeholder="Search for help..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-10 h-12 text-lg bg-white/5 border-white/10"
+              className="pl-10 md:pl-12 pr-10 h-10 md:h-12 text-base md:text-lg bg-white/5 border-white/10"
             />
             {searchQuery && (
               <button
@@ -323,15 +323,15 @@ export default function HelpCenterPage() {
 
           {/* Quick Actions */}
           {user && (
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <Link href="/help/tickets">
-                <Button variant="outline" className="gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-4 md:mt-6">
+              <Link href="/help/tickets" className="w-full sm:w-auto">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <TicketIcon className="w-4 h-4" />
                   My Tickets
                 </Button>
               </Link>
-              <Link href="/help/tickets/new">
-                <Button className="gap-2">
+              <Link href="/help/tickets/new" className="w-full sm:w-auto">
+                <Button className="gap-2 w-full sm:w-auto">
                   <MessageCircle className="w-4 h-4" />
                   Contact Support
                 </Button>
@@ -341,22 +341,22 @@ export default function HelpCenterPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
         {/* Categories Grid */}
-        <div className="mb-12">
-          <h2 className="text-xl font-semibold mb-6">Browse by Category</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mb-8 md:mb-12">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Browse by Category</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {categories.map((category) => {
               const Icon = iconMap[category.icon] || FileText;
               return (
                 <Link
                   key={category.id}
                   href={`/help/${category.slug}`}
-                  className="group p-6 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
+                  className="group p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Icon className="w-5 h-5" />
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <div className="p-2 md:p-3 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                      <Icon className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
@@ -380,13 +380,13 @@ export default function HelpCenterPage() {
         {/* Recent/Featured Threads */}
         {recentThreads.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold mb-6">Featured & Recent</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Featured & Recent</h2>
             <div className="space-y-2">
               {recentThreads.map((thread) => (
                 <Link
                   key={thread.id}
                   href={`/help/${thread.category.slug}/${thread.slug}`}
-                  className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
+                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
                 >
                   <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -413,13 +413,13 @@ export default function HelpCenterPage() {
         )}
 
         {/* Contact Support CTA */}
-        <div className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/20 text-center">
-          <h2 className="text-2xl font-bold mb-2">Can't find what you're looking for?</h2>
-          <p className="text-muted-foreground mb-6">
+        <div className="mt-8 md:mt-12 p-6 md:p-8 rounded-2xl bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/20 text-center">
+          <h2 className="text-xl md:text-2xl font-bold mb-2">Can't find what you're looking for?</h2>
+          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
             Our support team is here to help you with any questions.
           </p>
           <Link href={user ? "/help/tickets/new" : "/sign-in"}>
-            <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2 w-full sm:w-auto">
               <MessageCircle className="w-5 h-5" />
               {user ? "Contact Support" : "Sign in to Contact Support"}
             </Button>
