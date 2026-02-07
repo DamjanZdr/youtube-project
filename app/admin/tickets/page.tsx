@@ -133,6 +133,56 @@ export default function AdminTicketsPage() {
     loadArchivedCount();
   }, [filter, showArchived]);
 
+  // Real-time subscription for new messages and ticket updates
+  useEffect(() => {
+    // Subscribe to new messages
+    const messagesChannel = supabase
+      .channel('admin-ticket-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_ticket_messages',
+        },
+        async (payload) => {
+          // If viewing this ticket, reload messages
+          if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
+            await loadMessages(selectedTicket.id);
+          }
+          // Reload tickets to update status/counts
+          await loadTickets();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to ticket status changes
+    const ticketsChannel = supabase
+      .channel('admin-ticket-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_tickets',
+        },
+        async (payload) => {
+          // Update the selected ticket if it changed
+          if (selectedTicket && payload.new.id === selectedTicket.id) {
+            setSelectedTicket(prev => prev ? { ...prev, ...payload.new } : null);
+          }
+          // Reload tickets list
+          await loadTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(ticketsChannel);
+    };
+  }, [selectedTicket?.id]);
+
   const loadArchivedCount = async () => {
     const { count } = await supabase
       .from("support_tickets")

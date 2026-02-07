@@ -1,6 +1,7 @@
--- Fix ticket status update trigger to properly handle all states
--- When user replies: should set to 'awaiting_response' (from 'responded' or 'new')
--- When admin replies: should set to 'responded' (from 'new' or 'awaiting_response')
+-- Fix ticket status update trigger
+-- When user replies to 'responded' ticket: set to 'awaiting_response'
+-- When admin replies to 'new' or 'awaiting_response': set to 'responded'
+-- New tickets stay 'new' until admin responds
 
 CREATE OR REPLACE FUNCTION update_ticket_status_on_message()
 RETURNS TRIGGER AS $$
@@ -11,11 +12,11 @@ BEGIN
     SET status = 'responded', updated_at = NOW() 
     WHERE id = NEW.ticket_id AND status IN ('new', 'awaiting_response');
   ELSE
-    -- User replied, set to awaiting response (from 'new' or 'responded')
-    -- This covers: initial message after ticket creation, or replying after admin responds
+    -- User replied to a ticket where admin already responded
+    -- Only change to awaiting_response if admin has responded before
     UPDATE support_tickets 
     SET status = 'awaiting_response', updated_at = NOW() 
-    WHERE id = NEW.ticket_id AND status IN ('new', 'responded');
+    WHERE id = NEW.ticket_id AND status = 'responded';
   END IF;
   RETURN NEW;
 END;

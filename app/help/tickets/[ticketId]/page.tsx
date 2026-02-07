@@ -93,6 +93,39 @@ export default function TicketDetailPage() {
     checkAuthAndLoad();
   }, [ticketId]);
 
+  // Real-time subscription for new messages
+  useEffect(() => {
+    const channel = supabase
+      .channel(`ticket-messages-${ticketId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_ticket_messages',
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        async () => {
+          // Reload messages when a new one is added
+          await loadMessages();
+          // Also refresh ticket to get updated status
+          const { data: updatedTicket } = await supabase
+            .from("support_tickets")
+            .select(`*, related_studio:organizations(name)`)
+            .eq("id", ticketId)
+            .single();
+          if (updatedTicket) {
+            setTicket(updatedTicket as Ticket);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [ticketId]);
+
   useEffect(() => {
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
