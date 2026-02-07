@@ -105,24 +105,47 @@ export default function TicketDetailPage() {
           table: 'support_ticket_messages',
           filter: `ticket_id=eq.${ticketId}`,
         },
-        async () => {
-          // Reload messages when a new one is added
-          await loadMessages();
-          // Also refresh ticket to get updated status
-          const { data: updatedTicket } = await supabase
-            .from("support_tickets")
-            .select(`*, related_studio:organizations(name)`)
-            .eq("id", ticketId)
+        async (payload) => {
+          // Fetch the full message with sender info
+          const { data: newMessage } = await supabase
+            .from("support_ticket_messages")
+            .select(`
+              id,
+              content,
+              is_admin,
+              created_at,
+              sender:profiles!sender_id(full_name, avatar_url)
+            `)
+            .eq("id", payload.new.id)
             .single();
-          if (updatedTicket) {
-            setTicket(updatedTicket as Ticket);
+          
+          if (newMessage) {
+            setMessages(prev => [...prev, newMessage as unknown as Message]);
           }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to ticket status changes
+    const ticketChannel = supabase
+      .channel(`ticket-status-${ticketId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_tickets',
+          filter: `id=eq.${ticketId}`,
+        },
+        (payload) => {
+          setTicket(prev => prev ? { ...prev, ...payload.new } as Ticket : null);
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(ticketChannel);
     };
   }, [ticketId]);
 
@@ -201,20 +224,8 @@ export default function TicketDetailPage() {
       toast.error("Failed to send message");
       console.error(error);
     } else {
-      toast.success("Message sent");
       setReplyContent("");
-      await loadMessages();
-      
-      // Refresh ticket to get updated status
-      const { data: updatedTicket } = await supabase
-        .from("support_tickets")
-        .select(`*, related_studio:organizations(name)`)
-        .eq("id", ticketId)
-        .single();
-      
-      if (updatedTicket) {
-        setTicket(updatedTicket as Ticket);
-      }
+      // Realtime subscription will add the message automatically
     }
 
     setSubmitting(false);

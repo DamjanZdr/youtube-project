@@ -146,12 +146,32 @@ export default function AdminTicketsPage() {
           table: 'support_ticket_messages',
         },
         async (payload) => {
-          // If viewing this ticket, reload messages
+          // If viewing this ticket, add the message
           if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
-            await loadMessages(selectedTicket.id);
+            const { data: newMessage } = await supabase
+              .from("support_ticket_messages")
+              .select(`
+                id,
+                content,
+                is_admin,
+                created_at,
+                sender:profiles!sender_id(full_name, avatar_url)
+              `)
+              .eq("id", payload.new.id)
+              .single();
+            
+            if (newMessage) {
+              setMessages(prev => [...prev, newMessage as unknown as Message]);
+            }
           }
-          // Reload tickets to update status/counts
-          await loadTickets();
+          
+          // Update ticket in list with new message count
+          const ticketId = payload.new.ticket_id;
+          setTickets(prev => prev.map(t => 
+            t.id === ticketId 
+              ? { ...t, message_count: (t.message_count || 0) + 1, updated_at: new Date().toISOString() }
+              : t
+          ));
         }
       )
       .subscribe();
@@ -166,13 +186,15 @@ export default function AdminTicketsPage() {
           schema: 'public',
           table: 'support_tickets',
         },
-        async (payload) => {
+        (payload) => {
           // Update the selected ticket if it changed
           if (selectedTicket && payload.new.id === selectedTicket.id) {
             setSelectedTicket(prev => prev ? { ...prev, ...payload.new } : null);
           }
-          // Reload tickets list
-          await loadTickets();
+          // Update ticket in list
+          setTickets(prev => prev.map(t => 
+            t.id === payload.new.id ? { ...t, ...payload.new } : t
+          ));
         }
       )
       .subscribe();
@@ -302,13 +324,8 @@ export default function AdminTicketsPage() {
       toast.error("Failed to send reply");
       console.error(error);
     } else {
-      toast.success("Reply sent");
       setReplyContent("");
-      await loadMessages(selectedTicket.id);
-      await loadTickets();
-      
-      // Update selected ticket status
-      setSelectedTicket(prev => prev ? { ...prev, status: "responded" } : null);
+      // Realtime subscription will add the message and update status automatically
     }
 
     setSubmitting(false);
