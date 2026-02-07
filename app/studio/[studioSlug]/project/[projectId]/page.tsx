@@ -334,13 +334,28 @@ export default function PackagingPage() {
 
     setSaving(true);
 
-    // Upload to Supabase Storage
+    // Delete any existing files for this set first
+    const { data: existingFiles } = await supabase.storage
+      .from("thumbnails")
+      .list(`${projectId}`, { search: selectedSetId });
+    
+    if (existingFiles && existingFiles.length > 0) {
+      const filesToDelete = existingFiles
+        .filter(f => f.name.startsWith(selectedSetId))
+        .map(f => `${projectId}/${f.name}`);
+      if (filesToDelete.length > 0) {
+        await supabase.storage.from("thumbnails").remove(filesToDelete);
+      }
+    }
+
+    // Upload to Supabase Storage with timestamp to ensure unique filename
     const fileExt = file.name.split(".").pop();
-    const fileName = `${projectId}/${selectedSetId}.${fileExt}`;
+    const timestamp = Date.now();
+    const fileName = `${projectId}/${selectedSetId}_${timestamp}.${fileExt}`;
     
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("thumbnails")
-      .upload(fileName, file, { upsert: true });
+      .upload(fileName, file);
 
     if (uploadError) {
       console.error("Upload failed:", uploadError);
@@ -629,8 +644,8 @@ export default function PackagingPage() {
                 onClick={() => selectSet(set.id)}
                 className={`relative rounded-lg overflow-hidden cursor-pointer transition-all ${
                   set.is_selected
-                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    : "hover:ring-1 hover:ring-white/20"
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/20 scale-[1.02]"
+                    : "opacity-70 hover:opacity-100 hover:ring-1 hover:ring-white/20"
                 }`}
               >
                 {/* Selection Badge */}
@@ -639,7 +654,7 @@ export default function PackagingPage() {
                     Set {index + 1}
                   </span>
                   {set.is_selected && (
-                    <span className="flex items-center gap-0.5 text-[10px] font-medium bg-primary px-1.5 py-0.5 rounded">
+                    <span className="flex items-center gap-0.5 text-[10px] font-medium bg-primary text-primary-foreground px-1.5 py-0.5 rounded animate-pulse">
                       <Check className="w-2.5 h-2.5" />
                       Active
                     </span>

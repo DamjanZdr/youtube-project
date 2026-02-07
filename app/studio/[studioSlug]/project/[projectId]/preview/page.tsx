@@ -27,19 +27,32 @@ async function fetchChannel(projectId: string): Promise<Channel | null> {
   const supabase = createClient();
   const { data: project } = await supabase
     .from("projects")
-    .select("channel_id")
+    .select("channel_id, organization_id")
     .eq("id", projectId)
     .single();
 
-  if (!project?.channel_id) return null;
+  // First try project's linked channel
+  if (project?.channel_id) {
+    const { data: channels } = await supabase
+      .from("channels")
+      .select("*")
+      .eq("id", project.channel_id)
+      .limit(1);
+    if (channels?.[0]) return channels[0];
+  }
 
-  const { data: channels } = await supabase
-    .from("channels")
-    .select("*")
-    .eq("id", project.channel_id)
-    .limit(1);
+  // Fallback: get first channel from organization
+  if (project?.organization_id) {
+    const { data: channels } = await supabase
+      .from("channels")
+      .select("*")
+      .eq("organization_id", project.organization_id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    if (channels?.[0]) return channels[0];
+  }
 
-  return channels?.[0] || null;
+  return null;
 }
 
 async function fetchVideoType(projectId: string): Promise<string> {

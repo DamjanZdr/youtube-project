@@ -32,7 +32,7 @@ function getStoredState() {
 
 export function usePreviewState(): UsePreviewStateReturn {
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
-  const [orientation, setOrientationState] = useState<Orientation>("portrait");
+  const [orientation, setOrientationState] = useState<Orientation>("landscape");
   const [previewMode, setPreviewModeState] = useState<PreviewMode>("feed");
   const [compareMode, setCompareModeState] = useState(false);
   const [compareVideos, setCompareVideosState] = useState<YouTubeVideo[]>([]);
