@@ -646,23 +646,23 @@ export default function PackagingPage() {
                 Title & Thumbnail Sets
               </h2>
               <p className="text-sm text-muted-foreground">
-                Create up to 5 variations to A/B test • Click to select active set
+                Create up to 6 variations to A/B test • Click to select active set
               </p>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={addSet}
-              disabled={sets.length >= 5}
+              disabled={sets.length >= 6}
               className="gap-2"
             >
               <Plus className="w-4 h-4" />
-              Add Set ({sets.length}/5)
+              Add Set ({sets.length}/6)
             </Button>
           </div>
 
           {/* Sets Grid - YouTube Preview Style */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${project?.video_type === 'short' ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
             {sets.map((set, index) => (
               <div
                 key={set.id}
@@ -782,10 +782,10 @@ export default function PackagingPage() {
             ))}
 
             {/* Add New Set Card */}
-            {sets.length < 5 && (
+            {sets.length < 6 && (
               <button
                 onClick={addSet}
-                className="aspect-auto min-h-[180px] rounded-lg border-2 border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+                className={`rounded-lg border-2 border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary ${project?.video_type === 'short' ? 'aspect-[9/16]' : 'aspect-video min-h-[180px]'}`}
               >
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
                   <Plus className="w-4 h-4" />
