@@ -17,6 +17,8 @@ import {
   ChevronDown,
   Timer,
   RotateCcw,
+  Circle,
+  CheckCircle,
 } from "lucide-react";
 
 interface Scene {
@@ -25,6 +27,7 @@ interface Scene {
   visual_notes: string;
   position: number;
   duration_seconds: number | null; // null = auto-calculate
+  is_complete: boolean;
 }
 
 interface Script {
@@ -121,6 +124,7 @@ export default function StoryboardPage() {
             visual_notes: "",
             position: 0,
             duration_seconds: null,
+            is_complete: false,
           })
           .select()
           .single();
@@ -155,6 +159,7 @@ export default function StoryboardPage() {
           visual_notes: scene.visual_notes,
           position: scene.position,
           duration_seconds: scene.duration_seconds,
+          is_complete: scene.is_complete,
         })
         .eq("id", scene.id);
     }
@@ -206,6 +211,7 @@ export default function StoryboardPage() {
         visual_notes: "",
         position,
         duration_seconds: null,
+        is_complete: false,
       })
       .select()
       .single();
@@ -224,6 +230,11 @@ export default function StoryboardPage() {
 
   const updateScene = (id: string, field: "script_text" | "visual_notes", value: string) => {
     setScenes(scenes.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+    scheduleSave();
+  };
+
+  const toggleSceneComplete = (id: string) => {
+    setScenes(scenes.map((s) => (s.id === id ? { ...s, is_complete: !s.is_complete } : s)));
     scheduleSave();
   };
 
@@ -356,16 +367,17 @@ export default function StoryboardPage() {
               key={scene.id} 
               className={`glass-card p-4 group transition-all ${
                 draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
-              } ${dragOverIndex === index ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+              } ${dragOverIndex === index ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
+              ${scene.is_complete ? "border-green-500/30 bg-green-500/5" : ""}`}
               draggable
               onDragStart={() => handleDragStart(index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
               onDragLeave={() => setDragOverIndex(null)}
             >
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 items-start">
-                {/* Scene Number & Reorder */}
-                <div className="flex flex-col items-center gap-0.5 pt-6">
+              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4">
+                {/* Scene Number & Reorder - Centered vertically */}
+                <div className="flex flex-col items-center justify-center gap-0.5">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -393,7 +405,7 @@ export default function StoryboardPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <p className="text-xs text-muted-foreground">
-                      {scene.script_text.split(/\s+/).filter(Boolean).length} words
+                      <span className="font-medium">Script</span> · {scene.script_text.split(/\s+/).filter(Boolean).length} words
                     </p>
                     {/* Duration control */}
                     <div className="flex items-center gap-2">
@@ -464,7 +476,9 @@ export default function StoryboardPage() {
 
                 {/* Visual Column */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Editing Notes</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">
+                    <span className="font-medium">Editing Notes</span>
+                  </p>
                   <Textarea
                     value={scene.visual_notes}
                     onChange={(e) => {
@@ -479,14 +493,32 @@ export default function StoryboardPage() {
                   />
                 </div>
 
-                {/* Delete Button */}
-                <div className="pt-6">
+                {/* Actions - Centered vertically */}
+                <div className="flex flex-col items-center justify-center gap-1">
+                  {/* Mark Complete Toggle */}
+                  <button
+                    onClick={() => toggleSceneComplete(scene.id)}
+                    className={`p-1.5 rounded-md transition-colors ${
+                      scene.is_complete 
+                        ? "text-green-500 hover:bg-green-500/10" 
+                        : "text-muted-foreground hover:text-green-500 hover:bg-white/5 opacity-0 group-hover:opacity-100"
+                    }`}
+                    title={scene.is_complete ? "Mark as incomplete" : "Mark as complete"}
+                  >
+                    {scene.is_complete ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <Circle className="w-4 h-4" />
+                    )}
+                  </button>
+                  
+                  {/* Delete Button */}
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeScene(scene.id)}
                     disabled={scenes.length <= 1}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
