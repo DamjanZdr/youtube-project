@@ -1029,7 +1029,7 @@ function MobilePreview({ channel, openDialog }: PreviewProps) {
   // We scale by 2560/1235 ≈ 2.07 to zoom into center
   
   return (
-    <div className="w-[375px]">
+    <div className="w-full max-w-[375px]">
       {/* Banner - Mobile shows only center safe area by scaling from center */}
       <div className="px-4 pt-4">
         <div className="w-full aspect-[3.65/1] bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center rounded-lg overflow-hidden">

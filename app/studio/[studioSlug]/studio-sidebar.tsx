@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -144,16 +144,28 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
       {/* Desktop Spacer */}
       <div className={`hidden md:block transition-all duration-300 shrink-0 ${sidebarWidth}`} />
 
-      {/* Mobile Bottom Navigation Bar - Scrollable */}
+      {/* Mobile Bottom Navigation Bar - Scrollable with indicators */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-18 bg-background/95 backdrop-blur border-t border-white/10 z-50">
-        <div className="flex items-center h-full overflow-x-auto scrollbar-hide px-1 pb-safe">
+        {/* Left scroll indicator */}
+        <button
+          onClick={() => {
+            const nav = document.getElementById('mobile-nav-scroll');
+            if (nav) nav.scrollBy({ left: -100, behavior: 'smooth' });
+          }}
+          className="absolute left-0 top-0 bottom-0 z-10 w-6 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start pl-0.5"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+        </button>
+        
+        <div id="mobile-nav-scroll" className="flex items-center h-full overflow-x-auto scrollbar-hide px-6 pb-safe">
           {mobileNavItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 min-w-[72px] px-3 py-2 transition-colors ${
+                className={`flex flex-col items-center justify-center gap-1 min-w-[68px] px-2 py-2 transition-colors ${
                   active 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
@@ -164,7 +176,31 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
               </Link>
             );
           })}
+          {/* Profile/Name button that opens dropup */}
+          <SidebarUserDropup 
+            user={{
+              id: user.id,
+              email: user.email,
+              full_name: user.full_name,
+              avatar_url: user.avatar_url,
+            }}
+            initialAcceptInvites={user.accept_invites ?? true}
+            collapsed={false}
+            isMobile={true}
+          />
         </div>
+        
+        {/* Right scroll indicator */}
+        <button
+          onClick={() => {
+            const nav = document.getElementById('mobile-nav-scroll');
+            if (nav) nav.scrollBy({ left: 100, behavior: 'smooth' });
+          }}
+          className="absolute right-0 top-0 bottom-0 z-10 w-6 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end pr-0.5"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
       </nav>
     </>
   );

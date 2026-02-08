@@ -929,20 +929,20 @@ export default function BoardPage() {
 
       {/* Task Popup Dialog */}
       <Dialog open={showTaskPopup} onOpenChange={setShowTaskPopup}>
-        <DialogContent className="sm:max-w-[90vw] lg:max-w-[750px] w-[95vw] h-[90vh] sm:h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="sm:max-w-[90vw] lg:max-w-[750px] w-[95vw] max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0">
           <DialogTitle className="sr-only">
             {selectedProject?.active_set_title || selectedProject?.title || "Project Tasks"}
           </DialogTitle>
           {selectedProject && (
-            <div className="flex flex-col h-full">
-              {/* Top Section - Project Info */}
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Top Section - Project Info - Completely redesigned for mobile */}
               <div className="shrink-0 border-b border-white/10 p-4 sm:p-6">
-                {/* Mobile: Stack vertically, Desktop: Side by side */}
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex gap-6">
                   {/* Left: Image and Title */}
-                  <div className="flex gap-3 sm:block shrink-0">
+                  <div className="shrink-0">
                     {(selectedProject.active_set_thumbnail || selectedProject.thumbnail_url) && (
-                      <div className="w-24 sm:w-64 lg:w-80 aspect-video rounded-lg overflow-hidden bg-white/5 sm:mb-3 shrink-0">
+                      <div className="w-64 lg:w-80 aspect-video rounded-lg overflow-hidden bg-white/5 mb-3">
                         <img 
                           src={selectedProject.active_set_thumbnail || selectedProject.thumbnail_url || ""} 
                           alt="" 
@@ -950,139 +950,263 @@ export default function BoardPage() {
                         />
                       </div>
                     )}
-                    <div className="flex-1 sm:flex-none">
-                      <h3 className="font-semibold text-sm sm:text-lg leading-tight line-clamp-2">
-                        {selectedProject.active_set_title || selectedProject.title || "Untitled"}
-                      </h3>
-                      {/* Status Selector */}
-                      <div className="mt-2 sm:mt-3">
-                        <Select
-                          value={selectedProject.board_status_id || ""}
-                          onValueChange={(value) => {
-                            moveProject(selectedProject.id, value);
-                            setSelectedProject({ ...selectedProject, board_status_id: value });
-                          }}
-                        >
-                          <SelectTrigger className="w-fit h-8 bg-white/5 border-white/10 text-sm gap-2">
-                            <SelectValue>
-                              {(() => {
-                                const currentStatus = statuses.find(s => s.id === selectedProject.board_status_id);
-                                return currentStatus ? (
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-2.5 h-2.5 rounded-full ${currentStatus.color}`} />
-                                    <span>{currentStatus.name}</span>
-                                  </div>
-                                ) : <span className="text-muted-foreground">No status</span>;
-                              })()}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statuses.map((status) => (
-                              <SelectItem key={status.id} value={status.id}>
+                    <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                      {selectedProject.active_set_title || selectedProject.title || "Untitled"}
+                    </h3>
+                    <div className="mt-3">
+                      <Select
+                        value={selectedProject.board_status_id || ""}
+                        onValueChange={(value) => {
+                          moveProject(selectedProject.id, value);
+                          setSelectedProject({ ...selectedProject, board_status_id: value });
+                        }}
+                      >
+                        <SelectTrigger className="w-fit h-8 bg-white/5 border-white/10 text-sm gap-2">
+                          <SelectValue>
+                            {(() => {
+                              const currentStatus = statuses.find(s => s.id === selectedProject.board_status_id);
+                              return currentStatus ? (
                                 <div className="flex items-center gap-2">
-                                  <div className={`w-2.5 h-2.5 rounded-full ${status.color}`} />
-                                  <span>{status.name}</span>
+                                  <div className={`w-2.5 h-2.5 rounded-full ${currentStatus.color}`} />
+                                  <span>{currentStatus.name}</span>
                                 </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                              ) : <span className="text-muted-foreground">No status</span>;
+                            })()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statuses.map((status) => (
+                            <SelectItem key={status.id} value={status.id}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2.5 h-2.5 rounded-full ${status.color}`} />
+                                <span>{status.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   {/* Right: Project Assignee, Due Date, and Open Button */}
-                  <div className="flex-1 sm:flex-none sm:ml-auto">
-                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:w-44">
-                      {/* Project Assignee */}
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Project Assignee</label>
-                        <Select
-                          value={getProjectAssignee(selectedProject.id)?.user_id || "unassigned"}
-                          onValueChange={(value) => updateProjectAssignee(selectedProject.id, value === "unassigned" ? null : value)}
-                        >
-                          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
-                            <SelectValue>
-                              {(() => {
-                                const assignee = getProjectAssignee(selectedProject.id);
-                                if (assignee) {
-                                  const displayName = assignee.profile.full_name || assignee.profile.email?.split('@')[0] || 'Unknown';
-                                  return (
-                                    <div className="flex items-center gap-2">
-                                      {assignee.profile.avatar_url ? (
-                                        <img src={assignee.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
-                                      ) : (
-                                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
-                                          {displayName[0].toUpperCase()}
-                                        </div>
-                                      )}
-                                      <span className="truncate">{displayName}</span>
-                                    </div>
-                                  );
-                                }
-                                return <span className="text-muted-foreground">Unassigned</span>;
-                              })()}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                            {orgMembers.map((member) => {
-                              const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
-                              return (
-                              <SelectItem key={member.user_id} value={member.user_id}>
-                                <div className="flex items-center gap-2">
-                                  {member.profile.avatar_url ? (
-                                    <img src={member.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
-                                  ) : (
-                                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
-                                      {displayName[0].toUpperCase()}
-                                    </div>
-                                  )}
-                                  <span>{displayName}</span>
-                                </div>
-                              </SelectItem>
-                            );})}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Project Due Date */}
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Project Due Date</label>
-                        <Select
-                          value={selectedProject.due_date?.split('T')[0] || "none"}
-                          onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
-                        >
-                          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
-                            <SelectValue>
-                              {selectedProject.due_date 
-                                ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                : <span className="text-muted-foreground">No date</span>
+                  <div className="ml-auto w-44 space-y-3">
+                    {/* Project Assignee */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Project Assignee</label>
+                      <Select
+                        value={getProjectAssignee(selectedProject.id)?.user_id || "unassigned"}
+                        onValueChange={(value) => updateProjectAssignee(selectedProject.id, value === "unassigned" ? null : value)}
+                      >
+                        <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
+                          <SelectValue>
+                            {(() => {
+                              const assignee = getProjectAssignee(selectedProject.id);
+                              if (assignee) {
+                                const displayName = assignee.profile.full_name || assignee.profile.email?.split('@')[0] || 'Unknown';
+                                return (
+                                  <div className="flex items-center gap-2">
+                                    {assignee.profile.avatar_url ? (
+                                      <img src={assignee.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                                    ) : (
+                                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
+                                        {displayName[0].toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span className="truncate">{displayName}</span>
+                                  </div>
+                                );
                               }
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No date</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                              return <span className="text-muted-foreground">Unassigned</span>;
+                            })()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {orgMembers.map((member) => {
+                            const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
+                            return (
+                            <SelectItem key={member.user_id} value={member.user_id}>
+                              <div className="flex items-center gap-2">
+                                {member.profile.avatar_url ? (
+                                  <img src={member.profile.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-medium text-primary">
+                                    {displayName[0].toUpperCase()}
+                                  </div>
+                                )}
+                                <span>{displayName}</span>
+                              </div>
+                            </SelectItem>
+                          );})}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Project Due Date */}
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Project Due Date</label>
+                      <Select
+                        value={selectedProject.due_date?.split('T')[0] || "none"}
+                        onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
+                      >
+                        <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
+                          <SelectValue>
+                            {selectedProject.due_date 
+                              ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              : <span className="text-muted-foreground">No date</span>
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No date</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Open Project Button */}
+                    <Button asChild size="sm" variant="outline" className="w-full h-9">
+                      <Link href={`/studio/${studioSlug}/project/${selectedProject.id}/tasks`}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open Project
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
 
-                      {/* Open Project Button - Full width on mobile */}
-                      <div className="col-span-2 sm:col-span-1">
-                        <Button asChild size="sm" variant="outline" className="w-full h-9">
-                          <Link href={`/studio/${studioSlug}/project/${selectedProject.id}/tasks`}>
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Open Project
-                          </Link>
-                        </Button>
+                {/* Mobile Layout - Completely separate structure */}
+                <div className="sm:hidden space-y-4">
+                  {/* Row 1: Thumbnail + Title/Status */}
+                  <div className="flex gap-3">
+                    {(selectedProject.active_set_thumbnail || selectedProject.thumbnail_url) && (
+                      <div className="w-28 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0">
+                        <img 
+                          src={selectedProject.active_set_thumbnail || selectedProject.thumbnail_url || ""} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm leading-tight line-clamp-2 mb-2">
+                        {selectedProject.active_set_title || selectedProject.title || "Untitled"}
+                      </h3>
+                      <Select
+                        value={selectedProject.board_status_id || ""}
+                        onValueChange={(value) => {
+                          moveProject(selectedProject.id, value);
+                          setSelectedProject({ ...selectedProject, board_status_id: value });
+                        }}
+                      >
+                        <SelectTrigger className="w-full h-8 bg-white/5 border-white/10 text-xs gap-2">
+                          <SelectValue>
+                            {(() => {
+                              const currentStatus = statuses.find(s => s.id === selectedProject.board_status_id);
+                              return currentStatus ? (
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-2 h-2 rounded-full ${currentStatus.color}`} />
+                                  <span>{currentStatus.name}</span>
+                                </div>
+                              ) : <span className="text-muted-foreground">No status</span>;
+                            })()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statuses.map((status) => (
+                            <SelectItem key={status.id} value={status.id}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${status.color}`} />
+                                <span>{status.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+
+                  {/* Row 2: Assignee + Due Date side by side */}
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground mb-1 block">Assignee</label>
+                      <Select
+                        value={getProjectAssignee(selectedProject.id)?.user_id || "unassigned"}
+                        onValueChange={(value) => updateProjectAssignee(selectedProject.id, value === "unassigned" ? null : value)}
+                      >
+                        <SelectTrigger className="w-full h-8 bg-white/5 border-white/10 text-xs">
+                          <SelectValue>
+                            {(() => {
+                              const assignee = getProjectAssignee(selectedProject.id);
+                              if (assignee) {
+                                const displayName = assignee.profile.full_name || assignee.profile.email?.split('@')[0] || 'Unknown';
+                                return (
+                                  <div className="flex items-center gap-1.5">
+                                    {assignee.profile.avatar_url ? (
+                                      <img src={assignee.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                                    ) : (
+                                      <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-medium text-primary">
+                                        {displayName[0].toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span className="truncate">{displayName.split(' ')[0]}</span>
+                                  </div>
+                                );
+                              }
+                              return <span className="text-muted-foreground">None</span>;
+                            })()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {orgMembers.map((member) => {
+                            const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
+                            return (
+                            <SelectItem key={member.user_id} value={member.user_id}>
+                              <div className="flex items-center gap-2">
+                                {member.profile.avatar_url ? (
+                                  <img src={member.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                                ) : (
+                                  <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-medium text-primary">
+                                    {displayName[0].toUpperCase()}
+                                  </div>
+                                )}
+                                <span>{displayName}</span>
+                              </div>
+                            </SelectItem>
+                          );})}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground mb-1 block">Due Date</label>
+                      <Select
+                        value={selectedProject.due_date?.split('T')[0] || "none"}
+                        onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
+                      >
+                        <SelectTrigger className="w-full h-8 bg-white/5 border-white/10 text-xs">
+                          <SelectValue>
+                            {selectedProject.due_date 
+                              ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              : <span className="text-muted-foreground">None</span>
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No date</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Open Button */}
+                  <Button asChild size="sm" variant="outline" className="w-full h-9">
+                    <Link href={`/studio/${studioSlug}/project/${selectedProject.id}/tasks`}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open Project
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
               {/* Bottom Section - Status Tasks */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                 <h4 className="text-sm font-medium text-muted-foreground mb-4">Tasks by Status</h4>
                 <div className="space-y-3">
                   {statuses.map((status) => {

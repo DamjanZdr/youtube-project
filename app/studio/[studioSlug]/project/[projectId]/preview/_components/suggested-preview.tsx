@@ -87,7 +87,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
   return (
     <div 
       className="w-full bg-[#0f0f0f] flex flex-col rounded-xl overflow-hidden"
-      style={{ height: 'calc(100vh - 260px)' }}
+      style={{ height: 'calc(100vh - 260px)', minHeight: '400px' }}
     >
       {/* Header */}
       <div className="h-11 border-b border-white/5 flex items-center px-4 gap-4 shrink-0">
@@ -106,53 +106,56 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
         <div className="w-6 h-6 rounded-full bg-purple-600" />
       </div>
 
-      {/* Watch Page Content - centered container */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <div className="flex gap-6 h-full max-h-[calc(100%-20px)]">
-          {/* Main Video */}
-          <div className="flex flex-col h-full shrink-0">
-            <div 
-              className="h-full bg-black rounded-xl flex items-center justify-center"
-              style={{ aspectRatio: '16/9' }}
-            >
-              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
-                <div className="w-0 h-0 border-l-[16px] border-y-[10px] border-l-white border-y-transparent ml-1" />
-              </div>
+      {/* Watch Page Content */}
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
+        {/* Main Video - takes remaining space */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div 
+            className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
+            style={{ aspectRatio: '16/9', maxHeight: '60%' }}
+          >
+            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
+              <div className="w-0 h-0 border-l-[16px] border-y-[10px] border-l-white border-y-transparent ml-1" />
             </div>
           </div>
+          {/* Video info placeholder */}
+          <div className="mt-3 space-y-2">
+            <div className="h-5 bg-white/10 rounded w-3/4" />
+            <div className="h-4 bg-white/5 rounded w-1/2" />
+          </div>
+        </div>
 
-          {/* Suggested Sidebar */}
-          <div className="h-full overflow-y-auto space-y-2 w-[400px]" style={{ scrollbarWidth: "none" }}>
-            {/* Shorts Section (3 shorts) */}
-            <div className="mb-3">
-              <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
-              <div className="flex gap-2 pb-2">
-                {[0,1,2].map(i => (
-                  <ShortCard
-                    key={`short-${i}`}
-                    isYours={isShort && i === 1}
-                    set={set}
-                    compareVideo={getShortVideo(i)}
-                    size="sm"
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Long Form Videos */}
-            <div className="space-y-2 pr-1">
-              {[0,1,2,3,4].map(i => (
-                <VideoCard
-                  key={`long-${i}`}
-                  isYours={!isShort && i === 1}
+        {/* Suggested Sidebar */}
+        <div className="w-[340px] shrink-0 overflow-y-auto space-y-3" style={{ scrollbarWidth: "none" }}>
+          {/* Shorts Section (3 shorts) */}
+          <div className="mb-3">
+            <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
+            <div className="flex gap-2">
+              {[0,1,2].map(i => (
+                <ShortCard
+                  key={`short-${i}`}
+                  isYours={isShort && i === 1}
                   set={set}
-                  channel={channel}
-                  compareVideo={getLongVideo(i)}
+                  compareVideo={getShortVideo(i)}
                   size="sm"
-                  layout="horizontal"
                 />
               ))}
             </div>
+          </div>
+
+          {/* Long Form Videos */}
+          <div className="space-y-2">
+            {[0,1,2,3,4].map(i => (
+              <VideoCard
+                key={`long-${i}`}
+                isYours={!isShort && i === 1}
+                set={set}
+                channel={channel}
+                compareVideo={getLongVideo(i)}
+                size="sm"
+                layout="horizontal"
+              />
+            ))}
           </div>
         </div>
       </div>

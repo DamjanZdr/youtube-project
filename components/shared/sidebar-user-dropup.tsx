@@ -24,9 +24,10 @@ interface SidebarUserDropupProps {
   };
   initialAcceptInvites?: boolean;
   collapsed?: boolean;
+  isMobile?: boolean;
 }
 
-export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed = false }: SidebarUserDropupProps) {
+export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed = false, isMobile = false }: SidebarUserDropupProps) {
   const supabase = createClient();
   const [acceptInvites, setAcceptInvites] = useState(initialAcceptInvites);
   const [open, setOpen] = useState(false);
@@ -65,7 +66,18 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        {collapsed ? (
+        {isMobile ? (
+          <button className="flex flex-col items-center justify-center gap-1 min-w-[68px] px-2 py-2 text-muted-foreground hover:text-foreground transition-colors">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-medium">{initials}</span>
+              )}
+            </div>
+            <span className="text-xs font-medium">Me</span>
+          </button>
+        ) : collapsed ? (
           <Button variant="ghost" size="icon" className="w-full h-10 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
               {user.avatar_url ? (
@@ -92,10 +104,10 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align={collapsed ? "center" : "start"} 
-        side="top" 
-        className="w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"
-        sideOffset={8}
+        align={isMobile ? "end" : collapsed ? "center" : "start"} 
+        side={isMobile ? "top" : "top"} 
+        className={isMobile ? "w-56 mb-2 z-[100]" : "w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"}
+        sideOffset={isMobile ? 16 : 8}
       >
         {/* Back to Hub - at top */}
         <DropdownMenuItem asChild>

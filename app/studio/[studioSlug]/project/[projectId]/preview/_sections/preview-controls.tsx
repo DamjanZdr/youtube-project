@@ -30,21 +30,21 @@ export function PreviewControls({
   onCompareModeChange,
 }: PreviewControlsProps) {
   return (
-    <div className="relative flex flex-wrap items-center justify-between gap-2 px-3 md:px-4 py-2 border-b bg-background/50 backdrop-blur-sm shrink-0">
+    <div className="relative flex flex-wrap items-center justify-between gap-3 px-3 md:px-4 py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
       {/* Left: Orientation Toggle */}
       <ToggleGroup 
         type="single" 
         value={orientation} 
         onValueChange={(v) => v && onOrientationChange(v as Orientation)}
-        className="bg-muted rounded-lg p-0.5 md:p-1"
+        className="bg-muted rounded-lg p-1"
       >
-        <ToggleGroupItem value="landscape" className="h-7 md:h-8 px-2 md:px-3 gap-1.5 md:gap-2 data-[state=on]:bg-background">
-          <Monitor className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span className="hidden sm:inline text-xs md:text-sm">Desktop</span>
+        <ToggleGroupItem value="landscape" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+          <Monitor className="w-4 h-4" />
+          <span className="hidden sm:inline">Desktop</span>
         </ToggleGroupItem>
-        <ToggleGroupItem value="portrait" className="h-7 md:h-8 px-2 md:px-3 gap-1.5 md:gap-2 data-[state=on]:bg-background">
-          <Smartphone className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span className="hidden sm:inline text-xs md:text-sm">Mobile</span>
+        <ToggleGroupItem value="portrait" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+          <Smartphone className="w-4 h-4" />
+          <span className="hidden sm:inline">Mobile</span>
         </ToggleGroupItem>
       </ToggleGroup>
 
@@ -72,29 +72,29 @@ export function PreviewControls({
       )}
 
       {/* Right: Mode Toggle + Compare */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-3">
         <ToggleGroup 
           type="single" 
           value={previewMode} 
           onValueChange={(v) => v && onPreviewModeChange(v as PreviewMode)}
-          className="bg-muted rounded-lg p-0.5 md:p-1"
+          className="bg-muted rounded-lg p-1"
         >
-          <ToggleGroupItem value="feed" className="h-7 md:h-8 px-2 md:px-3 text-xs md:text-sm data-[state=on]:bg-background">
+          <ToggleGroupItem value="feed" className="h-9 px-3 text-sm data-[state=on]:bg-background">
             Feed
           </ToggleGroupItem>
-          <ToggleGroupItem value="suggested" className="h-7 md:h-8 px-2 md:px-3 text-xs md:text-sm data-[state=on]:bg-background">
+          <ToggleGroupItem value="suggested" className="h-9 px-3 text-sm data-[state=on]:bg-background">
             Suggested
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className="flex items-center gap-1.5 md:gap-2 pl-2 md:pl-3 border-l">
-          <GitCompareArrows className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground hidden sm:block" />
+        <div className="flex items-center gap-2 pl-3 border-l">
+          <GitCompareArrows className="w-4 h-4 text-muted-foreground hidden sm:block" />
           <Switch
             id="compare-mode"
             checked={compareMode}
             onCheckedChange={onCompareModeChange}
           />
-          <Label htmlFor="compare-mode" className="text-xs md:text-sm">
+          <Label htmlFor="compare-mode" className="text-sm">
             Compare
           </Label>
         </div>
