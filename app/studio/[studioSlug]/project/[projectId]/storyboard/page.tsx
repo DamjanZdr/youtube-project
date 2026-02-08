@@ -304,7 +304,8 @@ export default function StoryboardPage() {
     );
   }
 
-  return (\n    <div className=\"h-[calc(100vh-120px)] flex flex-col pb-16 md:pb-0\">", "oldString": "  return (\n    <div className=\"h-[calc(100vh-120px)] flex flex-col\">
+  return (
+    <div className="h-[calc(100vh-120px)] flex flex-col pb-16 md:pb-0">
       {/* Header Stats */}
       <div className="px-4 md:px-8 py-3 md:py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3 md:gap-6 flex-wrap">
