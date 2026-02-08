@@ -667,7 +667,7 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] md:h-screen flex flex-col relative">
+    <div className="h-full flex flex-col">
       {/* Page Header */}
       <div className="p-4 md:p-6 pb-3 md:pb-4 shrink-0">
         <h1 className="text-xl md:text-3xl font-bold">Board</h1>
@@ -695,7 +695,7 @@ export default function BoardPage() {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 md:px-6 pb-20 md:pb-20">
+      <div className="flex-1 overflow-x-auto overflow-y-auto px-4 md:px-6 pb-16">
         {/* Empty state when no statuses */}
         {statuses.length === 0 ? (
           <div className="h-full flex items-center justify-center">

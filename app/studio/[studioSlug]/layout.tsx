@@ -62,7 +62,7 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background flex">
+      <div className="h-[100dvh] bg-background flex flex-col md:flex-row overflow-hidden">
         {/* Client-side collapsible sidebar */}
         <StudioSidebar 
           studio={{ name: studio.name, logo_url: studio.logo_url }}
@@ -76,8 +76,8 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
           studioSlug={studioSlug}
         />
 
-        {/* Main Content - pb-16 for mobile bottom nav */}
-        <main className="flex-1 pb-16 md:pb-0">
+        {/* Main Content - uses remaining height, scrolls internally */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
           {children}
         </main>
       </div>
