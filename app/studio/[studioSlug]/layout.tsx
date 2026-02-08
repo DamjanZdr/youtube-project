@@ -76,8 +76,8 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
           studioSlug={studioSlug}
         />
 
-        {/* Main Content - uses remaining height, scrolls internally */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
+        {/* Main Content - pb-[72px] for mobile bottom nav (h-18) */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-[72px] md:pb-0">
           {children}
         </main>
       </div>

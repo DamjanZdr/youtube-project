@@ -739,7 +739,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       </div>
 
       {/* Plan Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 max-w-[1200px] mx-auto px-4 md:px-8">
         {plans.map((plan) => {
           const isSamePlan = plan.id === (subscription?.plan || "free");
           // Normalize interval - Stripe uses "month"/"year", we use "monthly"/"yearly"
@@ -782,28 +782,28 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           return (
             <Card
               key={plan.id}
-              className={`glass-card p-8 relative flex flex-col min-h-[520px] ${
+              className={`glass-card p-5 md:p-6 relative flex flex-col ${
                 plan.popular && !userHasHigherPlan ? "ring-2 ring-primary" : ""
               } ${isCurrent ? "bg-primary/5" : ""} ${exceedsMemberLimit ? "opacity-60" : ""}`}
             >
               {plan.popular && !userHasHigherPlan && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground px-3 py-1">Most Popular</Badge>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">Most Popular</Badge>
                 </div>
               )}
 
-              <div className="mb-8">
-                <h4 className="text-xl font-bold mb-3">{plan.name}</h4>
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-3xl font-bold">${price}</span>
+              <div className="mb-4 md:mb-6">
+                <h4 className="text-lg md:text-xl font-bold mb-2">{plan.name}</h4>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-2xl md:text-3xl font-bold">${price}</span>
                   <span className="text-sm text-muted-foreground">
                     /{billingInterval === "monthly" ? "mo" : "yr"}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-tight min-h-[32px]">{plan.description}</p>
+                <p className="text-xs md:text-sm text-muted-foreground leading-tight">{plan.description}</p>
               </div>
 
-              <ul className="space-y-3 mb-5 flex-1">
+              <ul className="space-y-2 md:space-y-3 mb-4 flex-1">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2">
                     {feature.included ? (
@@ -811,7 +811,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                     ) : (
                       <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                     )}
-                    <span className={`text-xs leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
+                    <span className={`text-sm leading-tight ${!feature.included ? 'text-muted-foreground' : ''}`}>
                       {feature.name}
                     </span>
                   </li>

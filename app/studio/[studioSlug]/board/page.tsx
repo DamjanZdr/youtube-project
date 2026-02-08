@@ -936,12 +936,13 @@ export default function BoardPage() {
           {selectedProject && (
             <div className="flex flex-col h-full">
               {/* Top Section - Project Info */}
-              <div className="shrink-0 border-b border-white/10 p-6">
-                <div className="flex gap-6 justify-between">
-                  {/* Left: Image stacked above Title */}
-                  <div className="shrink-0 min-w-0">
+              <div className="shrink-0 border-b border-white/10 p-4 sm:p-6">
+                {/* Mobile: Stack vertically, Desktop: Side by side */}
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                  {/* Left: Image and Title */}
+                  <div className="flex gap-3 sm:block shrink-0">
                     {(selectedProject.active_set_thumbnail || selectedProject.thumbnail_url) && (
-                      <div className="w-[45vw] sm:w-64 lg:w-80 max-w-80 aspect-video rounded-lg overflow-hidden bg-white/5 mb-3">
+                      <div className="w-24 sm:w-64 lg:w-80 aspect-video rounded-lg overflow-hidden bg-white/5 sm:mb-3 shrink-0">
                         <img 
                           src={selectedProject.active_set_thumbnail || selectedProject.thumbnail_url || ""} 
                           alt="" 
@@ -949,57 +950,58 @@ export default function BoardPage() {
                         />
                       </div>
                     )}
-                    <h3 className="font-semibold text-base sm:text-lg leading-tight max-w-[45vw] sm:max-w-64 lg:max-w-80">
-                      {selectedProject.active_set_title || selectedProject.title || "Untitled"}
-                    </h3>
-                    {/* Status Selector */}
-                    <div className="mt-3">
-                      <Select
-                        value={selectedProject.board_status_id || ""}
-                        onValueChange={(value) => {
-                          moveProject(selectedProject.id, value);
-                          setSelectedProject({ ...selectedProject, board_status_id: value });
-                        }}
-                      >
-                        <SelectTrigger className="w-fit h-8 bg-white/5 border-white/10 text-sm gap-2">
-                          <SelectValue>
-                            {(() => {
-                              const currentStatus = statuses.find(s => s.id === selectedProject.board_status_id);
-                              return currentStatus ? (
+                    <div className="flex-1 sm:flex-none">
+                      <h3 className="font-semibold text-sm sm:text-lg leading-tight line-clamp-2">
+                        {selectedProject.active_set_title || selectedProject.title || "Untitled"}
+                      </h3>
+                      {/* Status Selector */}
+                      <div className="mt-2 sm:mt-3">
+                        <Select
+                          value={selectedProject.board_status_id || ""}
+                          onValueChange={(value) => {
+                            moveProject(selectedProject.id, value);
+                            setSelectedProject({ ...selectedProject, board_status_id: value });
+                          }}
+                        >
+                          <SelectTrigger className="w-fit h-8 bg-white/5 border-white/10 text-sm gap-2">
+                            <SelectValue>
+                              {(() => {
+                                const currentStatus = statuses.find(s => s.id === selectedProject.board_status_id);
+                                return currentStatus ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${currentStatus.color}`} />
+                                    <span>{currentStatus.name}</span>
+                                  </div>
+                                ) : <span className="text-muted-foreground">No status</span>;
+                              })()}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statuses.map((status) => (
+                              <SelectItem key={status.id} value={status.id}>
                                 <div className="flex items-center gap-2">
-                                  <div className={`w-2.5 h-2.5 rounded-full ${currentStatus.color}`} />
-                                  <span>{currentStatus.name}</span>
+                                  <div className={`w-2.5 h-2.5 rounded-full ${status.color}`} />
+                                  <span>{status.name}</span>
                                 </div>
-                              ) : <span className="text-muted-foreground">No status</span>;
-                            })()}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statuses.map((status) => (
-                            <SelectItem key={status.id} value={status.id}>
-                              <div className="flex items-center gap-2">
-                                <div className={`w-2.5 h-2.5 rounded-full ${status.color}`} />
-                                <span>{status.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
                   {/* Right: Project Assignee, Due Date, and Open Button */}
-                  <div className="flex flex-col items-start shrink-0">
-                    {/* Project Assignee and Due Date stacked */}
-                    <div className="w-40 sm:w-44 lg:w-48 space-y-3">
+                  <div className="flex-1 sm:flex-none sm:ml-auto">
+                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:w-44">
                       {/* Project Assignee */}
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1.5 block">Project Assignee</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">Project Assignee</label>
                         <Select
                           value={getProjectAssignee(selectedProject.id)?.user_id || "unassigned"}
                           onValueChange={(value) => updateProjectAssignee(selectedProject.id, value === "unassigned" ? null : value)}
                         >
-                          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10">
+                          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
                             <SelectValue>
                               {(() => {
                                 const assignee = getProjectAssignee(selectedProject.id);
@@ -1046,31 +1048,27 @@ export default function BoardPage() {
 
                       {/* Project Due Date */}
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1.5 block">Project Due Date</label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            value={selectedProject.due_date?.split('T')[0] || ''}
-                            onChange={(e) => updateProjectDueDate(selectedProject.id, e.target.value || null)}
-                            className="w-full px-3 py-1.5 pr-8 rounded-lg bg-white/5 border border-white/10 focus:border-primary focus:outline-none text-sm h-9 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                          />
-                          {selectedProject.due_date && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProjectDueDate(selectedProject.id, null);
-                              }}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-white"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Project Due Date</label>
+                        <Select
+                          value={selectedProject.due_date?.split('T')[0] || "none"}
+                          onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
+                        >
+                          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
+                            <SelectValue>
+                              {selectedProject.due_date 
+                                ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                : <span className="text-muted-foreground">No date</span>
+                              }
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No date</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
-                      {/* Open Project Button */}
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1.5 block">&nbsp;</label>
+                      {/* Open Project Button - Full width on mobile */}
+                      <div className="col-span-2 sm:col-span-1">
                         <Button asChild size="sm" variant="outline" className="w-full h-9">
                           <Link href={`/studio/${studioSlug}/project/${selectedProject.id}/tasks`}>
                             <ExternalLink className="w-4 h-4 mr-2" />

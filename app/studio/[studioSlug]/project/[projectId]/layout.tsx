@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -17,6 +17,8 @@ import {
   ExternalLink,
   ListTodo,
   Lightbulb,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -210,26 +212,55 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 mt-3 md:mt-4 -mb-3 md:-mb-4 overflow-x-auto hide-scrollbar">
-          {tabs.map((tab) => {
-            const active = isTabActive(tab);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-all whitespace-nowrap shrink-0 ${
-                  active
-                    ? "text-white border-primary"
-                    : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/20"
-                }`}
-              >
-                <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                {tab.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Tab Navigation with Scroll Indicators */}
+        <div className="relative mt-3 md:mt-4 -mb-3 md:-mb-4">
+          {/* Left scroll indicator */}
+          <button
+            onClick={() => {
+              const nav = document.getElementById('project-tabs-nav');
+              if (nav) nav.scrollBy({ left: -150, behavior: 'smooth' });
+            }}
+            className="absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start md:hidden"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          
+          <nav 
+            id="project-tabs-nav"
+            className="flex items-center gap-1 overflow-x-auto scrollbar-hide px-6 md:px-0"
+          >
+            {tabs.map((tab) => {
+              const active = isTabActive(tab);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap shrink-0 ${
+                    active
+                      ? "text-white border-primary"
+                      : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/20"
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
+          
+          {/* Right scroll indicator */}
+          <button
+            onClick={() => {
+              const nav = document.getElementById('project-tabs-nav');
+              if (nav) nav.scrollBy({ left: 150, behavior: 'smooth' });
+            }}
+            className="absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end md:hidden"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
       </header>
 
       {/* Tab Content */}

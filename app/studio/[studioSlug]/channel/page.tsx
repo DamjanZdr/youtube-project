@@ -501,16 +501,21 @@ export default function ChannelPage() {
       </div>
 
       {/* Preview Container */}
-      <div className="glass-card overflow-hidden p-3 md:p-6 max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-240px)] mb-16 md:mb-0">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full overflow-y-auto lg:overflow-y-visible">
-          <div className="hidden md:flex flex-1 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex-col">
-            <div className="px-3 py-2 border-b border-white/10 bg-white/5">
+      <div className="glass-card overflow-hidden p-3 md:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+          {/* Desktop Preview - scrollable on mobile */}
+          <div className="bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
+            <div className="px-3 py-2 border-b border-white/10 bg-white/5 flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Desktop Preview</span>
+              <span className="text-[10px] text-muted-foreground md:hidden">← Scroll →</span>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <DesktopPreview channel={channel} openDialog={openDialog} />
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="min-w-[800px] md:min-w-0">
+                <DesktopPreview channel={channel} openDialog={openDialog} />
+              </div>
             </div>
           </div>
+          {/* Mobile Preview */}
           <div className="shrink-0 bg-[#0f0f0f] rounded-xl overflow-hidden shadow-2xl border border-white/10 flex flex-col mx-auto lg:mx-0">
             <div className="px-3 py-2 border-b border-white/10 bg-white/5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mobile Preview</span>

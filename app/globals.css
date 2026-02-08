@@ -426,3 +426,11 @@
   filter: drop-shadow(0 0 8px hsl(var(--info) / 0.5));
 }
 
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

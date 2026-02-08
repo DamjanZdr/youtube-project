@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, User } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -12,13 +12,6 @@ import {
 } from "@/components/ui/tooltip";
 import { NavLinks } from "./nav-links";
 import { SidebarUserDropup } from "@/components/shared/sidebar-user-dropup";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface StudioSidebarProps {
   studio: {
@@ -45,12 +38,14 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
   const navPadding = collapsed ? "p-2" : "p-3";
   const footerPadding = collapsed ? "p-2" : "p-4";
 
-  // Mobile bottom nav items (limited to 4 + more menu)
+  // Mobile bottom nav items - all pages in scrollable nav
   const mobileNavItems = [
     { href: `/studio/${studioSlug}`, icon: Home, label: "Home" },
     { href: `/studio/${studioSlug}/projects`, icon: FolderKanban, label: "Projects" },
     { href: `/studio/${studioSlug}/board`, icon: Layout, label: "Board" },
     { href: `/studio/${studioSlug}/wiki`, icon: BookOpen, label: "Wiki" },
+    { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" },
+    { href: `/studio/${studioSlug}/settings`, icon: Settings, label: "Settings" },
   ];
 
   const isActive = (href: string) => {
@@ -149,69 +144,26 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
       {/* Desktop Spacer */}
       <div className={`hidden md:block transition-all duration-300 shrink-0 ${sidebarWidth}`} />
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/95 backdrop-blur border-t border-white/10 z-50">
-        <div className="flex items-center justify-around h-full px-2 pb-safe">
+      {/* Mobile Bottom Navigation Bar - Scrollable */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-18 bg-background/95 backdrop-blur border-t border-white/10 z-50">
+        <div className="flex items-center h-full overflow-x-auto scrollbar-hide px-1 pb-safe">
           {mobileNavItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
+                className={`flex flex-col items-center justify-center gap-1 min-w-[72px] px-3 py-2 transition-colors ${
                   active 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <item.icon className={`w-5 h-5 ${active ? "scale-110" : ""} transition-transform`} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <item.icon className={`w-6 h-6 ${active ? "scale-110" : ""} transition-transform`} />
+                <span className="text-xs font-medium">{item.label}</span>
               </Link>
             );
           })}
-          
-          {/* More Menu (Profile + Settings + Channel) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex flex-col items-center justify-center gap-1 flex-1 h-full text-muted-foreground hover:text-foreground transition-colors">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-medium">{initials}</span>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium">More</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="top" className="w-48 mb-2">
-              <DropdownMenuItem asChild>
-                <Link href={`/studio/${studioSlug}/channel`} className="flex items-center gap-2">
-                  <Tv className="w-4 h-4" />
-                  Channel
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/studio/${studioSlug}/settings`} className="flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/account" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Account
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/hub" className="flex items-center gap-2">
-                  <Home className="w-4 h-4" />
-                  Switch Studio
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </nav>
     </>
