@@ -238,7 +238,7 @@ export default function WikiPage({ params }: WikiPageProps) {
   }
 
   return (
-    <div className="p-4 md:p-8 pb-20 md:pb-8">
+    <div className="p-4 md:p-8 ">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>

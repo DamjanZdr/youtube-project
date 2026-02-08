@@ -214,9 +214,6 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
           </DropdownMenu>
         </div>
       </nav>
-
-      {/* Mobile Bottom Spacer */}
-      <div className="md:hidden h-16 shrink-0" />
     </>
   );
 }

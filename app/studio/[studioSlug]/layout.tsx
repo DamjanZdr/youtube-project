@@ -76,8 +76,8 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
           studioSlug={studioSlug}
         />
 
-        {/* Main Content - margin handled by sidebar component */}
-        <main className="flex-1">
+        {/* Main Content - pb-16 for mobile bottom nav */}
+        <main className="flex-1 pb-16 md:pb-0">
           {children}
         </main>
       </div>

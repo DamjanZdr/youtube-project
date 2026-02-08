@@ -667,11 +667,11 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-0px)] flex flex-col relative">
+    <div className="h-[calc(100vh-64px)] md:h-screen flex flex-col relative">
       {/* Page Header */}
       <div className="p-4 md:p-6 pb-3 md:pb-4 shrink-0">
-        <h1 className="text-2xl md:text-3xl font-bold">Board</h1>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
+        <h1 className="text-xl md:text-3xl font-bold">Board</h1>
+        <p className="text-xs md:text-base text-muted-foreground mt-1">
           Visual overview of your content pipeline
         </p>
       </div>
@@ -695,7 +695,7 @@ export default function BoardPage() {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto px-4 md:px-6 pb-24 md:pb-20">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 md:px-6 pb-20 md:pb-20">
         {/* Empty state when no statuses */}
         {statuses.length === 0 ? (
           <div className="h-full flex items-center justify-center">
@@ -719,12 +719,12 @@ export default function BoardPage() {
             </div>
           </div>
         ) : (
-        <div className="flex gap-3 h-full md:min-w-max">
+        <div className="flex gap-2 md:gap-3 h-full">
           {/* Status Columns */}
           {statuses.map((status) => (
             <div 
               key={status.id} 
-              className={`w-[160px] md:w-56 shrink-0 flex flex-col bg-white/[0.02] rounded-2xl border transition-colors ${
+              className={`w-[120px] md:w-56 shrink-0 flex flex-col bg-white/[0.02] rounded-xl md:rounded-2xl border transition-colors ${
                 dragOverStatusId === status.id 
                   ? 'border-primary/50 bg-primary/5' 
                   : 'border-white/5'
