@@ -192,21 +192,21 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="glass-strong border-white/10 !w-[95vw] !h-[90vh] !max-w-[95vw] p-0 overflow-hidden">
-        <div className="flex h-full">
+      <DialogContent className="glass-strong border-white/10 w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-full overflow-y-auto md:overflow-hidden">
           {/* Left Panel - Studio Details */}
-          <div className="w-[400px] flex-shrink-0 bg-gradient-to-b from-white/[0.03] to-transparent border-r border-white/10 p-8 flex flex-col">
-            <div className="mb-10">
-              <h2 className="text-2xl font-bold mb-2">Create Studio</h2>
+          <div className="w-full md:w-[400px] flex-shrink-0 bg-gradient-to-b from-white/[0.03] to-transparent md:border-r border-b md:border-b-0 border-white/10 p-6 md:p-8 flex flex-col">
+            <div className="mb-6 md:mb-10">
+              <h2 className="text-xl md:text-2xl font-bold mb-2">Create Studio</h2>
               <p className="text-muted-foreground text-sm">Set up your YouTube workspace</p>
             </div>
 
             {/* Logo Upload */}
-            <div className="mb-8 text-center">
-              <label className="text-sm font-medium mb-4 block text-muted-foreground">Studio Logo</label>
+            <div className="mb-6 md:mb-8 text-center">
+              <label className="text-sm font-medium mb-3 md:mb-4 block text-muted-foreground">Studio Logo</label>
               <div 
                 onClick={() => logoInputRef.current?.click()}
-                className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-600/80 to-purple-600/80 backdrop-blur-xl flex items-center justify-center overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300 group relative mx-auto ring-1 ring-white/20 shadow-2xl shadow-purple-500/20"
+                className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-blue-600/80 to-purple-600/80 backdrop-blur-xl flex items-center justify-center overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300 group relative mx-auto ring-1 ring-white/20 shadow-2xl shadow-purple-500/20"
               >
                 {logoPreview ? (
                   <>
@@ -217,8 +217,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                   </>
                 ) : (
                   <div className="text-center">
-                    <ImageIcon className="w-10 h-10 text-white/60 mx-auto mb-2" />
-                    <span className="text-xs text-white/60 font-medium">Click to upload</span>
+                    <ImageIcon className="w-8 h-8 md:w-10 md:h-10 text-white/60 mx-auto mb-1 md:mb-2" />
+                    <span className="text-[10px] md:text-xs text-white/60 font-medium">Upload</span>
                   </div>
                 )}
               </div>
@@ -229,7 +229,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 className="hidden"
                 onChange={handleLogoChange}
               />
-              <p className="text-xs text-muted-foreground mt-3">PNG or JPG, 256×256px</p>
+              <p className="text-xs text-muted-foreground mt-2 md:mt-3">PNG or JPG, 256×256px</p>
             </div>
 
             {/* Studio Name */}
@@ -247,8 +247,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               />
             </div>
 
-            {/* Key Redemption - Vertically centered in remaining space */}
-            <div className="flex-1 flex items-center justify-center">
+            {/* Key Redemption - Vertically centered in remaining space on desktop */}
+            <div className="md:flex-1 md:flex md:items-center md:justify-center mt-4 md:mt-0">
               <div className="w-full">
                 {keyInfo ? (
                   <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-sm">
@@ -300,20 +300,20 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               </div>
             </div>
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && <p className="text-sm text-red-400 mt-4">{error}</p>}
           </div>
 
           {/* Right Panel - Plans */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 md:overflow-hidden">
             {/* Plan Header with Billing Toggle */}
-            <div className="relative flex items-center justify-center p-6 border-b border-white/10 bg-white/[0.02]">
-              <h3 className="absolute left-6 text-lg font-semibold">Choose a Plan</h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 p-4 md:p-6 border-b border-white/10 bg-white/[0.02]">
+              <h3 className="text-base md:text-lg font-semibold sm:absolute sm:left-6">Choose a Plan</h3>
               
-              {/* Billing Interval Toggle - Absolutely centered */}
+              {/* Billing Interval Toggle */}
               <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
                 <button
                   onClick={() => setBillingInterval("monthly")}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 md:px-5 py-2 rounded-lg text-sm font-medium transition-all ${
                     billingInterval === "monthly"
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground"
@@ -323,7 +323,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </button>
                 <button
                   onClick={() => setBillingInterval("yearly")}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                  className={`px-4 md:px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                     billingInterval === "yearly"
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground"
@@ -338,8 +338,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-4 gap-5 h-full">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -350,9 +350,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-6 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] ${
+                      className={`relative flex flex-col p-4 md:p-6 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
-                      } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 scale-[1.02]" : ""} ${
+                      } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
                       }`}
                     >
@@ -371,10 +371,10 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         </div>
                       )}
 
-                      <div className="mb-6">
-                        <h4 className="text-xl font-bold mb-3">{plan.name}</h4>
+                      <div className="mb-4 md:mb-6">
+                        <h4 className="text-lg md:text-xl font-bold mb-2 md:mb-3">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold">${price}</span>
+                          <span className="text-3xl md:text-4xl font-bold">${price}</span>
                           <span className="text-sm text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
@@ -382,15 +382,15 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-3 flex-1">
-                        {plan.features.map((feature, i) => (
-                          <li key={i} className="flex items-start gap-2.5">
+                      <ul className="space-y-2 md:space-y-3 flex-1">
+                        {plan.features.slice(0, 5).map((feature, i) => (
+                          <li key={i} className="flex items-start gap-2">
                             {feature.included ? (
                               <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-400" />
                             ) : (
                               <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-white/20" />
                             )}
-                            <span className={`text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
+                            <span className={`text-xs md:text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
                               {feature.name}
                             </span>
                           </li>
@@ -403,11 +403,11 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10 bg-white/[0.02]">
-              <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading} className="px-6">
+            <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-white/10 bg-white/[0.02]">
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading} className="px-4 md:px-6">
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 text-base font-medium">
+              <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-6 md:px-8 h-10 md:h-11 text-sm md:text-base font-medium">
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
