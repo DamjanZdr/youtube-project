@@ -78,7 +78,7 @@ interface Thread {
 export default function ForumPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
@@ -115,17 +115,18 @@ export default function ForumPage() {
   };
 
   const loadData = async () => {
-    // Load categories
+    // Load categories (exclude General Discussion)
     const { data: cats } = await supabase
       .from("help_categories")
       .select("id, name, slug, icon")
+      .neq("slug", "general")
       .order("position");
 
     if (cats) {
       setCategories(cats);
     }
 
-    // Load all threads
+    // Load user-generated threads only (not official/system)
     const { data: threadData } = await supabase
       .from("help_threads")
       .select(`
@@ -142,6 +143,7 @@ export default function ForumPage() {
         category:help_categories(slug, name, icon),
         author:profiles!author_id(full_name, avatar_url)
       `)
+      .eq("is_official", false)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -152,9 +154,21 @@ export default function ForumPage() {
     setLoading(false);
   };
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   // Filter threads
   const filteredThreads = threads.filter((thread) => {
-    if (selectedCategoryId && thread.category_id !== selectedCategoryId) return false;
+    if (selectedCategoryIds.size > 0 && !selectedCategoryIds.has(thread.category_id)) return false;
     if (searchQuery.trim()) {
       return thread.title.toLowerCase().includes(searchQuery.toLowerCase());
     }
@@ -251,7 +265,7 @@ export default function ForumPage() {
       </div>
 
       {/* Forum Content */}
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 w-full">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -270,132 +284,185 @@ export default function ForumPage() {
           )}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search threads..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 bg-white/5 border-white/10"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Category filter */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setSelectedCategoryId(null)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                !selectedCategoryId
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10"
-              }`}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategoryId === cat.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Threads List */}
-        {filteredThreads.length === 0 ? (
-          <div className="text-center py-16">
-            <MessagesSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold mb-2 text-muted-foreground">
-              {searchQuery || selectedCategoryId ? "No threads match your filter" : "No threads yet"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              {searchQuery || selectedCategoryId
-                ? "Try adjusting your search or filter."
-                : "Be the first to start a discussion!"}
-            </p>
-            {user && !searchQuery && !selectedCategoryId && (
-              <Link href="/help/forum/new">
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Create Thread
-                </Button>
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredThreads.map((thread) => {
-              const CatIcon = iconMap[thread.category?.icon] || FileText;
-              return (
-                <Link
-                  key={thread.id}
-                  href={`/help/${thread.category.slug}/${thread.slug}`}
-                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/30 hover:bg-white/[0.06] transition-all group"
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+          {/* Threads List */}
+          <div className="flex-1 min-w-0">
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search threads..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 bg-white/5 border-white/10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {thread.is_pinned && (
-                        <Pin className="w-3 h-3 text-yellow-500 shrink-0" />
-                      )}
-                      {thread.is_official && (
-                        <span className="px-1.5 py-0.5 text-[10px] rounded bg-primary/20 text-primary shrink-0">
-                          Official
-                        </span>
-                      )}
-                      {thread.is_locked && (
-                        <span className="px-1.5 py-0.5 text-[10px] rounded bg-red-500/20 text-red-400 shrink-0">
-                          Locked
-                        </span>
-                      )}
-                      <span className="font-medium truncate">{thread.title}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <CatIcon className="w-3 h-3" />
-                        {thread.category.name}
-                      </span>
-                      <span>
-                        by {thread.author?.full_name || (thread.is_official ? "System" : "Unknown")}
-                      </span>
-                      <span>
-                        {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 sm:gap-5 text-xs text-muted-foreground shrink-0">
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>{thread.view_count}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{thread.reply_count}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 group-hover:text-primary transition-colors" />
-                  </div>
-                </Link>
-              );
-            })}
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Active filters */}
+            {selectedCategoryIds.size > 0 && (
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <span className="text-xs text-muted-foreground">Filtered by:</span>
+                {categories
+                  .filter((c) => selectedCategoryIds.has(c.id))
+                  .map((cat) => {
+                    const Icon = iconMap[cat.icon] || FileText;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors"
+                      >
+                        <Icon className="w-3 h-3" />
+                        {cat.name}
+                        <X className="w-3 h-3" />
+                      </button>
+                    );
+                  })}
+                <button
+                  onClick={() => setSelectedCategoryIds(new Set())}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {filteredThreads.length === 0 ? (
+              <div className="text-center py-16 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                <MessagesSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h2 className="text-lg font-semibold mb-2 text-muted-foreground">
+                  {searchQuery || selectedCategoryIds.size > 0 ? "No threads match your filter" : "No community threads yet"}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {searchQuery || selectedCategoryIds.size > 0
+                    ? "Try adjusting your search or topics."
+                    : "Be the first to start a discussion!"}
+                </p>
+                {user && !searchQuery && selectedCategoryIds.size === 0 && (
+                  <Link href="/help/forum/new">
+                    <Button className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Create Thread
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredThreads.map((thread) => {
+                  const CatIcon = iconMap[thread.category?.icon] || FileText;
+                  return (
+                    <Link
+                      key={thread.id}
+                      href={`/help/${thread.category.slug}/${thread.slug}`}
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 hover:bg-white/[0.06] transition-all group"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          {thread.is_pinned && (
+                            <Pin className="w-3 h-3 text-yellow-500 shrink-0" />
+                          )}
+                          {thread.is_locked && (
+                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-red-500/20 text-red-400 shrink-0">
+                              Locked
+                            </span>
+                          )}
+                          <span className="font-medium truncate group-hover:text-primary transition-colors">{thread.title}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CatIcon className="w-3 h-3" />
+                            {thread.category.name}
+                          </span>
+                          <span>
+                            by {thread.author?.full_name || "Unknown"}
+                          </span>
+                          <span>
+                            {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 sm:gap-5 text-xs text-muted-foreground shrink-0">
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{thread.view_count}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>{thread.reply_count}</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 group-hover:text-primary transition-colors" />
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Topics Sidebar */}
+          <aside className="w-full md:w-64 lg:w-72 shrink-0 order-first md:order-last">
+            <div className="md:sticky md:top-24 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Topics
+              </h3>
+              <nav className="space-y-1">
+                {categories.map((cat) => {
+                  const Icon = iconMap[cat.icon] || FileText;
+                  const isSelected = selectedCategoryIds.has(cat.id);
+                  const count = threads.filter((t) => t.category_id === cat.id).length;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => toggleCategory(cat.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
+                        isSelected
+                          ? "bg-primary/15 text-primary border border-primary/20"
+                          : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-md transition-colors ${
+                          isSelected
+                            ? "bg-primary/20 text-primary"
+                            : "bg-white/5 text-muted-foreground"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-sm font-medium flex-1 truncate">
+                        {cat.name}
+                      </span>
+                      <span
+                        className={`text-xs tabular-nums ${
+                          isSelected ? "text-primary/70" : "text-muted-foreground/50"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+              {selectedCategoryIds.size > 0 && (
+                <button
+                  onClick={() => setSelectedCategoryIds(new Set())}
+                  className="w-full mt-3 pt-3 border-t border-white/[0.06] text-xs text-muted-foreground hover:text-foreground transition-colors text-center"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

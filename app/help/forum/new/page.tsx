@@ -79,10 +79,11 @@ export default function NewForumThreadPage() {
     setAcceptInvites(profile?.accept_invites ?? true);
     setIsAdmin(profile?.role === "admin");
 
-    // Load categories
+    // Load categories (exclude General Discussion)
     const { data: cats } = await supabase
       .from("help_categories")
       .select("id, name, slug, description")
+      .neq("slug", "general")
       .order("position");
 
     if (cats && cats.length > 0) {
