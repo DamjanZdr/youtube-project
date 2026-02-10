@@ -203,7 +203,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1500px] w-[95vw] h-[85vh]"}`}>
+      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1550px] w-[95vw] h-[75vh]"}`}>
         {step === 1 ? (
           <div className="p-8 md:p-10 flex flex-col items-center">
             <h2 className="text-2xl font-bold mb-2 text-center">Create Studio</h2>
@@ -262,7 +262,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col h-full max-h-[85vh]">
+          <div className="flex flex-col h-full">
             {/* Header with billing toggle */}
             <div className="flex flex-col items-center gap-4 p-6 md:p-8 border-b border-white/10 bg-white/[0.02]">
               <h2 className="text-xl md:text-2xl font-bold">Choose a Plan</h2>
@@ -297,7 +297,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
             {/* Plan Cards */}
             <div className="flex-1 overflow-y-auto px-6 md:px-12 py-6 md:py-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 h-full">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -308,7 +308,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-6 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl min-h-[340px] ${
+                      className={`relative flex flex-col p-6 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl h-full ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -330,9 +330,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                       )}
 
                       <div className="mb-6">
-                        <h4 className="text-lg md:text-xl font-bold mb-2">{plan.name}</h4>
+                        <h4 className="text-xl md:text-2xl font-bold mb-2">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl md:text-4xl font-bold">${price}</span>
+                          <span className="text-4xl md:text-5xl font-bold">${price}</span>
                           <span className="text-sm text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
@@ -348,7 +348,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                             ) : (
                               <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-white/20" />
                             )}
-                            <span className={`text-xs md:text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
+                            <span className={`text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
                               {feature.name}
                             </span>
                           </li>
