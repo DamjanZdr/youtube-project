@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Check, Key, X, ImageIcon } from "lucide-react";
+import { Plus, Loader2, Check, Key, X, ImageIcon, AlertCircle } from "lucide-react";
 import { createStudio } from "@/lib/actions/studio";
 import { plans as allPlans } from "@/config/subscriptions";
 import { toast } from "sonner";
@@ -116,7 +116,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
       // Make DB trigger errors more user-friendly
       let errorMsg = result.error;
       if (errorMsg.includes('free tier organization') || errorMsg.includes('one free tier')) {
-        errorMsg = "You can only have one free studio. Please upgrade your existing studio's plan, or select a paid plan for this new studio.";
+        errorMsg = "You're already a member of a free studio. Please upgrade your existing studio's plan, or select a paid plan for this new one.";
       }
       setError(errorMsg);
       setLoading(false);
@@ -423,8 +423,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                   )}
                 </div>
                 {error && (
-                  <div className="flex-1 text-center text-sm text-red-400 truncate px-2">
-                    {error}
+                  <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/25 min-w-0">
+                    <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span className="text-sm text-amber-300 truncate">{error}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-3 shrink-0">
