@@ -579,23 +579,23 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         setActiveTab(value);
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
-        <TabsList className="glass w-full sm:w-auto overflow-x-auto">
-          <TabsTrigger value="studio" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
-            <SettingsIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Studio</span>
+        <TabsList className="glass w-full sm:w-auto overflow-x-auto h-12">
+          <TabsTrigger value="studio" className="gap-2 text-sm px-5 py-2.5">
+            <SettingsIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Studio</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
-            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Members</span>
+          <TabsTrigger value="members" className="gap-2 text-sm px-5 py-2.5">
+            <Users className="w-4 h-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           {/* YouTube Tab - IN DEVELOPMENT: Requires Google OAuth app verification */}
-          {/* <TabsTrigger value="youtube" className="gap-2">
+          {/* <TabsTrigger value="youtube" className="gap-2 text-sm px-5 py-2.5">
             <Youtube className="w-4 h-4" />
             YouTube
           </TabsTrigger> */}
-          <TabsTrigger value="billing" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
-            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Billing</span>
+          <TabsTrigger value="billing" className="gap-2 text-sm px-5 py-2.5">
+            <CreditCard className="w-4 h-4" />
+            <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
         </TabsList>
 
