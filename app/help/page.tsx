@@ -26,6 +26,8 @@ import {
   Shield,
   Loader2,
   X,
+  BookOpen,
+  MessagesSquare,
 } from "lucide-react";
 
 // Icon mapping
@@ -47,7 +49,7 @@ interface Category {
   slug: string;
   description: string;
   icon: string;
-  thread_count?: number;
+  position: number;
 }
 
 interface Thread {
@@ -58,6 +60,7 @@ interface Thread {
   is_official: boolean;
   reply_count: number;
   created_at: string;
+  category_id: string;
   category: {
     slug: string;
     name?: string;
@@ -66,7 +69,9 @@ interface Thread {
 
 export default function HelpCenterPage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [recentThreads, setRecentThreads] = useState<Thread[]>([]);
+  const [articlesByCategory, setArticlesByCategory] = useState<Record<string, Thread[]>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Thread[]>([]);
   const [searching, setSearching] = useState(false);
@@ -103,6 +108,7 @@ export default function HelpCenterPage() {
           is_official,
           reply_count,
           created_at,
+          category_id,
           category:help_categories(slug, name)
         `)
         .or(`title.ilike.%${query}%`)
@@ -142,49 +148,75 @@ export default function HelpCenterPage() {
   };
 
   const loadData = async () => {
-    // Load categories with thread counts
+    // Load categories
     const { data: cats } = await supabase
       .from("help_categories")
       .select("*")
       .order("position");
 
     if (cats) {
-      // Get thread counts for each category
-      const catsWithCounts = await Promise.all(
-        cats.map(async (cat) => {
-          const { count } = await supabase
-            .from("help_threads")
-            .select("*", { count: "exact", head: true })
-            .eq("category_id", cat.id);
-          return { ...cat, thread_count: count || 0 };
-        })
-      );
-      setCategories(catsWithCounts);
-    }
+      setCategories(cats);
 
-    // Load recent/pinned threads
-    const { data: threads } = await supabase
-      .from("help_threads")
-      .select(`
-        id,
-        title,
-        slug,
-        is_pinned,
-        is_official,
-        reply_count,
-        created_at,
-        category:help_categories(slug)
-      `)
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(5);
+      // Load all articles grouped by category
+      const { data: articles } = await supabase
+        .from("help_threads")
+        .select(`
+          id,
+          title,
+          slug,
+          is_pinned,
+          is_official,
+          reply_count,
+          created_at,
+          category_id,
+          category:help_categories(slug, name)
+        `)
+        .order("is_pinned", { ascending: false })
+        .order("created_at", { ascending: false });
 
-    if (threads) {
-      setRecentThreads(threads as unknown as Thread[]);
+      if (articles) {
+        const grouped: Record<string, Thread[]> = {};
+        for (const article of articles as unknown as Thread[]) {
+          if (!grouped[article.category_id]) {
+            grouped[article.category_id] = [];
+          }
+          grouped[article.category_id].push(article);
+        }
+        setArticlesByCategory(grouped);
+      }
+
+      // Auto-expand and select first category
+      if (cats.length > 0) {
+        setExpandedCategories(new Set([cats[0].id]));
+        setSelectedCategory(cats[0].id);
+      }
     }
 
     setLoading(false);
   };
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+    setSelectedCategory(categoryId);
+  };
+
+  const selectCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (!expandedCategories.has(categoryId)) {
+      setExpandedCategories((prev) => new Set(prev).add(categoryId));
+    }
+  };
+
+  const selectedCategoryData = categories.find((c) => c.id === selectedCategory);
+  const selectedArticles = selectedCategory ? (articlesByCategory[selectedCategory] || []) : [];
 
   if (loading) {
     return (
@@ -195,8 +227,8 @@ export default function HelpCenterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation - Same as Hub */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Navigation */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
@@ -244,187 +276,252 @@ export default function HelpCenterPage() {
         </div>
       </header>
 
-      {/* Hero Header */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-primary/5 to-transparent">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-16">
-          <div className="text-center mb-6 md:mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-primary/20 mb-3 md:mb-4">
-              <HelpCircle className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-            </div>
-            <h1 className="text-2xl md:text-4xl font-bold mb-2">Help Center</h1>
-            <p className="text-sm md:text-lg text-muted-foreground">
-              Find answers, guides, and get support
-            </p>
-          </div>
-
-          {/* Search */}
-          <div className="max-w-xl mx-auto relative">
-            <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search for help..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 md:pl-12 pr-10 h-10 md:h-12 text-base md:text-lg bg-white/5 border-white/10"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      {/* Sub-navigation: Self Help / Forum / Tickets */}
+      <div className="border-b border-white/10 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex items-center gap-1 h-12">
+            <Link
+              href="/help"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground"
+            >
+              <BookOpen className="w-4 h-4" />
+              Self Help
+            </Link>
+            <Link
+              href="/help/forum"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <MessagesSquare className="w-4 h-4" />
+              Forum
+            </Link>
+            {user && (
+              <Link
+                href="/help/tickets"
+                className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
               >
-                <X className="w-4 h-4" />
-              </button>
+                <TicketIcon className="w-4 h-4" />
+                Tickets
+              </Link>
             )}
-            
-            {/* Search Results Dropdown */}
-            {searchQuery.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-white/10 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-                {searching ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : searchResults.length > 0 ? (
-                  <div className="py-2">
-                    {searchResults.map((thread) => (
-                      <Link
-                        key={thread.id}
-                        href={`/help/${thread.category.slug}/${thread.slug}`}
-                        onClick={() => setSearchQuery("")}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
-                      >
-                        <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            {thread.is_official && (
-                              <span className="px-1.5 py-0.5 text-[10px] rounded bg-primary/20 text-primary">
-                                Official
-                              </span>
-                            )}
-                            <span className="font-medium truncate">{thread.title}</span>
-                          </div>
-                          {thread.category.name && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              in {thread.category.name}
-                            </p>
-                          )}
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p>No results found for "{searchQuery}"</p>
-                    <p className="text-sm mt-1">Try different keywords or browse categories below</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
-          {/* Quick Actions */}
-          {user && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-4 md:mt-6">
-              <Link href="/help/tickets" className="w-full sm:w-auto">
-                <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                  <TicketIcon className="w-4 h-4" />
-                  My Tickets
-                </Button>
-              </Link>
-              <Link href="/help/tickets/new" className="w-full sm:w-auto">
-                <Button className="gap-2 w-full sm:w-auto">
-                  <MessageCircle className="w-4 h-4" />
-                  Contact Support
-                </Button>
-              </Link>
+            {/* Search - right side */}
+            <div className="ml-auto relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-8 text-sm bg-white/5 border-white/10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Search Results Dropdown */}
+              {searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-white/10 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+                  {searching ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="py-1">
+                      {searchResults.map((thread) => (
+                        <Link
+                          key={thread.id}
+                          href={`/help/${thread.category.slug}/${thread.slug}`}
+                          onClick={() => setSearchQuery("")}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 transition-colors text-sm"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium truncate block">{thread.title}</span>
+                            {thread.category.name && (
+                              <span className="text-xs text-muted-foreground">in {thread.category.name}</span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      No results found
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
-        {/* Categories Grid */}
-        <div className="mb-8 md:mb-12">
-          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Browse by Category</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      {/* Main Content: Sidebar + Articles */}
+      <div className="flex-1 flex">
+        {/* Sidebar */}
+        <aside className="w-64 lg:w-72 shrink-0 border-r border-white/10 bg-white/[0.01] overflow-y-auto hidden md:block">
+          <nav className="py-4">
             {categories.map((category) => {
               const Icon = iconMap[category.icon] || FileText;
+              const isExpanded = expandedCategories.has(category.id);
+              const isActive = selectedCategory === category.id;
+              const articles = articlesByCategory[category.id] || [];
+
               return (
-                <Link
-                  key={category.id}
-                  href={`/help/${category.slug}`}
-                  className="group p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
-                >
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="p-2 md:p-3 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Icon className="w-4 h-4 md:w-5 md:h-5" />
+                <div key={category.id}>
+                  {/* Category header */}
+                  <button
+                    onClick={() => toggleCategory(category.id)}
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-left transition-colors ${
+                      isActive
+                        ? "text-primary bg-primary/5"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    }`}
+                  >
+                    <ChevronRight
+                      className={`w-3.5 h-3.5 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                    />
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{category.name}</span>
+                    {articles.length > 0 && (
+                      <span className="ml-auto text-xs text-muted-foreground/60">{articles.length}</span>
+                    )}
+                  </button>
+
+                  {/* Expanded article list */}
+                  {isExpanded && articles.length > 0 && (
+                    <div className="ml-4 border-l border-white/5">
+                      {articles.map((article) => (
+                        <Link
+                          key={article.id}
+                          href={`/help/${article.category.slug}/${article.slug}`}
+                          className="flex items-center gap-2 pl-6 pr-4 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                        >
+                          <FileText className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{article.title}</span>
+                        </Link>
+                      ))}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {category.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {category.thread_count} {category.thread_count === 1 ? "article" : "articles"}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </Link>
+                  )}
+                </div>
               );
             })}
-          </div>
-        </div>
+          </nav>
+        </aside>
 
-        {/* Recent/Featured Threads */}
-        {recentThreads.length > 0 && (
-          <div>
-            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Featured & Recent</h2>
-            <div className="space-y-2">
-              {recentThreads.map((thread) => (
-                <Link
-                  key={thread.id}
-                  href={`/help/${thread.category.slug}/${thread.slug}`}
-                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
-                >
-                  <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {thread.is_pinned && (
-                        <Pin className="w-3 h-3 text-yellow-500" />
-                      )}
-                      {thread.is_official && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
-                          Official
-                        </span>
-                      )}
-                      <span className="font-medium truncate">{thread.title}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {thread.reply_count} {thread.reply_count === 1 ? "reply" : "replies"}
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Mobile category selector */}
+          <div className="md:hidden border-b border-white/10 p-4">
+            <select
+              value={selectedCategory || ""}
+              onChange={(e) => selectCategory(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-sm"
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="p-6 md:p-8 lg:p-10 max-w-4xl">
+            {selectedCategoryData ? (
+              <>
+                {/* Category header */}
+                <div className="mb-8">
+                  <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                    {selectedCategoryData.name}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {selectedCategoryData.description}
+                  </p>
+                </div>
+
+                {/* Articles list */}
+                {selectedArticles.length === 0 ? (
+                  <div className="text-center py-16">
+                    <FileText className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                    <h2 className="text-lg font-semibold mb-2 text-muted-foreground">No articles yet</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Articles for this category will appear here.
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </Link>
-              ))}
+                ) : (
+                  <div className="space-y-2">
+                    {selectedArticles.map((article) => (
+                      <Link
+                        key={article.id}
+                        href={`/help/${article.category.slug}/${article.slug}`}
+                        className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/30 hover:bg-white/[0.06] transition-all group"
+                      >
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            {article.is_pinned && (
+                              <Pin className="w-3 h-3 text-yellow-500 shrink-0" />
+                            )}
+                            {article.is_official && (
+                              <span className="px-1.5 py-0.5 text-[10px] rounded bg-primary/20 text-primary shrink-0">
+                                Official
+                              </span>
+                            )}
+                            <span className="font-medium truncate">{article.title}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {article.reply_count} {article.reply_count === 1 ? "reply" : "replies"}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16">
+                <HelpCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h2 className="text-lg font-semibold mb-2">Select a category</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose a category from the sidebar to browse articles.
+                </p>
+              </div>
+            )}
+
+            {/* Contact Support CTA */}
+            <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/10 border border-primary/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-1">Can&apos;t find what you&apos;re looking for?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Ask the community in the forum or contact support directly.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href="/help/forum">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <MessagesSquare className="w-4 h-4" />
+                      Forum
+                    </Button>
+                  </Link>
+                  <Link href={user ? "/help/tickets/new" : "/auth/login"}>
+                    <Button size="sm" className="gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      Contact Support
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Contact Support CTA */}
-        <div className="mt-8 md:mt-12 p-6 md:p-8 rounded-2xl bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/20 text-center">
-          <h2 className="text-xl md:text-2xl font-bold mb-2">Can't find what you're looking for?</h2>
-          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-            Our support team is here to help you with any questions.
-          </p>
-          <Link href={user ? "/help/tickets/new" : "/sign-in"}>
-            <Button size="lg" className="gap-2 w-full sm:w-auto">
-              <MessageCircle className="w-5 h-5" />
-              {user ? "Contact Support" : "Sign in to Contact Support"}
-            </Button>
-          </Link>
-        </div>
+        </main>
       </div>
     </div>
   );
