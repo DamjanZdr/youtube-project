@@ -413,6 +413,11 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               )}
 
               {/* Action buttons: Have a plan key? (left) | Back + Create Studio (right) */}
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+                  {error}
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div>
                   {!keyInfo && !showKeyInput && (
