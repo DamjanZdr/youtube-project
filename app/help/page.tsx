@@ -7,21 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
-  Rocket,
-  Folder,
-  Image,
-  Tv,
-  Users,
-  CreditCard,
-  Youtube,
-  Lightbulb,
   MessageCircle,
   Search,
   HelpCircle,
   TicketIcon,
   ChevronRight,
   FileText,
-  Pin,
   LayoutGrid,
   Shield,
   Loader2,
@@ -29,28 +20,6 @@ import {
   BookOpen,
   MessagesSquare,
 } from "lucide-react";
-
-// Icon mapping
-const iconMap: Record<string, React.ElementType> = {
-  rocket: Rocket,
-  folder: Folder,
-  image: Image,
-  tv: Tv,
-  users: Users,
-  "credit-card": CreditCard,
-  youtube: Youtube,
-  lightbulb: Lightbulb,
-  "message-circle": MessageCircle,
-};
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  icon: string;
-  thread_count?: number;
-}
 
 interface Thread {
   id: string;
@@ -67,7 +36,6 @@ interface Thread {
 }
 
 export default function HelpCenterPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [recentThreads, setRecentThreads] = useState<Thread[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Thread[]>([]);
@@ -144,26 +112,6 @@ export default function HelpCenterPage() {
   };
 
   const loadData = async () => {
-    // Load categories with thread counts
-    const { data: cats } = await supabase
-      .from("help_categories")
-      .select("*")
-      .order("position");
-
-    if (cats) {
-      // Get thread counts for each category
-      const catsWithCounts = await Promise.all(
-        cats.map(async (cat) => {
-          const { count } = await supabase
-            .from("help_threads")
-            .select("*", { count: "exact", head: true })
-            .eq("category_id", cat.id);
-          return { ...cat, thread_count: count || 0 };
-        })
-      );
-      setCategories(catsWithCounts);
-    }
-
     // Load recent/pinned threads
     const { data: threads } = await supabase
       .from("help_threads")
@@ -325,31 +273,31 @@ export default function HelpCenterPage() {
 
           {/* Two Main Options: Self Help & Public Forum */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 mt-8 md:mt-10">
-            <a
-              href="#self-help"
-              className="group w-full sm:w-64 p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-center"
+            <Link
+              href="/help/self-help"
+              className="group w-full sm:w-72 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-center"
             >
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors mb-3">
-                <BookOpen className="w-5 h-5" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors mb-4">
+                <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">Self Help</h3>
-              <p className="text-xs text-muted-foreground">Browse guides &amp; articles</p>
-            </a>
+              <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">Self Help</h3>
+              <p className="text-sm text-muted-foreground">Browse guides &amp; articles</p>
+            </Link>
             <Link
               href="/help/forum"
-              className="group w-full sm:w-64 p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-center"
+              className="group w-full sm:w-72 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all text-center"
             >
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors mb-3">
-                <MessagesSquare className="w-5 h-5" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors mb-4">
+                <MessagesSquare className="w-6 h-6" />
               </div>
-              <h3 className="font-semibold mb-1 group-hover:text-purple-400 transition-colors">Public Forum</h3>
-              <p className="text-xs text-muted-foreground">Ask the community</p>
+              <h3 className="text-lg font-semibold mb-1 group-hover:text-purple-400 transition-colors">Public Forum</h3>
+              <p className="text-sm text-muted-foreground">Ask the community</p>
             </Link>
           </div>
 
           {/* Quick Actions */}
           {user && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-4 md:mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
               <Link href="/help/tickets" className="w-full sm:w-auto">
                 <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <TicketIcon className="w-4 h-4" />
@@ -364,101 +312,6 @@ export default function HelpCenterPage() {
               </Link>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Self Help Section */}
-      <div id="self-help" className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
-        {/* Categories Grid */}
-        <div className="mb-8 md:mb-12">
-          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Browse by Category</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-            {categories.map((category) => {
-              const Icon = iconMap[category.icon] || FileText;
-              return (
-                <Link
-                  key={category.id}
-                  href={`/help/${category.slug}`}
-                  className="group p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
-                >
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="p-2 md:p-3 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {category.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {category.thread_count} {category.thread_count === 1 ? "article" : "articles"}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Recent/Featured Threads */}
-        {recentThreads.length > 0 && (
-          <div>
-            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Featured &amp; Recent</h2>
-            <div className="space-y-2">
-              {recentThreads.map((thread) => (
-                <Link
-                  key={thread.id}
-                  href={`/help/${thread.category.slug}/${thread.slug}`}
-                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all"
-                >
-                  <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {thread.is_pinned && (
-                        <Pin className="w-3 h-3 text-yellow-500" />
-                      )}
-                      {thread.is_official && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
-                          Official
-                        </span>
-                      )}
-                      <span className="font-medium truncate">{thread.title}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {thread.reply_count} {thread.reply_count === 1 ? "reply" : "replies"}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Contact Support CTA */}
-        <div className="mt-8 md:mt-12 p-6 md:p-8 rounded-2xl bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/20 text-center">
-          <h2 className="text-xl md:text-2xl font-bold mb-2">Can&apos;t find what you&apos;re looking for?</h2>
-          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-            Our support team is here to help you with any questions.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/help/forum">
-              <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                <MessagesSquare className="w-5 h-5" />
-                Ask the Community
-              </Button>
-            </Link>
-            <Link href={user ? "/help/tickets/new" : "/auth/login"}>
-              <Button size="lg" className="gap-2 w-full sm:w-auto">
-                <MessageCircle className="w-5 h-5" />
-                {user ? "Contact Support" : "Sign in to Contact Support"}
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
     </div>
