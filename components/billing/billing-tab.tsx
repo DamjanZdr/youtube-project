@@ -739,7 +739,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       </div>
 
       {/* Plan Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 max-w-[1200px] mx-auto px-4 md:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 md:gap-6">
         {plans.map((plan) => {
           const isSamePlan = plan.id === (subscription?.plan || "free");
           // Normalize interval - Stripe uses "month"/"year", we use "monthly"/"yearly"
@@ -782,7 +782,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
           return (
             <Card
               key={plan.id}
-              className={`glass-card p-5 md:p-6 relative flex flex-col ${
+              className={`glass-card p-6 md:p-8 relative flex flex-col min-h-[320px] ${
                 plan.popular && !userHasHigherPlan ? "ring-2 ring-primary" : ""
               } ${isCurrent ? "bg-primary/5" : ""} ${exceedsMemberLimit ? "opacity-60" : ""}`}
             >
@@ -792,10 +792,10 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 </div>
               )}
 
-              <div className="mb-4 md:mb-6">
-                <h4 className="text-lg md:text-xl font-bold mb-2">{plan.name}</h4>
+              <div className="mb-5 md:mb-8">
+                <h4 className="text-xl md:text-2xl font-bold mb-2">{plan.name}</h4>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-2xl md:text-3xl font-bold">${price}</span>
+                  <span className="text-3xl md:text-4xl font-bold">${price}</span>
                   <span className="text-sm text-muted-foreground">
                     /{billingInterval === "monthly" ? "mo" : "yr"}
                   </span>
@@ -803,7 +803,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 <p className="text-xs md:text-sm text-muted-foreground leading-tight">{plan.description}</p>
               </div>
 
-              <ul className="space-y-2 md:space-y-3 mb-4 flex-1">
+              <ul className="space-y-3 md:space-y-4 mb-6 flex-1">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2">
                     {feature.included ? (
@@ -831,7 +831,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
               )}
 
               <Button
-                className="w-full mt-auto h-10 text-sm font-semibold"
+                className="w-full mt-auto h-11 text-sm font-semibold"
                 variant={
                   (isCurrent || isCurrentFree)
                     ? "outline" 

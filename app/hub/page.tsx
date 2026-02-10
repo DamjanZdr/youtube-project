@@ -450,22 +450,7 @@ export default function HubPage() {
                     </div>
                   </div>
                 </div>
-                {/* Subscriber Count Badge */}
-                {(studio.subscriberCount ?? 0) > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
-                        <Youtube className="w-4 h-4 text-red-500" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-foreground">
-                          {formatSubscriberCount(studio.subscriberCount || 0)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">subscribers</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+{/* Subscriber Count Badge - hidden while YouTube connection is disabled */}
               </Link>
             ))}
             
