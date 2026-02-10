@@ -203,7 +203,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1100px] w-[95vw]"}`}>
+      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1400px] w-[95vw]"}`}>
         {step === 1 ? (
           <div className="p-8 md:p-10 flex flex-col items-center">
             <h2 className="text-2xl font-bold mb-2 text-center">Create Studio</h2>
@@ -296,8 +296,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards */}
-            <div className="flex-1 overflow-y-auto px-6 md:px-10 py-6 md:py-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+            <div className="flex-1 overflow-y-auto px-6 md:px-12 py-6 md:py-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -308,7 +308,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-5 md:p-6 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
+                      className={`relative flex flex-col p-5 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -394,29 +394,33 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Action buttons: Back | Create Studio | Have a plan key? */}
-              <div className="flex items-center justify-center gap-3">
-                <Button variant="ghost" onClick={() => setStep(1)} className="px-5">
-                  Back
-                </Button>
-                <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 text-base font-medium">
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : selectedPlan === "free" || keyInfo ? (
-                    "Create Studio"
-                  ) : (
-                    "Continue to Checkout"
+              {/* Action buttons: Have a plan key? (left) | Back + Create Studio (right) */}
+              <div className="flex items-center justify-between">
+                <div>
+                  {!keyInfo && !showKeyInput && (
+                    <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10">
+                      <Key className="w-4 h-4" />
+                      Have a plan key?
+                    </Button>
                   )}
-                </Button>
-                {!keyInfo && !showKeyInput && (
-                  <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10">
-                    <Key className="w-4 h-4" />
-                    Have a plan key?
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-5">
+                    Back
                   </Button>
-                )}
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 text-base font-medium">
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : selectedPlan === "free" || keyInfo ? (
+                      "Create Studio"
+                    ) : (
+                      "Continue to Checkout"
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
