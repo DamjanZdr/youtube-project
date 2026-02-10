@@ -34,7 +34,7 @@ export function NavLinks({ studioSlug, collapsed = false, onNavigate }: NavLinks
 
   const navItems: NavItem[] = [
     { href: `/studio/${studioSlug}`, icon: Home, label: "Home" },
-    { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" },
+    // { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" }, // Temporarily hidden - YouTube connection disabled
     { href: `/studio/${studioSlug}/projects`, icon: FolderKanban, label: "Projects" },
     { href: `/studio/${studioSlug}/board`, icon: Layout, label: "Board" },
     { href: `/studio/${studioSlug}/wiki`, icon: BookOpen, label: "Wiki" },

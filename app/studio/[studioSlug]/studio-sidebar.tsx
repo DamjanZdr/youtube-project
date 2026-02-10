@@ -44,7 +44,7 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
     { href: `/studio/${studioSlug}/projects`, icon: FolderKanban, label: "Projects" },
     { href: `/studio/${studioSlug}/board`, icon: Layout, label: "Board" },
     { href: `/studio/${studioSlug}/wiki`, icon: BookOpen, label: "Wiki" },
-    { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" },
+    // { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" }, // Temporarily hidden - YouTube connection disabled
     { href: `/studio/${studioSlug}/settings`, icon: Settings, label: "Settings" },
   ];
 
