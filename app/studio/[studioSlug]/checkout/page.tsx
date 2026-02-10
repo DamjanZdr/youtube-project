@@ -95,14 +95,15 @@ export default function CheckoutPage() {
         </Button>
       </div>
 
-      <div id="checkout" className="rounded-2xl overflow-hidden shadow-2xl">
+      <div id="checkout">
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
           options={{ fetchClientSecret }}
         >
-          <EmbeddedCheckout className="min-h-[600px]" />
+          <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       </div>
+      <div className="h-12" />
     </div>
   );
 }
