@@ -412,14 +412,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Action buttons: Have a plan key? (left) | Back + Create Studio (right) */}
-              {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400">
-                  {error}
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div>
+              {/* Action buttons: Have a plan key? (left) | error (center) | Back + Create Studio (right) */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="shrink-0">
                   {!keyInfo && !showKeyInput && (
                     <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10">
                       <Key className="w-4 h-4" />
@@ -427,7 +422,12 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                {error && (
+                  <div className="flex-1 text-center text-sm text-red-400 truncate px-2">
+                    {error}
+                  </div>
+                )}
+                <div className="flex items-center gap-3 shrink-0">
                   <Button variant="ghost" onClick={() => setStep(1)} className="px-5">
                     Back
                   </Button>
