@@ -83,7 +83,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-6 md:py-12 px-4">
+    <div className="max-w-3xl mx-auto py-6 md:py-12 px-4 pb-16">
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -95,7 +95,7 @@ export default function CheckoutPage() {
         </Button>
       </div>
 
-      <div id="checkout">
+      <div id="checkout" className="rounded-2xl overflow-clip">
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
           options={{ fetchClientSecret }}
@@ -103,7 +103,6 @@ export default function CheckoutPage() {
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       </div>
-      <div className="h-12" />
     </div>
   );
 }
