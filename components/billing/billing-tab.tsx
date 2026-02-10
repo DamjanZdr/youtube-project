@@ -18,6 +18,7 @@ import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, G
 import { toast } from "sonner";
 import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
 import { createClient } from "@/lib/supabase/client";
+import { useParams, useRouter } from "next/navigation";
 
 interface PendingKey {
   id: string;
@@ -33,6 +34,9 @@ interface BillingTabProps {
 }
 
 export function BillingTab({ subscription, studioId }: BillingTabProps) {
+  const params = useParams();
+  const router = useRouter();
+  const studioSlug = params.studioSlug as string;
   const [loading, setLoading] = useState<string | null>(null);
   // Default to current subscription's interval, or monthly if no subscription
   const currentInterval = subscription?.interval === "year" ? "yearly" : "monthly";
@@ -127,6 +131,17 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
         ? plan.stripePriceId.monthly 
         : plan.stripePriceId.yearly;
       
+      // For new subscriptions (free plan users), use embedded checkout
+      if (isFreePlan && plan.id !== "free") {
+        sessionStorage.setItem("checkoutParams", JSON.stringify({
+          organizationId: studioId,
+          priceId,
+        }));
+        router.push(`/studio/${studioSlug}/checkout`);
+        return;
+      }
+
+      // For existing subscribers (upgrades/downgrades), use server action
       const { url } = await createCheckoutSession(studioId, priceId);
       if (url) {
         window.location.href = url;

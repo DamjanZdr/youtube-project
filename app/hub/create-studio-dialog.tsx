@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Check, Key, X, ImageIcon } from "lucide-react";
 import { createStudio } from "@/lib/actions/studio";
-import { createCheckoutSession } from "@/lib/actions/billing";
 import { plans as allPlans } from "@/config/subscriptions";
 import { toast } from "sonner";
 
@@ -139,30 +138,23 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
       }
     }
 
-    // If user selected a paid plan without a key, go directly to Stripe checkout
-    if (selectedPlan !== "free" && !keyInfo && result.id) {
+    // If user selected a paid plan without a key, go to embedded checkout
+    if (selectedPlan !== "free" && !keyInfo && result.id && result.slug) {
       const plan = plans.find(p => p.id === selectedPlan);
       const priceId = billingInterval === "monthly" 
         ? plan?.stripePriceId?.monthly 
         : plan?.stripePriceId?.yearly;
       
       if (priceId) {
-        try {
-          const checkout = await createCheckoutSession(result.id, priceId);
-          if (checkout?.url) {
-            setOpen(false);
-            resetForm();
-            window.location.href = checkout.url;
-            return;
-          }
-        } catch (checkoutError) {
-          console.error("Checkout error:", checkoutError);
-          toast.error("Studio created! Redirecting to billing to complete upgrade.");
-          router.push(`/studio/${result.slug}/settings?tab=billing`);
-          setOpen(false);
-          resetForm();
-          return;
-        }
+        // Store checkout params for the embedded checkout page
+        sessionStorage.setItem("checkoutParams", JSON.stringify({
+          organizationId: result.id,
+          priceId,
+        }));
+        setOpen(false);
+        resetForm();
+        router.push(`/studio/${result.slug}/checkout`);
+        return;
       }
     }
 
