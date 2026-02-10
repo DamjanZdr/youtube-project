@@ -203,7 +203,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1400px] w-[95vw]"}`}>
+      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1500px] w-[95vw] h-[85vh]"}`}>
         {step === 1 ? (
           <div className="p-8 md:p-10 flex flex-col items-center">
             <h2 className="text-2xl font-bold mb-2 text-center">Create Studio</h2>
@@ -308,7 +308,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-5 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
+                      className={`relative flex flex-col p-6 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl min-h-[340px] ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -329,7 +329,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         </div>
                       )}
 
-                      <div className="mb-5">
+                      <div className="mb-6">
                         <h4 className="text-lg md:text-xl font-bold mb-2">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
                           <span className="text-3xl md:text-4xl font-bold">${price}</span>
@@ -340,7 +340,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-2.5 flex-1">
+                      <ul className="space-y-3.5 flex-1">
                         {plan.features.slice(0, 5).map((feature, i) => (
                           <li key={i} className="flex items-start gap-2">
                             {feature.included ? (
