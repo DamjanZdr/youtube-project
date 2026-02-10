@@ -154,7 +154,7 @@ export async function createStudio(formData: FormData) {
 
   revalidatePath("/hub");
   
-  return { success: true, slug: studio.slug };
+  return { success: true, slug: studio.slug, id: studio.id };
 }
 
 // Get all studios for the current user
