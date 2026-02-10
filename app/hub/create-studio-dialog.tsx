@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Check, Key, X, ImageIcon } from "lucide-react";
@@ -111,7 +113,12 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
     const result = await createStudio(formData);
 
     if (result.error) {
-      setError(result.error);
+      // Make DB trigger errors more user-friendly
+      let errorMsg = result.error;
+      if (errorMsg.includes('free tier organization') || errorMsg.includes('one free tier')) {
+        errorMsg = "You can only have one free studio. Please upgrade your existing studio's plan, or select a paid plan for this new studio.";
+      }
+      setError(errorMsg);
       setLoading(false);
       return;
     }
@@ -213,6 +220,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
         )}
       </DialogTrigger>
       <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1550px] w-[95vw] h-[75vh]"}`}>
+        <DialogTitle className="sr-only">Create Studio</DialogTitle>
+        <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
           <div className="p-8 md:p-10 flex flex-col items-center">
             <h2 className="text-2xl font-bold mb-2 text-center">Create Studio</h2>

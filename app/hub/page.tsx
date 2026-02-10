@@ -122,23 +122,8 @@ export default function HubPage() {
             .select("*", { count: "exact", head: true })
             .eq("organization_id", org.id);
 
-          // Get subscriber count - try live from YouTube API first
-          let subscriberCount = 0;
-          try {
-            const response = await fetch(`/api/youtube/stats?organizationId=${org.id}`);
-            if (response.ok) {
-              const stats = await response.json();
-              subscriberCount = stats.subscriberCount || 0;
-            }
-          } catch (e) {
-            // YouTube not connected - try from cached channel data
-            const { data: channelsData } = await supabase
-              .from("channels")
-              .select("subscriber_count")
-              .eq("organization_id", org.id)
-              .limit(1);
-            subscriberCount = channelsData?.[0]?.subscriber_count || 0;
-          }
+          // Subscriber count disabled while YouTube connection is off
+          const subscriberCount = 0;
 
           return {
             id: org.id,
