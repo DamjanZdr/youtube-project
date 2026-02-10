@@ -25,24 +25,24 @@ export async function createStudio(formData: FormData) {
     return { error: "Studio name is required" };
   }
   
-  // Generate slug and ensure uniqueness
-  let slug = generateSlug(name);
-  let slugExists = true;
-  let attempts = 0;
+  // Generate slug and ensure uniqueness with sequential numbering
+  const baseSlug = generateSlug(name);
+  let slug = baseSlug;
+  let suffix = 2;
   
-  while (slugExists && attempts < 10) {
+  while (true) {
     const { data: existing } = await supabase
       .from("organizations")
       .select("id")
       .eq("slug", slug)
       .single();
     
-    if (!existing) {
-      slugExists = false;
-    } else {
-      attempts++;
-      slug = `${generateSlug(name)}-${Math.random().toString(36).substring(2, 6)}`;
-    }
+    if (!existing) break;
+    
+    slug = `${baseSlug}-${suffix}`;
+    suffix++;
+    
+    if (suffix > 100) break; // safety limit
   }
   
   // Must have a real authenticated user to create studios
