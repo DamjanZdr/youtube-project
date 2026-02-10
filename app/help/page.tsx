@@ -13,6 +13,8 @@ import {
   TicketIcon,
   ChevronRight,
   FileText,
+  Pin,
+  Eye,
   LayoutGrid,
   Shield,
   Loader2,
@@ -20,6 +22,7 @@ import {
   BookOpen,
   MessagesSquare,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface Thread {
   id: string;
@@ -28,6 +31,7 @@ interface Thread {
   is_pinned: boolean;
   is_official: boolean;
   reply_count: number;
+  view_count: number;
   created_at: string;
   category: {
     slug: string;
@@ -41,6 +45,9 @@ export default function HelpCenterPage() {
   const [searchResults, setSearchResults] = useState<Thread[]>([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 5;
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -112,7 +119,6 @@ export default function HelpCenterPage() {
   };
 
   const loadData = async () => {
-    // Load recent/pinned threads
     const { data: threads } = await supabase
       .from("help_threads")
       .select(`
@@ -122,18 +128,48 @@ export default function HelpCenterPage() {
         is_pinned,
         is_official,
         reply_count,
+        view_count,
         created_at,
-        category:help_categories(slug)
+        category:help_categories(slug, name)
       `)
-      .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(5);
+      .range(0, PAGE_SIZE - 1);
 
     if (threads) {
       setRecentThreads(threads as unknown as Thread[]);
+      setHasMore(threads.length === PAGE_SIZE);
     }
 
     setLoading(false);
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+
+    const from = recentThreads.length;
+    const { data: threads } = await supabase
+      .from("help_threads")
+      .select(`
+        id,
+        title,
+        slug,
+        is_pinned,
+        is_official,
+        reply_count,
+        view_count,
+        created_at,
+        category:help_categories(slug, name)
+      `)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (threads) {
+      setRecentThreads((prev) => [...prev, ...(threads as unknown as Thread[])]);
+      setHasMore(threads.length === PAGE_SIZE);
+    }
+
+    setLoadingMore(false);
   };
 
   if (loading) {
@@ -312,6 +348,109 @@ export default function HelpCenterPage() {
               </Link>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Recent Posts */}
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
+        <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Recent Posts</h2>
+        <div className="space-y-2">
+          {recentThreads.map((thread) => (
+            <Link
+              key={thread.id}
+              href={`/help/${thread.category.slug}/${thread.slug}`}
+              className="group flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10 transition-all"
+            >
+              <div className="p-2 rounded-lg bg-white/5 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {thread.is_pinned && (
+                    <Pin className="w-3 h-3 text-yellow-500 shrink-0" />
+                  )}
+                  {thread.is_official && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-primary/20 text-primary shrink-0">
+                      Official
+                    </span>
+                  )}
+                  <span className="font-medium truncate group-hover:text-primary transition-colors">
+                    {thread.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {thread.category.name && (
+                    <span className="text-primary/70">{thread.category.name}</span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {thread.view_count}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageCircle className="w-3 h-3" />
+                    {thread.reply_count}
+                  </span>
+                  <span>
+                    {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Load More */}
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Load More"
+              )}
+            </Button>
+          </div>
+        )}
+
+        {!hasMore && recentThreads.length > 0 && (
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            You&apos;ve reached the end
+          </p>
+        )}
+      </div>
+
+      {/* Footer CTA */}
+      <div className="border-t border-white/10">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-10 md:py-14">
+          <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/20 text-center">
+            <h2 className="text-xl md:text-2xl font-bold mb-2">Can&apos;t find what you&apos;re looking for?</h2>
+            <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
+              Our support team is here to help you with any questions.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/help/forum">
+                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                  <MessagesSquare className="w-5 h-5" />
+                  Ask the Community
+                </Button>
+              </Link>
+              <Link href={user ? "/help/tickets/new" : "/auth/login"}>
+                <Button size="lg" className="gap-2 w-full sm:w-auto">
+                  <MessageCircle className="w-5 h-5" />
+                  {user ? "Contact Support" : "Sign in to Contact Support"}
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
