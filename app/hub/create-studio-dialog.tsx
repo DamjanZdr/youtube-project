@@ -219,7 +219,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1550px] w-[95vw] h-[75vh]"}`}>
+      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1550px] w-[95vw] h-[85vh] max-h-[900px]"}`}>
         <DialogTitle className="sr-only">Create Studio</DialogTitle>
         <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
@@ -326,7 +326,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-6 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl h-full ${
+                      className={`relative flex flex-col p-6 md:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl h-full min-h-[280px] ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
