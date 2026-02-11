@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCallback, useEffect } from "react";
 import TurndownService from "turndown";
+import { marked } from "marked";
 
 interface RichTextEditorProps {
   value: string;
@@ -37,14 +38,18 @@ interface RichTextEditorProps {
   rows?: number;
 }
 
+// Configure marked for synchronous operation
+marked.use({ async: false });
+
 // Convert HTML to Markdown for storage
 const turndownService = new TurndownService({
   headingStyle: "atx",
   codeBlockStyle: "fenced",
   bulletListMarker: "-",
+  emDelimiter: "*",  // Use asterisks for italic, not underscores
 });
 
-// Custom rule for underline (markdown doesn't support it natively, use HTML)
+// Custom rule for underline (markdown doesn't support it natively, keep as HTML)
 turndownService.addRule("underline", {
   filter: ["u"],
   replacement: function (content) {
@@ -52,51 +57,12 @@ turndownService.addRule("underline", {
   },
 });
 
-// Convert Markdown to HTML for initial loading
+// Convert Markdown to HTML for loading into editor
 function markdownToHtml(markdown: string): string {
   if (!markdown) return "";
   
-  // Basic markdown to HTML conversion
-  let html = markdown
-    // Headers
-    .replace(/^##### (.*$)/gim, "<h3>$1</h3>")
-    .replace(/^#### (.*$)/gim, "<h3>$1</h3>")
-    .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-    .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-    .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-    // Bold and italic
-    .replace(/\*\*\*(.*?)\*\*\*/gim, "<strong><em>$1</em></strong>")
-    .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/gim, "<em>$1</em>")
-    // Inline code
-    .replace(/`([^`]+)`/gim, "<code>$1</code>")
-    // Code blocks
-    .replace(/```[\s\S]*?```/gim, (match) => {
-      const code = match.replace(/```\w*\n?/g, "").replace(/```/g, "");
-      return `<pre><code>${code}</code></pre>`;
-    })
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>')
-    // Blockquotes
-    .replace(/^> (.*$)/gim, "<blockquote>$1</blockquote>")
-    // Horizontal rule
-    .replace(/^---$/gim, "<hr>")
-    // Unordered lists (simple)
-    .replace(/^- (.*$)/gim, "<li>$1</li>")
-    // Ordered lists (simple)
-    .replace(/^\d+\. (.*$)/gim, "<li>$1</li>")
-    // Line breaks
-    .replace(/\n\n/gim, "</p><p>")
-    .replace(/\n/gim, "<br>");
-
-  // Wrap consecutive li elements in ul
-  html = html.replace(/(<li>.*?<\/li>)+/gi, (match) => `<ul>${match}</ul>`);
-  
-  // Wrap in paragraph if not already wrapped
-  if (!html.startsWith("<")) {
-    html = `<p>${html}</p>`;
-  }
-
+  // Use marked for proper markdown parsing
+  const html = marked.parse(markdown, { async: false }) as string;
   return html;
 }
 
