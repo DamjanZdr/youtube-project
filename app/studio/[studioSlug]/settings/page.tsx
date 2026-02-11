@@ -218,9 +218,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     setInviting(true);
     
     // Check if user exists and get their invite preference using security definer function
-    const { data: existingUser } = await supabase
-      .rpc('lookup_user_for_invite', { lookup_email: inviteEmail })
-      .single();
+    const { data: users } = await supabase
+      .rpc('lookup_user_for_invite', { lookup_email: inviteEmail });
+    
+    const existingUser = users?.[0];
 
     if (!existingUser) {
       toast.error('User not found. They need to sign up first.');
@@ -470,9 +471,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     setTransferring(true);
     
     // Check if user exists using security definer function
-    const { data: existingUser } = await supabase
-      .rpc('lookup_user_for_invite', { lookup_email: transferEmail })
-      .single();
+    const { data: users } = await supabase
+      .rpc('lookup_user_for_invite', { lookup_email: transferEmail });
+    
+    const existingUser = users?.[0];
 
     if (!existingUser) {
       toast.error('User not found. They need to sign up first.');
