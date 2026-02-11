@@ -361,7 +361,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       {/* Sets Section */}
-      <div className="mb-8">
+      <div data-tutorial="sets-section" className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Title & Thumbnail Sets</h2>
@@ -402,7 +402,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
 
                 {/* Thumbnail */}
                 <div className="w-48 shrink-0">
-                  <div data-tutorial="thumbnail-upload" className={`${videoType === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-white/20 transition-colors`}>
+                  <div data-tutorial={index === 0 ? "thumbnail-upload" : undefined} className={`${videoType === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-white/20 transition-colors`}>
                     {set.thumbnail ? (
                       <img src={set.thumbnail} alt="" className="w-full h-full object-cover rounded-xl" />
                     ) : (
@@ -427,7 +427,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                     )}
                   </div>
                   <Input 
-                    data-tutorial="title-input"
+                    data-tutorial={index === 0 ? "title-input" : undefined}
                     value={set.title}
                     onChange={(e) => {
                       e.stopPropagation();
@@ -473,7 +473,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
       </div>
 
       {/* Description, Video Type & Other Fields */}
-      <div className="grid grid-cols-1 lg:grid-cols-[0.7fr_1fr] gap-6">
+      <div data-tutorial="metadata-section" className="grid grid-cols-1 lg:grid-cols-[0.7fr_1fr] gap-6">
         {/* Left Column: Description & Video Type */}
         <div className="space-y-6">
           {/* Description */}

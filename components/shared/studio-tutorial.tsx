@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Create Project Dialog",
     content: "The project creation dialogue isn't mandatory to fill out. If you don't have a name for the project yet, and just want to brainstorm, you can leave the title empty. Just select whether you are thinking of a long form video or a short video and create the project.",
     icon: <Plus className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/projects$/,
   },
 
   // === 3. IDEA PAGE ===
@@ -105,7 +104,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Voice to Text",
     content: "You can also use \"Voice\" if you are not a fan of writing manually. This is a simple voice to text feature that helps people that enjoy saying their ideas out loud instead of typing them down.",
     icon: <Mic className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/idea$/,
     highlights: [
       { selector: "[data-tutorial='voice-button']" },
     ],
@@ -115,7 +113,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Why Idea First",
     content: "Something that most YouTubers do wrong, is they jump right into scriptwriting, recording and editing. But just like the idea phase is important, even more crucial is to first do the packaging, before even writing a single word for your script.",
     icon: <Lightbulb className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/idea$/,
   },
   {
     id: 8,
@@ -132,13 +129,16 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     content: "Other than planning out your metadata, the packaging tab allows you to make 6 different sets of titles and thumbnails. When making a video, you wanna make sure you test it as much as possible, to ensure it is something people will want to watch.",
     icon: <Package className="w-5 h-5" />,
     expectedPath: /\/project\/[^/]+\/packaging$/,
+    highlights: [
+      { selector: "[data-tutorial='sets-section']", label: "1" },
+      { selector: "[data-tutorial='metadata-section']", label: "2" },
+    ],
   },
   {
     id: 10,
     title: "Create a Set",
     content: "For now, create a simple title, and add any image as a thumbnail. It is for testing purposes only, you can change it later.",
     icon: <Package className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/packaging$/,
     highlights: [
       { selector: "[data-tutorial='title-input']", label: "1" },
       { selector: "[data-tutorial='thumbnail-upload']", label: "2" },
@@ -168,7 +168,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Suggested Videos",
     content: "You can see how your video will look on the home feed, but also in the suggested videos section. Go ahead, switch to the suggested version.",
     icon: <Eye className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/preview$/,
     highlights: [
       { selector: "[data-tutorial='view-feed']", label: "1" },
       { selector: "[data-tutorial='view-suggested']", label: "2" },
@@ -179,7 +178,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Mobile Preview",
     content: "And not only on desktop, but also on mobile. Try it out now! Don't forget, mobile also has feed and suggested. Try them both.",
     icon: <Eye className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/preview$/,
     highlights: [
       { selector: "[data-tutorial='device-desktop']", label: "1" },
       { selector: "[data-tutorial='device-mobile']", label: "2" },
@@ -206,7 +204,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Scene Planning",
     content: "The process that big creators use is, while writing the script, to also write what exactly should be shown on screen while that part of the script is being read. That way, all the editor (even if that's still you) has to do is simply add the elements mentioned in the editor notes and match the part of the recording where the script is being read.",
     icon: <Layout className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/storyboard$/,
     highlights: [
       { selector: "[data-tutorial='scene-script']", label: "Script" },
       { selector: "[data-tutorial='scene-notes']", label: "Editor Notes" },
@@ -217,7 +214,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Multiple Scenes",
     content: "You can also make more scenes. That way, you can split your work into smaller pieces and make it easier to follow how far you have gotten. Of course you can move your scenes to change their order by dragging them or clicking the arrows, or simply delete them.",
     icon: <Layout className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/storyboard$/,
     highlights: [
       { selector: "[data-tutorial='add-scene']" },
     ],
@@ -227,7 +223,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Scene Completion",
     content: "The storyboard also helps you know approximately how long your video will be, as well as the ability to mark off a section as complete, so that the next day when you are ready to continue editing you know exactly where you left off.",
     icon: <Layout className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/storyboard$/,
     highlights: [
       { selector: "[data-tutorial='scene-duration']", label: "1" },
       { selector: "[data-tutorial='scene-complete']", label: "2" },
@@ -257,21 +252,18 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Moving Projects",
     content: "You can see your active project here. By dragging and dropping, you can change the current stage that your project is in. Go ahead, move it to the \"Package\" stage.",
     icon: <Columns3 className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/board$/,
   },
   {
     id: 23,
     title: "Project Tasks",
     content: "If you click on the project it opens the stages with the tasks for each stage that you can check as completed as you go. As mentioned earlier, these tasks are the default suggested tasks, but you can change them to fit your exact process.",
     icon: <CheckSquare className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/board$/,
   },
   {
     id: 24,
     title: "Team & Deadlines",
     content: "Additionally if you work in a team you can assign people to the project, or the individual stages, as well as set a deadline for the entire project, and for individual stages.",
     icon: <Users className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/board$/,
     highlights: [
       { selector: "[data-tutorial='project-assignee']", label: "1" },
       { selector: "[data-tutorial='project-deadline']", label: "2" },
@@ -302,7 +294,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Document Editor",
     content: "This is the document. Simple text editor, with basic formatting options. Here you want to keep stuff like, for example, the font you use on your thumbnails. The font you use on your text captions. You can make more documents and save links to sound effects, or background songs you want to use in your videos.",
     icon: <BookOpen className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/wiki/,
   },
   {
     id: 28,
@@ -337,7 +328,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Members Settings",
     content: "Here you can see the members, their roles and you can invite, remove members or edit their roles, if you have the permission for it.",
     icon: <Users className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/settings/,
   },
   {
     id: 32,
@@ -351,14 +341,12 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Billing Overview",
     content: "Here you can see your billing overview, such as your current billing cycle, and the upcoming one (if there is one).",
     icon: <CreditCard className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/settings/,
   },
   {
     id: 34,
     title: "Plans & Pricing",
     content: "You can see the options and what they include as well as the prices. Keep in mind, yearly subscriptions are 17% cheaper. Also here you can use a key if you have one to obtain a gifted subscription.",
     icon: <CreditCard className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/settings/,
     highlights: [
       { selector: "[data-tutorial='billing-plans']", label: "1" },
       { selector: "[data-tutorial='billing-redeem']", label: "2" },
@@ -411,6 +399,9 @@ export function StudioTutorial({
   );
   const [highlightPositions, setHighlightPositions] = useState<HighlightPosition[]>([]);
   const [clickRect, setClickRect] = useState<DOMRect | null>(null);
+  
+  // Track previous pathname to only auto-advance on actual navigation
+  const prevPathnameRef = useRef<string>(pathname);
 
   // Update highlight positions when step changes
   useEffect(() => {
@@ -464,9 +455,13 @@ export function StudioTutorial({
     };
   }, [currentStep, isVisible, pathname]);
 
-  // Auto-advance when user navigates to expected path
+  // Auto-advance when user navigates to expected path (only on actual navigation)
   useEffect(() => {
     if (!isVisible || currentStep === null) return;
+    
+    // Only auto-advance when pathname actually changed (prevents cascade)
+    if (prevPathnameRef.current === pathname) return;
+    prevPathnameRef.current = pathname;
     
     const nextStep = TUTORIAL_STEPS[currentStep + 1];
     
