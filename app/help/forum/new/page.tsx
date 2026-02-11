@@ -11,13 +11,16 @@ import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { toast } from "sonner";
 import {
   ChevronLeft,
+  ChevronDown,
   Send,
   Loader2,
   LayoutGrid,
   Shield,
+  HelpCircle,
   BookOpen,
   MessagesSquare,
   TicketIcon,
+  Check,
 } from "lucide-react";
 
 interface Category {
@@ -48,6 +51,7 @@ export default function NewForumThreadPage() {
   // Form state
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   const supabase = createClient();
@@ -214,6 +218,13 @@ export default function NewForumThreadPage() {
               href="/help"
               className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
             >
+              <HelpCircle className="w-4 h-4" />
+              Help Center
+            </Link>
+            <Link
+              href="/help/self-help"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
               <BookOpen className="w-4 h-4" />
               Self Help
             </Link>
@@ -256,17 +267,50 @@ export default function NewForumThreadPage() {
           {/* Category selector */}
           <div>
             <label className="block text-sm font-medium mb-2">Category</label>
-            <select
-              value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+              >
+                <span>
+                  {categories.find((c) => c.id === selectedCategoryId)?.name || "Select a category"}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {dropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg bg-background border border-white/10 shadow-xl overflow-hidden">
+                    <div className="py-1 max-h-64 overflow-y-auto">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategoryId(cat.id);
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors ${
+                            selectedCategoryId === cat.id
+                              ? "bg-primary/15 text-primary"
+                              : "text-foreground hover:bg-white/5"
+                          }`}
+                        >
+                          <span className="flex-1">{cat.name}</span>
+                          {selectedCategoryId === cat.id && (
+                            <Check className="w-4 h-4 text-primary shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             {selectedCategoryId && (
               <p className="text-xs text-muted-foreground mt-1.5">
                 {categories.find((c) => c.id === selectedCategoryId)?.description}
