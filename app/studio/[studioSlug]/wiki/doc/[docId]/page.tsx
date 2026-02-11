@@ -592,6 +592,19 @@ export default function WikiDocPage({ params }: DocPageProps) {
                   <ListOrdered className="w-4 h-4" />
                 </Button>
               </div>
+              
+              <div className="w-px h-6 bg-white/10 shrink-0" />
+              
+              {/* Text Color */}
+              <div className="shrink-0">
+                <input
+                  type="color"
+                  onInput={(e) => editor.chain().focus().setColor(e.currentTarget.value).run()}
+                  value={editor.getAttributes("textStyle").color || "#ffffff"}
+                  className="w-8 h-8 rounded cursor-pointer border border-white/10 bg-transparent"
+                  title="Text Color"
+                />
+              </div>
             </div>
           </div>
         </div>

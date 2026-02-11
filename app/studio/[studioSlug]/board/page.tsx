@@ -1257,13 +1257,13 @@ export default function BoardPage() {
 
                           {/* Status Assignee and Due Date - Only show when expanded */}
                           {!isCollapsed && (
-                            <div className="flex items-center gap-3 mt-2 sm:mt-0 pl-6 sm:pl-0" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2 mt-2 sm:mt-0 pl-6 sm:pl-0" onClick={(e) => e.stopPropagation()}>
                               {/* Status Assignee */}
                               <Select
                                 value={statusDetail?.assignee_id || "unassigned"}
                                 onValueChange={(value) => updateStatusAssignee(selectedProject.id, status.id, value === "unassigned" ? null : value)}
                               >
-                                <SelectTrigger className="w-28 sm:w-32 h-7 text-xs bg-transparent border-white/10">
+                                <SelectTrigger className="w-[120px] h-8 text-xs bg-transparent border-white/10">
                                   <SelectValue>
                                     {statusAssignee ? (
                                       (() => {
@@ -1308,12 +1308,12 @@ export default function BoardPage() {
                               </Select>
 
                               {/* Status Due Date */}
-                              <div className="relative w-24 sm:w-28">
+                              <div className="relative w-[120px]">
                                 <input
                                   type="date"
                                   value={statusDetail?.due_date || ''}
                                   onChange={(e) => updateStatusDueDate(selectedProject.id, status.id, e.target.value || null)}
-                                  className="w-full px-2 py-1 pr-6 rounded bg-transparent border border-white/10 focus:border-primary focus:outline-none text-xs h-7 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                  className="w-full px-2 py-1 pr-6 rounded bg-transparent border border-white/10 focus:border-primary focus:outline-none text-xs h-8 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                 />
                                 {statusDetail?.due_date && (
                                   <button

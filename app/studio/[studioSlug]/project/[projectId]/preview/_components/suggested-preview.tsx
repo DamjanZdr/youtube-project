@@ -108,8 +108,8 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
       {/* Watch Page Content */}
       <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
-        {/* Main Video - fixed width with 16:9 ratio */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-356px)]">
+        {/* Main Video - takes available space */}
+        <div className="flex-1 flex flex-col min-w-0">
           <div 
             className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
             style={{ aspectRatio: '16/9' }}
