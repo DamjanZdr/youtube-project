@@ -169,9 +169,8 @@ export default function ForumPage() {
         reply_count,
         created_at,
         category_id,
-        category:help_categories(slug, name, icon),
-        author:profiles!author_id(full_name, avatar_url),
-        thread_categories:help_thread_categories(category_id)
+        category:help_categories!category_id(slug, name, icon),
+        author:profiles!author_id(full_name, avatar_url)
       `)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
@@ -183,7 +182,21 @@ export default function ForumPage() {
     if (threadData) {
       // Filter out official threads client-side to handle NULL values properly
       const userThreads = threadData.filter(t => t.is_official !== true);
-      setThreads(userThreads as unknown as Thread[]);
+      
+      // Fetch thread categories separately if needed
+      const threadIds = userThreads.map(t => t.id);
+      const { data: catData } = await supabase
+        .from("help_thread_categories")
+        .select("thread_id, category_id")
+        .in("thread_id", threadIds);
+      
+      // Attach categories to threads
+      const threadsWithCats = userThreads.map(t => ({
+        ...t,
+        thread_categories: catData?.filter(c => c.thread_id === t.id) || []
+      }));
+      
+      setThreads(threadsWithCats as unknown as Thread[]);
     }
 
     setLoading(false);
