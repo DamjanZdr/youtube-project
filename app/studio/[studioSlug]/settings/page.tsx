@@ -598,7 +598,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         setActiveTab(value);
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
-        <TabsList className="glass w-full sm:w-auto overflow-x-auto h-12">
+        <TabsList data-tutorial="settings-tabs" className="glass w-full sm:w-auto overflow-x-auto h-12">
           <TabsTrigger value="studio" data-tutorial="settings-studio" className="gap-2 text-sm px-5 py-2.5">
             <SettingsIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Studio</span>
@@ -620,7 +620,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
         {/* Studio Settings */}
         <TabsContent value="studio" className="space-y-6">
-          <div className="glass-card p-4 md:p-6 space-y-6">
+          <div data-tutorial="studio-profile" className="glass-card p-4 md:p-6 space-y-6">
             <div>
               <h3 className="text-base md:text-lg font-semibold mb-4">Studio Profile</h3>
               
@@ -693,7 +693,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
           {/* Transfer Ownership Section - Only visible to owner */}
           {isCurrentUserOwner() && (
-            <div className="glass-card p-6 border-amber-500/20">
+            <div data-tutorial="transfer-ownership" className="glass-card p-6 border-amber-500/20">
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
                   <Crown className="w-5 h-5 text-amber-500" />
@@ -769,7 +769,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           )}
 
           {/* Tutorial & Help */}
-          <div className="glass-card p-6">
+          <div data-tutorial="tutorial-help" className="glass-card p-6">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/30">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -792,7 +792,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           </div>
 
           {/* Danger Zone */}
-          <div className="glass-card p-6 border-red-500/20">
+          <div data-tutorial="danger-zone" className="glass-card p-6 border-red-500/20">
             <h3 className="text-lg font-semibold text-red-500 mb-4">Danger Zone</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Deleting your studio is permanent and cannot be undone. All projects,

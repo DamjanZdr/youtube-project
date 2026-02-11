@@ -33,6 +33,7 @@ export function PreviewControls({
     <div className="relative flex flex-wrap items-center justify-between gap-3 px-3 md:px-4 py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
       {/* Left: Orientation Toggle */}
       <ToggleGroup 
+        data-tutorial="device-toggle"
         type="single" 
         value={orientation} 
         onValueChange={(v) => v && onOrientationChange(v as Orientation)}
@@ -74,6 +75,7 @@ export function PreviewControls({
       {/* Right: Mode Toggle + Compare */}
       <div className="flex items-center gap-3">
         <ToggleGroup 
+          data-tutorial="view-toggle"
           type="single" 
           value={previewMode} 
           onValueChange={(v) => v && onPreviewModeChange(v as PreviewMode)}

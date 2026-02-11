@@ -444,7 +444,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       )}
 
       {/* Billing Overview Card */}
-      <Card className="glass-card p-6">
+      <Card data-tutorial="billing-overview" className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Billing Overview</h2>
           {!isFreePlan && !isGiftedPlan && (

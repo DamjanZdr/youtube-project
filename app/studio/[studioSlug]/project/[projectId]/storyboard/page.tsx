@@ -393,8 +393,9 @@ export default function StoryboardPage() {
                 <div className="flex flex-col md:grid md:grid-cols-[auto_1fr_1fr_auto] gap-3 md:gap-4">
                   {/* Scene Number & Reorder - Row on mobile, Column on desktop */}
                   <div className="flex flex-row md:flex-col items-center justify-between md:justify-center gap-2 md:gap-0.5">
-                    <div className="flex md:flex-col items-center gap-1 md:gap-0.5">
+                    <div data-tutorial={index === 0 ? "scene-reorder" : undefined} className="flex md:flex-col items-center gap-1 md:gap-0.5">
                       <Button
+                        data-tutorial={index === 0 ? "scene-up" : undefined}
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
@@ -407,6 +408,7 @@ export default function StoryboardPage() {
                         {index + 1}
                       </span>
                       <Button
+                        data-tutorial={index === 0 ? "scene-down" : undefined}
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
@@ -418,6 +420,7 @@ export default function StoryboardPage() {
                     </div>
                     {/* Delete Button on mobile - next to scene number */}
                     <Button
+                      data-tutorial={index === 0 ? "scene-delete" : undefined}
                       variant="ghost"
                       size="icon"
                       onClick={() => removeScene(scene.id)}
@@ -551,6 +554,7 @@ export default function StoryboardPage() {
                   {/* Delete Button - Hidden on mobile (shown in scene number row), Centered vertically on desktop */}
                   <div className="hidden md:flex flex-col items-center justify-center">
                     <Button
+                      data-tutorial={index === 0 ? "scene-delete" : undefined}
                       variant="ghost"
                       size="icon"
                       onClick={() => removeScene(scene.id)}
