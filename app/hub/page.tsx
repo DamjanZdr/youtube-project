@@ -360,11 +360,12 @@ export default function HubPage() {
                         {studio.name}
                       </h3>
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 shrink-0 ${
+                        studio.plan === 'enterprise' ? 'border-amber-500/50 text-amber-400' :
                         studio.plan === 'studio' ? 'border-purple-500/50 text-purple-400' :
                         studio.plan === 'creator' ? 'border-blue-500/50 text-blue-400' :
                         'border-white/20 text-muted-foreground'
                       }`}>
-                        {studio.plan === 'studio' ? 'Studio' : studio.plan === 'creator' ? 'Creator' : 'Free'}
+                        {studio.plan === 'enterprise' ? 'Enterprise' : studio.plan === 'studio' ? 'Studio' : studio.plan === 'creator' ? 'Creator' : 'Free'}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">

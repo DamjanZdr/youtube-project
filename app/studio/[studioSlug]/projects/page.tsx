@@ -170,7 +170,7 @@ export default function ProjectsPage() {
       .single();
 
     const plan = sub?.plan || "free";
-    const limits: Record<string, number> = { free: 1, creator: -1, studio: -1, agency: -1 };
+    const limits: Record<string, number> = { free: 1, creator: -1, studio: -1, enterprise: -1 };
     const limit = limits[plan] ?? 1;
 
     if (limit !== -1 && (projectCount ?? 0) >= limit) {
