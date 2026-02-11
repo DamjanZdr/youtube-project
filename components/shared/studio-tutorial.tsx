@@ -23,13 +23,35 @@ import {
   CreditCard,
   Mic,
   User,
-  Play
+  Play,
+  LucideIcon
 } from "lucide-react";
+import tutorialStepsData from "@/config/tutorial-steps.json";
+
+// Icon mapping from string names to components
+const ICONS: Record<string, LucideIcon> = {
+  Home,
+  FolderOpen,
+  Lightbulb,
+  Package,
+  Eye,
+  Layout,
+  CheckSquare,
+  Columns3,
+  BookOpen,
+  Settings,
+  Plus,
+  Users,
+  CreditCard,
+  Mic,
+  User,
+  Play,
+};
 
 interface HighlightItem {
   selector: string;
-  label?: string; // Optional numbered label like "1", "2", etc.
-  isGroup?: boolean; // If true, combines all matched elements into one bounding box
+  label?: string;
+  isGroup?: boolean;
 }
 
 interface TutorialStep {
@@ -37,441 +59,28 @@ interface TutorialStep {
   title: string;
   content: string;
   icon: React.ReactNode;
-  expectedPath?: string | RegExp;
-  highlights?: HighlightItem[]; // Multiple elements to highlight with labels
-  clickSelector?: string; // Element user needs to click (green pulsing)
-  clickSelectors?: string[]; // Multiple elements - clicking any of them advances
-  autoAdvanceOnClick?: string; // Selector - clicking this element auto-advances to next step
+  expectedPath?: RegExp;
+  highlights?: HighlightItem[];
+  clickSelector?: string;
+  clickSelectors?: string[];
+  autoAdvanceOnClick?: string;
 }
 
-const TUTORIAL_STEPS: TutorialStep[] = [
-  // === 1. HOME PAGE ===
-  {
-    id: 0,
-    title: "Welcome to Your Studio",
-    content: "This is the home page where you can see a summary of all your projects.",
-    icon: <Home className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+$/,
-  },
-  {
-    id: 1,
-    title: "Project Stats",
-    content: "Here you can see (1) the total amount of projects your studio has, (2) how many are in progress, and (3) how many are completed.",
-    icon: <Home className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='stat-total']", label: "1" },
-      { selector: "[data-tutorial='stat-progress']", label: "2" },
-      { selector: "[data-tutorial='stat-completed']", label: "3" },
-    ],
-  },
-  {
-    id: 2,
-    title: "Project Pipeline",
-    content: "This shows (1) the projects in each stage at a glance and (2) your most recent projects for quick access.",
-    icon: <Home className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='pipeline']", label: "1" },
-      { selector: "[data-tutorial='recent-projects']", label: "2" },
-    ],
-  },
-  {
-    id: 3,
-    title: "Go to Projects",
-    content: "Up next is the Projects tab. Click on it to proceed.",
-    icon: <FolderOpen className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-projects']",
-  },
-
-  // === 2. PROJECTS PAGE ===
-  {
-    id: 4,
-    title: "Projects Library",
-    content: "This is where all of your projects are created and stored. Go ahead, try creating a new project.",
-    icon: <FolderOpen className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/projects$/,
-    clickSelector: "[data-tutorial='new-project']",
-  },
-  {
-    id: 5,
-    title: "Create Project Dialog",
-    content: "The project creation dialogue isn't mandatory to fill out. If you don't have a name for the project yet, and just want to brainstorm, you can leave the title empty. Just select whether you are thinking of a long form video or a short video and create the project.",
-    icon: <Plus className="w-5 h-5" />,
-  },
-
-  // === 3. IDEA PAGE ===
-  {
-    id: 6,
-    title: "Idea Tab",
-    content: "As you can see when creating a project, we land on the Idea tab. It's always useful to have some place to note down your brainstorming. Write down your ideas, plan your hook, what will keep the users watching after the hook, what do you want your call to action of this video to be.",
-    icon: <Lightbulb className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/idea$/,
-    highlights: [
-      { selector: "[data-tutorial='idea-editor']" },
-    ],
-  },
-  {
-    id: 7,
-    title: "Voice to Text",
-    content: "You can also use \"Voice\" if you are not a fan of writing manually. This is a simple voice to text feature that helps people that enjoy saying their ideas out loud instead of typing them down.",
-    icon: <Mic className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='voice-button']" },
-    ],
-  },
-  {
-    id: 8,
-    title: "Why Idea First",
-    content: "Something that most YouTubers do wrong, is they jump right into scriptwriting, recording and editing. But just like the idea phase is important, even more crucial is to first do the packaging, before even writing a single word for your script.",
-    icon: <Lightbulb className="w-5 h-5" />,
-  },
-  {
-    id: 9,
-    title: "Go to Packaging",
-    content: "Go ahead and open the packaging tab.",
-    icon: <Package className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-packaging']",
-  },
-
-  // === 4. PACKAGING PAGE ===
-  {
-    id: 10,
-    title: "Packaging Sections",
-    content: "The packaging tab has two main areas: (1) the Sets section where you create title and thumbnail combinations, and (2) the Metadata section for video description and tags.",
-    icon: <Package className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/packaging$/,
-    highlights: [
-      { selector: "[data-tutorial='sets-section']", label: "1" },
-      { selector: "[data-tutorial='metadata-section']", label: "2" },
-    ],
-  },
-  {
-    id: 11,
-    title: "Multiple Sets",
-    content: "You can make up to 6 different sets of titles and thumbnails. When making a video, you wanna make sure you test it as much as possible, to ensure it is something people will want to watch.",
-    icon: <Package className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='sets-section']" },
-    ],
-  },
-  {
-    id: 12,
-    title: "Create a Set",
-    content: "For now, create a simple title, and add any image as a thumbnail. It is for testing purposes only, you can change it later.",
-    icon: <Package className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='title-input']", label: "1" },
-      { selector: "[data-tutorial='thumbnail-upload']", label: "2" },
-    ],
-  },
-  {
-    id: 13,
-    title: "Go to Preview",
-    content: "Once you have made at least one set, move on to the preview tab.",
-    icon: <Eye className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-preview']",
-  },
-
-  // === 5. PREVIEW PAGE ===
-  {
-    id: 14,
-    title: "Preview Tab",
-    content: "In the preview, you can see how your set will look like on the YouTube platform.",
-    icon: <Eye className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/preview$/,
-  },
-  {
-    id: 15,
-    title: "Compare Feature",
-    content: "If you wanna compare your thumbnail to your live competition, enable the compare feature. It uses the title of the set to search and show other videos so you can see how exactly your video might look next to them.",
-    icon: <Eye className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='compare-toggle']",
-  },
-  {
-    id: 16,
-    title: "Feed vs Suggested",
-    content: "You can see how your video will look on the home feed, but also in the suggested videos section. Go ahead, click on \"Suggested\" to switch views.",
-    icon: <Eye className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='view-toggle']", isGroup: true },
-    ],
-    autoAdvanceOnClick: "[data-tutorial='view-suggested']",
-  },
-  {
-    id: 17,
-    title: "Desktop vs Mobile",
-    content: "You can also preview how it looks on different devices. Click on \"Mobile\" to see the mobile view.",
-    icon: <Eye className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='device-toggle']", isGroup: true },
-    ],
-    autoAdvanceOnClick: "[data-tutorial='device-mobile']",
-  },
-  {
-    id: 18,
-    title: "Try All Combinations",
-    content: "Don't forget, mobile also has feed and suggested. Try them both to make sure your thumbnail looks great everywhere.",
-    icon: <Eye className="w-5 h-5" />,
-  },
-  {
-    id: 19,
-    title: "Go to Storyboard",
-    content: "Once you have tested several thumbnails, found the one you like the most, and you are certain that this is something that people will want to click on, move on to the storyboard tab.",
-    icon: <Layout className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-storyboard']",
-  },
-
-  // === 6. STORYBOARD PAGE ===
-  {
-    id: 20,
-    title: "Storyboard",
-    content: "This is the storyboard. It is very user-friendly and simple, but extremely important in order to make good videos. Most people write their script, and then they go to recording and editing. This is a trap that has made many YouTuber's exhausted when making videos, and eventually led them to quit.",
-    icon: <Layout className="w-5 h-5" />,
-    expectedPath: /\/project\/[^/]+\/storyboard$/,
-  },
-  {
-    id: 21,
-    title: "Scene Structure",
-    content: "Each scene has two parts: (1) the Script where you write what you'll say, and (2) the Editor Notes where you describe what should be shown on screen while that part is being read.",
-    icon: <Layout className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='scene-script']", label: "1" },
-      { selector: "[data-tutorial='scene-notes']", label: "2" },
-    ],
-  },
-  {
-    id: 22,
-    title: "Why Editor Notes",
-    content: "The process that big creators use is, while writing the script, to also write what exactly should be shown on screen. That way, all the editor (even if that's still you) has to do is simply add the elements mentioned in the editor notes.",
-    icon: <Layout className="w-5 h-5" />,
-  },
-  {
-    id: 23,
-    title: "Managing Scenes",
-    content: "You can (1) add more scenes, (2) reorder them with the arrows, or (3) delete them. Click any of these buttons to continue.",
-    icon: <Layout className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='add-scene']", label: "1" },
-      { selector: "[data-tutorial='scene-reorder']", label: "2", isGroup: true },
-      { selector: "[data-tutorial='scene-delete']", label: "3" },
-    ],
-    clickSelectors: ["[data-tutorial='add-scene']", "[data-tutorial='scene-up']", "[data-tutorial='scene-down']", "[data-tutorial='scene-delete']"],
-  },
-  {
-    id: 24,
-    title: "Duration & Completion",
-    content: "The storyboard also shows (1) approximately how long each scene will take, and (2) you can mark sections as complete so you know where you left off.",
-    icon: <Layout className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='scene-duration']", label: "1" },
-      { selector: "[data-tutorial='scene-complete']", label: "2" },
-    ],
-  },
-  {
-    id: 25,
-    title: "Go to Board",
-    content: "These are the most important parts of your project. There's also tasks, but we will see those same tasks in the Board page. Go ahead, open it.",
-    icon: <Columns3 className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-board']",
-  },
-
-  // === 7. BOARD PAGE ===
-  {
-    id: 26,
-    title: "Board Overview",
-    content: "This is where all your projects are tracked into stages. Blueprint has the most crucial stages by default.",
-    icon: <Columns3 className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/board$/,
-  },
-  {
-    id: 27,
-    title: "Edit Board",
-    content: "With the edit button you can add, delete or edit stages, as well as the default tasks in each stage.",
-    icon: <Columns3 className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='board-edit']" },
-    ],
-  },
-  {
-    id: 28,
-    title: "Moving Projects",
-    content: "You can see your active project here. By dragging and dropping, you can change the current stage that your project is in. Go ahead, move it to the \"Package\" stage.",
-    icon: <Columns3 className="w-5 h-5" />,
-  },
-  {
-    id: 29,
-    title: "Project Tasks",
-    content: "If you click on the project it opens the stages with the tasks for each stage that you can check as completed as you go. These are the default suggested tasks, but you can change them to fit your exact process.",
-    icon: <CheckSquare className="w-5 h-5" />,
-  },
-  {
-    id: 30,
-    title: "Assignees",
-    content: "If you work in a team you can assign people to the project, or the individual stages.",
-    icon: <Users className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='project-assignee']" },
-    ],
-  },
-  {
-    id: 31,
-    title: "Deadlines",
-    content: "You can also set a deadline for the entire project, and for individual stages.",
-    icon: <Users className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='project-deadline']" },
-    ],
-  },
-  {
-    id: 32,
-    title: "Go to Wiki",
-    content: "You can now close the project tasks, and open up the Wiki page.",
-    icon: <BookOpen className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-wiki']",
-  },
-
-  // === 8. WIKI PAGE ===
-  {
-    id: 33,
-    title: "Wiki Overview",
-    content: "The Wiki is a simple concept but is crucial to ensuring not only easy access to all of your important resources, but also to maintaining your branding so that your viewers get used to your style and always recognize your videos.",
-    icon: <BookOpen className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/wiki/,
-  },
-  {
-    id: 34,
-    title: "Create a Document",
-    content: "Here you can create a document, or a folder and create documents in it. Go ahead and try it out. Click \"Create Document\" and name it something like \"Brand Fonts\".",
-    icon: <BookOpen className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='wiki-new-doc']",
-  },
-  {
-    id: 35,
-    title: "Document Editor",
-    content: "This is the document editor. Here you want to keep stuff like the font you use on your thumbnails, text captions, links to sound effects, or background songs you want to use in your videos.",
-    icon: <BookOpen className="w-5 h-5" />,
-  },
-  {
-    id: 36,
-    title: "Go to Settings",
-    content: "Then we have the settings tab. Please open it.",
-    icon: <Settings className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='nav-settings']",
-  },
-
-  // === 9. SETTINGS PAGE ===
-  {
-    id: 37,
-    title: "Settings Tabs",
-    content: "Here we have three settings sections: Studio, Members, and Billing.",
-    icon: <Settings className="w-5 h-5" />,
-    expectedPath: /\/studio\/[^/]+\/settings/,
-    highlights: [
-      { selector: "[data-tutorial='settings-tabs']", isGroup: true },
-    ],
-  },
-  {
-    id: 38,
-    title: "Studio Profile",
-    content: "In the Studio Profile section you can update your studio icon, name and url slug.",
-    icon: <Settings className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='studio-profile']" },
-    ],
-  },
-  {
-    id: 39,
-    title: "Transfer Ownership",
-    content: "You can transfer the studio to another user if needed.",
-    icon: <Settings className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='transfer-ownership']" },
-    ],
-  },
-  {
-    id: 40,
-    title: "Tutorial & Help",
-    content: "You can rerun this very tutorial anytime from here.",
-    icon: <Settings className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='tutorial-help']" },
-    ],
-  },
-  {
-    id: 41,
-    title: "Danger Zone",
-    content: "And you can delete the entire studio. Be careful with this - it's permanent!",
-    icon: <Settings className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='danger-zone']" },
-    ],
-  },
-  {
-    id: 42,
-    title: "Go to Members",
-    content: "Move on to the members settings.",
-    icon: <Users className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='settings-members']",
-    autoAdvanceOnClick: "[data-tutorial='settings-members']",
-  },
-  {
-    id: 43,
-    title: "Members Settings",
-    content: "Here you can see the members, their roles and you can invite, remove members or edit their roles, if you have the permission for it.",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    id: 44,
-    title: "Go to Billing",
-    content: "And last is the billing settings. Open it up.",
-    icon: <CreditCard className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='settings-billing']",
-    autoAdvanceOnClick: "[data-tutorial='settings-billing']",
-  },
-  {
-    id: 45,
-    title: "Billing Overview",
-    content: "Here you can see your billing overview, such as your current billing cycle, and the upcoming one (if there is one).",
-    icon: <CreditCard className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='billing-overview']" },
-    ],
-  },
-  {
-    id: 46,
-    title: "Plans",
-    content: "You can see the plan options and what they include as well as the prices. Keep in mind, yearly subscriptions are 17% cheaper.",
-    icon: <CreditCard className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='billing-plans']" },
-    ],
-  },
-  {
-    id: 47,
-    title: "Redeem Code",
-    content: "Here you can use a key if you have one to obtain a gifted subscription.",
-    icon: <CreditCard className="w-5 h-5" />,
-    highlights: [
-      { selector: "[data-tutorial='billing-redeem']" },
-    ],
-  },
-
-  // === 10. PROFILE ===
-  {
-    id: 48,
-    title: "Your Profile",
-    content: "Last but not least is your profile. Click on it now. From here you can go back to the hub where you have the list of your studios, you can open your account settings, you can access the help center, enable or disable invites, and sign out.",
-    icon: <User className="w-5 h-5" />,
-    clickSelector: "[data-tutorial='user-menu']",
-  },
-
-  // === DONE ===
-  {
-    id: 49,
-    title: "That's All!",
-    content: "That's all for now. Go ahead and get started on your first project.",
-    icon: <Play className="w-5 h-5" />,
-  },
-];
+// Convert JSON data to TutorialStep objects
+const TUTORIAL_STEPS: TutorialStep[] = tutorialStepsData.steps.map((step) => {
+  const IconComponent = ICONS[step.icon] || Home;
+  return {
+    id: step.id,
+    title: step.title,
+    content: step.content,
+    icon: <IconComponent className="w-5 h-5" />,
+    expectedPath: step.expectedPath ? new RegExp(step.expectedPath) : undefined,
+    highlights: step.highlights,
+    clickSelector: step.clickSelector,
+    clickSelectors: step.clickSelectors,
+    autoAdvanceOnClick: step.autoAdvanceOnClick,
+  };
+});
 
 interface StudioTutorialProps {
   studioSlug: string;
