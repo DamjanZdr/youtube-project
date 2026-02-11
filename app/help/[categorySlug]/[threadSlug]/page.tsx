@@ -43,6 +43,7 @@ import {
   ShieldOff,
   ShieldCheck,
   LayoutGrid,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -78,11 +79,13 @@ interface Reply {
   author_id: string | null;
   is_official: boolean;
   created_at: string;
+  parent_reply_id: string | null;
   author: {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
   } | null;
+  children?: Reply[];
 }
 
 export default function ThreadPage() {
@@ -99,6 +102,8 @@ export default function ThreadPage() {
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyToAuthor, setReplyToAuthor] = useState<string | null>(null);
 
   // Edit states
   const [editingThread, setEditingThread] = useState(false);
@@ -204,13 +209,35 @@ export default function ThreadPage() {
         is_official,
         created_at,
         author_id,
+        parent_reply_id,
         author:profiles!author_id(id, full_name, avatar_url)
       `)
       .eq("thread_id", threadData.id)
       .order("created_at", { ascending: true });
 
     if (replyData) {
-      setReplies(replyData as unknown as Reply[]);
+      // Organize replies into tree structure (1 level nesting)
+      const topLevel: Reply[] = [];
+      const childMap: Record<string, Reply[]> = {};
+
+      replyData.forEach((reply) => {
+        const replyWithChildren = { ...reply, children: [] } as unknown as Reply;
+        if (reply.parent_reply_id) {
+          if (!childMap[reply.parent_reply_id]) {
+            childMap[reply.parent_reply_id] = [];
+          }
+          childMap[reply.parent_reply_id].push(replyWithChildren);
+        } else {
+          topLevel.push(replyWithChildren);
+        }
+      });
+
+      // Attach children to their parents
+      topLevel.forEach((reply) => {
+        reply.children = childMap[reply.id] || [];
+      });
+
+      setReplies(topLevel);
     }
 
     setLoading(false);
@@ -227,6 +254,7 @@ export default function ThreadPage() {
         thread_id: thread.id,
         author_id: user.id,
         content: replyContent.trim(),
+        parent_reply_id: replyToId,
       });
 
     if (error) {
@@ -235,10 +263,36 @@ export default function ThreadPage() {
     } else {
       toast.success("Reply posted");
       setReplyContent("");
+      setReplyToId(null);
+      setReplyToAuthor(null);
       loadData(); // Reload to show new reply
     }
 
     setSubmitting(false);
+  };
+
+  // Handle clicking reply on a reply
+  const handleReplyToReply = (replyId: string, authorName: string, isChild: boolean, parentReplyId?: string) => {
+    // If it's a child reply or we're replying to a parent, set the appropriate parent
+    const targetParentId = isChild ? parentReplyId : replyId;
+    setReplyToId(targetParentId || null);
+    
+    // For child replies, auto-mention the author
+    if (isChild) {
+      setReplyContent(`@${authorName} `);
+    } else {
+      setReplyContent("");
+    }
+    setReplyToAuthor(authorName);
+    
+    // Scroll to reply form
+    document.getElementById("reply-form")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const cancelReplyTo = () => {
+    setReplyToId(null);
+    setReplyToAuthor(null);
+    setReplyContent("");
   };
 
   // Admin actions
@@ -696,12 +750,12 @@ export default function ThreadPage() {
         {!thread.is_official && replies.length > 0 && (
           <div className="mb-6 md:mb-8">
             <h2 className="text-sm font-medium text-muted-foreground mb-4">
-              {replies.length} {replies.length === 1 ? "Reply" : "Replies"}
+              {replies.reduce((acc, r) => acc + 1 + (r.children?.length || 0), 0)} {replies.reduce((acc, r) => acc + 1 + (r.children?.length || 0), 0) === 1 ? "Reply" : "Replies"}
             </h2>
             <div className="space-y-4">
               {replies.map((reply) => (
+                <div key={reply.id}>
                 <div
-                  key={reply.id}
                   className={`p-4 rounded-lg border ${
                     reply.is_official
                       ? "bg-primary/10 border-primary/30"
@@ -794,8 +848,139 @@ export default function ThreadPage() {
                       {reply.content}
                     </ReactMarkdown>
                   </div>
+                  {/* Reply button for top-level replies */}
+                  {user && !thread.is_locked && (
+                    <div className="mt-3 pt-2 border-t border-white/5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
+                        onClick={() => handleReplyToReply(reply.id, reply.author?.full_name || "Unknown", false)}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Reply
+                      </Button>
+                    </div>
+                  )}
                   </>
                   )}
+                </div>
+
+                {/* Nested replies (conversations) */}
+                {reply.children && reply.children.length > 0 && (
+                  <div className="ml-6 md:ml-10 mt-2 space-y-2 border-l-2 border-white/10 pl-4">
+                    {reply.children.map((childReply) => (
+                      <div
+                        key={childReply.id}
+                        className={`p-3 rounded-lg ${
+                          childReply.is_official
+                            ? "bg-primary/10 border border-primary/30"
+                            : "bg-white/[0.03]"
+                        }`}
+                      >
+                        {editingReplyId === childReply.id ? (
+                          <div>
+                            <div className="mb-3">
+                              <RichTextEditor
+                                value={editReplyContent}
+                                onChange={setEditReplyContent}
+                                placeholder="Edit your reply..."
+                                rows={4}
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingReplyId(null);
+                                  setEditReplyContent("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button size="sm" onClick={saveReplyEdit} disabled={savingReply}>
+                                {savingReply ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                        <>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                              {childReply.author?.avatar_url ? (
+                                <img src={childReply.author.avatar_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-3 h-3 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-xs">
+                                {childReply.author?.full_name || "Unknown"}
+                              </span>
+                              {childReply.is_official && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary">
+                                  Staff
+                                </span>
+                              )}
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatDistanceToNow(new Date(childReply.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {canEditReply(childReply) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <MoreHorizontal className="w-3 h-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => startEditReply(childReply)}>
+                                  <Pencil className="w-4 h-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setDeleteReplyId(childReply.id)}
+                                  className="text-red-400 focus:text-red-400"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                        <div className="text-sm leading-relaxed text-foreground/80 [&_p]:my-0 [&_p]:mb-1 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_u]:underline">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                            rehypePlugins={[rehypeRaw]}
+                          >
+                            {childReply.content}
+                          </ReactMarkdown>
+                        </div>
+                        {/* Reply button for child replies (auto @mention) */}
+                        {user && !thread.is_locked && (
+                          <div className="mt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[10px] text-muted-foreground hover:text-foreground h-6 px-1.5"
+                              onClick={() => handleReplyToReply(childReply.id, childReply.author?.full_name || "Unknown", true, reply.id)}
+                            >
+                              <MessageCircle className="w-3 h-3 mr-1" />
+                              Reply
+                            </Button>
+                          </div>
+                        )}
+                        </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 </div>
               ))}
             </div>
@@ -804,13 +989,32 @@ export default function ThreadPage() {
 
         {/* Reply Form - hidden for official threads */}
         {user && !thread.is_locked && !thread.is_official ? (
-          <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
-            <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
+          <div id="reply-form" className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm">
+                {replyToAuthor ? (
+                  <>Replying to <span className="text-primary">@{replyToAuthor}</span></>
+                ) : (
+                  "Post a Reply"
+                )}
+              </h3>
+              {replyToId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground h-7"
+                  onClick={cancelReplyTo}
+                >
+                  <X className="w-3.5 h-3.5 mr-1" />
+                  Cancel
+                </Button>
+              )}
+            </div>
             <div className="mb-4">
               <RichTextEditor
                 value={replyContent}
                 onChange={setReplyContent}
-                placeholder="Write your reply..."
+                placeholder={replyToAuthor ? `Reply to ${replyToAuthor}...` : "Write your reply..."}
                 rows={6}
               />
             </div>
