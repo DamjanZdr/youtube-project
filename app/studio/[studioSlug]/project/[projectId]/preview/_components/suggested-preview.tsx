@@ -108,8 +108,8 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
       {/* Watch Page Content */}
       <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
-        {/* Main Video - takes available space */}
-        <div className="flex-1 flex flex-col min-w-0">
+        {/* Main Video - takes available space but limited */}
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-380px)]">
           <div 
             className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
             style={{ aspectRatio: '16/9' }}
@@ -126,7 +126,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
         </div>
 
         {/* Suggested Sidebar */}
-        <div className="w-[280px] shrink-0 overflow-y-auto space-y-3" style={{ scrollbarWidth: "none" }}>
+        <div className="w-[360px] shrink-0 overflow-y-auto space-y-3" style={{ scrollbarWidth: "none" }}>
           {/* Shorts Section (3 shorts) */}
           <div className="mb-3">
             <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
