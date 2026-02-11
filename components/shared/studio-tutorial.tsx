@@ -151,18 +151,6 @@ export function StudioTutorial({
   // Track if we've auto-advanced from a click (prevent double-advance)
   const hasAutoAdvancedRef = useRef(false);
 
-  // Reset preview preferences to defaults when tutorial starts (so preview defaults to desktop)
-  useEffect(() => {
-    if (isVisible && currentStep !== null && currentStep < TUTORIAL_STEPS.length) {
-      // Clear preview-state localStorage so it defaults to desktop/feed/compare-off
-      try {
-        localStorage.removeItem('preview-state');
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-    }
-  }, []); // Only run once on mount when tutorial is active
-
   // Update highlight positions when step changes
   useEffect(() => {
     const step = TUTORIAL_STEPS[currentStep ?? 0];

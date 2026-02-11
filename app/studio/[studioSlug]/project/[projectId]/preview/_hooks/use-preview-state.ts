@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import type { Orientation, PreviewMode, YouTubeVideo } from "../_components";
 
 export interface UsePreviewStateReturn {
@@ -18,70 +18,18 @@ export interface UsePreviewStateReturn {
   setCompareShorts: (videos: YouTubeVideo[]) => void;
 }
 
-const STORAGE_KEY = "preview-state";
-
-function getStoredState() {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
+// Removed localStorage persistence - defaults should always be:
+// - orientation: landscape (desktop)
+// - previewMode: feed
+// - compareMode: false
 
 export function usePreviewState(): UsePreviewStateReturn {
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
-  const [orientation, setOrientationState] = useState<Orientation>("landscape");
-  const [previewMode, setPreviewModeState] = useState<PreviewMode>("feed");
-  const [compareMode, setCompareModeState] = useState(false);
-  const [compareVideos, setCompareVideosState] = useState<YouTubeVideo[]>([]);
-  const [compareShorts, setShortsState] = useState<YouTubeVideo[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = getStoredState();
-    if (stored) {
-      if (stored.orientation) setOrientationState(stored.orientation);
-      if (stored.previewMode) setPreviewModeState(stored.previewMode);
-      if (stored.compareMode !== undefined) setCompareModeState(stored.compareMode);
-    }
-    setIsHydrated(true);
-  }, []);
-
-  // Persist to localStorage when values change
-  const setOrientation = useCallback((value: Orientation) => {
-    setOrientationState(value);
-    if (typeof window !== "undefined") {
-      const stored = getStoredState() || {};
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, orientation: value }));
-    }
-  }, []);
-
-  const setPreviewMode = useCallback((value: PreviewMode) => {
-    setPreviewModeState(value);
-    if (typeof window !== "undefined") {
-      const stored = getStoredState() || {};
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, previewMode: value }));
-    }
-  }, []);
-
-  const setCompareMode = useCallback((value: boolean) => {
-    setCompareModeState(value);
-    if (typeof window !== "undefined") {
-      const stored = getStoredState() || {};
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, compareMode: value }));
-    }
-  }, []);
-
-  const setCompareVideos = useCallback((videos: YouTubeVideo[]) => {
-    setCompareVideosState(videos);
-  }, []);
-
-  const setCompareShorts = useCallback((videos: YouTubeVideo[]) => {
-    setShortsState(videos);
-  }, []);
+  const [orientation, setOrientation] = useState<Orientation>("landscape");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("feed");
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareVideos, setCompareVideos] = useState<YouTubeVideo[]>([]);
+  const [compareShorts, setCompareShorts] = useState<YouTubeVideo[]>([]);
 
   return {
     currentSetIndex,
