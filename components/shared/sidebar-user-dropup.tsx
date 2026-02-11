@@ -78,7 +78,7 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
             <span className="text-xs font-medium">Me</span>
           </button>
         ) : collapsed ? (
-          <Button variant="ghost" size="icon" className="w-full h-10 rounded-xl">
+          <Button data-tutorial="user-menu" variant="ghost" size="icon" className="w-full h-10 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
@@ -88,7 +88,7 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
             </div>
           </Button>
         ) : (
-          <Button variant="ghost" className="w-full justify-between px-3 py-2 h-auto hover:bg-white/5">
+          <Button data-tutorial="user-menu" variant="ghost" className="w-full justify-between px-3 py-2 h-auto hover:bg-white/5">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
                 {user.avatar_url ? (

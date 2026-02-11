@@ -160,7 +160,7 @@ export default function StudioHomePage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-        <div className="glass-card p-4 md:p-5">
+        <div data-tutorial="stat-total" className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
               <Video className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
@@ -172,7 +172,7 @@ export default function StudioHomePage() {
           </div>
         </div>
         
-        <div className="glass-card p-4 md:p-5">
+        <div data-tutorial="stat-progress" className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
               <Clock className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
@@ -184,7 +184,7 @@ export default function StudioHomePage() {
           </div>
         </div>
         
-        <div className="glass-card p-4 md:p-5">
+        <div data-tutorial="stat-completed" className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
@@ -198,7 +198,7 @@ export default function StudioHomePage() {
       </div>
 
       {/* Content Pipeline */}
-      <div className="glass-card p-4 md:p-6 mb-6 md:mb-8">
+      <div data-tutorial="pipeline" className="glass-card p-4 md:p-6 mb-6 md:mb-8">
         <h2 className="text-base md:text-lg font-semibold mb-4">Content Pipeline</h2>
         <div className="flex gap-2 overflow-x-auto pb-2">
           {boardStatuses.map((status) => {
@@ -215,7 +215,7 @@ export default function StudioHomePage() {
       </div>
 
       {/* Recent Projects */}
-      <div className="glass-card p-4 md:p-6">
+      <div data-tutorial="recent-projects" className="glass-card p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base md:text-lg font-semibold">Recent Projects</h2>
           <Button variant="ghost" size="sm" asChild>

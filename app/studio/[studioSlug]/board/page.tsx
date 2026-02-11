@@ -679,6 +679,7 @@ export default function BoardPage() {
       {/* Floating Action Bar */}
       <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-white/10 shadow-lg">
         <Button 
+          data-tutorial="board-edit"
           variant={editMode ? "default" : "ghost"} 
           size="sm"
           onClick={() => setEditMode(!editMode)}
@@ -997,7 +998,7 @@ export default function BoardPage() {
                         value={getProjectAssignee(selectedProject.id)?.user_id || "unassigned"}
                         onValueChange={(value) => updateProjectAssignee(selectedProject.id, value === "unassigned" ? null : value)}
                       >
-                        <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
+                        <SelectTrigger data-tutorial="project-assignee" className="w-full h-9 bg-white/5 border-white/10 text-sm">
                           <SelectValue>
                             {(() => {
                               const assignee = getProjectAssignee(selectedProject.id);
@@ -1048,7 +1049,7 @@ export default function BoardPage() {
                         value={selectedProject.due_date?.split('T')[0] || "none"}
                         onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
                       >
-                        <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 text-sm">
+                        <SelectTrigger data-tutorial="project-deadline" className="w-full h-9 bg-white/5 border-white/10 text-sm">
                           <SelectValue>
                             {selectedProject.due_date 
                               ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })

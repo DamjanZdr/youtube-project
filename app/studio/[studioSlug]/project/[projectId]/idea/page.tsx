@@ -299,7 +299,7 @@ export default function IdeaPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-auto p-4 md:p-6 pb-32">
+      <div data-tutorial="idea-editor" className="flex-1 overflow-auto p-4 md:p-6 pb-32">
         <div className="max-w-4xl mx-auto">
           <RichTextEditor
             content={content}
@@ -315,6 +315,7 @@ export default function IdeaPage() {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           {/* Voice Button */}
           <button
+            data-tutorial="voice-button"
             onClick={toggleListening}
             className={`
               group relative overflow-hidden

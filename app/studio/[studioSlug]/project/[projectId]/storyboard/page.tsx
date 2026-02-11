@@ -339,7 +339,7 @@ export default function StoryboardPage() {
             ) : null}
           </div>
         </div>
-        <Button onClick={addScene} size="sm" className="gap-2 w-full sm:w-auto">
+        <Button data-tutorial="add-scene" onClick={addScene} size="sm" className="gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Add Scene
         </Button>
@@ -467,6 +467,7 @@ export default function StoryboardPage() {
                           />
                         ) : (
                           <button
+                            data-tutorial={index === 0 ? "scene-duration" : undefined}
                             onClick={() => setEditingDurationId(scene.id)}
                             className={`text-xs px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors ${
                               scene.duration_seconds !== null ? "text-primary" : "text-muted-foreground"
@@ -488,6 +489,7 @@ export default function StoryboardPage() {
                       </div>
                     </div>
                     <Textarea
+                      data-tutorial={index === 0 ? "scene-script" : undefined}
                       value={scene.script_text}
                       onChange={(e) => {
                         updateScene(scene.id, "script_text", e.target.value);
@@ -509,6 +511,7 @@ export default function StoryboardPage() {
                       </p>
                       {/* Mark Complete Toggle - always visible */}
                       <button
+                        data-tutorial={index === 0 ? "scene-complete" : undefined}
                         onClick={() => toggleSceneComplete(scene.id)}
                         className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded transition-colors ${
                           scene.is_complete 
@@ -531,6 +534,7 @@ export default function StoryboardPage() {
                       </button>
                     </div>
                     <Textarea
+                      data-tutorial={index === 0 ? "scene-notes" : undefined}
                       value={scene.visual_notes}
                       onChange={(e) => {
                         updateScene(scene.id, "visual_notes", e.target.value);

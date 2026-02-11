@@ -599,7 +599,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         router.push(`/studio/${studioSlug}/settings?tab=${value}`, { scroll: false });
       }} className="space-y-6">
         <TabsList className="glass w-full sm:w-auto overflow-x-auto h-12">
-          <TabsTrigger value="studio" className="gap-2 text-sm px-5 py-2.5">
+          <TabsTrigger value="studio" data-tutorial="settings-studio" className="gap-2 text-sm px-5 py-2.5">
             <SettingsIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Studio</span>
           </TabsTrigger>

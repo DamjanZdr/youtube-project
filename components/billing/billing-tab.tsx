@@ -754,7 +754,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       </div>
 
       {/* Plan Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 md:gap-6">
+      <div data-tutorial="billing-plans" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 md:gap-6">
         {plans.map((plan) => {
           const isSamePlan = plan.id === (subscription?.plan || "free");
           // Normalize interval - Stripe uses "month"/"year", we use "monthly"/"yearly"
@@ -917,7 +917,7 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
       )}
 
       {/* Redeem Key Section (below plans, above billing history) */}
-      <Card className="glass-card max-w-md mx-auto mt-10 p-6">
+      <Card data-tutorial="billing-redeem" className="glass-card max-w-md mx-auto mt-10 p-6">
         {showKeyInput ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">

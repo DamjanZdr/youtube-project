@@ -38,11 +38,11 @@ export function PreviewControls({
         onValueChange={(v) => v && onOrientationChange(v as Orientation)}
         className="bg-muted rounded-lg p-1"
       >
-        <ToggleGroupItem value="landscape" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+        <ToggleGroupItem data-tutorial="device-desktop" value="landscape" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
           <Monitor className="w-4 h-4" />
           <span className="hidden sm:inline">Desktop</span>
         </ToggleGroupItem>
-        <ToggleGroupItem value="portrait" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+        <ToggleGroupItem data-tutorial="device-mobile" value="portrait" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
           <Smartphone className="w-4 h-4" />
           <span className="hidden sm:inline">Mobile</span>
         </ToggleGroupItem>
@@ -79,10 +79,10 @@ export function PreviewControls({
           onValueChange={(v) => v && onPreviewModeChange(v as PreviewMode)}
           className="bg-muted rounded-lg p-1"
         >
-          <ToggleGroupItem value="feed" className="h-9 px-3 text-sm data-[state=on]:bg-background">
+          <ToggleGroupItem data-tutorial="view-feed" value="feed" className="h-9 px-3 text-sm data-[state=on]:bg-background">
             Feed
           </ToggleGroupItem>
-          <ToggleGroupItem value="suggested" className="h-9 px-3 text-sm data-[state=on]:bg-background">
+          <ToggleGroupItem data-tutorial="view-suggested" value="suggested" className="h-9 px-3 text-sm data-[state=on]:bg-background">
             Suggested
           </ToggleGroupItem>
         </ToggleGroup>
@@ -90,6 +90,7 @@ export function PreviewControls({
         <div className="flex items-center gap-2 pl-3 border-l">
           <GitCompareArrows className="w-4 h-4 text-muted-foreground hidden sm:block" />
           <Switch
+            data-tutorial="compare-toggle"
             id="compare-mode"
             checked={compareMode}
             onCheckedChange={onCompareModeChange}

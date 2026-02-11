@@ -248,11 +248,11 @@ export default function WikiPage({ params }: WikiPageProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowCreateFolder(true)} className="flex-1 sm:flex-none">
+          <Button data-tutorial="wiki-new-folder" variant="outline" onClick={() => setShowCreateFolder(true)} className="flex-1 sm:flex-none">
             <Folder className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">New </span>Folder
           </Button>
-          <Button className="glow-sm flex-1 sm:flex-none" onClick={() => setShowCreateDocument(true)}>
+          <Button data-tutorial="wiki-new-doc" className="glow-sm flex-1 sm:flex-none" onClick={() => setShowCreateDocument(true)}>
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">New </span>Doc
           </Button>
