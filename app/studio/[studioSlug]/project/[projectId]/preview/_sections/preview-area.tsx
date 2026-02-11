@@ -36,7 +36,7 @@ export function PreviewArea({
 
   return (
     <div className="h-full overflow-x-auto scrollbar-hide">
-      <div className={`h-full flex items-center justify-center p-4 ${orientation === 'portrait' ? '' : 'min-w-[600px] md:min-w-0'}`}>
+      <div className={`h-full flex items-center justify-center p-4 ${orientation === 'portrait' ? '' : 'min-w-[900px] md:min-w-0'}`}>
         {previewMode === "feed" ? (
           <FeedPreview {...previewProps} />
         ) : (
