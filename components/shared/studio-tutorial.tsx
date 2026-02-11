@@ -245,7 +245,7 @@ export function StudioTutorial({
     
     // Handle autoAdvanceOnClick
     if (step?.autoAdvanceOnClick) {
-      const handleClick = (e: MouseEvent) => {
+      const handleClick = (e: Event) => {
         const target = e.target as Element;
         const clickedElement = target.closest(step.autoAdvanceOnClick!);
         if (clickedElement) {
@@ -257,13 +257,13 @@ export function StudioTutorial({
         }
       };
       
-      document.addEventListener("click", handleClick, true);
-      return () => document.removeEventListener("click", handleClick, true);
+      document.addEventListener("pointerdown", handleClick, true);
+      return () => document.removeEventListener("pointerdown", handleClick, true);
     }
     
     // Handle clickSelectors (any of them advances)
     if (step?.clickSelectors && step.clickSelectors.length > 0) {
-      const handleClick = (e: MouseEvent) => {
+      const handleClick = (e: Event) => {
         const target = e.target as Element;
         for (const selector of step.clickSelectors!) {
           const clickedElement = target.closest(selector);
@@ -278,13 +278,13 @@ export function StudioTutorial({
         }
       };
       
-      document.addEventListener("click", handleClick, true);
-      return () => document.removeEventListener("click", handleClick, true);
+      document.addEventListener("pointerdown", handleClick, true);
+      return () => document.removeEventListener("pointerdown", handleClick, true);
     }
     
-    // Handle single clickSelector - detect navigation clicks
+    // Handle single clickSelector - use pointerdown for better detection with dropdowns
     if (step?.clickSelector) {
-      const handleClick = (e: MouseEvent) => {
+      const handleClick = (e: Event) => {
         const target = e.target as Element;
         // Check if clicked element or any ancestor matches the selector
         const clickedElement = target.closest(step.clickSelector!);
@@ -305,8 +305,9 @@ export function StudioTutorial({
         }
       };
       
-      document.addEventListener("click", handleClick, true);
-      return () => document.removeEventListener("click", handleClick, true);
+      // Use pointerdown instead of click - fires before dropdown menu takes over
+      document.addEventListener("pointerdown", handleClick, true);
+      return () => document.removeEventListener("pointerdown", handleClick, true);
     }
   }, [currentStep, isVisible]);
 
@@ -422,10 +423,10 @@ export function StudioTutorial({
           <div
             className="fixed border-2 border-blue-400/80 rounded-lg pointer-events-none z-[99] transition-all duration-150 ease-out"
             style={{
-              left: pos.rect.left - 4,
-              top: pos.rect.top - 4,
-              width: pos.rect.width + 8,
-              height: pos.rect.height + 8,
+              left: pos.rect.left - 10,
+              top: pos.rect.top - 10,
+              width: pos.rect.width + 20,
+              height: pos.rect.height + 20,
             }}
           />
           {/* Label badge */}
@@ -433,8 +434,8 @@ export function StudioTutorial({
             <div
               className="fixed bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center pointer-events-none z-[100] shadow-lg transition-all duration-150 ease-out"
               style={{
-                left: pos.rect.left - 10,
-                top: pos.rect.top - 10,
+                left: pos.rect.left - 16,
+                top: pos.rect.top - 16,
               }}
             >
               {pos.label}
