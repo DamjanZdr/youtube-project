@@ -57,7 +57,7 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     }
   }
 
-  // Fetch tutorial progress and first project for tutorial
+  // Fetch tutorial progress
   const { data: memberData } = await supabase
     .from("organization_members")
     .select("tutorial_step")
@@ -65,17 +65,8 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     .eq("user_id", user.id)
     .single();
 
-  const { data: firstProject } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("organization_id", studio.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-
   // Tutorial step: null = never started (show welcome), number = current step
   const tutorialStep = memberData?.tutorial_step ?? null;
-  const hasProjects = !!firstProject;
 
   // Track activity (non-blocking)
   updateUserActivity().catch(() => {});
@@ -108,8 +99,6 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
           organizationId={studio.id}
           userId={user.id}
           initialStep={tutorialStep}
-          hasProjects={hasProjects}
-          firstProjectId={firstProject?.id}
         />
       </div>
     </TooltipProvider>

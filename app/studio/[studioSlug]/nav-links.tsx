@@ -21,6 +21,7 @@ interface NavItem {
   href: string;
   icon: LucideIcon;
   label: string;
+  tutorialId?: string;
 }
 
 interface NavLinksProps {
@@ -35,10 +36,10 @@ export function NavLinks({ studioSlug, collapsed = false, onNavigate }: NavLinks
   const navItems: NavItem[] = [
     { href: `/studio/${studioSlug}`, icon: Home, label: "Home" },
     // { href: `/studio/${studioSlug}/channel`, icon: Tv, label: "Channel" }, // Temporarily hidden - YouTube connection disabled
-    { href: `/studio/${studioSlug}/projects`, icon: FolderKanban, label: "Projects" },
-    { href: `/studio/${studioSlug}/board`, icon: Layout, label: "Board" },
-    { href: `/studio/${studioSlug}/wiki`, icon: BookOpen, label: "Wiki" },
-    { href: `/studio/${studioSlug}/settings`, icon: Settings, label: "Settings" },
+    { href: `/studio/${studioSlug}/projects`, icon: FolderKanban, label: "Projects", tutorialId: "nav-projects" },
+    { href: `/studio/${studioSlug}/board`, icon: Layout, label: "Board", tutorialId: "nav-board" },
+    { href: `/studio/${studioSlug}/wiki`, icon: BookOpen, label: "Wiki", tutorialId: "nav-wiki" },
+    { href: `/studio/${studioSlug}/settings`, icon: Settings, label: "Settings", tutorialId: "nav-settings" },
   ];
 
   const isActive = (href: string) => {
@@ -58,6 +59,7 @@ export function NavLinks({ studioSlug, collapsed = false, onNavigate }: NavLinks
           <Link
             href={item.href}
             onClick={onNavigate}
+            data-tutorial={item.tutorialId}
             className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} ${collapsed ? "px-0" : "px-3"} py-2.5 rounded-xl transition-all duration-200 group border ${
               active 
                 ? "bg-primary/20 text-primary border-primary/30" 

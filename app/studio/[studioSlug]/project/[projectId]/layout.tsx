@@ -93,10 +93,10 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
   const tabs = [
     { href: `/studio/${studioSlug}/project/${projectId}/idea`, icon: Lightbulb, label: "Idea" },
-    { href: `/studio/${studioSlug}/project/${projectId}`, icon: Package, label: "Packaging", exact: true },
-    { href: `/studio/${studioSlug}/project/${projectId}/preview`, icon: Eye, label: "Preview" },
-    { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard" },
-    { href: `/studio/${studioSlug}/project/${projectId}/tasks`, icon: ListTodo, label: "Tasks" },
+    { href: `/studio/${studioSlug}/project/${projectId}`, icon: Package, label: "Packaging", exact: true, tutorialId: "nav-packaging" },
+    { href: `/studio/${studioSlug}/project/${projectId}/preview`, icon: Eye, label: "Preview", tutorialId: "nav-preview" },
+    { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard", tutorialId: "nav-storyboard" },
+    { href: `/studio/${studioSlug}/project/${projectId}/tasks`, icon: ListTodo, label: "Tasks", tutorialId: "nav-tasks" },
     { href: `/studio/${studioSlug}/project/${projectId}/settings`, icon: Settings, label: "" },
   ];
 
@@ -223,6 +223,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 <Link
                   key={tab.href}
                   href={tab.href}
+                  data-tutorial={tab.tutorialId}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap shrink-0 ${
                     active
                       ? "text-white border-primary"

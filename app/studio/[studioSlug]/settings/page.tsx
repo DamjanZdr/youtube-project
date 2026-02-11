@@ -603,7 +603,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <SettingsIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Studio</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="gap-2 text-sm px-5 py-2.5">
+          <TabsTrigger value="members" data-tutorial="settings-members" className="gap-2 text-sm px-5 py-2.5">
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
@@ -612,7 +612,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Youtube className="w-4 h-4" />
             YouTube
           </TabsTrigger> */}
-          <TabsTrigger value="billing" className="gap-2 text-sm px-5 py-2.5">
+          <TabsTrigger value="billing" data-tutorial="settings-billing" className="gap-2 text-sm px-5 py-2.5">
             <CreditCard className="w-4 h-4" />
             <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
