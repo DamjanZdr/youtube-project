@@ -44,7 +44,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {/* Logo */}
       <div className="flex items-center justify-center mb-2">
-        <Image src="/bplogo.png" alt="myBlueprint" width={160} height={40} className="h-10 w-auto" />
+        <Image src="/bplogo.png" alt="Blueprint" width={160} height={40} className="h-10 w-auto" />
       </div>
 
       <div className="glass-card p-8">

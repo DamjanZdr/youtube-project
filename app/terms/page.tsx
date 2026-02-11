@@ -36,7 +36,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">1. Acceptance of Terms</h2>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              By accessing or using myBlueprint ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
+              By accessing or using Blueprint ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
               If you disagree with any part of the terms, you may not access the Service. These Terms apply to all visitors, 
               users, and others who access or use the Service.
             </p>
@@ -45,7 +45,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
             <p className="text-muted-foreground leading-relaxed">
-              myBlueprint is a project management and content planning platform designed for YouTube creators and content studios. 
+              Blueprint is a project management and content planning platform designed for YouTube creators and content studios. 
               The Service provides tools for video project management, script writing, thumbnail management, team collaboration, 
               and content workflow organization.
             </p>
@@ -89,7 +89,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">5. Intellectual Property</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               The Service and its original content (excluding Content provided by users), features, and functionality are 
-              and will remain the exclusive property of myBlueprint and its licensors. The Service is protected by copyright, 
+              and will remain the exclusive property of Blueprint and its licensors. The Service is protected by copyright, 
               trademark, and other laws.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -121,7 +121,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">7. Refunds</h2>
             <p className="text-muted-foreground leading-relaxed">
               Except when required by law, paid Subscription fees are non-refundable. Certain refund requests for 
-              Subscriptions may be considered on a case-by-case basis and granted at the sole discretion of myBlueprint.
+              Subscriptions may be considered on a case-by-case basis and granted at the sole discretion of Blueprint.
             </p>
           </section>
 
@@ -172,7 +172,7 @@ export default function TermsPage() {
               FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR COURSE OF PERFORMANCE.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              myBlueprint does not warrant that (a) the Service will function uninterrupted, secure, or available at any 
+              Blueprint does not warrant that (a) the Service will function uninterrupted, secure, or available at any 
               particular time or location; (b) any errors or defects will be corrected; (c) the Service is free of viruses 
               or other harmful components; or (d) the results of using the Service will meet your requirements.
             </p>
@@ -181,7 +181,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">12. Limitation of Liability</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              IN NO EVENT SHALL MYBLUEPRINT, ITS DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, SUPPLIERS, OR AFFILIATES, 
+              IN NO EVENT SHALL BLUEPRINT, ITS DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, SUPPLIERS, OR AFFILIATES, 
               BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT 
               LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM:
             </p>
@@ -200,7 +200,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">13. Indemnification</h2>
             <p className="text-muted-foreground leading-relaxed">
-              You agree to defend, indemnify, and hold harmless myBlueprint and its licensees, employees, contractors, 
+              You agree to defend, indemnify, and hold harmless Blueprint and its licensees, employees, contractors, 
               agents, officers, and directors from and against any and all claims, damages, obligations, losses, liabilities, 
               costs or debt, and expenses arising from: (a) your use of and access to the Service; (b) your violation of 
               any term of these Terms; (c) your violation of any third party right, including without limitation any 
@@ -244,7 +244,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">17. Governing Law</h2>
             <p className="text-muted-foreground leading-relaxed">
               These Terms shall be governed and construed in accordance with the laws of the jurisdiction in which 
-              myBlueprint operates, without regard to its conflict of law provisions. Our failure to enforce any right 
+              Blueprint operates, without regard to its conflict of law provisions. Our failure to enforce any right 
               or provision of these Terms will not be considered a waiver of those rights.
             </p>
           </section>
@@ -268,7 +268,7 @@ export default function TermsPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 flex items-center justify-between text-sm text-muted-foreground">
-          <p>© 2026 myBlueprint</p>
+          <p>© 2026 Blueprint</p>
           <div className="flex items-center gap-6">
             <Link href="/terms" className="text-foreground">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

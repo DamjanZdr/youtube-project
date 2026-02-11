@@ -13,7 +13,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "myBlueprint",
+  title: "Blueprint",
   description: "The all-in-one creator operating system for YouTube creators",
   icons: [
     { rel: "icon", url: "/bpicon.png", type: "image/png" },

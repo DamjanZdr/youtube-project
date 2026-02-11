@@ -25,7 +25,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Mobile Logo */}
             <Link href="/dashboard" className="flex items-center gap-2 font-bold md:hidden">
               <span className="text-lg">🎬</span>
-              <span className="text-sm">myBlueprint</span>
+              <span className="text-sm">Blueprint</span>
             </Link>
             {/* TODO: Add header content - search, notifications, user menu */}
             <div className="flex-1" />

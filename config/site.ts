@@ -3,7 +3,7 @@
  */
 
 export const siteConfig = {
-  name: 'myBlueprint',
+  name: 'Blueprint',
   description: 'The all-in-one creator operating system for YouTubers and content studios',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   ogImage: '/opengraph-image.png',
@@ -17,7 +17,7 @@ export const siteConfig = {
   },
   
   // Creator
-  creator: 'myBlueprint',
+  creator: 'Blueprint',
   
   // SEO
   keywords: [

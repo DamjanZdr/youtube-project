@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
             const resend = getResend();
             try {
               if (resend) await resend.emails.send({
-                from: "MyBlueprint <noreply@myblueprint.studio>",
+                from: "Blueprint <noreply@myblueprint.studio>",
                 to: ownerEmail,
                 subject: `Your Gifted Plan Has Expired - Activate ${planName} Now`,
                 html: `
@@ -166,7 +166,7 @@ export async function GET(req: NextRequest) {
                                   
                                   <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
                                     <p style="color: #3f3f46; font-size: 12px; margin: 0;">
-                                      © MyBlueprint Studio
+                                      © Blueprint Studio
                                     </p>
                                   </div>
                                 </td>
@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
             const resend = getResend();
             try {
               if (resend) await resend.emails.send({
-                from: "MyBlueprint <noreply@myblueprint.studio>",
+                from: "Blueprint <noreply@myblueprint.studio>",
                 to: ownerEmail,
                 subject: `Your ${planConfig?.name || sub.previous_plan} Subscription Has Resumed`,
                 html: `
@@ -283,7 +283,7 @@ export async function GET(req: NextRequest) {
                                   
                                   <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
                                     <p style="color: #3f3f46; font-size: 12px; margin: 0;">
-                                      © MyBlueprint Studio
+                                      © Blueprint Studio
                                     </p>
                                   </div>
                                 </td>
@@ -331,7 +331,7 @@ export async function GET(req: NextRequest) {
           const resend = getResend();
           try {
             if (resend) await resend.emails.send({
-              from: "MyBlueprint <noreply@myblueprint.studio>",
+              from: "Blueprint <noreply@myblueprint.studio>",
               to: ownerEmail,
               subject: `Your Gifted Plan Has Expired`,
               html: `
@@ -368,7 +368,7 @@ export async function GET(req: NextRequest) {
                                 
                                 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
                                   <p style="color: #3f3f46; font-size: 12px; margin: 0;">
-                                    © MyBlueprint Studio
+                                    © Blueprint Studio
                                   </p>
                                 </div>
                               </td>

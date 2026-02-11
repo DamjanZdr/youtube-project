@@ -230,7 +230,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="py-6 md:py-8 px-4 md:px-6 border-t border-white/5 relative z-10">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© 2026 myBlueprint</p>
+          <p>© 2026 Blueprint</p>
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

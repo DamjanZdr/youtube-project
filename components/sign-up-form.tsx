@@ -64,14 +64,14 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {/* Logo */}
       <div className="flex items-center justify-center mb-2">
-        <Image src="/bplogo.png" alt="myBlueprint" width={160} height={40} className="h-10 w-auto" />
+        <Image src="/bplogo.png" alt="Blueprint" width={160} height={40} className="h-10 w-auto" />
       </div>
 
       <div className="glass-card p-8">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">Create an account</h1>
           <p className="text-muted-foreground mt-1">
-            Get started with myBlueprint
+            Get started with Blueprint
           </p>
         </div>
         

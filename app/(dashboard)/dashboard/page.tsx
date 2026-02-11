@@ -8,7 +8,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
         <p className="text-sm md:text-base text-muted-foreground">
-          Welcome to myBlueprint. Manage your content from here.
+          Welcome to Blueprint. Manage your content from here.
         </p>
       </div>
       

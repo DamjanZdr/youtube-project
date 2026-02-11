@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">1. Introduction</h2>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              myBlueprint ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains 
+              Blueprint ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains 
               how we collect, use, disclose, and safeguard your information when you use our Service. Please read this 
               privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the Service.
             </p>
@@ -209,7 +209,7 @@ export default function PrivacyPage() {
             <h3 className="text-xl font-medium mb-3 mt-6">7.5 Revoke YouTube Access</h3>
             <p className="text-muted-foreground leading-relaxed">
               You can revoke our access to your YouTube data at any time by visiting Google's security settings at 
-              https://security.google.com/settings/security/permissions and removing myBlueprint's access.
+              https://security.google.com/settings/security/permissions and removing Blueprint's access.
             </p>
           </section>
 
@@ -328,7 +328,7 @@ export default function PrivacyPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 flex items-center justify-between text-sm text-muted-foreground">
-          <p>© 2026 myBlueprint</p>
+          <p>© 2026 Blueprint</p>
           <div className="flex items-center gap-6">
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/privacy" className="text-foreground">Privacy</Link>

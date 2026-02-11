@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   if (email && resend) {
     try {
       await resend.emails.send({
-        from: "MyBlueprint <noreply@myblueprint.studio>",
+        from: "Blueprint <noreply@myblueprint.studio>",
         to: email,
         subject: `Your ${planText} Plan Key is Ready! 🎉`,
         html: `
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
 
                           <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
                             <p style="color: #3f3f46; font-size: 12px; margin: 0;">
-                              © MyBlueprint Studio • If you didn't expect this email, you can safely ignore it.
+                              © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
                             </p>
                           </div>
                         </td>
