@@ -312,7 +312,7 @@ export default function IdeaPage() {
 
       {/* Floating Voice Input Button - Fixed to viewport */}
       {speechSupported && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50">
           {/* Voice Button */}
           <button
             data-tutorial="voice-button"

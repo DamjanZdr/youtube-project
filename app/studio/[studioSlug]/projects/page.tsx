@@ -477,53 +477,58 @@ function ProjectListItem({ project, studioSlug, boardStatuses }: { project: Proj
   return (
     <Link
       href={`/studio/${studioSlug}/project/${project.id}`}
-      className="glass-card p-4 hover:bg-white/5 transition-colors flex items-center gap-4 group"
+      className="glass-card p-3 md:p-4 hover:bg-white/5 transition-colors flex flex-col md:flex-row md:items-center gap-3 md:gap-4 group"
     >
-      {/* Thumbnail */}
-      <div className="w-32 aspect-video rounded-lg bg-gradient-to-br from-white/5 to-white/10 overflow-hidden shrink-0 relative">
-        {displayThumbnail ? (
-          <img src={displayThumbnail} alt={displayTitle} className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            {project.video_type === "short" ? (
-              <Film className="w-6 h-6 text-muted-foreground/30" />
-            ) : (
-              <Tv className="w-6 h-6 text-muted-foreground/30" />
-            )}
-          </div>
-        )}
+      <div className="flex items-center gap-3 md:gap-4 min-w-0">
+        {/* Thumbnail */}
+        <div className="w-20 md:w-32 aspect-video rounded-lg bg-gradient-to-br from-white/5 to-white/10 overflow-hidden shrink-0 relative">
+          {displayThumbnail ? (
+            <img src={displayThumbnail} alt={displayTitle} className="w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              {project.video_type === "short" ? (
+                <Film className="w-6 h-6 text-muted-foreground/30" />
+              ) : (
+                <Tv className="w-6 h-6 text-muted-foreground/30" />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold truncate group-hover:text-primary transition-colors text-sm md:text-base">
+            {displayTitle || "Untitled Project"}
+          </h3>
+          {project.description && (
+            <p className="text-xs md:text-sm text-muted-foreground truncate mt-0.5">{project.description}</p>
+          )}
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
-          {displayTitle || "Untitled Project"}
-        </h3>
-        {project.description && (
-          <p className="text-sm text-muted-foreground truncate mt-0.5">{project.description}</p>
-        )}
+      {/* Badges & Date Row */}
+      <div className="flex items-center gap-2 md:gap-4 pl-[calc(5rem+0.75rem)] md:pl-0 shrink-0">
+        {/* Type */}
+        <span className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-white/5 capitalize shrink-0">
+          {project.video_type}
+        </span>
+
+        {/* Status */}
+        <span
+          className={`flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs px-2 md:px-2.5 py-0.5 md:py-1 rounded-full ${statusColor} bg-opacity-20 shrink-0`}
+        >
+          <span className={`w-1.5 md:w-2 h-1.5 md:h-2 rounded-full ${statusColor}`} />
+          {statusName}
+        </span>
+
+        {/* Date */}
+        <span className="text-[10px] md:text-xs text-muted-foreground shrink-0 ml-auto md:ml-0 md:w-24 md:text-right">
+          {new Date(project.updated_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
       </div>
-
-      {/* Type */}
-      <span className="text-xs px-2 py-1 rounded-full bg-white/5 capitalize shrink-0">
-        {project.video_type}
-      </span>
-
-      {/* Status */}
-      <span
-        className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${statusColor} bg-opacity-20 shrink-0`}
-      >
-        <span className={`w-2 h-2 rounded-full ${statusColor}`} />
-        {statusName}
-      </span>
-
-      {/* Date */}
-      <span className="text-xs text-muted-foreground shrink-0 w-24 text-right">
-        {new Date(project.updated_at).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })}
-      </span>
     </Link>
   );
 }
