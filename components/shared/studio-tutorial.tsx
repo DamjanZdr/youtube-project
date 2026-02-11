@@ -269,9 +269,9 @@ export function StudioTutorial({
   // Show welcome prompt for new users
   if (showWelcome && !isVisible) {
     return (
-      <div className="fixed inset-0 z-[100]">
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-lg w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="fixed inset-0 z-[100] pointer-events-none">
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-card border border-white/10 rounded-2xl shadow-2xl p-8 max-w-lg w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Icon */}
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 mx-auto">
             <Sparkles className="w-8 h-8" />
@@ -309,26 +309,37 @@ export function StudioTutorial({
   const progress = ((currentStep ?? 0) / (TUTORIAL_STEPS.length - 1)) * 100;
 
   return (
-    <div className="fixed inset-0 z-[100]">
-      {/* Backdrop with cutout for highlighted element */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm">
-        {highlightRect && (
-          <div
-            className="absolute bg-transparent ring-4 ring-primary ring-offset-2 ring-offset-background rounded-lg animate-pulse"
-            style={{
-              left: highlightRect.left - 8,
-              top: highlightRect.top - 8,
-              width: highlightRect.width + 16,
-              height: highlightRect.height + 16,
-            }}
-          />
-        )}
-      </div>
+    <div className="fixed inset-0 z-[100] pointer-events-none">
+      {/* Backdrop - allow clicks through */}
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* Clickable highlight area for interactive elements */}
+      {highlightRect && (
+        <div
+          className="pointer-events-auto absolute ring-4 ring-primary ring-offset-2 ring-offset-transparent rounded-lg cursor-pointer"
+          style={{
+            left: highlightRect.left - 8,
+            top: highlightRect.top - 8,
+            width: highlightRect.width + 16,
+            height: highlightRect.height + 16,
+            zIndex: 101,
+          }}
+          onClick={(e) => {
+            // Allow clicks to pass through to the underlying element
+            e.stopPropagation();
+            const element = document.elementFromPoint(
+              highlightRect.left + highlightRect.width / 2,
+              highlightRect.top + highlightRect.height / 2
+            ) as HTMLElement;
+            element?.click();
+          }}
+        />
+      )}
 
       {/* Tutorial Card */}
       <div 
         className={cn(
-          "absolute bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300",
+          "pointer-events-auto absolute glass-card border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300",
           step.position === "center" && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
           step.position === "right" && highlightRect && "top-1/2 -translate-y-1/2",
           step.position === "bottom" && "left-1/2 -translate-x-1/2",
@@ -342,7 +353,7 @@ export function StudioTutorial({
         }
       >
         {/* Progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-muted rounded-t-2xl overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 rounded-t-2xl overflow-hidden">
           <div 
             className="h-full bg-primary transition-all duration-300" 
             style={{ width: `${progress}%` }}
