@@ -14,7 +14,13 @@ import {
   Archive,
   ChevronRight,
   AlertCircle,
+  HelpCircle,
+  BookOpen,
+  MessagesSquare,
+  LayoutGrid,
+  Shield,
 } from "lucide-react";
+import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { formatDistanceToNow } from "date-fns";
 
 interface Ticket {
@@ -49,6 +55,9 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "resolved">("all");
+  const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
+  const [acceptInvites, setAcceptInvites] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const supabase = createClient();
 
@@ -57,17 +66,32 @@ export default function TicketsPage() {
   }, []);
 
   const checkAuthAndLoad = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
     
-    if (!user) {
+    if (!authUser) {
       router.push("/sign-in");
       return;
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, avatar_url, accept_invites, role")
+      .eq("id", authUser.id)
+      .single();
+
+    setUser({
+      id: authUser.id,
+      email: authUser.email || "",
+      full_name: profile?.full_name,
+      avatar_url: profile?.avatar_url,
+    });
+    setAcceptInvites(profile?.accept_invites ?? true);
+    setIsAdmin(profile?.role === "admin");
+
     const { data: ticketData } = await supabase
       .from("support_tickets")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", authUser.id)
       .order("created_at", { ascending: false });
 
     if (ticketData) {
@@ -94,17 +118,85 @@ export default function TicketsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Navigation */}
+      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
+            <img
+              src="/bplogo.png"
+              alt="Logo"
+              className="max-h-9 md:max-h-12 object-contain"
+              style={{ width: 'auto', height: '100%' }}
+            />
+          </Link>
+          <div className="flex items-center gap-2 md:gap-3">
+            {user && (
+              <>
+                <Link href="/hub">
+                  <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
+                    <LayoutGrid className="w-4 h-4" />
+                    <span className="hidden sm:inline">Hub</span>
+                  </Button>
+                </Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-2 md:px-3">
+                      <Shield className="w-4 h-4 md:mr-2" />
+                      <span className="hidden md:inline">Admin</span>
+                    </Button>
+                  </Link>
+                )}
+                <UserProfileDropdown
+                  user={user}
+                  initialAcceptInvites={acceptInvites}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Sub-navigation */}
+      <div className="border-b border-white/10 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex items-center gap-1 h-12">
+            <Link
+              href="/help"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Help Center
+            </Link>
+            <Link
+              href="/help/self-help"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              Self Help
+            </Link>
+            <Link
+              href="/help/forum"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <MessagesSquare className="w-4 h-4" />
+              Forum
+            </Link>
+            <Link
+              href="/help/tickets"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground"
+            >
+              <TicketIcon className="w-4 h-4" />
+              Tickets
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <Link
-                href="/help"
-                className="text-xs md:text-sm text-muted-foreground hover:text-foreground mb-2 inline-block"
-              >
-                ← Back to Help Center
-              </Link>
               <h1 className="text-2xl md:text-3xl font-bold">My Support Tickets</h1>
             </div>
             <Link href="/help/tickets/new">
