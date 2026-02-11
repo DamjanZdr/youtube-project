@@ -18,196 +18,384 @@ import {
   Columns3,
   BookOpen,
   Settings,
-  Sparkles,
   Plus,
   Users,
-  CreditCard
+  CreditCard,
+  Mic,
+  Type,
+  Image,
+  FileText,
+  GripVertical,
+  Play
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface TutorialStep {
   id: number;
   title: string;
-  description: string;
+  content: string; // Direct, practical explanation
   icon: React.ReactNode;
-  expectedPath?: string | RegExp; // Path pattern user should be on
-  highlightSelector?: string; // CSS selector for element to highlight
-  actionHint?: string; // What the user should do
+  expectedPath?: string | RegExp;
+  highlightSelector?: string; // For info highlights (blue)
+  clickSelector?: string; // For action highlights (green) - user needs to click this
+  infoSelectors?: string[]; // Multiple elements to highlight as info
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
-  // HOME
+  // === HOME PAGE ===
   {
     id: 0,
-    title: "Welcome to Your Studio",
-    description: "This is your Home dashboard. Here you see project stats, content pipeline progress, and recent projects. It's your quick overview of everything happening.",
-    icon: <Home className="w-6 h-6" />,
+    title: "Home Dashboard",
+    content: "The top row shows your project counts: Total projects, In Progress, and Completed. Use these to quickly see your workload at a glance.",
+    icon: <Home className="w-5 h-5" />,
     expectedPath: /\/studio\/[^/]+$/,
+    highlightSelector: ".grid.grid-cols-3",
   },
-  // PROJECTS LIST
   {
     id: 1,
-    title: "Your Projects Library",
-    description: "Click 'Projects' in the sidebar to see all your video projects. This is where you manage your entire content library.",
-    icon: <FolderOpen className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-projects']",
-    actionHint: "Click 'Projects' in the sidebar",
+    title: "Content Pipeline",
+    content: "The colored bars show how many projects are in each stage of your workflow. Each color represents a status column from your Board. This helps you identify bottlenecks — if too many projects pile up in one stage, you know where to focus.",
+    icon: <Home className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+$/,
+    highlightSelector: "[class*='Content Pipeline']",
   },
   {
     id: 2,
-    title: "Projects Overview",
-    description: "Here's your project library. Browse through your content, filter by status, and manage all your videos in one place.",
-    icon: <FolderOpen className="w-6 h-6" />,
-    expectedPath: /\/studio\/[^/]+\/projects$/,
+    title: "Recent Projects",
+    content: "Your 5 most recently updated projects appear here for quick access. Click any project to jump directly into it. Use 'View all' to see your complete project library.",
+    icon: <Home className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+$/,
   },
-  // CREATE PROJECT
   {
     id: 3,
-    title: "Create a New Project",
-    description: "Let's create a project! Click 'New Project' to start. Every video begins here — just give it a title and you're ready to plan.",
-    icon: <Plus className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='new-project']",
-    actionHint: "Click 'New Project' to create one",
-    expectedPath: /\/studio\/[^/]+\/projects$/,
+    title: "Go to Projects",
+    content: "Open the Projects page to see your full library and create new videos.",
+    icon: <FolderOpen className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-projects']",
   },
-  // PROJECT PAGES
+
+  // === PROJECTS PAGE ===
   {
     id: 4,
-    title: "The Idea Page",
-    description: "This is your brain dump zone. Use voice-to-text or type freely to capture raw thoughts. No judgment, no editing — just get your ideas out.",
-    icon: <Lightbulb className="w-6 h-6" />,
-    expectedPath: /\/project\/[^/]+\/idea$/,
+    title: "Projects Library",
+    content: "This page lists all your video projects. Each card shows the project title, current status, and thumbnail. Projects are grouped by type: Long-form videos and Shorts.",
+    icon: <FolderOpen className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/projects$/,
   },
   {
     id: 5,
-    title: "Package Before You Script",
-    description: "Here's the key insight: title, thumbnail, and description determine 90% of clicks. Design packaging FIRST before writing your script.",
-    icon: <Package className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-packaging']",
-    actionHint: "Click 'Packaging' in the project tabs",
+    title: "Create a Project",
+    content: "Click 'New Project' to start a new video. You'll enter a title and choose between Long-form or Short. The project will be created and you'll land on the Idea page to start planning.",
+    icon: <Plus className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='new-project']",
+    expectedPath: /\/studio\/[^/]+\/projects$/,
   },
+
+  // === IDEA PAGE ===
   {
     id: 6,
-    title: "Packaging Workshop",
-    description: "Create title variations, write descriptions, and design thumbnails. Test different angles before committing. Iterate until it's irresistible.",
-    icon: <Package className="w-6 h-6" />,
-    expectedPath: /\/project\/[^/]+\/packaging$/,
+    title: "Idea Page - Brain Dump",
+    content: "This is where you capture raw ideas before organizing them. Type anything — concepts, hooks, points to cover, research notes. The goal is to get everything out of your head without worrying about structure.",
+    icon: <Lightbulb className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/idea$/,
   },
   {
     id: 7,
-    title: "Preview Your Video",
-    description: "See how your video appears in YouTube's feed and search. Does your thumbnail pop? Is your title compelling?",
-    icon: <Eye className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-preview']",
-    actionHint: "Click 'Preview' to see how it looks",
+    title: "Voice-to-Text",
+    content: "Click the microphone button to dictate your ideas instead of typing. This is faster for brainstorming — just talk through your video concept and it transcribes automatically. Use this every time you have a new video idea to capture it quickly.",
+    icon: <Mic className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/idea$/,
+    highlightSelector: "[data-tutorial='voice-button']",
   },
   {
     id: 8,
-    title: "Feed Preview",
-    description: "This preview shows your video alongside others. Check if your thumbnail stands out. Make adjustments in Packaging until satisfied.",
-    icon: <Eye className="w-6 h-6" />,
-    expectedPath: /\/project\/[^/]+\/preview$/,
+    title: "Why Use the Idea Page",
+    content: "Writing ideas down before packaging forces you to clarify your thinking. Many creators skip this and end up with unfocused videos. Spend 5-10 minutes here for every project — it saves hours of confusion later.",
+    icon: <Lightbulb className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/idea$/,
   },
   {
     id: 9,
-    title: "Visual Storyboarding",
-    description: "Plan your story scene by scene. Focus on WHAT viewers see, not HOW you'll edit. Think engagement, retention, emotional beats.",
-    icon: <Layout className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-storyboard']",
-    actionHint: "Click 'Storyboard' to plan scenes",
+    title: "Go to Packaging",
+    content: "Move to Packaging to design your title, thumbnail, and description.",
+    icon: <Package className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-packaging']",
   },
+
+  // === PACKAGING PAGE ===
   {
     id: 10,
-    title: "Scene Planning",
-    description: "Add scenes to build structure. Each should have purpose — hook, build tension, deliver value, call to action. Drag to reorder.",
-    icon: <Layout className="w-6 h-6" />,
-    expectedPath: /\/project\/[^/]+\/storyboard$/,
+    title: "Packaging - The Click Decision",
+    content: "Your title, thumbnail, and description determine whether someone clicks your video. Design these BEFORE writing your script. This ensures your video delivers on its promise instead of forcing a title onto finished content.",
+    icon: <Package className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/packaging$/,
   },
   {
     id: 11,
-    title: "Project Tasks",
-    description: "Break down your project into tasks. Research, filming, editing — track everything in one place.",
-    icon: <CheckSquare className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-tasks']",
-    actionHint: "Click 'Tasks' to see your to-dos",
+    title: "Title Variations",
+    content: "Write 3-5 different titles for your video. Each should approach the topic from a different angle. Test which creates the most curiosity. Bad title = no clicks, regardless of how good your video is.",
+    icon: <Type className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/packaging$/,
+    highlightSelector: "[data-tutorial='title-input']",
   },
   {
     id: 12,
-    title: "Task Management",
-    description: "Create tasks, set due dates, check them off. Default tasks are auto-created based on your workflow. Customize to match how you work.",
-    icon: <CheckSquare className="w-6 h-6" />,
-    expectedPath: /\/project\/[^/]+\/tasks$/,
+    title: "Thumbnail Upload",
+    content: "Upload or design your thumbnail here. Your thumbnail is 90% of the click decision on mobile. It should be readable at small sizes, create curiosity, and clearly communicate the video's value.",
+    icon: <Image className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/packaging$/,
+    highlightSelector: "[data-tutorial='thumbnail-upload']",
   },
-  // BOARD
   {
     id: 13,
-    title: "The Kanban Board",
-    description: "Now let's see all projects at once. Click 'Board' in the sidebar for your content pipeline view.",
-    icon: <Columns3 className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-board']",
-    actionHint: "Click 'Board' in the sidebar",
+    title: "Description",
+    content: "Write your video description. Include keywords for search, timestamps for longer videos, and links to related content. The first 2 lines show in search results — make them count.",
+    icon: <FileText className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/packaging$/,
+    highlightSelector: "[data-tutorial='description-input']",
   },
   {
     id: 14,
-    title: "Your Content Pipeline",
-    description: "Drag projects between columns to update status. See what's in progress, needs attention, or is ready to publish. Click any card to open that project.",
-    icon: <Columns3 className="w-6 h-6" />,
-    expectedPath: /\/studio\/[^/]+\/board$/,
+    title: "Packaging Sets",
+    content: "Create multiple packaging variations to A/B test different approaches. Click 'Add Set' to create alternatives. Mark one as 'Selected' to use it as your primary. You can switch later if performance data suggests a different approach would work better.",
+    icon: <Package className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/packaging$/,
   },
-  // WIKI
   {
     id: 15,
-    title: "Channel Knowledge Base",
-    description: "Click 'Wiki' to access your knowledge base. Store brand guidelines, sponsor info, recurring segments — everything you reference.",
-    icon: <BookOpen className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-wiki']",
-    actionHint: "Click 'Wiki' in the sidebar",
+    title: "Go to Preview",
+    content: "See how your packaging looks in YouTube's actual interface.",
+    icon: <Eye className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-preview']",
   },
+
+  // === PREVIEW PAGE ===
   {
     id: 16,
-    title: "Your Wiki",
-    description: "Create folders to organize topics, add documents inside. This is your channel's institutional memory — maintain consistency across videos.",
-    icon: <BookOpen className="w-6 h-6" />,
-    expectedPath: /\/studio\/[^/]+\/wiki/,
+    title: "Preview - See Before Publishing",
+    content: "This page shows exactly how your video will appear on YouTube. Check your thumbnail at real sizes, see your title next to competitors, and verify everything looks right before producing the video.",
+    icon: <Eye className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/preview$/,
   },
-  // SETTINGS
   {
     id: 17,
-    title: "Studio Settings",
-    description: "Finally, let's check settings. Click 'Settings' in the sidebar to customize your studio.",
-    icon: <Settings className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='nav-settings']",
-    actionHint: "Click 'Settings' in the sidebar",
+    title: "Feed View",
+    content: "The Home Feed preview shows your video as it appears on YouTube's homepage. Your thumbnail competes against other videos for attention. If it doesn't stand out here, viewers will scroll past it.",
+    icon: <Eye className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/preview$/,
   },
   {
     id: 18,
-    title: "Studio Profile",
-    description: "Update your studio name, upload a logo, and find 'Tutorial & Help' to restart this walkthrough anytime.",
-    icon: <Settings className="w-6 h-6" />,
-    expectedPath: /\/studio\/[^/]+\/settings/,
+    title: "Search & Sidebar",
+    content: "Toggle between Feed, Search, and Sidebar views. Search shows how your video appears in YouTube search results. Sidebar shows how it looks in 'Recommended' next to other videos. Test all three.",
+    icon: <Eye className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/preview$/,
   },
   {
     id: 19,
-    title: "Team Members",
-    description: "The 'Members' tab lets you invite collaborators, assign roles, and control access to your studio.",
-    icon: <Users className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='settings-members']",
-    actionHint: "Click the 'Members' tab",
+    title: "Why Preview Matters",
+    content: "Most creators never see their video the way viewers do until after publishing. By previewing first, you catch problems early — unreadable thumbnails, boring titles, missing descriptions. Fix these before you invest time filming.",
+    icon: <Eye className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/preview$/,
   },
   {
     id: 20,
-    title: "Billing & Subscription",
-    description: "The 'Billing' tab shows your plan, usage, and payments. Upgrade to unlock more projects and features.",
-    icon: <CreditCard className="w-6 h-6" />,
-    highlightSelector: "[data-tutorial='settings-billing']",
-    actionHint: "Click the 'Billing' tab",
+    title: "Go to Storyboard",
+    content: "Plan the visual structure of your video.",
+    icon: <Layout className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-storyboard']",
   },
-  // DONE
+
+  // === STORYBOARD PAGE ===
   {
     id: 21,
-    title: "You're All Set!",
-    description: "You know the Blueprint workflow: Idea → Packaging → Preview → Storyboard → Tasks. Great videos start with great planning. Go create something amazing!",
-    icon: <Sparkles className="w-6 h-6" />,
+    title: "Storyboard - Visual Planning",
+    content: "Plan what viewers will see, scene by scene. Focus on the story structure — hook, buildup, payoff. Don't plan editing details like B-roll or transitions yet. Those come during post-production.",
+    icon: <Layout className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/storyboard$/,
+  },
+  {
+    id: 22,
+    title: "Adding Scenes",
+    content: "Click 'Add Scene' to create a new scene card. Give each scene a title and description of what happens. Add reference images if helpful. Each scene should have one clear purpose in your video.",
+    icon: <Plus className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/storyboard$/,
+  },
+  {
+    id: 23,
+    title: "Scene Order",
+    content: "Drag scenes to reorder them. Your first scene is your hook — you have 30 seconds to grab attention. Middle scenes build value. Final scenes deliver the payoff and call to action.",
+    icon: <GripVertical className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/storyboard$/,
+  },
+  {
+    id: 24,
+    title: "Why Storyboard",
+    content: "Storyboarding before filming prevents wasted shoots and meandering videos. You'll know exactly what footage you need, making production faster. Viewers stay engaged because every scene has purpose.",
+    icon: <Layout className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/storyboard$/,
+  },
+  {
+    id: 25,
+    title: "Go to Tasks",
+    content: "Track the work needed to complete this project.",
+    icon: <CheckSquare className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-tasks']",
+  },
+
+  // === TASKS PAGE ===
+  {
+    id: 26,
+    title: "Tasks - Project Checklist",
+    content: "Every project has tasks: research, scripting, filming, editing, publishing. This page tracks them all. Check off tasks as you complete them to see your progress.",
+    icon: <CheckSquare className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/tasks$/,
+  },
+  {
+    id: 27,
+    title: "Default Tasks",
+    content: "New projects automatically get default tasks based on typical video production workflow. These are starting points — delete tasks you don't need, add custom ones for your specific process.",
+    icon: <CheckSquare className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/tasks$/,
+  },
+  {
+    id: 28,
+    title: "Adding Tasks",
+    content: "Click 'Add Task' to create custom tasks. Be specific: 'Film intro shot at desk' is better than 'Film video'. Specific tasks are easier to complete and track.",
+    icon: <Plus className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/tasks$/,
+  },
+  {
+    id: 29,
+    title: "Why Track Tasks",
+    content: "Without a task list, it's easy to forget steps or feel overwhelmed by a project. Breaking work into checkable tasks makes progress visible and keeps you moving forward.",
+    icon: <CheckSquare className="w-5 h-5" />,
+    expectedPath: /\/project\/[^/]+\/tasks$/,
+  },
+  {
+    id: 30,
+    title: "Go to Board",
+    content: "See all your projects on the Kanban board.",
+    icon: <Columns3 className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-board']",
+  },
+
+  // === BOARD PAGE ===
+  {
+    id: 31,
+    title: "Board - Pipeline View",
+    content: "The Board shows all projects organized by status. Each column is a stage in your workflow. Drag project cards between columns as they progress from idea to published.",
+    icon: <Columns3 className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/board$/,
+  },
+  {
+    id: 32,
+    title: "Project Cards",
+    content: "Each card shows the project thumbnail, title, and type. Click any card to open that project. Cards show which stage each video is in at a glance.",
+    icon: <Columns3 className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/board$/,
+  },
+  {
+    id: 33,
+    title: "Moving Projects",
+    content: "Drag cards between columns to update their status. When you finish filming, drag from 'Filming' to 'Editing'. The Board updates automatically — no extra clicks needed.",
+    icon: <GripVertical className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/board$/,
+  },
+  {
+    id: 34,
+    title: "Why Use the Board",
+    content: "The Board prevents projects from getting stuck or forgotten. You can see your entire content pipeline, identify bottlenecks where projects pile up, and ensure nothing falls through the cracks.",
+    icon: <Columns3 className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/board$/,
+  },
+  {
+    id: 35,
+    title: "Go to Wiki",
+    content: "Store your channel's reference documents.",
+    icon: <BookOpen className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-wiki']",
+  },
+
+  // === WIKI PAGE ===
+  {
+    id: 36,
+    title: "Wiki - Knowledge Base",
+    content: "The Wiki stores information you reference across multiple videos: brand guidelines, sponsor details, recurring segments, equipment settings, anything you need to remember.",
+    icon: <BookOpen className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/wiki/,
+  },
+  {
+    id: 37,
+    title: "Folders",
+    content: "Create folders to organize topics. Examples: 'Brand Guidelines', 'Sponsors', 'Equipment', 'Recurring Segments'. Keep related documents together for easy access.",
+    icon: <FolderOpen className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/wiki/,
+  },
+  {
+    id: 38,
+    title: "Documents",
+    content: "Inside folders, create documents with detailed information. A sponsor document might include contact info, talking points, and link requirements. Update these as things change.",
+    icon: <FileText className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/wiki/,
+  },
+  {
+    id: 39,
+    title: "Why Maintain a Wiki",
+    content: "Without documentation, you'll waste time re-finding information for every video. The Wiki is your channel's memory — it maintains consistency and speeds up production, especially when working with team members.",
+    icon: <BookOpen className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/wiki/,
+  },
+  {
+    id: 40,
+    title: "Go to Settings",
+    content: "Configure your studio preferences.",
+    icon: <Settings className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='nav-settings']",
+  },
+
+  // === SETTINGS PAGE ===
+  {
+    id: 41,
+    title: "Settings - Studio Tab",
+    content: "The Studio tab contains your studio name, logo, and URL. Update these to match your brand. The 'Restart Tutorial' button is here if you ever want to go through this walkthrough again.",
+    icon: <Settings className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/settings/,
+  },
+  {
+    id: 42,
+    title: "Members Tab",
+    content: "Open the Members tab to manage your team.",
+    icon: <Users className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='settings-members']",
+  },
+  {
+    id: 43,
+    title: "Team Management",
+    content: "The Members tab shows everyone with access to this studio. Invite collaborators by email, see pending invites, and remove members if needed. Team members can access projects based on their role.",
+    icon: <Users className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/settings/,
+  },
+  {
+    id: 44,
+    title: "Billing Tab",
+    content: "Open the Billing tab to see your subscription.",
+    icon: <CreditCard className="w-5 h-5" />,
+    clickSelector: "[data-tutorial='settings-billing']",
+  },
+  {
+    id: 45,
+    title: "Subscription & Limits",
+    content: "The Billing tab shows your current plan, project limits, and team member limits. Upgrade to unlock more projects and invite more team members. Manage your payment method here.",
+    icon: <CreditCard className="w-5 h-5" />,
+    expectedPath: /\/studio\/[^/]+\/settings/,
+  },
+
+  // === DONE ===
+  {
+    id: 46,
+    title: "Tutorial Complete",
+    content: "You've seen every feature. The workflow is: capture ideas, design packaging, preview it, storyboard the structure, track tasks, manage projects on the board, and store references in the wiki. Start using these tools for your next video.",
+    icon: <Play className="w-5 h-5" />,
   },
 ];
 
@@ -233,33 +421,52 @@ export function StudioTutorial({
     initialStep !== null && initialStep >= 0 && initialStep < TUTORIAL_STEPS.length
   );
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+  const [clickRect, setClickRect] = useState<DOMRect | null>(null);
 
-  // Update highlight position when step changes or page changes
+  // Update highlight positions when step changes
   useEffect(() => {
     const step = TUTORIAL_STEPS[currentStep ?? 0];
-    if (!step?.highlightSelector || !isVisible) {
+    if (!isVisible) {
       setHighlightRect(null);
+      setClickRect(null);
       return;
     }
 
-    const updateHighlight = () => {
-      const element = document.querySelector(step.highlightSelector!);
-      if (element) {
-        setHighlightRect(element.getBoundingClientRect());
+    const updateHighlights = () => {
+      // Info highlight (blue)
+      if (step?.highlightSelector) {
+        const element = document.querySelector(step.highlightSelector);
+        if (element) {
+          setHighlightRect(element.getBoundingClientRect());
+        } else {
+          setHighlightRect(null);
+        }
       } else {
         setHighlightRect(null);
       }
+
+      // Click highlight (green)
+      if (step?.clickSelector) {
+        const element = document.querySelector(step.clickSelector);
+        if (element) {
+          setClickRect(element.getBoundingClientRect());
+        } else {
+          setClickRect(null);
+        }
+      } else {
+        setClickRect(null);
+      }
     };
 
-    updateHighlight();
-    const interval = setInterval(updateHighlight, 500);
-    window.addEventListener("resize", updateHighlight);
-    window.addEventListener("scroll", updateHighlight);
+    updateHighlights();
+    const interval = setInterval(updateHighlights, 500);
+    window.addEventListener("resize", updateHighlights);
+    window.addEventListener("scroll", updateHighlights);
     
     return () => {
       clearInterval(interval);
-      window.removeEventListener("resize", updateHighlight);
-      window.removeEventListener("scroll", updateHighlight);
+      window.removeEventListener("resize", updateHighlights);
+      window.removeEventListener("scroll", updateHighlights);
     };
   }, [currentStep, isVisible, pathname]);
 
@@ -330,27 +537,23 @@ export function StudioTutorial({
     await saveProgress(TUTORIAL_STEPS.length);
   };
 
-  // Show welcome prompt for new users
+  // Welcome prompt
   if (showWelcome && !isVisible) {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none">
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-card border border-white/10 rounded-2xl shadow-2xl p-8 max-w-lg w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 mx-auto">
-            <Sparkles className="w-8 h-8" />
-          </div>
-          <h2 className="text-2xl font-bold text-center mb-3">Welcome to Blueprint!</h2>
-          <p className="text-muted-foreground text-center leading-relaxed mb-6">
-            Would you like a quick walkthrough of the studio? We&apos;ll guide you through 
-            each feature so you can start creating effectively.
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-8 max-w-lg w-[90vw]">
+          <h2 className="text-2xl font-bold text-center mb-3">Learn the Studio</h2>
+          <p className="text-zinc-400 text-center leading-relaxed mb-6">
+            Quick walkthrough of every feature. Takes about 5 minutes. 
+            You can restart this anytime from Settings.
           </p>
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleSkipWelcome} className="flex-1">
-              Skip for now
+              Skip
             </Button>
             <Button onClick={handleStart} className="flex-1">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Start Tutorial
+              Start
             </Button>
           </div>
         </div>
@@ -365,14 +568,13 @@ export function StudioTutorial({
   const step = TUTORIAL_STEPS[currentStep ?? 0];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
-  const progress = ((currentStep ?? 0) / (TUTORIAL_STEPS.length - 1)) * 100;
 
   return (
     <>
-      {/* Highlight ring for interactive elements */}
+      {/* Info highlight - blue border, subtle */}
       {highlightRect && (
         <div
-          className="fixed ring-4 ring-primary rounded-lg pointer-events-none z-[99] animate-pulse"
+          className="fixed border-2 border-blue-400/70 rounded-lg pointer-events-none z-[99]"
           style={{
             left: highlightRect.left - 4,
             top: highlightRect.top - 4,
@@ -382,78 +584,65 @@ export function StudioTutorial({
         />
       )}
 
-      {/* Tutorial Card - fixed bottom right */}
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 glass-card border border-white/10 rounded-2xl shadow-2xl p-5 max-w-sm w-[calc(100vw-2rem)] md:w-96 animate-in fade-in slide-in-from-bottom-4 duration-300 z-[100]">
-        {/* Progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 rounded-t-2xl overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-300" 
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+      {/* Click highlight - green pulsing ring */}
+      {clickRect && (
+        <div
+          className="fixed ring-4 ring-emerald-400 rounded-lg pointer-events-none z-[99] animate-pulse"
+          style={{
+            left: clickRect.left - 6,
+            top: clickRect.top - 6,
+            width: clickRect.width + 12,
+            height: clickRect.height + 12,
+          }}
+        />
+      )}
 
+      {/* Tutorial Card - solid background for readability */}
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 bg-zinc-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-5 max-w-sm w-[calc(100vw-2rem)] md:w-96 z-[100]">
         {/* Skip button */}
         <button
           onClick={handleSkip}
-          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-3 right-3 text-zinc-500 hover:text-white transition-colors"
           aria-label="Skip tutorial"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+        <div className="flex items-start gap-3 mb-3 pr-6">
+          <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white flex-shrink-0">
             {step.icon}
           </div>
-          <div className="flex-1 min-w-0 pr-4">
-            <h2 className="text-base font-semibold leading-tight">{step.title}</h2>
-            <span className="text-xs text-muted-foreground">
-              Step {(currentStep ?? 0) + 1} of {TUTORIAL_STEPS.length}
-            </span>
-          </div>
+          <h2 className="text-base font-semibold leading-tight pt-1.5">{step.title}</h2>
         </div>
 
         {/* Content */}
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          {step.description}
+        <p className="text-sm text-zinc-300 leading-relaxed mb-4">
+          {step.content}
         </p>
 
-        {/* Action hint */}
-        {step.actionHint && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-2 mb-4">
-            <p className="text-sm text-primary font-medium">
-              👉 {step.actionHint}
+        {/* Click instruction */}
+        {step.clickSelector && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 mb-4">
+            <p className="text-sm text-emerald-400 font-medium">
+              Click the highlighted element to continue
             </p>
           </div>
         )}
 
-        {/* Step dots */}
-        <div className="flex justify-center gap-1 mb-4">
-          {TUTORIAL_STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "w-1.5 h-1.5 rounded-full transition-colors",
-                i === currentStep ? "bg-primary" : i < (currentStep ?? 0) ? "bg-primary/50" : "bg-white/20"
-              )}
-            />
-          ))}
-        </div>
-
         {/* Navigation */}
         <div className="flex gap-2">
           {!isFirstStep && (
-            <Button variant="outline" size="sm" onClick={handlePrev} className="flex-1">
+            <Button variant="outline" size="sm" onClick={handlePrev} className="flex-1 bg-transparent border-white/10 hover:bg-white/5">
               <ArrowLeft className="w-3 h-3 mr-1" />
               Back
             </Button>
           )}
           <Button size="sm" onClick={handleNext} className="flex-1">
             {isLastStep ? (
-              "Finish"
-            ) : step.actionHint ? (
-              "I did it"
+              "Done"
+            ) : step.clickSelector ? (
+              "I clicked it"
             ) : (
               <>
                 Next
@@ -493,8 +682,7 @@ export function StartTutorialButton({
 
   return (
     <Button variant="outline" onClick={handleStartTutorial} className={className}>
-      <Sparkles className="w-4 h-4 mr-2" />
-      Start Tutorial
+      Restart Tutorial
     </Button>
   );
 }
