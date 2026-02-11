@@ -31,6 +31,7 @@ import {
   Heading3,
   List,
   ListOrdered,
+  FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
@@ -425,6 +426,23 @@ export default function WikiDocPage({ params }: DocPageProps) {
             Back
           </Link>
           <div className="flex items-center gap-2">
+            {/* Mobile Folder Selector */}
+            <Select value={folderId || "none"} onValueChange={(value) => setFolderId(value === "none" ? null : value)}>
+              <SelectTrigger className="h-8 w-auto gap-1.5 text-xs px-2">
+                <FolderOpen className="w-3.5 h-3.5" />
+                <span className="max-w-[80px] truncate">
+                  {folderId ? folders.find(f => f.id === folderId)?.name || "Folder" : "No folder"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No folder</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <span className="text-xs text-muted-foreground">
               {saving ? "Saving..." : lastSaved ? "Saved" : ""}
             </span>
@@ -481,6 +499,103 @@ export default function WikiDocPage({ params }: DocPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Mobile Floating Toolbar */}
+      {editor && (
+        <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-3 pb-2">
+          <div className="bg-zinc-900/95 backdrop-blur-sm border border-white/10 rounded-xl p-2 shadow-lg">
+            <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-hide">
+              {/* Text Styles */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant={editor.isActive("bold") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Bold className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("italic") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Italic className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("underline") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Underline className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("strike") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Strikethrough className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="w-px h-6 bg-white/10 shrink-0" />
+              
+              {/* Headings */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant={editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Heading1 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Heading2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Heading3 className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="w-px h-6 bg-white/10 shrink-0" />
+              
+              {/* Lists */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  className="h-8 w-8 p-0"
+                >
+                  <ListOrdered className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
