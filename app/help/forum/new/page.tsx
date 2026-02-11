@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MarkdownEditor } from "@/components/help/markdown-editor";
+import { RichTextEditor } from "@/components/help/rich-text-editor";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { toast } from "sonner";
 import {
@@ -431,7 +431,7 @@ export default function NewForumThreadPage() {
           {/* Content */}
           <div>
             <label className="block text-sm font-medium mb-2">Content</label>
-            <MarkdownEditor
+            <RichTextEditor
               value={content}
               onChange={setContent}
               placeholder="Provide details, context, or share your thoughts..."

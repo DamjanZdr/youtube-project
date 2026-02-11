@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
-import { MarkdownEditor } from "@/components/help/markdown-editor";
+import { RichTextEditor } from "@/components/help/rich-text-editor";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -578,7 +578,7 @@ export default function ThreadPage() {
               className="mb-4"
             />
             <div className="mb-4">
-              <MarkdownEditor
+              <RichTextEditor
                 value={editThreadContent}
                 onChange={setEditThreadContent}
                 placeholder="Content (supports Markdown)"
@@ -714,7 +714,7 @@ export default function ThreadPage() {
                   {editingReplyId === reply.id ? (
                     <div>
                       <div className="mb-3">
-                        <MarkdownEditor
+                        <RichTextEditor
                           value={editReplyContent}
                           onChange={setEditReplyContent}
                           placeholder="Edit your reply..."
@@ -817,7 +817,7 @@ export default function ThreadPage() {
           <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
             <div className="mb-4">
-              <MarkdownEditor
+              <RichTextEditor
                 value={replyContent}
                 onChange={setReplyContent}
                 placeholder="Write your reply..."
