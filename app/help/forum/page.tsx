@@ -154,8 +154,8 @@ export default function ForumPage() {
       setCategories(cats);
     }
 
-    // Load user-generated threads only (not official/system)
-    // Use .or to catch both false and null values for is_official
+    // Load all threads then filter to non-official ones client-side
+    // (PostgreSQL NULL handling makes server-side filtering tricky)
     const { data: threadData, error: threadError } = await supabase
       .from("help_threads")
       .select(`
@@ -173,7 +173,6 @@ export default function ForumPage() {
         author:profiles!author_id(full_name, avatar_url),
         thread_categories:help_thread_categories(category_id)
       `)
-      .or("is_official.eq.false,is_official.is.null")
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -182,7 +181,9 @@ export default function ForumPage() {
     }
     
     if (threadData) {
-      setThreads(threadData as unknown as Thread[]);
+      // Filter out official threads client-side to handle NULL values properly
+      const userThreads = threadData.filter(t => t.is_official !== true);
+      setThreads(userThreads as unknown as Thread[]);
     }
 
     setLoading(false);
