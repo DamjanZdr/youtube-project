@@ -70,25 +70,35 @@ export default function HelpCenterPage() {
       setSearching(true);
       const query = searchQuery.toLowerCase().trim();
       
+      // Search both title and content
       const { data: threads } = await supabase
         .from("help_threads")
         .select(`
           id,
           title,
           slug,
+          content,
           is_pinned,
           is_official,
           reply_count,
           created_at,
           category:help_categories(slug, name)
         `)
-        .or(`title.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (threads) {
-        setSearchResults(threads as unknown as Thread[]);
+        // Sort: title matches first, then content-only matches
+        const sorted = [...threads].sort((a, b) => {
+          const aInTitle = a.title.toLowerCase().includes(query);
+          const bInTitle = b.title.toLowerCase().includes(query);
+          if (aInTitle && !bInTitle) return -1;
+          if (!aInTitle && bInTitle) return 1;
+          return 0;
+        });
+        setSearchResults(sorted.slice(0, 10) as unknown as Thread[]);
       }
       setSearching(false);
     }, 300);
