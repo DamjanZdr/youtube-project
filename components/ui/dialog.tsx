@@ -60,7 +60,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border p-6 shadow-lg outline-none",
+          "bg-background fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border p-4 sm:p-6 shadow-lg outline-none max-h-[calc(100vh-2rem)] overflow-y-auto",
           className
         )}
         style={{ transform: "translate(-50%, -50%)" }}

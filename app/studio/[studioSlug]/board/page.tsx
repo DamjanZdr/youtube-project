@@ -725,7 +725,7 @@ export default function BoardPage() {
           {statuses.map((status) => (
             <div 
               key={status.id} 
-              className={`w-[120px] md:w-56 shrink-0 flex flex-col bg-white/[0.02] rounded-xl md:rounded-2xl border transition-colors ${
+              className={`w-[180px] md:w-56 shrink-0 flex flex-col bg-white/[0.02] rounded-xl md:rounded-2xl border transition-colors ${
                 dragOverStatusId === status.id 
                   ? 'border-primary/50 bg-primary/5' 
                   : 'border-white/5'
@@ -812,24 +812,28 @@ export default function BoardPage() {
                 {/* Edit mode controls - second row */}
                 {editMode && (
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 md:gap-1">
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="h-6 px-2 text-xs"
+                        className="h-6 w-6 md:w-auto px-0 md:px-2 text-xs"
                         onClick={() => moveStatus(status.id, -1)}
                         disabled={statuses.findIndex(s => s.id === status.id) === 0}
+                        title="Move left"
                       >
-                        ← Left
+                        <span className="md:hidden">←</span>
+                        <span className="hidden md:inline">← Left</span>
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="h-6 px-2 text-xs"
+                        className="h-6 w-6 md:w-auto px-0 md:px-2 text-xs"
                         onClick={() => moveStatus(status.id, 1)}
                         disabled={statuses.findIndex(s => s.id === status.id) === statuses.length - 1}
+                        title="Move right"
                       >
-                        Right →
+                        <span className="md:hidden">→</span>
+                        <span className="hidden md:inline">Right →</span>
                       </Button>
                     </div>
                     <div className="flex items-center gap-1">
