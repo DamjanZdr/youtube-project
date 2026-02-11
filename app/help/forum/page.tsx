@@ -169,8 +169,8 @@ export default function ForumPage() {
         reply_count,
         created_at,
         category_id,
-        category:help_categories!category_id(slug, name, icon),
-        author:profiles!author_id(full_name, avatar_url)
+        author_id,
+        category:help_categories!category_id(slug, name, icon)
       `)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
@@ -183,6 +183,15 @@ export default function ForumPage() {
       // Filter out official threads client-side to handle NULL values properly
       const userThreads = threadData.filter(t => t.is_official !== true);
       
+      // Fetch author profiles from public_profiles view (secure - no email)
+      const authorIds = [...new Set(userThreads.map(t => t.author_id).filter(Boolean))];
+      const { data: authorData } = await supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", authorIds);
+      
+      const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
+      
       // Fetch thread categories separately if needed
       const threadIds = userThreads.map(t => t.id);
       const { data: catData } = await supabase
@@ -190,13 +199,14 @@ export default function ForumPage() {
         .select("thread_id, category_id")
         .in("thread_id", threadIds);
       
-      // Attach categories to threads
-      const threadsWithCats = userThreads.map(t => ({
+      // Attach categories and authors to threads
+      const threadsWithData = userThreads.map(t => ({
         ...t,
+        author: authorMap.get(t.author_id) || null,
         thread_categories: catData?.filter(c => c.thread_id === t.id) || []
       }));
       
-      setThreads(threadsWithCats as unknown as Thread[]);
+      setThreads(threadsWithData as unknown as Thread[]);
     }
 
     setLoading(false);

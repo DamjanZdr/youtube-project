@@ -107,12 +107,21 @@ export default function CategoryPage() {
         view_count,
         reply_count,
         created_at,
-        author:profiles!author_id(full_name, avatar_url)
+        author_id
       `)
       .eq("category_id", cat.id)
       .eq("is_official", true);
 
     if (threadData) {
+      // Fetch author profiles from public_profiles view (secure - no email)
+      const authorIds = [...new Set(threadData.map(t => t.author_id).filter(Boolean))];
+      const { data: authorData } = await supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", authorIds);
+      
+      const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
+      
       // Sort: pinned first (oldest pinned on top), then unpinned (newest first)
       const sorted = [...threadData].sort((a, b) => {
         // Pinned articles come first
@@ -127,7 +136,14 @@ export default function CategoryPage() {
         // Within unpinned: newest first (descending)
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-      setThreads(sorted as unknown as Thread[]);
+      
+      // Attach authors
+      const threadsWithAuthors = sorted.map(t => ({
+        ...t,
+        author: authorMap.get(t.author_id) || null
+      }));
+      
+      setThreads(threadsWithAuthors as unknown as Thread[]);
     }
 
     setLoading(false);

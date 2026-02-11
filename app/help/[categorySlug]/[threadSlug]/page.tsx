@@ -180,8 +180,7 @@ export default function ThreadPage() {
         view_count,
         reply_count,
         created_at,
-        author_id,
-        author:profiles!author_id(id, full_name, avatar_url)
+        author_id
       `)
       .eq("category_id", cat.id)
       .eq("slug", threadSlug)
@@ -192,14 +191,6 @@ export default function ThreadPage() {
       return;
     }
 
-    setThread({ ...threadData, category: cat } as unknown as Thread);
-
-    // Increment view count
-    await supabase
-      .from("help_threads")
-      .update({ view_count: (threadData.view_count || 0) + 1 })
-      .eq("id", threadData.id);
-
     // Load replies
     const { data: replyData } = await supabase
       .from("help_thread_replies")
@@ -209,11 +200,37 @@ export default function ThreadPage() {
         is_official,
         created_at,
         author_id,
-        parent_reply_id,
-        author:profiles!author_id(id, full_name, avatar_url)
+        parent_reply_id
       `)
       .eq("thread_id", threadData.id)
       .order("created_at", { ascending: true });
+
+    // Fetch all author profiles from public_profiles view (secure - no email)
+    const allAuthorIds = [
+      threadData.author_id,
+      ...(replyData?.map(r => r.author_id) || [])
+    ].filter(Boolean);
+    const uniqueAuthorIds = [...new Set(allAuthorIds)];
+    
+    const { data: authorData } = await supabase
+      .from("public_profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", uniqueAuthorIds);
+    
+    const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
+
+    // Set thread with author
+    setThread({ 
+      ...threadData, 
+      category: cat,
+      author: authorMap.get(threadData.author_id) || null
+    } as unknown as Thread);
+
+    // Increment view count
+    await supabase
+      .from("help_threads")
+      .update({ view_count: (threadData.view_count || 0) + 1 })
+      .eq("id", threadData.id);
 
     if (replyData) {
       // Organize replies into tree structure (1 level nesting)
@@ -221,7 +238,11 @@ export default function ThreadPage() {
       const childMap: Record<string, Reply[]> = {};
 
       replyData.forEach((reply) => {
-        const replyWithChildren = { ...reply, children: [] } as unknown as Reply;
+        const replyWithChildren = { 
+          ...reply, 
+          author: authorMap.get(reply.author_id) || null,
+          children: [] 
+        } as unknown as Reply;
         if (reply.parent_reply_id) {
           if (!childMap[reply.parent_reply_id]) {
             childMap[reply.parent_reply_id] = [];
