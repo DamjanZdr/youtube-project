@@ -21,7 +21,8 @@ import {
   Upload,
   UserPlus,
   Crown,
-  Youtube
+  Youtube,
+  Sparkles
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -447,6 +448,24 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     setCancellingTransfer(false);
   };
 
+  const handleRestartTutorial = async () => {
+    if (!studio || !user) return;
+    
+    const { error } = await supabase
+      .from('organization_members')
+      .update({ tutorial_step: 0, tutorial_completed_at: null })
+      .eq('organization_id', studio.id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error('Failed to restart tutorial');
+    } else {
+      toast.success('Tutorial will start on next page load');
+      router.push(`/studio/${studioSlug}`);
+      router.refresh();
+    }
+  };
+
   const handleInitiateTransfer = async () => {
     if (!transferEmail || !studio || !user) return;
     
@@ -748,6 +767,29 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               )}
             </div>
           )}
+
+          {/* Tutorial & Help */}
+          <div className="glass-card p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/30">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Tutorial & Help</h3>
+                <p className="text-sm text-muted-foreground">
+                  Restart the onboarding tutorial to learn about all the features
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleRestartTutorial}
+            >
+              <Sparkles className="w-4 h-4" />
+              Restart Tutorial
+            </Button>
+          </div>
 
           {/* Danger Zone */}
           <div className="glass-card p-6 border-red-500/20">

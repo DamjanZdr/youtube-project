@@ -240,7 +240,7 @@ export default function ProjectsPage() {
           <h1 className="text-2xl md:text-3xl font-bold">Projects</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1">Manage your video projects and content pipeline</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="glow-sm gap-2 w-full sm:w-auto">
+        <Button data-tutorial="new-project" onClick={() => setShowCreateDialog(true)} className="glow-sm gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           New Project
         </Button>

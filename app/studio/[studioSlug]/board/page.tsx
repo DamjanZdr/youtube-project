@@ -688,7 +688,7 @@ export default function BoardPage() {
           <span className="hidden sm:inline">{editMode ? "Done" : "Edit"}</span>
         </Button>
         <div className="w-px h-6 bg-white/10" />
-        <Button size="sm" className="rounded-full glow-sm px-3" onClick={() => setShowCreateDialog(true)}>
+        <Button data-tutorial="new-project" size="sm" className="rounded-full glow-sm px-3" onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">New Project</span>
         </Button>

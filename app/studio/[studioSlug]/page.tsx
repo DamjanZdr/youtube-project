@@ -77,19 +77,6 @@ export default function StudioHomePage() {
         .limit(5);
 
       setProjects(projectData || []);
-
-      // Try to fetch live stats from YouTube if connected
-      try {
-        const response = await fetch(`/api/youtube/stats?organizationId=${studioData?.id}`);
-        if (response.ok) {
-          const stats = await response.json();
-          if (stats.subscriberCount) {
-            setSubscriberCount(stats.subscriberCount);
-          }
-        }
-      } catch (e) {
-        // YouTube not connected or error - use cached value
-      }
     }
 
     loadData();
@@ -165,14 +152,14 @@ export default function StudioHomePage() {
           <h1 className="text-xl md:text-2xl font-bold">Welcome back{user?.full_name ? `, ${user.full_name}` : ''}!</h1>
           <p className="text-sm md:text-base text-muted-foreground">Here&apos;s what&apos;s happening with {studio?.name || "your studio"}</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto" onClick={() => setShowCreateDialog(true)}>
+        <Button data-tutorial="new-project" className="bg-primary hover:bg-primary/90 w-full sm:w-auto" onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Project
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">

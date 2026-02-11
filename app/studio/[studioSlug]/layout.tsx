@@ -4,6 +4,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { StudioSidebar } from "./studio-sidebar";
+import { StudioTutorial } from "@/components/shared/studio-tutorial";
 import { updateUserActivity, updateOrgActivity } from "@/lib/actions/activity";
 
 interface StudioLayoutProps {
@@ -56,6 +57,26 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     }
   }
 
+  // Fetch tutorial progress and first project for tutorial
+  const { data: memberData } = await supabase
+    .from("organization_members")
+    .select("tutorial_step")
+    .eq("organization_id", studio.id)
+    .eq("user_id", user.id)
+    .single();
+
+  const { data: firstProject } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("organization_id", studio.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .single();
+
+  // Tutorial step: null = never started (show welcome), number = current step
+  const tutorialStep = memberData?.tutorial_step ?? null;
+  const hasProjects = !!firstProject;
+
   // Track activity (non-blocking)
   updateUserActivity().catch(() => {});
   updateOrgActivity(studio.id).catch(() => {});
@@ -80,6 +101,16 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
         <main className="flex-1 overflow-y-auto overflow-x-hidden pb-[72px] md:pb-0">
           {children}
         </main>
+
+        {/* Onboarding Tutorial */}
+        <StudioTutorial
+          studioSlug={studioSlug}
+          organizationId={studio.id}
+          userId={user.id}
+          initialStep={tutorialStep}
+          hasProjects={hasProjects}
+          firstProjectId={firstProject?.id}
+        />
       </div>
     </TooltipProvider>
   );
