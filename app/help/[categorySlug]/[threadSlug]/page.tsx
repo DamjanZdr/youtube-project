@@ -50,6 +50,41 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
+import React from "react";
+
+// Custom text renderer to highlight @mentions
+const renderTextWithMentions = (text: string) => {
+  const parts = text.split(/(@[a-z0-9_]+)/gi);
+  return parts.map((part, i) => {
+    if (part.match(/^@[a-z0-9_]+$/i)) {
+      return (
+        <span key={i} className="text-primary font-medium">
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+};
+
+// Custom components for ReactMarkdown to highlight @mentions
+const markdownComponents = {
+  p: ({ children, ...props }: any) => {
+    const processChildren = (child: any): any => {
+      if (typeof child === 'string') {
+        return renderTextWithMentions(child);
+      }
+      if (React.isValidElement(child) && (child.props as any)?.children) {
+        return React.cloneElement(child, {
+          ...child.props,
+          children: React.Children.map((child.props as any).children, processChildren)
+        } as any);
+      }
+      return child;
+    };
+    return <p {...props}>{React.Children.map(children, processChildren)}</p>;
+  }
+};
 
 interface Thread {
   id: string;
@@ -106,6 +141,7 @@ export default function ThreadPage() {
   const [submitting, setSubmitting] = useState(false);
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [replyToAuthor, setReplyToAuthor] = useState<string | null>(null);
+  const [replyLocation, setReplyLocation] = useState<string | null>(null); // "thread" | reply.id | null
 
   // Edit states
   const [editingThread, setEditingThread] = useState(false);
@@ -288,6 +324,7 @@ export default function ThreadPage() {
       setReplyContent("");
       setReplyToId(null);
       setReplyToAuthor(null);
+      setReplyLocation(null);
       loadData(); // Reload to show new reply
     }
 
@@ -308,15 +345,22 @@ export default function ThreadPage() {
       setReplyContent("");
     }
     setReplyToAuthor(authorName);
-    
-    // Scroll to reply form
-    document.getElementById("reply-form")?.scrollIntoView({ behavior: "smooth" });
+    setReplyLocation(replyId); // Show form under this reply
+  };
+
+  // Handle clicking reply on the main thread
+  const handleReplyToThread = () => {
+    setReplyToId(null);
+    setReplyToAuthor(null);
+    setReplyContent("");
+    setReplyLocation("thread");
   };
 
   const cancelReplyTo = () => {
     setReplyToId(null);
     setReplyToAuthor(null);
     setReplyContent("");
+    setReplyLocation(null);
   };
 
   // Admin actions
@@ -766,7 +810,65 @@ export default function ThreadPage() {
                 <span>{thread.reply_count} replies</span>
               </div>
             )}
+            {/* Reply button for main thread */}
+            {user && !thread.is_locked && !thread.is_official && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground h-7 px-2 ml-auto"
+                onClick={handleReplyToThread}
+              >
+                <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                Reply
+              </Button>
+            )}
           </div>
+          
+          {/* Inline reply form for main thread */}
+          {replyLocation === "thread" && user && !thread.is_locked && !thread.is_official && (
+            <div className="mt-4 p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">Replying to thread</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
+                  onClick={cancelReplyTo}
+                >
+                  <X className="w-3.5 h-3.5 mr-1" />
+                  Cancel
+                </Button>
+              </div>
+              <div className="mb-3">
+                <RichTextEditor
+                  value={replyContent}
+                  onChange={setReplyContent}
+                  placeholder="Write your reply..."
+                  rows={4}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={submitReply}
+                  disabled={submitting || !replyContent.trim()}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      Post Reply
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         )}
 
@@ -868,6 +970,7 @@ export default function ThreadPage() {
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       rehypePlugins={[rehypeRaw]}
+                      components={markdownComponents}
                     >
                       {reply.content}
                     </ReactMarkdown>
@@ -884,6 +987,53 @@ export default function ThreadPage() {
                         <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
                         Reply
                       </Button>
+                    </div>
+                  )}
+                  
+                  {/* Inline reply form for this reply */}
+                  {replyLocation === reply.id && user && !thread.is_locked && (
+                    <div className="mt-3 p-3 rounded-lg bg-black/20 border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-muted-foreground">
+                          Replying to <span className="text-primary">@{reply.author?.username || reply.author?.full_name || "Unknown"}</span>
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-muted-foreground hover:text-foreground h-6 px-1.5"
+                          onClick={cancelReplyTo}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="mb-2">
+                        <RichTextEditor
+                          value={replyContent}
+                          onChange={setReplyContent}
+                          placeholder="Write your reply..."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={submitReply}
+                          disabled={submitting || !replyContent.trim()}
+                          size="sm"
+                          className="gap-1.5 h-7 text-xs"
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Posting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3 h-3" />
+                              Reply
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
                   </>
@@ -981,6 +1131,7 @@ export default function ThreadPage() {
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm, remarkBreaks]}
                             rehypePlugins={[rehypeRaw]}
+                            components={markdownComponents}
                           >
                             {childReply.content}
                           </ReactMarkdown>
@@ -999,6 +1150,53 @@ export default function ThreadPage() {
                             </Button>
                           </div>
                         )}
+                        
+                        {/* Inline reply form for child reply */}
+                        {replyLocation === childReply.id && user && !thread.is_locked && (
+                          <div className="mt-2 p-2 rounded bg-black/20 border border-white/10">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] text-muted-foreground">
+                                Replying to <span className="text-primary">@{childReply.author?.username || childReply.author?.full_name || "Unknown"}</span>
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[10px] text-muted-foreground hover:text-foreground h-5 px-1"
+                                onClick={cancelReplyTo}
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+                            <div className="mb-2">
+                              <RichTextEditor
+                                value={replyContent}
+                                onChange={setReplyContent}
+                                placeholder="Write your reply..."
+                                rows={2}
+                              />
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                onClick={submitReply}
+                                disabled={submitting || !replyContent.trim()}
+                                size="sm"
+                                className="gap-1 h-6 text-[10px] px-2"
+                              >
+                                {submitting ? (
+                                  <>
+                                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                    Posting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-2.5 h-2.5" />
+                                    Reply
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                         </>
                         )}
                       </div>
@@ -1011,65 +1209,15 @@ export default function ThreadPage() {
           </div>
         )}
 
-        {/* Reply Form - hidden for official threads */}
-        {user && !thread.is_locked && !thread.is_official ? (
-          <div id="reply-form" className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-sm">
-                {replyToAuthor ? (
-                  <>Replying to <span className="text-primary">@{replyToAuthor}</span></>
-                ) : (
-                  "Post a Reply"
-                )}
-              </h3>
-              {replyToId && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-foreground h-7"
-                  onClick={cancelReplyTo}
-                >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Cancel
-                </Button>
-              )}
-            </div>
-            <div className="mb-4">
-              <RichTextEditor
-                value={replyContent}
-                onChange={setReplyContent}
-                placeholder={replyToAuthor ? `Reply to ${replyToAuthor}...` : "Write your reply..."}
-                rows={6}
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={submitReply}
-                disabled={submitting || !replyContent.trim()}
-                className="gap-2 w-full sm:w-auto"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Posting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Post Reply
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        ) : thread.is_locked ? (
+        {/* Status messages for locked/not signed in */}
+        {thread.is_locked && !thread.is_official && (
           <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 text-center">
             <Lock className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-muted-foreground text-xs md:text-sm">This thread is locked and no longer accepting replies.</p>
           </div>
-        ) : thread.is_official ? (
-          null
-        ) : (
+        )}
+        
+        {!user && !thread.is_locked && !thread.is_official && (
           <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 text-center">
             <p className="text-muted-foreground text-sm mb-4">Sign in to post a reply</p>
             <Link href="/sign-in">
