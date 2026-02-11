@@ -653,19 +653,21 @@ export default function ThreadPage() {
             )}
           </div>
           <article className="prose prose-neutral dark:prose-invert max-w-none
-            prose-headings:font-normal prose-headings:text-foreground/90
-            prose-h1:text-lg prose-h1:mt-0 prose-h1:mb-6
-            prose-h2:text-[15px] prose-h2:mt-8 prose-h2:mb-3 prose-h2:text-foreground/80
-            prose-h3:text-[14px] prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-foreground/70
-            prose-h4:text-[14px] prose-h4:mt-4 prose-h4:mb-2 prose-h4:text-foreground/70
-            prose-h5:text-[13px] prose-h5:mt-4 prose-h5:mb-2 prose-h5:text-foreground/60
-            prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-p:my-4
-            prose-li:text-[15px] prose-li:leading-7 prose-li:text-muted-foreground prose-li:my-1
-            prose-ul:my-4 prose-ol:my-4
-            prose-strong:font-medium prose-strong:text-foreground/90
-            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-            prose-table:text-sm prose-th:font-normal prose-th:text-foreground/80
-            prose-code:text-sm prose-code:font-normal
+            prose-headings:font-semibold prose-headings:text-foreground
+            prose-h1:text-2xl prose-h1:mt-6 prose-h1:mb-4
+            prose-h2:text-xl prose-h2:font-bold prose-h2:mt-6 prose-h2:mb-3
+            prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-5 prose-h3:mb-2
+            prose-h4:text-base prose-h4:font-semibold prose-h4:mt-4 prose-h4:mb-2
+            prose-p:text-[15px] prose-p:leading-7 prose-p:text-foreground/80 prose-p:my-3
+            prose-li:text-[15px] prose-li:leading-7 prose-li:text-foreground/80 prose-li:my-0.5
+            prose-ul:my-3 prose-ul:pl-6 prose-ol:my-3 prose-ol:pl-6
+            prose-strong:font-semibold prose-strong:text-foreground
+            prose-em:italic
+            prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80
+            prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground
+            prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3
+            prose-code:bg-black/30 prose-code:rounded prose-code:px-1 prose-code:text-sm prose-code:font-mono
+            prose-hr:border-white/20 prose-hr:my-6
             [&_u]:underline
           ">
             <ReactMarkdown 
@@ -792,7 +794,7 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-normal prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground [&_u]:underline">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-h2:text-xl prose-h2:font-bold prose-h3:text-lg prose-h3:font-semibold prose-p:text-[15px] prose-p:leading-7 prose-p:text-foreground/80 prose-li:text-[15px] prose-li:text-foreground/80 prose-strong:font-semibold prose-strong:text-foreground prose-a:text-primary prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-code:bg-black/30 prose-code:rounded prose-code:px-1 [&_u]:underline">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       rehypePlugins={[rehypeRaw]}
