@@ -21,6 +21,7 @@ import {
   MessagesSquare,
   TicketIcon,
   Check,
+  X,
 } from "lucide-react";
 
 interface Category {
@@ -52,7 +53,7 @@ export default function NewForumThreadPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
 
   const supabase = createClient();
 
@@ -92,39 +93,53 @@ export default function NewForumThreadPage() {
 
     if (cats && cats.length > 0) {
       setCategories(cats);
-      setSelectedCategoryId(cats[0].id);
     }
 
     setLoading(false);
   };
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
-    if (!user || !selectedCategoryId || !title.trim() || !content.trim()) {
-      toast.error("Please fill in all fields");
+    if (!user || selectedCategoryIds.size === 0 || !title.trim() || !content.trim()) {
+      toast.error(selectedCategoryIds.size === 0 ? "Please select at least one category" : "Please fill in all fields");
       return;
     }
 
     setSubmitting(true);
 
-    const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
-    if (!selectedCategory) {
-      toast.error("Please select a category");
+    // Use first selected category as primary (for URL routing)
+    const categoryIdsArray = Array.from(selectedCategoryIds);
+    const primaryCategoryId = categoryIdsArray[0];
+    const primaryCategory = categories.find((c) => c.id === primaryCategoryId);
+    if (!primaryCategory) {
+      toast.error("Invalid category selection");
       setSubmitting(false);
       return;
     }
 
     const slug = generateSlug(title);
 
-    // Check if slug already exists in this category
+    // Check if slug already exists in primary category
     const { data: existing } = await supabase
       .from("help_threads")
       .select("id")
-      .eq("category_id", selectedCategoryId)
+      .eq("category_id", primaryCategoryId)
       .eq("slug", slug)
       .single();
 
     if (existing) {
-      toast.error("A thread with a similar title already exists in this category");
+      toast.error("A thread with a similar title already exists");
       setSubmitting(false);
       return;
     }
@@ -132,13 +147,13 @@ export default function NewForumThreadPage() {
     const { data: thread, error } = await supabase
       .from("help_threads")
       .insert({
-        category_id: selectedCategoryId,
+        category_id: primaryCategoryId,
         author_id: user.id,
         title: title.trim(),
         slug,
         content: content.trim(),
       })
-      .select("slug")
+      .select("id, slug")
       .single();
 
     if (error) {
@@ -148,8 +163,16 @@ export default function NewForumThreadPage() {
       return;
     }
 
+    // Insert all selected categories into junction table
+    const junctionRows = categoryIdsArray.map((catId) => ({
+      thread_id: thread.id,
+      category_id: catId,
+    }));
+
+    await supabase.from("help_thread_categories").insert(junctionRows);
+
     toast.success("Thread created!");
-    router.push(`/help/${selectedCategory.slug}/${thread.slug}`);
+    router.push(`/help/${primaryCategory.slug}/${thread.slug}`);
   };
 
   if (loading) {
@@ -264,17 +287,19 @@ export default function NewForumThreadPage() {
         </p>
 
         <div className="space-y-5 md:space-y-6">
-          {/* Category selector */}
+          {/* Category selector - multi-select */}
           <div>
-            <label className="block text-sm font-medium mb-2">Category</label>
+            <label className="block text-sm font-medium mb-2">Categories</label>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="w-full flex items-center justify-between h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               >
-                <span>
-                  {categories.find((c) => c.id === selectedCategoryId)?.name || "Select a category"}
+                <span className={selectedCategoryIds.size === 0 ? "text-muted-foreground" : ""}>
+                  {selectedCategoryIds.size === 0
+                    ? "Select categories"
+                    : `${selectedCategoryIds.size} ${selectedCategoryIds.size === 1 ? "category" : "categories"} selected`}
                 </span>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
               </button>
@@ -286,35 +311,50 @@ export default function NewForumThreadPage() {
                   />
                   <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg bg-background border border-white/10 shadow-xl overflow-hidden">
                     <div className="py-1 max-h-64 overflow-y-auto">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCategoryId(cat.id);
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors ${
-                            selectedCategoryId === cat.id
-                              ? "bg-primary/15 text-primary"
-                              : "text-foreground hover:bg-white/5"
-                          }`}
-                        >
-                          <span className="flex-1">{cat.name}</span>
-                          {selectedCategoryId === cat.id && (
-                            <Check className="w-4 h-4 text-primary shrink-0" />
-                          )}
-                        </button>
-                      ))}
+                      {categories.map((cat) => {
+                        const isSelected = selectedCategoryIds.has(cat.id);
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => toggleCategory(cat.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors ${
+                              isSelected
+                                ? "bg-primary/15 text-primary"
+                                : "text-foreground hover:bg-white/5"
+                            }`}
+                          >
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "border-white/20"
+                            }`}>
+                              {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                            </div>
+                            <span className="flex-1">{cat.name}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
               )}
             </div>
-            {selectedCategoryId && (
-              <p className="text-xs text-muted-foreground mt-1.5">
-                {categories.find((c) => c.id === selectedCategoryId)?.description}
-              </p>
+            {selectedCategoryIds.size > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {categories
+                  .filter((c) => selectedCategoryIds.has(c.id))
+                  .map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => toggleCategory(cat.id)}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors"
+                    >
+                      {cat.name}
+                      <X className="w-3 h-3" />
+                    </button>
+                  ))}
+              </div>
             )}
           </div>
 
@@ -352,7 +392,7 @@ export default function NewForumThreadPage() {
             </Link>
             <Button
               onClick={handleSubmit}
-              disabled={submitting || !title.trim() || !content.trim() || !selectedCategoryId}
+              disabled={submitting || !title.trim() || !content.trim() || selectedCategoryIds.size === 0}
               className="gap-2 w-full sm:w-auto"
             >
               {submitting ? (

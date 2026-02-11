@@ -74,6 +74,7 @@ interface Thread {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
+  thread_categories: { category_id: string }[];
 }
 
 export default function ForumPage() {
@@ -142,7 +143,8 @@ export default function ForumPage() {
         created_at,
         category_id,
         category:help_categories(slug, name, icon),
-        author:profiles!author_id(full_name, avatar_url)
+        author:profiles!author_id(full_name, avatar_url),
+        thread_categories:help_thread_categories(category_id)
       `)
       .eq("is_official", false)
       .order("is_pinned", { ascending: false })
@@ -169,7 +171,12 @@ export default function ForumPage() {
 
   // Filter threads
   const filteredThreads = threads.filter((thread) => {
-    if (selectedCategoryIds.size > 0 && !selectedCategoryIds.has(thread.category_id)) return false;
+    if (selectedCategoryIds.size > 0) {
+      // Check if thread has ANY of the selected categories (via junction table)
+      const threadCatIds = thread.thread_categories?.map((tc) => tc.category_id) || [thread.category_id];
+      const hasMatch = threadCatIds.some((id) => selectedCategoryIds.has(id));
+      if (!hasMatch) return false;
+    }
     if (searchQuery.trim()) {
       return thread.title.toLowerCase().includes(searchQuery.toLowerCase());
     }
@@ -366,7 +373,6 @@ export default function ForumPage() {
             ) : (
               <div className="space-y-2">
                 {filteredThreads.map((thread) => {
-                  const CatIcon = iconMap[thread.category?.icon] || FileText;
                   return (
                     <Link
                       key={thread.id}
@@ -385,11 +391,23 @@ export default function ForumPage() {
                           )}
                           <span className="font-medium truncate group-hover:text-primary transition-colors">{thread.title}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <CatIcon className="w-3 h-3" />
-                            {thread.category.name}
-                          </span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          {/* Show all categories as tags */}
+                          {(() => {
+                            const threadCatIds = thread.thread_categories?.map((tc) => tc.category_id) || [];
+                            const threadCats = threadCatIds.length > 0
+                              ? categories.filter((c) => threadCatIds.includes(c.id))
+                              : categories.filter((c) => c.id === thread.category_id);
+                            return threadCats.map((cat) => {
+                              const Icon = iconMap[cat.icon] || FileText;
+                              return (
+                                <span key={cat.id} className="flex items-center gap-1">
+                                  <Icon className="w-3 h-3" />
+                                  {cat.name}
+                                </span>
+                              );
+                            });
+                          })()}
                           <span>
                             by {thread.author?.full_name || "Unknown"}
                           </span>
@@ -426,7 +444,10 @@ export default function ForumPage() {
                 {categories.map((cat) => {
                   const Icon = iconMap[cat.icon] || FileText;
                   const isSelected = selectedCategoryIds.has(cat.id);
-                  const count = threads.filter((t) => t.category_id === cat.id).length;
+                  const count = threads.filter((t) => {
+                    const threadCatIds = t.thread_categories?.map((tc) => tc.category_id) || [t.category_id];
+                    return threadCatIds.includes(cat.id);
+                  }).length;
                   return (
                     <button
                       key={cat.id}
