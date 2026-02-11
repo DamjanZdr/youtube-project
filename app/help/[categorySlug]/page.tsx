@@ -94,7 +94,7 @@ export default function CategoryPage() {
 
     setCategory(cat);
 
-    // Load threads
+    // Load only official threads for category pages (user threads appear in forum)
     const { data: threadData } = await supabase
       .from("help_threads")
       .select(`
@@ -109,7 +109,8 @@ export default function CategoryPage() {
         created_at,
         author:profiles!author_id(full_name, avatar_url)
       `)
-      .eq("category_id", cat.id);
+      .eq("category_id", cat.id)
+      .eq("is_official", true);
 
     if (threadData) {
       // Sort: pinned first (oldest pinned on top), then unpinned (newest first)

@@ -339,7 +339,12 @@ export default function ThreadPage() {
       setDeleting(false);
     } else {
       toast.success("Article deleted");
-      router.push(`/help/${categorySlug}`);
+      // Redirect to forum for user threads, category page for official threads
+      if (thread.is_official) {
+        router.push(`/help/${categorySlug}`);
+      } else {
+        router.push("/help/forum");
+      }
     }
   };
 
