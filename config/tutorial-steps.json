@@ -54,7 +54,7 @@
       "title": "Idea Tab",
       "content": "As you can see when creating a project, we land on the Idea tab. It's always useful to have some place to note down your brainstorming. Write down your ideas, plan your hook, what will keep the users watching after the hook, what do you want your call to action of this video to be.",
       "icon": "Lightbulb",
-      "expectedPath": "\\/project\\/[^/]+\\/idea$",
+      "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/idea$",
       "highlights": [
         { "selector": "[data-tutorial='idea-editor']" }
       ]
@@ -86,7 +86,7 @@
       "title": "Packaging Sections",
       "content": "The packaging tab has two main areas: (1) the Sets section where you create title and thumbnail combinations, and (2) the Metadata section for video description and tags.",
       "icon": "Package",
-      "expectedPath": "\\/project\\/[^/]+\\/packaging$",
+      "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+(\\/packaging)?$",
       "highlights": [
         { "selector": "[data-tutorial='sets-section']", "label": "1" },
         { "selector": "[data-tutorial='metadata-section']", "label": "2" }
@@ -123,7 +123,7 @@
       "title": "Preview Tab",
       "content": "In the preview, you can see how your set will look like on the YouTube platform.",
       "icon": "Eye",
-      "expectedPath": "\\/project\\/[^/]+\\/preview$"
+      "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/preview$"
     },
     {
       "id": 15,
@@ -170,7 +170,7 @@
       "title": "Storyboard",
       "content": "This is the storyboard. It is very user-friendly and simple, but extremely important in order to make good videos. Most people write their script, and then they go to recording and editing. This is a trap that has made many YouTuber's exhausted when making videos, and eventually led them to quit.",
       "icon": "Layout",
-      "expectedPath": "\\/project\\/[^/]+\\/storyboard$"
+      "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/storyboard$"
     },
     {
       "id": 21,
@@ -288,7 +288,8 @@
       "id": 35,
       "title": "Document Editor",
       "content": "This is the document editor. Here you want to keep stuff like the font you use on your thumbnails, text captions, links to sound effects, or background songs you want to use in your videos.",
-      "icon": "BookOpen"
+      "icon": "BookOpen",
+      "expectedPath": "^\\/studio\\/[^/]+\\/wiki\\/doc\\/"
     },
     {
       "id": 36,

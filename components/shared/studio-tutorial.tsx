@@ -107,6 +107,27 @@ function getCombinedRect(elements: Element[]): DOMRect | null {
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
+// Helper to check if an element is visible
+function isElementVisible(el: Element): boolean {
+  const style = window.getComputedStyle(el);
+  const rect = el.getBoundingClientRect();
+  return style.display !== 'none' && 
+         style.visibility !== 'hidden' && 
+         rect.width > 0 && 
+         rect.height > 0;
+}
+
+// Helper to find first visible element matching selector
+function queryVisibleElement(selector: string): Element | null {
+  const elements = document.querySelectorAll(selector);
+  for (const el of elements) {
+    if (isElementVisible(el)) {
+      return el;
+    }
+  }
+  return null;
+}
+
 export function StudioTutorial({ 
   studioSlug, 
   organizationId, 
@@ -130,6 +151,18 @@ export function StudioTutorial({
   // Track if we've auto-advanced from a click (prevent double-advance)
   const hasAutoAdvancedRef = useRef(false);
 
+  // Reset preview preferences to defaults when tutorial starts (so preview defaults to desktop)
+  useEffect(() => {
+    if (isVisible && currentStep !== null && currentStep < TUTORIAL_STEPS.length) {
+      // Clear preview-state localStorage so it defaults to desktop/feed/compare-off
+      try {
+        localStorage.removeItem('preview-state');
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+    }
+  }, []); // Only run once on mount when tutorial is active
+
   // Update highlight positions when step changes
   useEffect(() => {
     const step = TUTORIAL_STEPS[currentStep ?? 0];
@@ -145,8 +178,8 @@ export function StudioTutorial({
         const positions: HighlightPosition[] = [];
         for (const highlight of step.highlights) {
           if (highlight.isGroup) {
-            // Group highlight - combine all matching elements
-            const elements = Array.from(document.querySelectorAll(highlight.selector));
+            // Group highlight - combine all matching VISIBLE elements
+            const elements = Array.from(document.querySelectorAll(highlight.selector)).filter(isElementVisible);
             const combinedRect = getCombinedRect(elements);
             if (combinedRect) {
               positions.push({
@@ -155,8 +188,8 @@ export function StudioTutorial({
               });
             }
           } else {
-            // Single element highlight
-            const element = document.querySelector(highlight.selector);
+            // Single element highlight - find first VISIBLE element
+            const element = queryVisibleElement(highlight.selector);
             if (element) {
               positions.push({
                 rect: element.getBoundingClientRect(),
@@ -170,19 +203,18 @@ export function StudioTutorial({
         setHighlightPositions([]);
       }
 
-      // Click highlight (green) - can be single or from clickSelectors
+      // Click highlight (blue pulsing) - can be single or from clickSelectors
       if (step?.clickSelector) {
-        const element = document.querySelector(step.clickSelector);
+        const element = queryVisibleElement(step.clickSelector);
         if (element) {
           setClickRect(element.getBoundingClientRect());
         } else {
           setClickRect(null);
         }
       } else if (step?.clickSelectors && step.clickSelectors.length > 0) {
-        // For multiple click targets, highlight all of them (handled in positions above)
-        // Just use the first one found for the green pulse
+        // For multiple click targets, use the first VISIBLE one found
         for (const selector of step.clickSelectors) {
-          const element = document.querySelector(selector);
+          const element = queryVisibleElement(selector);
           if (element) {
             setClickRect(element.getBoundingClientRect());
             break;
@@ -257,11 +289,14 @@ export function StudioTutorial({
         const clickedElement = target.closest(step.clickSelector!);
         if (clickedElement) {
           // For navigation elements, the page will change and we'll auto-advance via pathname
-          // For non-navigation elements (like new-project), we need to advance manually
+          // For non-navigation elements (like new-project, user-menu), we need to advance manually
           const isNavElement = step.clickSelector!.includes("nav-");
           const isSettingsTab = step.clickSelector!.includes("settings-");
+          const isUserMenu = step.clickSelector!.includes("user-menu");
+          const isWikiNewDoc = step.clickSelector!.includes("wiki-new-doc");
           
-          if (!isNavElement && !isSettingsTab) {
+          // User menu is special - needs manual advance; wiki-new-doc should NOT advance (dialog opens)
+          if (isUserMenu || (!isNavElement && !isSettingsTab && !isWikiNewDoc)) {
             hasAutoAdvancedRef.current = true;
             setTimeout(() => {
               handleNext();
@@ -409,18 +444,32 @@ export function StudioTutorial({
         </div>
       ))}
 
-      {/* Click highlight - green pulsing ring, smooth transitions */}
+      {/* Click highlight - blue pulsing ring with slow thicken/slim effect */}
       {clickRect && (
         <div
-          className="fixed ring-4 ring-emerald-400 rounded-lg pointer-events-none z-[99] animate-pulse transition-all duration-150 ease-out"
+          className="fixed rounded-lg pointer-events-none z-[99] transition-all duration-150 ease-out"
           style={{
             left: clickRect.left - 6,
             top: clickRect.top - 6,
             width: clickRect.width + 12,
             height: clickRect.height + 12,
+            boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.8)',
+            animation: 'tutorial-pulse 2s ease-in-out infinite',
           }}
         />
       )}
+
+      {/* CSS for slow pulse animation */}
+      <style jsx global>{`
+        @keyframes tutorial-pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.6);
+          }
+          50% {
+            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.9);
+          }
+        }
+      `}</style>
 
       {/* Tutorial Card - solid background for readability */}
       <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 bg-zinc-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl p-5 max-w-sm w-[calc(100vw-2rem)] md:w-96 z-[100]">
