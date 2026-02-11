@@ -67,7 +67,7 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         {isMobile ? (
-          <button className="flex flex-col items-center justify-center gap-1 min-w-[68px] px-2 py-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button data-tutorial="user-menu" className="flex flex-col items-center justify-center gap-1 min-w-[68px] px-2 py-2 text-muted-foreground hover:text-foreground transition-colors">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center border border-white/10 overflow-hidden">
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />

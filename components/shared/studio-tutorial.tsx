@@ -288,20 +288,15 @@ export function StudioTutorial({
         const target = e.target as Element;
         const clickedElement = target.closest(step.clickSelector!);
         if (clickedElement) {
-          // For navigation elements, the page will change and we'll auto-advance via pathname
-          // For non-navigation elements (like new-project, user-menu), we need to advance manually
-          const isNavElement = step.clickSelector!.includes("nav-");
-          const isSettingsTab = step.clickSelector!.includes("settings-");
-          const isUserMenu = step.clickSelector!.includes("user-menu");
+          // wiki-new-doc should NOT advance (dialog opens first)
           const isWikiNewDoc = step.clickSelector!.includes("wiki-new-doc");
           
-          // User menu is special - needs manual advance; wiki-new-doc should NOT advance (dialog opens)
-          if (isUserMenu || (!isNavElement && !isSettingsTab && !isWikiNewDoc)) {
+          if (!isWikiNewDoc) {
             hasAutoAdvancedRef.current = true;
             setTimeout(() => {
               handleNext();
               hasAutoAdvancedRef.current = false;
-            }, 100);
+            }, 150); // Slightly longer delay for navigation
           }
         }
       };
