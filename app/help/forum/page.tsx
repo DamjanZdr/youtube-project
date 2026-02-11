@@ -155,6 +155,7 @@ export default function ForumPage() {
     }
 
     // Load user-generated threads only (not official/system)
+    // Use .or to catch both false and null values for is_official
     const { data: threadData, error: threadError } = await supabase
       .from("help_threads")
       .select(`
@@ -172,7 +173,7 @@ export default function ForumPage() {
         author:profiles!author_id(full_name, avatar_url),
         thread_categories:help_thread_categories(category_id)
       `)
-      .eq("is_official", false)
+      .or("is_official.eq.false,is_official.is.null")
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
 

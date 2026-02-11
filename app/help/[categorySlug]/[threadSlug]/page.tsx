@@ -465,9 +465,15 @@ export default function ThreadPage() {
               Help Center
             </Link>
             <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-            <Link href={`/help/self-help?category=${categorySlug}`} className="hover:text-foreground truncate">
-              {thread.category.name}
-            </Link>
+            {thread.is_official ? (
+              <Link href={`/help/self-help?category=${categorySlug}`} className="hover:text-foreground truncate">
+                {thread.category.name}
+              </Link>
+            ) : (
+              <Link href="/help/forum" className="hover:text-foreground truncate">
+                Public Forum
+              </Link>
+            )}
           </div>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
