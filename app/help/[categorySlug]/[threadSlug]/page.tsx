@@ -64,6 +64,7 @@ interface Thread {
   author_id: string | null;
   author: {
     id: string;
+    username: string | null;
     full_name: string | null;
     avatar_url: string | null;
   } | null;
@@ -82,6 +83,7 @@ interface Reply {
   parent_reply_id: string | null;
   author: {
     id: string;
+    username: string | null;
     full_name: string | null;
     avatar_url: string | null;
   } | null;
@@ -214,7 +216,7 @@ export default function ThreadPage() {
     
     const { data: authorData } = await supabase
       .from("public_profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, username, full_name, avatar_url")
       .in("id", uniqueAuthorIds);
     
     const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
@@ -293,14 +295,15 @@ export default function ThreadPage() {
   };
 
   // Handle clicking reply on a reply
-  const handleReplyToReply = (replyId: string, authorName: string, isChild: boolean, parentReplyId?: string) => {
+  const handleReplyToReply = (replyId: string, authorName: string, authorUsername: string | null, isChild: boolean, parentReplyId?: string) => {
     // If it's a child reply or we're replying to a parent, set the appropriate parent
     const targetParentId = isChild ? parentReplyId : replyId;
     setReplyToId(targetParentId || null);
     
-    // For child replies, auto-mention the author
+    // For child replies, auto-mention the author using username if available
     if (isChild) {
-      setReplyContent(`@${authorName} `);
+      const mention = authorUsername || authorName.toLowerCase().replace(/\s+/g, "_");
+      setReplyContent(`@${mention} `);
     } else {
       setReplyContent("");
     }
@@ -876,7 +879,7 @@ export default function ThreadPage() {
                         variant="ghost"
                         size="sm"
                         className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
-                        onClick={() => handleReplyToReply(reply.id, reply.author?.full_name || "Unknown", false)}
+                        onClick={() => handleReplyToReply(reply.id, reply.author?.full_name || "Unknown", reply.author?.username || null, false)}
                       >
                         <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
                         Reply
@@ -989,7 +992,7 @@ export default function ThreadPage() {
                               variant="ghost"
                               size="sm"
                               className="text-[10px] text-muted-foreground hover:text-foreground h-6 px-1.5"
-                              onClick={() => handleReplyToReply(childReply.id, childReply.author?.full_name || "Unknown", true, reply.id)}
+                              onClick={() => handleReplyToReply(childReply.id, childReply.author?.full_name || "Unknown", childReply.author?.username || null, true, reply.id)}
                             >
                               <MessageCircle className="w-3 h-3 mr-1" />
                               Reply

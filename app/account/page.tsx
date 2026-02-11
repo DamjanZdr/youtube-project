@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Upload, ArrowLeft, User, Mail, Lock, Bell } from "lucide-react";
+import { Upload, ArrowLeft, User, Mail, Lock, Bell, AtSign, Check, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function AccountSettingsPage() {
@@ -17,6 +17,10 @@ export default function AccountSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
   const [acceptInvites, setAcceptInvites] = useState(true);
@@ -39,6 +43,7 @@ export default function AccountSettingsPage() {
       if (profile) {
         setUser(profile);
         setDisplayName(profile.full_name || "");
+        setUsername(profile.username || "");
         setAcceptInvites(profile.accept_invites ?? true);
       }
     }
@@ -49,20 +54,84 @@ export default function AccountSettingsPage() {
   const handleSaveDisplayName = async () => {
     if (!user) return;
     
+    // Validate username if set
+    if (username && usernameError) {
+      toast.error("Please fix username errors first");
+      return;
+    }
+    
+    if (username && usernameAvailable === false) {
+      toast.error("Username is already taken");
+      return;
+    }
+    
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: displayName })
+      .update({ 
+        full_name: displayName,
+        username: username || null
+      })
       .eq("id", user.id);
 
     if (error) {
-      console.error("Error saving display name:", error);
-      toast.error("Failed to save display name");
+      console.error("Error saving profile:", error);
+      if (error.message?.includes("profiles_username_unique")) {
+        toast.error("Username is already taken");
+      } else if (error.message?.includes("profiles_username_format")) {
+        toast.error("Invalid username format");
+      } else {
+        toast.error("Failed to save profile");
+      }
     } else {
-      setUser({ ...user, full_name: displayName });
-      toast.success("Display name updated successfully!");
+      setUser({ ...user, full_name: displayName, username: username || null });
+      toast.success("Profile updated successfully!");
     }
     setSaving(false);
+  };
+
+  const validateUsername = (value: string): string | null => {
+    if (!value) return null; // Empty is OK (username is optional)
+    if (value.length < 3) return "Username must be at least 3 characters";
+    if (value.length > 20) return "Username must be 20 characters or less";
+    if (!/^[a-z0-9_]+$/.test(value)) return "Only lowercase letters, numbers, and underscores";
+    return null;
+  };
+
+  const handleUsernameChange = async (value: string) => {
+    const normalized = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    setUsername(normalized);
+    setUsernameAvailable(null);
+    
+    const error = validateUsername(normalized);
+    setUsernameError(error);
+    
+    if (error || !normalized) {
+      return;
+    }
+    
+    // Check if username is the same as current
+    if (normalized === user?.username) {
+      setUsernameAvailable(true);
+      return;
+    }
+    
+    // Check availability
+    setCheckingUsername(true);
+    const { data, error: fetchError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", normalized)
+      .maybeSingle();
+    
+    setCheckingUsername(false);
+    
+    if (fetchError) {
+      console.error("Error checking username:", fetchError);
+      return;
+    }
+    
+    setUsernameAvailable(!data);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,6 +278,46 @@ export default function AccountSettingsPage() {
               className="glass max-w-md"
               placeholder="Your display name"
             />
+          </div>
+
+          {/* Username */}
+          <div className="space-y-2 mb-4">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <AtSign className="w-4 h-4" />
+              Username
+            </label>
+            <div className="relative max-w-md">
+              <Input 
+                value={username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                className={`glass pr-10 ${
+                  usernameError ? "border-red-500/50" : 
+                  usernameAvailable === true ? "border-green-500/50" :
+                  usernameAvailable === false ? "border-red-500/50" : ""
+                }`}
+                placeholder="your_username"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {checkingUsername ? (
+                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                ) : usernameError ? (
+                  <X className="w-4 h-4 text-red-500" />
+                ) : usernameAvailable === true ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : usernameAvailable === false ? (
+                  <X className="w-4 h-4 text-red-500" />
+                ) : null}
+              </div>
+            </div>
+            {usernameError ? (
+              <p className="text-xs text-red-400">{usernameError}</p>
+            ) : usernameAvailable === false ? (
+              <p className="text-xs text-red-400">Username is already taken</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Used for @mentions in forums. Lowercase letters, numbers, and underscores only.
+              </p>
+            )}
           </div>
 
           {/* Email (read-only) */}

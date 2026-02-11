@@ -36,6 +36,7 @@ interface Thread {
   reply_count: number;
   created_at: string;
   author: {
+    username: string | null;
     full_name: string | null;
     avatar_url: string | null;
   } | null;
@@ -117,7 +118,7 @@ export default function CategoryPage() {
       const authorIds = [...new Set(threadData.map(t => t.author_id).filter(Boolean))];
       const { data: authorData } = await supabase
         .from("public_profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, username, full_name, avatar_url")
         .in("id", authorIds);
       
       const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
