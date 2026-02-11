@@ -639,7 +639,7 @@ export default function PackagingPage() {
 
       <div className="max-w-5xl mx-auto">
         {/* Title & Thumbnail Sets */}
-        <div className="mb-6 md:mb-8">
+        <div data-tutorial="sets-section" className="mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h2 className="text-base md:text-lg font-semibold">
@@ -796,7 +796,8 @@ export default function PackagingPage() {
           </div>
         </div>
 
-        {/* Description - Full width */}
+        {/* Description & Metadata */}
+        <div data-tutorial="metadata-section">
         <div className="glass-card p-4 md:p-6 mb-4 md:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <h3 className="font-medium flex items-center gap-2 text-sm md:text-base">
@@ -1030,6 +1031,7 @@ export default function PackagingPage() {
               />
             </div>
           )} */}
+        </div>
         </div>
       </div>
 
