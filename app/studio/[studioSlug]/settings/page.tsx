@@ -684,8 +684,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
             </div>
 
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving} className="glow-sm">
+            <div className="flex justify-center">
+              <Button onClick={handleSave} disabled={saving} className="glow-sm w-full sm:w-auto">
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
@@ -755,21 +755,23 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                   <p className="text-sm text-muted-foreground">
                     Enter the email address of the user you want to transfer ownership to. They must have an account.
                   </p>
-                  <Button 
-                    variant="outline" 
-                    className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
-                    onClick={() => setShowTransferDialog(true)}
-                  >
-                    <Crown className="w-4 h-4" />
-                    Initiate Transfer
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 border-amber-500/30 hover:bg-amber-500/10 w-full sm:w-auto"
+                      onClick={() => setShowTransferDialog(true)}
+                    >
+                      <Crown className="w-4 h-4" />
+                      Initiate Transfer
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Tutorial & Help */}
-          <div data-tutorial="tutorial-help" className="glass-card p-6">
+          {/* Tutorial & Help - Hidden on mobile */}
+          <div data-tutorial="tutorial-help" className="glass-card p-6 hidden sm:block">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/30">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -798,10 +800,12 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               Deleting your studio is permanent and cannot be undone. All projects,
               documents, and data will be lost.
             </p>
-            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteDialog(true)}>
-              <Trash2 className="w-4 h-4" />
-              Delete Studio
-            </Button>
+            <div className="flex justify-center">
+              <Button variant="destructive" className="gap-2 w-full sm:w-auto" onClick={() => setShowDeleteDialog(true)}>
+                <Trash2 className="w-4 h-4" />
+                Delete Studio
+              </Button>
+            </div>
           </div>
         </TabsContent>
 
@@ -830,10 +834,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 {members.map((member: any) => (
                   <div 
                     key={member.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-white/5"
+                    className="flex items-center justify-between p-4 rounded-xl bg-white/5 gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                         {(member.user as any)?.avatar_url ? (
                           <img src={(member.user as any).avatar_url} alt={(member.user as any).full_name || (member.user as any).email} className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -842,9 +846,18 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                           </span>
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium">{(member.user as any)?.full_name || (member.user as any)?.email}</p>
-                        <p className="text-sm text-muted-foreground">{(member.user as any)?.email}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium truncate">{(member.user as any)?.full_name || (member.user as any)?.email}</p>
+                          <span className={`text-xs capitalize px-2 py-0.5 rounded-full shrink-0 ${
+                            member.status === 'pending' 
+                              ? 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+                              : 'text-muted-foreground bg-white/5'
+                          }`}>
+                            {member.status === 'pending' ? 'Invited' : (member.role === 'owner' ? 'Owner' : 'Member')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{(member.user as any)?.email}</p>
                         {member.joined_at && (
                           <p className="text-xs text-muted-foreground/70 mt-0.5">
                             {member.status === 'pending' ? 'Invited' : 'Joined'} {new Date(member.joined_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -852,14 +865,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm capitalize px-3 py-1 rounded-full ${
-                        member.status === 'pending' 
-                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
-                          : 'text-muted-foreground bg-white/5'
-                      }`}>
-                        {member.status === 'pending' ? 'Invited' : (member.role === 'owner' ? 'Owner' : 'Member')}
-                      </span>
+                    <div className="flex items-center shrink-0">
                       {member.role !== 'owner' && (
                         <Button 
                           variant="ghost" 
