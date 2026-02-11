@@ -171,19 +171,6 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
               </span>
             )}
 
-            {/* YouTube Link (if published) */}
-            {project.youtube_video_id && (
-              <a
-                href={`https://youtube.com/watch?v=${project.youtube_video_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 text-sm text-red-400 hover:text-red-300"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span className="hidden md:inline">View on YouTube</span>
-              </a>
-            )}
-
             {/* More Menu */}
             <div className="relative">
               <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10" onClick={() => setShowMoreMenu(!showMoreMenu)}>

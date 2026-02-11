@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CreateProjectDialog } from "@/components/shared/create-project-dialog";
-import { Plus, Video, Clock, TrendingUp, Youtube } from "lucide-react";
+import { Plus, Video, Clock, TrendingUp } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -24,11 +24,6 @@ interface BoardStatus {
   color: string;
 }
 
-// Format subscriber count with commas (e.g., 6,900,000)
-function formatSubscriberCount(count: number): string {
-  return count.toLocaleString();
-}
-
 export default function StudioHomePage() {
   const params = useParams();
   const router = useRouter();
@@ -40,7 +35,6 @@ export default function StudioHomePage() {
   const [boardStatuses, setBoardStatuses] = useState<BoardStatus[]>([]);
   const [user, setUser] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [subscriberCount, setSubscriberCount] = useState<number>(0);
 
   useEffect(() => {
     async function loadData() {
@@ -83,15 +77,6 @@ export default function StudioHomePage() {
         .limit(5);
 
       setProjects(projectData || []);
-
-      // Fetch subscriber count - first from DB, then try to sync live from YouTube
-      const { data: channelsForCount } = await supabase
-        .from("channels")
-        .select("subscriber_count")
-        .eq("organization_id", studioData?.id)
-        .limit(1);
-
-      setSubscriberCount(channelsForCount?.[0]?.subscriber_count || 0);
 
       // Try to fetch live stats from YouTube if connected
       try {
@@ -188,19 +173,6 @@ export default function StudioHomePage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-        {/* Subscriber Count - Featured */}
-        <div className="glass-card p-4 md:p-5 border border-red-500/20">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center">
-              <Youtube className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-lg md:text-2xl font-bold">{formatSubscriberCount(subscriberCount)}</p>
-              <p className="text-xs md:text-sm text-muted-foreground">Subscribers</p>
-            </div>
-          </div>
-        </div>
-
         <div className="glass-card p-4 md:p-5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">

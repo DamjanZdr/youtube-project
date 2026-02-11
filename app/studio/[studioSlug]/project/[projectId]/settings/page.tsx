@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Settings,
-  Trash2,
-  Copy
+  Trash2
 } from "lucide-react";
 
 interface ProjectSettingsPageProps {
@@ -62,11 +61,6 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
     setSaving(false);
   };
 
-  const duplicateProject = async () => {
-    // TODO: Implement project duplication
-    console.log("Duplicate project not yet implemented");
-  };
-
   const deleteProject = async () => {
     setDeleting(true);
     await supabase
@@ -109,24 +103,6 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
         <Button onClick={saveNotes} disabled={saving} className="glow-sm w-full sm:w-auto">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
-      </div>
-
-      {/* Actions */}
-      <div className="glass-card p-4 md:p-6 space-y-4">
-        <h2 className="text-base md:text-lg font-semibold">Actions</h2>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 rounded-xl bg-white/5">
-          <div>
-            <p className="font-medium text-sm md:text-base">Duplicate Project</p>
-            <p className="text-xs md:text-sm text-muted-foreground">
-              Create a copy of this project
-            </p>
-          </div>
-          <Button variant="outline" onClick={duplicateProject} className="gap-2 w-full sm:w-auto">
-            <Copy className="w-4 h-4" />
-            Duplicate
-          </Button>
-        </div>
       </div>
 
       {/* Danger Zone */}
