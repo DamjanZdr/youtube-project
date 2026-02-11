@@ -286,8 +286,12 @@ export function StudioTutorial({
     if (step?.clickSelector) {
       const handleClick = (e: MouseEvent) => {
         const target = e.target as Element;
+        // Check if clicked element or any ancestor matches the selector
         const clickedElement = target.closest(step.clickSelector!);
-        if (clickedElement) {
+        // Also check if the click was on the element itself (for elements that contain the click)
+        const directMatch = document.querySelector(step.clickSelector!)?.contains(target);
+        
+        if (clickedElement || directMatch) {
           // wiki-new-doc should NOT advance (dialog opens first)
           const isWikiNewDoc = step.clickSelector!.includes("wiki-new-doc");
           
