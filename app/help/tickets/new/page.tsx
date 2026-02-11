@@ -290,14 +290,14 @@ export default function NewTicketPage() {
           </div>
 
           {/* Submit */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-4">
-            <Link href="/help/tickets">
-              <Button variant="outline">Cancel</Button>
+          <div className="flex flex-row gap-3 sm:gap-4 pt-4">
+            <Link href="/help/tickets" className="w-[30%] sm:w-auto">
+              <Button variant="outline" className="w-full">Cancel</Button>
             </Link>
             <Button
               onClick={handleSubmit}
               disabled={submitting || !subject.trim() || !category || !message.trim()}
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-initial w-[70%] sm:w-auto"
             >
               {submitting ? (
                 <>

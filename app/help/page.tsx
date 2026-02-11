@@ -181,9 +181,9 @@ export default function HelpCenterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
+      {/* Top Navigation - Bottom on mobile, top on desktop */}
+      <header className="fixed bottom-0 md:sticky md:top-0 md:bottom-auto left-0 right-0 z-50 glass-strong border-t md:border-t-0 md:border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img

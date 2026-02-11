@@ -30,8 +30,8 @@ export default async function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
+      {/* Navigation - Bottom on mobile, top on desktop */}
+      <nav className="fixed bottom-0 md:top-0 md:bottom-auto left-0 right-0 z-50 glass-strong border-t md:border-t-0 md:border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
@@ -77,7 +77,7 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20 relative z-10">
+      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 pt-6 md:pt-32 pb-20 md:pb-20 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full glass mb-6 md:mb-8">

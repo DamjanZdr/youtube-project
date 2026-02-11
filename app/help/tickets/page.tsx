@@ -117,9 +117,9 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
+      {/* Top Navigation - Bottom on mobile, top on desktop */}
+      <header className="fixed bottom-0 md:sticky md:top-0 md:bottom-auto left-0 right-0 z-50 glass-strong border-t md:border-t-0 md:border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
@@ -159,34 +159,34 @@ export default function TicketsPage() {
       {/* Sub-navigation */}
       <div className="border-b border-white/10 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center gap-1 h-12">
+          <div className="flex items-center gap-1 h-12 overflow-x-auto scrollbar-hide">
             <Link
               href="/help"
-              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors shrink-0 whitespace-nowrap"
             >
               <HelpCircle className="w-4 h-4" />
               Help Center
             </Link>
             <Link
               href="/help/self-help"
-              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors shrink-0 whitespace-nowrap"
             >
               <BookOpen className="w-4 h-4" />
               Self Help
             </Link>
             <Link
               href="/help/forum"
-              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors shrink-0 whitespace-nowrap"
             >
               <MessagesSquare className="w-4 h-4" />
               Public Forum
             </Link>
             <Link
               href="/help/tickets"
-              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground"
+              className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground shrink-0 whitespace-nowrap"
             >
               <TicketIcon className="w-4 h-4" />
-              Tickets
+              Contact Support
             </Link>
           </div>
         </div>
