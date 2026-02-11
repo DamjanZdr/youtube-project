@@ -114,7 +114,12 @@ export default function TasksPage() {
         .order("position"),
       supabase
         .from("organization_members")
-        .select("id, user_id, role, profile:profiles(id, email, full_name, avatar_url)")
+        .select(`
+          id,
+          user_id,
+          role,
+          profile:profiles!organization_members_user_id_fkey(id, email, full_name, avatar_url)
+        `)
         .eq("organization_id", project.organization_id),
       supabase
         .from("project_assignees")

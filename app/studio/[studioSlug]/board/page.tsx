@@ -1049,22 +1049,27 @@ export default function BoardPage() {
                     {/* Project Due Date */}
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Project Due Date</label>
-                      <Select
-                        value={selectedProject.due_date?.split('T')[0] || "none"}
-                        onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
-                      >
-                        <SelectTrigger data-tutorial="project-deadline" className="w-full h-9 bg-white/5 border-white/10 text-sm">
-                          <SelectValue>
-                            {selectedProject.due_date 
-                              ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                              : <span className="text-muted-foreground">No date</span>
-                            }
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No date</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          data-tutorial="project-deadline"
+                          value={selectedProject.due_date?.split('T')[0] || ''}
+                          onChange={(e) => updateProjectDueDate(selectedProject.id, e.target.value || null)}
+                          className="w-full px-3 py-2 pr-8 rounded-md bg-white/5 border border-white/10 focus:border-primary focus:outline-none text-sm h-9 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          placeholder="No date"
+                        />
+                        {selectedProject.due_date && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateProjectDueDate(selectedProject.id, null);
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     {/* Open Project Button */}
                     <Button asChild size="sm" variant="outline" className="w-full h-9">
@@ -1181,22 +1186,25 @@ export default function BoardPage() {
                     </div>
                     <div className="flex-1">
                       <label className="text-[10px] text-muted-foreground mb-1 block">Due Date</label>
-                      <Select
-                        value={selectedProject.due_date?.split('T')[0] || "none"}
-                        onValueChange={(value) => updateProjectDueDate(selectedProject.id, value === "none" ? null : value)}
-                      >
-                        <SelectTrigger className="w-full h-8 bg-white/5 border-white/10 text-xs">
-                          <SelectValue>
-                            {selectedProject.due_date 
-                              ? new Date(selectedProject.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                              : <span className="text-muted-foreground">None</span>
-                            }
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No date</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={selectedProject.due_date?.split('T')[0] || ''}
+                          onChange={(e) => updateProjectDueDate(selectedProject.id, e.target.value || null)}
+                          className="w-full px-2 py-1 pr-6 rounded-md bg-white/5 border border-white/10 focus:border-primary focus:outline-none text-xs h-8 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                        {selectedProject.due_date && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateProjectDueDate(selectedProject.id, null);
+                            }}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
