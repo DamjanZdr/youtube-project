@@ -23,7 +23,8 @@ ADD CONSTRAINT profiles_username_format CHECK (
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username) WHERE username IS NOT NULL;
 
 -- Update public_profiles view to include username
-CREATE OR REPLACE VIEW public_profiles AS
+DROP VIEW IF EXISTS public_profiles;
+CREATE VIEW public_profiles AS
 SELECT 
   id,
   username,
