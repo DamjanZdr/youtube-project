@@ -84,11 +84,10 @@ export default function NewForumThreadPage() {
     setAcceptInvites(profile?.accept_invites ?? true);
     setIsAdmin(profile?.role === "admin");
 
-    // Load categories (exclude General Discussion)
+    // Load categories
     const { data: cats } = await supabase
       .from("help_categories")
       .select("id, name, slug, description")
-      .neq("slug", "general")
       .order("position");
 
     if (cats && cats.length > 0) {
@@ -256,7 +255,7 @@ export default function NewForumThreadPage() {
               className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground"
             >
               <MessagesSquare className="w-4 h-4" />
-              Forum
+              Public Forum
             </Link>
             {user && (
               <Link

@@ -268,7 +268,7 @@ function SelfHelpContent() {
               className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
             >
               <MessagesSquare className="w-4 h-4" />
-              Forum
+              Public Forum
             </Link>
             {user && (
               <Link

@@ -117,11 +117,10 @@ export default function ForumPage() {
   };
 
   const loadData = async () => {
-    // Load categories (exclude General Discussion)
+    // Load categories
     const { data: cats } = await supabase
       .from("help_categories")
       .select("id, name, slug, icon")
-      .neq("slug", "general")
       .order("position");
 
     if (cats) {
@@ -264,7 +263,7 @@ export default function ForumPage() {
               className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-primary text-foreground"
             >
               <MessagesSquare className="w-4 h-4" />
-              Forum
+              Public Forum
             </Link>
             {user && (
               <Link
