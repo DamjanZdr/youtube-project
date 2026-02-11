@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   HelpCircle,
   TicketIcon,
   ChevronRight,
+  ChevronLeft,
   FileText,
   Pin,
   LayoutGrid,
@@ -86,6 +87,32 @@ export default function ForumPage() {
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Scroll indicators state
+  const tabsNavRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollIndicators = useCallback(() => {
+    const nav = tabsNavRef.current;
+    if (nav) {
+      setCanScrollLeft(nav.scrollLeft > 0);
+      setCanScrollRight(nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 1);
+    }
+  }, []);
+
+  useEffect(() => {
+    const nav = tabsNavRef.current;
+    if (nav) {
+      updateScrollIndicators();
+      nav.addEventListener('scroll', updateScrollIndicators);
+      window.addEventListener('resize', updateScrollIndicators);
+      return () => {
+        nav.removeEventListener('scroll', updateScrollIndicators);
+        window.removeEventListener('resize', updateScrollIndicators);
+      };
+    }
+  }, [updateScrollIndicators, loading]);
 
   const supabase = createClient();
 
@@ -204,19 +231,19 @@ export default function ForumPage() {
             />
           </Link>
           
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-3 md:gap-3">
             {user ? (
               <>
                 <Link href="/hub">
-                  <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
-                    <LayoutGrid className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-3 md:px-3 h-10 md:h-9">
+                    <LayoutGrid className="w-5 h-5 md:w-4 md:h-4" />
                     <span className="hidden sm:inline">Hub</span>
                   </Button>
                 </Link>
                 {isAdmin && (
                   <Link href="/admin">
-                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-2 md:px-3">
-                      <Shield className="w-4 h-4 md:mr-2" />
+                    <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-3 md:px-3 h-10 md:h-9">
+                      <Shield className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
                       <span className="hidden md:inline">Admin</span>
                     </Button>
                   </Link>
@@ -229,10 +256,10 @@ export default function ForumPage() {
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">Login</Button>
+                  <Button variant="ghost" size="sm" className="h-10 md:h-9">Login</Button>
                 </Link>
                 <Link href="/auth/sign-up">
-                  <Button size="sm">Register</Button>
+                  <Button size="sm" className="h-10 md:h-9">Register</Button>
                 </Link>
               </div>
             )}
@@ -242,8 +269,25 @@ export default function ForumPage() {
 
       {/* Sub-navigation */}
       <div className="border-b border-white/10 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center gap-1 h-12 overflow-x-auto scrollbar-hide">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
+          {/* Left scroll indicator */}
+          {canScrollLeft && (
+            <button
+              onClick={() => {
+                const nav = tabsNavRef.current;
+                if (nav) nav.scrollBy({ left: -150, behavior: 'smooth' });
+              }}
+              className="absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start md:hidden"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
+          
+          <div 
+            ref={tabsNavRef}
+            className="flex items-center gap-1 h-12 overflow-x-auto scrollbar-hide"
+          >
             <Link
               href="/help"
               className="flex items-center gap-2 px-4 h-full text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors shrink-0 whitespace-nowrap"
@@ -275,6 +319,20 @@ export default function ForumPage() {
               </Link>
             )}
           </div>
+          
+          {/* Right scroll indicator */}
+          {canScrollRight && (
+            <button
+              onClick={() => {
+                const nav = tabsNavRef.current;
+                if (nav) nav.scrollBy({ left: 150, behavior: 'smooth' });
+              }}
+              className="absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end md:hidden"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
