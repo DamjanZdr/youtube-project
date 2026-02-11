@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
   Rocket,
@@ -24,6 +26,8 @@ import {
   BookOpen,
   MessagesSquare,
   TicketIcon,
+  Search,
+  X,
   Eye,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -67,10 +71,14 @@ interface Thread {
   };
 }
 
-export default function SelfHelpPage() {
+function SelfHelpContent() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
@@ -81,7 +89,7 @@ export default function SelfHelpPage() {
   useEffect(() => {
     loadData();
     checkUser();
-  }, []);
+  }, [categoryParam]);
 
   const checkUser = async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -123,8 +131,15 @@ export default function SelfHelpPage() {
       );
       setCategories(catsWithCounts);
 
-      // Select first category by default
-      if (catsWithCounts.length > 0) {
+      // Select category from URL param or default to first
+      if (categoryParam) {
+        const matchedCat = catsWithCounts.find((c) => c.slug === categoryParam);
+        if (matchedCat) {
+          setActiveCategory(matchedCat.id);
+        } else if (catsWithCounts.length > 0) {
+          setActiveCategory(catsWithCounts[0].id);
+        }
+      } else if (catsWithCounts.length > 0) {
         setActiveCategory(catsWithCounts[0].id);
       }
     }
@@ -156,8 +171,16 @@ export default function SelfHelpPage() {
   };
 
   const activeThreads = activeCategory
-    ? threads.filter((t) => t.category_id === activeCategory)
-    : threads;
+    ? threads.filter((t) => {
+        if (t.category_id !== activeCategory) return false;
+        if (searchQuery.trim()) {
+          return t.title.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        return true;
+      })
+    : searchQuery.trim()
+      ? threads.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      : threads;
 
   const activeCategoryData = categories.find((c) => c.id === activeCategory);
 
@@ -312,7 +335,7 @@ export default function SelfHelpPage() {
           <main className="flex-1 min-w-0">
             {/* Category Header */}
             {activeCategoryData && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <h1 className="text-xl md:text-2xl font-bold mb-1">
                   {activeCategoryData.name}
                 </h1>
@@ -321,6 +344,25 @@ export default function SelfHelpPage() {
                 </p>
               </div>
             )}
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 bg-white/5 border-white/10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
 
             {/* Articles */}
             {activeThreads.length > 0 ? (
@@ -379,5 +421,13 @@ export default function SelfHelpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SelfHelpPage() {
+  return (
+    <Suspense>
+      <SelfHelpContent />
+    </Suspense>
   );
 }

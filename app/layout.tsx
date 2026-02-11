@@ -16,8 +16,9 @@ export const metadata: Metadata = {
   title: "myBlueprint",
   description: "The all-in-one creator operating system for YouTube creators",
   icons: [
-    { rel: "icon", url: "/bplogo.ico" },
-    { rel: "apple-touch-icon", url: "/bplogo.png" },
+    { rel: "icon", url: "/bpicon.png", type: "image/png" },
+    { rel: "icon", url: "/bplogo.ico", sizes: "any" },
+    { rel: "apple-touch-icon", url: "/bpicon.png" },
   ],
 };
 

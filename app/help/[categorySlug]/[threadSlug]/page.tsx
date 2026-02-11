@@ -465,7 +465,7 @@ export default function ThreadPage() {
               Help Center
             </Link>
             <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-            <Link href={`/help/${categorySlug}`} className="hover:text-foreground truncate">
+            <Link href={`/help/self-help?category=${categorySlug}`} className="hover:text-foreground truncate">
               {thread.category.name}
             </Link>
           </div>
