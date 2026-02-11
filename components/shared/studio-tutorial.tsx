@@ -46,7 +46,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     description: "Every video starts as a project. Click 'New Project' to create one. Don't worry about having everything figured out — start with just a rough idea and we'll help you develop it.",
     icon: <Plus className="w-6 h-6" />,
     highlightSelector: "[data-tutorial='new-project']",
-    position: "right",
+    position: "center",
   },
   {
     id: 2,
@@ -309,20 +309,19 @@ export function StudioTutorial({
   const progress = ((currentStep ?? 0) / (TUTORIAL_STEPS.length - 1)) * 100;
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none">
-      {/* Backdrop - allow clicks through */}
-      <div className="absolute inset-0 bg-black/40" />
+    <div className="fixed inset-0 z-[100]">
+      {/* Backdrop - semi-transparent, doesn't block clicks */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
       {/* Clickable highlight area for interactive elements */}
       {highlightRect && (
         <div
-          className="pointer-events-auto absolute ring-4 ring-primary ring-offset-2 ring-offset-transparent rounded-lg cursor-pointer"
+          className="absolute ring-4 ring-primary ring-offset-2 ring-offset-transparent rounded-lg cursor-pointer z-[102]"
           style={{
             left: highlightRect.left - 8,
             top: highlightRect.top - 8,
             width: highlightRect.width + 16,
             height: highlightRect.height + 16,
-            zIndex: 101,
           }}
           onClick={(e) => {
             // Allow clicks to pass through to the underlying element
@@ -336,21 +335,9 @@ export function StudioTutorial({
         />
       )}
 
-      {/* Tutorial Card */}
+      {/* Tutorial Card - always centered */}
       <div 
-        className={cn(
-          "pointer-events-auto absolute glass-card border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300",
-          step.position === "center" && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
-          step.position === "right" && highlightRect && "top-1/2 -translate-y-1/2",
-          step.position === "bottom" && "left-1/2 -translate-x-1/2",
-        )}
-        style={
-          step.position === "right" && highlightRect
-            ? { left: highlightRect.right + 24 }
-            : step.position === "bottom" && highlightRect
-            ? { top: highlightRect.bottom + 24 }
-            : undefined
-        }
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-card border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] animate-in fade-in slide-in-from-bottom-4 duration-300 z-[101]"
       >
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 rounded-t-2xl overflow-hidden">
