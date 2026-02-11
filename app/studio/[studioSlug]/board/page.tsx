@@ -1227,7 +1227,7 @@ export default function BoardPage() {
                     return (
                       <div key={status.id} className={`border rounded-lg overflow-hidden ${isCurrentStatus ? 'border-white/20 bg-white/[0.02]' : 'border-white/10'}`}>
                         {/* Status Header */}
-                        <div className="flex items-center justify-between p-3 hover:bg-white/5">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 hover:bg-white/5">
                           <button
                             onClick={() => {
                               const newCollapsed = new Set(collapsedStatuses);
@@ -1255,78 +1255,80 @@ export default function BoardPage() {
                             </span>
                           </button>
 
-                          {/* Status Assignee and Due Date */}
-                          <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                            {/* Status Assignee */}
-                            <Select
-                              value={statusDetail?.assignee_id || "unassigned"}
-                              onValueChange={(value) => updateStatusAssignee(selectedProject.id, status.id, value === "unassigned" ? null : value)}
-                            >
-                              <SelectTrigger className="w-32 h-7 text-xs bg-transparent border-white/10">
-                                <SelectValue>
-                                  {statusAssignee ? (
-                                    (() => {
-                                      const displayName = statusAssignee.profile.full_name || statusAssignee.profile.email?.split('@')[0] || 'Unknown';
-                                      return (
-                                        <div className="flex items-center gap-1.5">
-                                          {statusAssignee.profile.avatar_url ? (
-                                            <img src={statusAssignee.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
-                                          ) : (
-                                            <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
-                                              {displayName[0].toUpperCase()}
-                                            </div>
-                                          )}
-                                          <span className="truncate">{displayName.split(' ')[0]}</span>
-                                        </div>
-                                      );
-                                    })()
-                                  ) : (
-                                    <span className="text-muted-foreground">Assignee</span>
-                                  )}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="unassigned">Unassigned</SelectItem>
-                                {orgMembers.map((member) => {
-                                  const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
-                                  return (
-                                  <SelectItem key={member.user_id} value={member.user_id}>
-                                    <div className="flex items-center gap-2">
-                                      {member.profile.avatar_url ? (
-                                        <img src={member.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
-                                      ) : (
-                                        <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
-                                          {displayName[0].toUpperCase()}
-                                        </div>
-                                      )}
-                                      <span>{displayName}</span>
-                                    </div>
-                                  </SelectItem>
-                                );})}
-                              </SelectContent>
-                            </Select>
+                          {/* Status Assignee and Due Date - Only show when expanded */}
+                          {!isCollapsed && (
+                            <div className="flex items-center gap-3 mt-2 sm:mt-0 pl-6 sm:pl-0" onClick={(e) => e.stopPropagation()}>
+                              {/* Status Assignee */}
+                              <Select
+                                value={statusDetail?.assignee_id || "unassigned"}
+                                onValueChange={(value) => updateStatusAssignee(selectedProject.id, status.id, value === "unassigned" ? null : value)}
+                              >
+                                <SelectTrigger className="w-28 sm:w-32 h-7 text-xs bg-transparent border-white/10">
+                                  <SelectValue>
+                                    {statusAssignee ? (
+                                      (() => {
+                                        const displayName = statusAssignee.profile.full_name || statusAssignee.profile.email?.split('@')[0] || 'Unknown';
+                                        return (
+                                          <div className="flex items-center gap-1.5">
+                                            {statusAssignee.profile.avatar_url ? (
+                                              <img src={statusAssignee.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                                            ) : (
+                                              <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
+                                                {displayName[0].toUpperCase()}
+                                              </div>
+                                            )}
+                                            <span className="truncate">{displayName.split(' ')[0]}</span>
+                                          </div>
+                                        );
+                                      })()
+                                    ) : (
+                                      <span className="text-muted-foreground">Assignee</span>
+                                    )}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                                  {orgMembers.map((member) => {
+                                    const displayName = member.profile.full_name || member.profile.email?.split('@')[0] || 'Unknown';
+                                    return (
+                                    <SelectItem key={member.user_id} value={member.user_id}>
+                                      <div className="flex items-center gap-2">
+                                        {member.profile.avatar_url ? (
+                                          <img src={member.profile.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                                        ) : (
+                                          <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-medium text-primary">
+                                            {displayName[0].toUpperCase()}
+                                          </div>
+                                        )}
+                                        <span>{displayName}</span>
+                                      </div>
+                                    </SelectItem>
+                                  );})}
+                                </SelectContent>
+                              </Select>
 
-                            {/* Status Due Date */}
-                            <div className="relative w-28">
-                              <input
-                                type="date"
-                                value={statusDetail?.due_date || ''}
-                                onChange={(e) => updateStatusDueDate(selectedProject.id, status.id, e.target.value || null)}
-                                className="w-full px-2 py-1 pr-6 rounded bg-transparent border border-white/10 focus:border-primary focus:outline-none text-xs h-7 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                              />
-                              {statusDetail?.due_date && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateStatusDueDate(selectedProject.id, status.id, null);
-                                  }}
-                                  className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              )}
+                              {/* Status Due Date */}
+                              <div className="relative w-24 sm:w-28">
+                                <input
+                                  type="date"
+                                  value={statusDetail?.due_date || ''}
+                                  onChange={(e) => updateStatusDueDate(selectedProject.id, status.id, e.target.value || null)}
+                                  className="w-full px-2 py-1 pr-6 rounded bg-transparent border border-white/10 focus:border-primary focus:outline-none text-xs h-7 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                />
+                                {statusDetail?.due_date && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateStatusDueDate(selectedProject.id, status.id, null);
+                                    }}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Task List */}
