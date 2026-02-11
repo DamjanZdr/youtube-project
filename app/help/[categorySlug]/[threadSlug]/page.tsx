@@ -48,6 +48,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import rehypeRaw from "rehype-raw";
 
 interface Thread {
   id: string;
@@ -665,9 +666,11 @@ export default function ThreadPage() {
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
             prose-table:text-sm prose-th:font-normal prose-th:text-foreground/80
             prose-code:text-sm prose-code:font-normal
+            [&_u]:underline
           ">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm, remarkBreaks]}
+              rehypePlugins={[rehypeRaw]}
               components={{
                 p: ({ children }) => {
                   if (!children || (typeof children === 'string' && !children.trim())) {
@@ -789,9 +792,10 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-normal prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-normal prose-p:text-[15px] prose-p:leading-7 prose-p:text-muted-foreground prose-li:text-[15px] prose-li:text-muted-foreground [&_u]:underline">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks]}
+                      rehypePlugins={[rehypeRaw]}
                       components={{
                         p: ({ children }) => {
                           if (!children || (typeof children === 'string' && !children.trim())) {

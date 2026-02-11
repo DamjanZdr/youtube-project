@@ -147,8 +147,29 @@ export function RichTextEditor({
   const setLink = useCallback(() => {
     if (!editor) return;
     
+    // Check if there's selected text
+    const { from, to } = editor.state.selection;
+    const hasSelection = from !== to;
+    
+    if (!hasSelection) {
+      // No text selected - prompt for both text and URL
+      const text = window.prompt("Link text");
+      if (!text) return;
+      
+      const url = window.prompt("URL");
+      if (!url) return;
+      
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${url}">${text}</a>`)
+        .run();
+      return;
+    }
+    
+    // Text is selected - just ask for URL
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
+    const url = window.prompt("URL", previousUrl || "https://");
 
     if (url === null) return;
     if (url === "") {
