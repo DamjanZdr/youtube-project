@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownEditor } from "@/components/help/markdown-editor";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { toast } from "sonner";
 import {
@@ -431,15 +431,14 @@ export default function NewForumThreadPage() {
           {/* Content */}
           <div>
             <label className="block text-sm font-medium mb-2">Content</label>
-            <Textarea
+            <MarkdownEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Provide details, context, or share your thoughts..."
               rows={10}
-              className="resize-none bg-white/5 border-white/10"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Tip: You can use Markdown formatting and embed YouTube videos using [youtube:VIDEO_ID]
+              Tip: Embed YouTube videos using [youtube:VIDEO_ID]
             </p>
           </div>
 

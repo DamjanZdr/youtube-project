@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownEditor } from "@/components/help/markdown-editor";
 import { toast } from "sonner";
 import { ChevronLeft, Send, Loader2, Shield } from "lucide-react";
 
@@ -207,15 +207,14 @@ export default function NewThreadPage() {
           {/* Content */}
           <div>
             <label className="block text-sm font-medium mb-2">Content</label>
-            <Textarea
+            <MarkdownEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Provide details, context, or share your thoughts..."
               rows={10}
-              className="resize-none"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Tip: You can embed YouTube videos using [youtube:VIDEO_ID]
+              Tip: Embed YouTube videos using [youtube:VIDEO_ID]
             </p>
           </div>
 
