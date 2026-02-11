@@ -340,18 +340,6 @@ export default function HelpCenterPage() {
               <p className="text-sm text-muted-foreground">Submit a ticket</p>
             </Link>
           </div>
-
-          {/* Quick Action */}
-          {user && (
-            <div className="flex items-center justify-center mt-6 md:mt-8">
-              <Link href="/help/tickets" className="w-full sm:w-auto">
-                <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                  <TicketIcon className="w-4 h-4" />
-                  My Tickets
-                </Button>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
 
