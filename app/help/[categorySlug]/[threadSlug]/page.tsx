@@ -652,22 +652,22 @@ export default function ThreadPage() {
               </DropdownMenu>
             )}
           </div>
-          <article className="prose prose-neutral dark:prose-invert max-w-none
-            prose-headings:font-semibold prose-headings:text-foreground
-            prose-h1:text-2xl prose-h1:mt-4 prose-h1:mb-2
-            prose-h2:text-xl prose-h2:font-bold prose-h2:mt-4 prose-h2:mb-2
-            prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-3 prose-h3:mb-1
-            prose-h4:text-base prose-h4:font-semibold prose-h4:mt-2 prose-h4:mb-1
-            prose-p:text-[15px] prose-p:leading-relaxed prose-p:text-foreground/80 prose-p:my-2
-            prose-li:text-[15px] prose-li:leading-relaxed prose-li:text-foreground/80 prose-li:my-0
-            prose-ul:my-2 prose-ul:pl-6 prose-ol:my-2 prose-ol:pl-6
-            prose-strong:font-semibold prose-strong:text-foreground
-            prose-em:italic
-            prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80
-            prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-2
-            prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-pre:my-2
-            prose-code:bg-black/30 prose-code:rounded prose-code:px-1 prose-code:text-sm prose-code:font-mono
-            prose-hr:border-white/20 prose-hr:my-4
+          <article className="max-w-none text-[15px] leading-relaxed text-foreground/80
+            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-foreground [&_h1]:mt-0 [&_h1]:mb-2
+            [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-0 [&_h2]:mb-2
+            [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-0 [&_h3]:mb-1
+            [&_h4]:text-base [&_h4]:font-semibold [&_h4]:text-foreground [&_h4]:mt-0 [&_h4]:mb-1
+            [&_p]:my-0 [&_p]:mb-2
+            [&_li]:my-0
+            [&_ul]:my-0 [&_ul]:mb-2 [&_ul]:pl-6 [&_ul]:list-disc
+            [&_ol]:my-0 [&_ol]:mb-2 [&_ol]:pl-6 [&_ol]:list-decimal
+            [&_strong]:font-semibold [&_strong]:text-foreground
+            [&_em]:italic
+            [&_a]:text-primary [&_a]:underline hover:[&_a]:text-primary/80
+            [&_blockquote]:border-l-4 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_blockquote]:my-0 [&_blockquote]:mb-2
+            [&_pre]:bg-black/30 [&_pre]:rounded [&_pre]:p-3 [&_pre]:my-0 [&_pre]:mb-2
+            [&_code]:bg-black/30 [&_code]:rounded [&_code]:px-1 [&_code]:text-sm [&_code]:font-mono
+            [&_hr]:border-white/20 [&_hr]:my-4
             [&_u]:underline
           ">
             <ReactMarkdown 
@@ -786,7 +786,7 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-h2:text-xl prose-h2:font-bold prose-h2:mt-4 prose-h2:mb-2 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-3 prose-h3:mb-1 prose-p:text-[15px] prose-p:leading-relaxed prose-p:text-foreground/80 prose-p:my-2 prose-li:text-[15px] prose-li:text-foreground/80 prose-li:my-0 prose-ul:my-2 prose-ol:my-2 prose-strong:font-semibold prose-strong:text-foreground prose-a:text-primary prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-2 prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-pre:my-2 prose-code:bg-black/30 prose-code:rounded prose-code:px-1 [&_u]:underline">
+                  <div className="max-w-none text-[15px] leading-relaxed text-foreground/80 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-0 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-0 [&_h3]:mb-1 [&_p]:my-0 [&_p]:mb-2 [&_li]:my-0 [&_ul]:my-0 [&_ul]:mb-2 [&_ul]:pl-6 [&_ul]:list-disc [&_ol]:my-0 [&_ol]:mb-2 [&_ol]:pl-6 [&_ol]:list-decimal [&_strong]:font-semibold [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-0 [&_blockquote]:mb-2 [&_pre]:bg-black/30 [&_pre]:rounded [&_pre]:p-3 [&_pre]:my-0 [&_pre]:mb-2 [&_code]:bg-black/30 [&_code]:rounded [&_code]:px-1 [&_u]:underline">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       rehypePlugins={[rehypeRaw]}
