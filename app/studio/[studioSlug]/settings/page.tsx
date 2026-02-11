@@ -236,16 +236,16 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
-    // Check if already a member or has pending invite
+    // Check if already a member or has pending invite using security definer function
     const { data: existingMembership } = await supabase
-      .from('organization_members')
-      .select('status')
-      .eq('organization_id', studio.id)
-      .eq('user_id', existingUser.id)
-      .single();
+      .rpc('check_user_membership', { 
+        p_org_id: studio.id, 
+        p_user_id: existingUser.id 
+      });
 
-    if (existingMembership) {
-      if (existingMembership.status === 'active') {
+    if (existingMembership && existingMembership.length > 0) {
+      const membership = existingMembership[0];
+      if (membership.status === 'active') {
         toast.error('This user is already a member.');
       } else {
         toast.error('This user already has a pending invite.');

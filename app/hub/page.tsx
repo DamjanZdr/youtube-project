@@ -173,86 +173,12 @@ export default function HubPage() {
   async function handleInviteResponse(inviteId: string, accept: boolean, isTransfer: boolean = false) {
     if (accept) {
       if (isTransfer) {
-        // For transfer invites, we need to:
-        // 1. Check the subscription plan's member limit
-        // 2. If limit is 1, delete the current owner (kick them out)
-        // 3. Otherwise, demote current owner to editor
-        // 4. Accept this invite (update status to active, keep role as owner)
-        
-        const invite = pendingInvites.find(i => i.id === inviteId);
-        if (!invite) {
-          toast.error("Invite not found");
-          return;
-        }
+        // Use security definer function for transfer acceptance
+        const { data, error } = await supabase
+          .rpc('accept_ownership_transfer', { invite_id: inviteId });
 
-        // First, find the current owner
-        const { data: currentOwner } = await supabase
-          .from("organization_members")
-          .select("id")
-          .eq("organization_id", invite.organization_id)
-          .eq("role", "owner")
-          .eq("status", "active")
-          .single();
-
-        if (!currentOwner) {
-          toast.error("Current owner not found");
-          return;
-        }
-
-        // Check the subscription to determine member limit
-        const { data: subscription } = await supabase
-          .from("subscriptions")
-          .select("plan")
-          .eq("organization_id", invite.organization_id)
-          .maybeSingle();
-
-        const plan = subscription?.plan || 'free';
-        // Member limits: free=1, creator=1, studio=4, enterprise=unlimited
-        const memberLimit = plan === 'free' || plan === 'creator' ? 1 : 
-                          plan === 'studio' ? 4 : 999;
-
-        if (memberLimit <= 1) {
-          // Delete the old owner entirely (kick them out)
-          const { error: deleteError } = await supabase
-            .from("organization_members")
-            .delete()
-            .eq("id", currentOwner.id);
-
-          if (deleteError) {
-            toast.error("Failed to transfer ownership");
-            return;
-          }
-        } else {
-          // Demote current owner to editor
-          const { error: demoteError } = await supabase
-            .from("organization_members")
-            .update({ role: "editor" })
-            .eq("id", currentOwner.id);
-
-          if (demoteError) {
-            toast.error("Failed to transfer ownership");
-            return;
-          }
-        }
-
-        // Accept transfer invite (becomes owner)
-        const { error: acceptError } = await supabase
-          .from("organization_members")
-          .update({ status: "active" })
-          .eq("id", inviteId);
-
-        if (acceptError) {
-          toast.error("Failed to accept transfer");
-          // Rollback - re-add the old owner if they were deleted, or restore role if demoted
-          if (memberLimit <= 1) {
-            // Can't easily rollback a delete, but the transfer failed anyway
-            toast.error("Transfer failed - previous owner may need to be re-invited");
-          } else {
-            await supabase
-              .from("organization_members")
-              .update({ role: "owner" })
-              .eq("id", currentOwner.id);
-          }
+        if (error || !data?.success) {
+          toast.error(data?.error || error?.message || "Failed to accept transfer");
         } else {
           toast.success("Ownership transferred successfully!");
           loadData();
