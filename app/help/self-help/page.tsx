@@ -29,6 +29,7 @@ import {
   Search,
   X,
   Eye,
+  Plus,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -125,7 +126,8 @@ function SelfHelpContent() {
           const { count } = await supabase
             .from("help_threads")
             .select("*", { count: "exact", head: true })
-            .eq("category_id", cat.id);
+            .eq("category_id", cat.id)
+            .eq("is_official", true);
           return { ...cat, thread_count: count || 0 };
         })
       );
@@ -144,7 +146,7 @@ function SelfHelpContent() {
       }
     }
 
-    // Load all threads
+    // Load official articles only
     const { data: allThreads } = await supabase
       .from("help_threads")
       .select(`
@@ -160,6 +162,7 @@ function SelfHelpContent() {
         category_id,
         category:help_categories(slug, name)
       `)
+      .eq("is_official", true)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -335,13 +338,23 @@ function SelfHelpContent() {
           <main className="flex-1 min-w-0">
             {/* Category Header */}
             {activeCategoryData && (
-              <div className="mb-4">
-                <h1 className="text-xl md:text-2xl font-bold mb-1">
-                  {activeCategoryData.name}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {activeCategoryData.description}
-                </p>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold mb-1">
+                    {activeCategoryData.name}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    {activeCategoryData.description}
+                  </p>
+                </div>
+                {isAdmin && (
+                  <Link href={`/help/${activeCategoryData.slug}/new?type=article`}>
+                    <Button size="sm" className="gap-2 shrink-0">
+                      <Plus className="w-4 h-4" />
+                      New Article
+                    </Button>
+                  </Link>
+                )}
               </div>
             )}
 
@@ -415,6 +428,14 @@ function SelfHelpContent() {
                 <p className="text-sm text-muted-foreground/60 mt-1">
                   Articles will appear here once they&apos;re published.
                 </p>
+                {isAdmin && activeCategoryData && (
+                  <Link href={`/help/${activeCategoryData.slug}/new?type=article`}>
+                    <Button size="sm" className="gap-2 mt-4">
+                      <Plus className="w-4 h-4" />
+                      New Article
+                    </Button>
+                  </Link>
+                )}
               </div>
             )}
           </main>

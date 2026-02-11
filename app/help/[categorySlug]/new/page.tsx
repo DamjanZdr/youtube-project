@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ChevronLeft, Send, Loader2 } from "lucide-react";
+import { ChevronLeft, Send, Loader2, Shield } from "lucide-react";
 
 interface Category {
   id: string;
@@ -34,6 +34,8 @@ export default function NewThreadPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<{ id: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isArticle, setIsArticle] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -54,6 +56,27 @@ export default function NewThreadPage() {
     }
 
     setUser(user);
+
+    // Check admin status
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const userIsAdmin = profile?.role === "admin";
+    setIsAdmin(userIsAdmin);
+
+    // Check if creating an article (admin only)
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeParam = urlParams.get("type");
+    if (typeParam === "article") {
+      if (!userIsAdmin) {
+        router.push("/help/self-help");
+        return;
+      }
+      setIsArticle(true);
+    }
 
     // Load category
     const { data: cat } = await supabase
@@ -103,6 +126,7 @@ export default function NewThreadPage() {
         title: title.trim(),
         slug,
         content: content.trim(),
+        ...(isArticle ? { is_official: true } : {}),
       })
       .select("slug")
       .single();
@@ -114,7 +138,7 @@ export default function NewThreadPage() {
       return;
     }
 
-    toast.success("Thread created!");
+    toast.success(isArticle ? "Article published!" : "Thread created!");
     router.push(`/help/${categorySlug}/${thread.slug}`);
   };
 
@@ -143,15 +167,26 @@ export default function NewThreadPage() {
       <div className="border-b border-white/10">
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <Link
-            href={`/help/${categorySlug}`}
+            href={isArticle ? `/help/self-help?category=${categorySlug}` : `/help/${categorySlug}`}
             className="inline-flex items-center gap-2 text-xs md:text-sm text-muted-foreground hover:text-foreground mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to {category.name}
+            {isArticle ? "Back to Self Help" : `Back to ${category.name}`}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold">New Thread</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              {isArticle ? "New Article" : "New Thread"}
+            </h1>
+            {isArticle && (
+              <span className="px-2 py-0.5 text-xs font-medium rounded bg-primary/20 text-primary">
+                Official
+              </span>
+            )}
+          </div>
           <p className="text-sm md:text-base text-muted-foreground mt-2">
-            Start a new discussion in {category.name}
+            {isArticle
+              ? `Publish an official article in ${category.name}`
+              : `Start a new discussion in ${category.name}`}
           </p>
         </div>
       </div>
@@ -186,7 +221,7 @@ export default function NewThreadPage() {
 
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
-            <Link href={`/help/${categorySlug}`} className="w-full sm:w-auto">
+            <Link href={isArticle ? `/help/self-help?category=${categorySlug}` : `/help/${categorySlug}`} className="w-full sm:w-auto">
               <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
             </Link>
             <Button
@@ -199,7 +234,7 @@ export default function NewThreadPage() {
               ) : (
                 <Send className="w-4 h-4" />
               )}
-              Create Thread
+              {isArticle ? "Publish Article" : "Create Thread"}
             </Button>
           </div>
         </div>
