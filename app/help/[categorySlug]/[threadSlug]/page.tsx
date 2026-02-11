@@ -654,35 +654,27 @@ export default function ThreadPage() {
           </div>
           <article className="prose prose-neutral dark:prose-invert max-w-none
             prose-headings:font-semibold prose-headings:text-foreground
-            prose-h1:text-2xl prose-h1:mt-6 prose-h1:mb-4
-            prose-h2:text-xl prose-h2:font-bold prose-h2:mt-6 prose-h2:mb-3
-            prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-5 prose-h3:mb-2
-            prose-h4:text-base prose-h4:font-semibold prose-h4:mt-4 prose-h4:mb-2
-            prose-p:text-[15px] prose-p:leading-7 prose-p:text-foreground/80 prose-p:my-3
-            prose-li:text-[15px] prose-li:leading-7 prose-li:text-foreground/80 prose-li:my-0.5
-            prose-ul:my-3 prose-ul:pl-6 prose-ol:my-3 prose-ol:pl-6
+            prose-h1:text-2xl prose-h1:mt-4 prose-h1:mb-2
+            prose-h2:text-xl prose-h2:font-bold prose-h2:mt-4 prose-h2:mb-2
+            prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-3 prose-h3:mb-1
+            prose-h4:text-base prose-h4:font-semibold prose-h4:mt-2 prose-h4:mb-1
+            prose-p:text-[15px] prose-p:leading-relaxed prose-p:text-foreground/80 prose-p:my-2
+            prose-li:text-[15px] prose-li:leading-relaxed prose-li:text-foreground/80 prose-li:my-0
+            prose-ul:my-2 prose-ul:pl-6 prose-ol:my-2 prose-ol:pl-6
             prose-strong:font-semibold prose-strong:text-foreground
             prose-em:italic
             prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80
-            prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground
-            prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3
+            prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-2
+            prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-pre:my-2
             prose-code:bg-black/30 prose-code:rounded prose-code:px-1 prose-code:text-sm prose-code:font-mono
-            prose-hr:border-white/20 prose-hr:my-6
+            prose-hr:border-white/20 prose-hr:my-4
             [&_u]:underline
           ">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm, remarkBreaks]}
               rehypePlugins={[rehypeRaw]}
-              components={{
-                p: ({ children }) => {
-                  if (!children || (typeof children === 'string' && !children.trim())) {
-                    return <p className="h-4">&nbsp;</p>;
-                  }
-                  return <p>{children}</p>;
-                }
-              }}
             >
-              {thread.content.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
+              {thread.content}
             </ReactMarkdown>
           </article>
           <div className="flex items-center gap-3 md:gap-4 mt-4 md:mt-6 pt-4 border-t border-white/10 text-xs md:text-sm text-muted-foreground">
@@ -794,20 +786,12 @@ export default function ThreadPage() {
                       </DropdownMenu>
                     )}
                   </div>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-h2:text-xl prose-h2:font-bold prose-h3:text-lg prose-h3:font-semibold prose-p:text-[15px] prose-p:leading-7 prose-p:text-foreground/80 prose-li:text-[15px] prose-li:text-foreground/80 prose-strong:font-semibold prose-strong:text-foreground prose-a:text-primary prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-code:bg-black/30 prose-code:rounded prose-code:px-1 [&_u]:underline">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-h2:text-xl prose-h2:font-bold prose-h2:mt-4 prose-h2:mb-2 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-3 prose-h3:mb-1 prose-p:text-[15px] prose-p:leading-relaxed prose-p:text-foreground/80 prose-p:my-2 prose-li:text-[15px] prose-li:text-foreground/80 prose-li:my-0 prose-ul:my-2 prose-ol:my-2 prose-strong:font-semibold prose-strong:text-foreground prose-a:text-primary prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-white/20 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-2 prose-pre:bg-black/30 prose-pre:rounded prose-pre:p-3 prose-pre:my-2 prose-code:bg-black/30 prose-code:rounded prose-code:px-1 [&_u]:underline">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       rehypePlugins={[rehypeRaw]}
-                      components={{
-                        p: ({ children }) => {
-                          if (!children || (typeof children === 'string' && !children.trim())) {
-                            return <p className="h-4">&nbsp;</p>;
-                          }
-                          return <p>{children}</p>;
-                        }
-                      }}
                     >
-                      {reply.content.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
+                      {reply.content}
                     </ReactMarkdown>
                   </div>
                   </>
