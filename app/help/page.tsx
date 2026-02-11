@@ -307,11 +307,11 @@ export default function HelpCenterPage() {
             )}
           </div>
 
-          {/* Two Main Options: Self Help & Public Forum */}
+          {/* Three Main Options: Self Help, Public Forum & Contact Support */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 mt-8 md:mt-10">
             <Link
               href="/help/self-help"
-              className="group w-full sm:w-72 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-center"
+              className="group w-full sm:w-60 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-center"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors mb-4">
                 <BookOpen className="w-6 h-6" />
@@ -321,7 +321,7 @@ export default function HelpCenterPage() {
             </Link>
             <Link
               href="/help/forum"
-              className="group w-full sm:w-72 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all text-center"
+              className="group w-full sm:w-60 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all text-center"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors mb-4">
                 <MessagesSquare className="w-6 h-6" />
@@ -329,21 +329,25 @@ export default function HelpCenterPage() {
               <h3 className="text-lg font-semibold mb-1 group-hover:text-purple-400 transition-colors">Public Forum</h3>
               <p className="text-sm text-muted-foreground">Ask the community</p>
             </Link>
+            <Link
+              href="/help/tickets"
+              className="group w-full sm:w-60 p-6 md:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-white/10 transition-all text-center"
+            >
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors mb-4">
+                <TicketIcon className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1 group-hover:text-emerald-400 transition-colors">Contact Support</h3>
+              <p className="text-sm text-muted-foreground">Submit a ticket</p>
+            </Link>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Action */}
           {user && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
+            <div className="flex items-center justify-center mt-6 md:mt-8">
               <Link href="/help/tickets" className="w-full sm:w-auto">
                 <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <TicketIcon className="w-4 h-4" />
                   My Tickets
-                </Button>
-              </Link>
-              <Link href="/help/tickets/new" className="w-full sm:w-auto">
-                <Button className="gap-2 w-full sm:w-auto">
-                  <MessageCircle className="w-4 h-4" />
-                  Contact Support
                 </Button>
               </Link>
             </div>
