@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -57,6 +57,32 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // Scroll indicators state
+  const tabsNavRef = useRef<HTMLElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollIndicators = useCallback(() => {
+    const nav = tabsNavRef.current;
+    if (nav) {
+      setCanScrollLeft(nav.scrollLeft > 0);
+      setCanScrollRight(nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 1);
+    }
+  }, []);
+
+  useEffect(() => {
+    const nav = tabsNavRef.current;
+    if (nav) {
+      updateScrollIndicators();
+      nav.addEventListener('scroll', updateScrollIndicators);
+      window.addEventListener('resize', updateScrollIndicators);
+      return () => {
+        nav.removeEventListener('scroll', updateScrollIndicators);
+        window.removeEventListener('resize', updateScrollIndicators);
+      };
+    }
+  }, [updateScrollIndicators, loading]);
 
   useEffect(() => {
     fetchProject();
@@ -202,19 +228,21 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         {/* Tab Navigation with Scroll Indicators */}
         <div className="relative mt-3 md:mt-4 -mb-3 md:-mb-4">
           {/* Left scroll indicator */}
-          <button
-            onClick={() => {
-              const nav = document.getElementById('project-tabs-nav');
-              if (nav) nav.scrollBy({ left: -150, behavior: 'smooth' });
-            }}
-            className="absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start md:hidden"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
+          {canScrollLeft && (
+            <button
+              onClick={() => {
+                const nav = tabsNavRef.current;
+                if (nav) nav.scrollBy({ left: -150, behavior: 'smooth' });
+              }}
+              className="absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start md:hidden"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
           
           <nav 
-            id="project-tabs-nav"
+            ref={tabsNavRef}
             className="flex items-center gap-1 overflow-x-auto scrollbar-hide px-6 md:px-0"
           >
             {tabs.map((tab) => {
@@ -238,16 +266,18 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           </nav>
           
           {/* Right scroll indicator */}
-          <button
-            onClick={() => {
-              const nav = document.getElementById('project-tabs-nav');
-              if (nav) nav.scrollBy({ left: 150, behavior: 'smooth' });
-            }}
-            className="absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end md:hidden"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
+          {canScrollRight && (
+            <button
+              onClick={() => {
+                const nav = tabsNavRef.current;
+                if (nav) nav.scrollBy({ left: 150, behavior: 'smooth' });
+              }}
+              className="absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end md:hidden"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </header>
 
