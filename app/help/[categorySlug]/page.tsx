@@ -281,10 +281,12 @@ export default function CategoryPage() {
                       <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       <span>{thread.view_count}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      <span>{thread.reply_count}</span>
-                    </div>
+                    {!thread.is_official && (
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span>{thread.reply_count}</span>
+                      </div>
+                    )}
                   </div>
                   <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>

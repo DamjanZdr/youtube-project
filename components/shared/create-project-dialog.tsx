@@ -22,7 +22,6 @@ export function CreateProjectDialog({
   onCreateProject,
 }: CreateProjectDialogProps) {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [videoType, setVideoType] = useState<"long" | "short">("long");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +30,9 @@ export function CreateProjectDialog({
     setCreating(true);
     setError(null);
     try {
-      await onCreateProject({ title: title.trim() || "Untitled Project", description, videoType });
+      await onCreateProject({ title: title.trim() || "Untitled Project", description: "", videoType });
       // Reset form
       setTitle("");
-      setDescription("");
       setVideoType("long");
       onOpenChange(false);
     } catch (err: any) {
@@ -77,15 +75,6 @@ export function CreateProjectDialog({
               placeholder="Untitled Project"
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">Description (optional)</label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What's this video about?"
             />
           </div>
 

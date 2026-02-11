@@ -674,16 +674,18 @@ export default function ThreadPage() {
               <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span>{thread.view_count} views</span>
             </div>
-            <div className="flex items-center gap-1">
-              <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              <span>{thread.reply_count} replies</span>
-            </div>
+            {!thread.is_official && (
+              <div className="flex items-center gap-1">
+                <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>{thread.reply_count} replies</span>
+              </div>
+            )}
           </div>
         </div>
         )}
 
-        {/* Replies */}
-        {replies.length > 0 && (
+        {/* Replies - hidden for official threads */}
+        {!thread.is_official && replies.length > 0 && (
           <div className="mb-6 md:mb-8">
             <h2 className="text-sm font-medium text-muted-foreground mb-4">
               {replies.length} {replies.length === 1 ? "Reply" : "Replies"}
@@ -799,8 +801,8 @@ export default function ThreadPage() {
           </div>
         )}
 
-        {/* Reply Form */}
-        {user && !thread.is_locked ? (
+        {/* Reply Form - hidden for official threads */}
+        {user && !thread.is_locked && !thread.is_official ? (
           <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="font-medium text-sm mb-4">Post a Reply</h3>
             <div className="mb-4">
@@ -836,6 +838,8 @@ export default function ThreadPage() {
             <Lock className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-muted-foreground text-xs md:text-sm">This thread is locked and no longer accepting replies.</p>
           </div>
+        ) : thread.is_official ? (
+          null
         ) : (
           <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 text-center">
             <p className="text-muted-foreground text-sm mb-4">Sign in to post a reply</p>

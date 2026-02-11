@@ -155,7 +155,7 @@ export default function ForumPage() {
     }
 
     // Load user-generated threads only (not official/system)
-    const { data: threadData } = await supabase
+    const { data: threadData, error: threadError } = await supabase
       .from("help_threads")
       .select(`
         id,
@@ -176,6 +176,10 @@ export default function ForumPage() {
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
+    if (threadError) {
+      console.error("Error loading forum threads:", threadError);
+    }
+    
     if (threadData) {
       setThreads(threadData as unknown as Thread[]);
     }

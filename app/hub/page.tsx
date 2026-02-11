@@ -18,6 +18,7 @@ interface Studio {
   memberCount?: number;
   projectCount?: number;
   subscriberCount?: number;
+  plan?: string;
 }
 
 interface PendingInvite {
@@ -122,6 +123,13 @@ export default function HubPage() {
             .select("*", { count: "exact", head: true })
             .eq("organization_id", org.id);
 
+          // Get subscription plan
+          const { data: subscription } = await supabase
+            .from("subscriptions")
+            .select("plan")
+            .eq("organization_id", org.id)
+            .single();
+
           // Subscriber count disabled while YouTube connection is off
           const subscriberCount = 0;
 
@@ -133,6 +141,7 @@ export default function HubPage() {
             memberCount: memberCount || 1,
             projectCount: projectCount || 0,
             subscriberCount,
+            plan: subscription?.plan || 'free',
           };
         })
       );
@@ -346,9 +355,18 @@ export default function HubPage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
-                      {studio.name}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
+                        {studio.name}
+                      </h3>
+                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 shrink-0 ${
+                        studio.plan === 'studio' ? 'border-purple-500/50 text-purple-400' :
+                        studio.plan === 'creator' ? 'border-blue-500/50 text-blue-400' :
+                        'border-white/20 text-muted-foreground'
+                      }`}>
+                        {studio.plan === 'studio' ? 'Studio' : studio.plan === 'creator' ? 'Creator' : 'Free'}
+                      </Badge>
+                    </div>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
@@ -361,7 +379,6 @@ export default function HubPage() {
                     </div>
                   </div>
                 </div>
-{/* Subscriber Count Badge - hidden while YouTube connection is disabled */}
               </Link>
             ))}
             

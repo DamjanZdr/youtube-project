@@ -466,10 +466,12 @@ function SelfHelpContent() {
                           <Eye className="w-3 h-3" />
                           {thread.view_count}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" />
-                          {thread.reply_count}
-                        </span>
+                        {!thread.is_official && (
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" />
+                            {thread.reply_count}
+                          </span>
+                        )}
                         <span>
                           {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
                         </span>

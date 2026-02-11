@@ -178,6 +178,7 @@ export default function NewForumThreadPage() {
         title: title.trim(),
         slug,
         content: content.trim(),
+        is_official: false,
       })
       .select("id, slug")
       .single();
