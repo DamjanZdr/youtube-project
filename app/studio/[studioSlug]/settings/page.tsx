@@ -217,11 +217,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     
     setInviting(true);
     
-    // Check if user exists and get their invite preference
+    // Check if user exists and get their invite preference using security definer function
     const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id, accept_invites')
-      .eq('email', inviteEmail)
+      .rpc('lookup_user_for_invite', { lookup_email: inviteEmail })
       .single();
 
     if (!existingUser) {
@@ -471,11 +469,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     
     setTransferring(true);
     
-    // Check if user exists
+    // Check if user exists using security definer function
     const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id, email, full_name')
-      .eq('email', transferEmail)
+      .rpc('lookup_user_for_invite', { lookup_email: transferEmail })
       .single();
 
     if (!existingUser) {
