@@ -87,6 +87,7 @@ interface StudioTutorialProps {
   organizationId: string;
   userId: string;
   initialStep: number | null;
+  tutorialCompletedAt: string | null;
 }
 
 interface HighlightPosition {
@@ -133,12 +134,27 @@ export function StudioTutorial({
   organizationId, 
   userId, 
   initialStep,
+  tutorialCompletedAt,
 }: StudioTutorialProps) {
   const pathname = usePathname();
   const supabase = createClient();
   
+  // Detect mobile - tutorial is desktop only
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    // Check if mobile on mount (window not available during SSR)
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   const [currentStep, setCurrentStep] = useState<number | null>(initialStep);
-  const [showWelcome, setShowWelcome] = useState(initialStep === null);
+  // Only show welcome if: never started (initialStep null), never completed (tutorialCompletedAt null), and not mobile
+  const [showWelcome, setShowWelcome] = useState(initialStep === null && tutorialCompletedAt === null);
   const [isVisible, setIsVisible] = useState(
     initialStep !== null && initialStep >= 0 && initialStep < TUTORIAL_STEPS.length
   );
@@ -370,8 +386,8 @@ export function StudioTutorial({
     await saveProgress(TUTORIAL_STEPS.length);
   };
 
-  // Welcome prompt
-  if (showWelcome && !isVisible) {
+  // Welcome prompt - desktop only
+  if (showWelcome && !isVisible && !isMobile) {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none">
         <div className="absolute inset-0 bg-black/50" />
@@ -394,7 +410,8 @@ export function StudioTutorial({
     );
   }
 
-  if (!isVisible) {
+  // Hide tutorial on mobile or when not visible
+  if (!isVisible || isMobile) {
     return null;
   }
 

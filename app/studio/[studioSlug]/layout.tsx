@@ -60,13 +60,15 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
   // Fetch tutorial progress
   const { data: memberData } = await supabase
     .from("organization_members")
-    .select("tutorial_step")
+    .select("tutorial_step, tutorial_completed_at")
     .eq("organization_id", studio.id)
     .eq("user_id", user.id)
     .single();
 
   // Tutorial step: null = never started (show welcome), number = current step
+  // If tutorial_completed_at is set, user has dismissed/completed it before
   const tutorialStep = memberData?.tutorial_step ?? null;
+  const tutorialCompletedAt = memberData?.tutorial_completed_at ?? null;
 
   // Track activity (non-blocking)
   updateUserActivity().catch(() => {});
@@ -93,12 +95,13 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
           {children}
         </main>
 
-        {/* Onboarding Tutorial */}
+        {/* Onboarding Tutorial - desktop only */}
         <StudioTutorial
           studioSlug={studioSlug}
           organizationId={studio.id}
           userId={user.id}
           initialStep={tutorialStep}
+          tutorialCompletedAt={tutorialCompletedAt}
         />
       </div>
     </TooltipProvider>
