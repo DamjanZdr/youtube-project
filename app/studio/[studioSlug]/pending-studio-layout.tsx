@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CreditCard, Clock, Trash2, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +8,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { plans } from "@/config/subscriptions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PendingStudioLayoutProps {
   children: React.ReactNode;
@@ -19,6 +30,7 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Check if we're on the checkout page - allow it to render
   const isCheckoutPage = pathname.includes('/checkout');
@@ -42,10 +54,6 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
   }
 
   async function handleCancelStudio() {
-    if (!confirm("Are you sure you want to cancel this studio? This cannot be undone.")) {
-      return;
-    }
-
     const { error } = await supabase
       .from("organizations")
       .delete()
@@ -60,6 +68,28 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
       router.push("/hub");
     }
   }
+
+  const cancelDialog = (
+    <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel Studio</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to cancel this studio? This will permanently delete the pending studio and cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep Studio</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleCancelStudio}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Cancel Studio
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 
   // If on checkout page, render it with a minimal header
   if (isCheckoutPage) {
@@ -82,7 +112,7 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
               variant="ghost"
               size="sm"
               className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-              onClick={handleCancelStudio}
+              onClick={() => setShowCancelDialog(true)}
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Cancel
@@ -90,6 +120,7 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
           </div>
         </header>
         {children}
+        {cancelDialog}
       </div>
     );
   }
@@ -143,7 +174,7 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
                 variant="outline"
                 size="lg"
                 className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                onClick={handleCancelStudio}
+                onClick={() => setShowCancelDialog(true)}
               >
                 <Trash2 className="w-5 h-5" />
               </Button>
@@ -151,6 +182,7 @@ export function PendingStudioLayout({ children, studioName, studioSlug, organiza
           </div>
         </div>
       </div>
+      {cancelDialog}
     </div>
   );
 }

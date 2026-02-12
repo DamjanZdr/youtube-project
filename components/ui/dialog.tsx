@@ -60,7 +60,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border p-4 sm:p-6 shadow-lg outline-none max-h-[calc(100vh-2rem)] overflow-y-auto",
+          "bg-background fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-4 sm:p-6 shadow-lg outline-none max-h-[calc(100vh-2rem)] overflow-y-auto",
           className
         )}
         style={{ transform: "translate(-50%, -50%)" }}
@@ -70,9 +70,9 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute top-3 right-3 md:top-4 md:right-4 p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 opacity-70 hover:opacity-100 transition-all focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none z-10"
           >
-            <XIcon />
+            <XIcon className="w-4 h-4 md:w-5 md:h-5" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}

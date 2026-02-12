@@ -226,7 +226,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1550px] w-[95vw] h-[90vh] md:h-[85vh] max-h-[900px] flex flex-col"}`}>
+      <DialogContent className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1600px] w-[95vw] h-[90vh] md:h-[85vh] max-h-[950px] flex flex-col rounded-2xl"}`}>
         <DialogTitle className="sr-only">Create Studio</DialogTitle>
         <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
@@ -289,14 +289,14 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
         ) : (
           <div className="flex flex-col h-full min-h-0">
             {/* Header with billing toggle - sticky on mobile */}
-            <div className="flex flex-col items-center gap-3 md:gap-4 p-4 md:p-6 lg:p-8 border-b border-white/10 bg-white/[0.02] shrink-0">
-              <h2 className="text-lg md:text-xl lg:text-2xl font-bold">Choose a Plan</h2>
+            <div className="flex flex-col items-center gap-3 md:gap-4 p-4 md:p-6 lg:p-8 xl:p-10 border-b border-white/10 bg-white/[0.02] shrink-0 rounded-t-2xl">
+              <h2 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold">Choose a Plan</h2>
               
               {/* Billing Interval Toggle */}
               <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
                 <button
                   onClick={() => setBillingInterval("monthly")}
-                  className={`px-3 md:px-4 lg:px-5 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
+                  className={`px-3 md:px-4 lg:px-5 xl:px-6 py-1.5 md:py-2 lg:py-2.5 rounded-lg text-xs md:text-sm lg:text-base font-medium transition-all ${
                     billingInterval === "monthly"
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground"
@@ -306,14 +306,14 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </button>
                 <button
                   onClick={() => setBillingInterval("yearly")}
-                  className={`px-3 md:px-4 lg:px-5 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-1.5 md:gap-2 ${
+                  className={`px-3 md:px-4 lg:px-5 xl:px-6 py-1.5 md:py-2 lg:py-2.5 rounded-lg text-xs md:text-sm lg:text-base font-medium transition-all flex items-center gap-1.5 md:gap-2 ${
                     billingInterval === "yearly"
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Yearly
-                  <span className="text-[9px] md:text-[10px] bg-green-500/20 text-green-400 px-1.5 md:px-2 py-0.5 rounded-full font-semibold">
+                  <span className="text-[9px] md:text-[10px] lg:text-xs bg-green-500/20 text-green-400 px-1.5 md:px-2 py-0.5 rounded-full font-semibold">
                     SAVE 17%
                   </span>
                 </button>
@@ -321,8 +321,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards - scrollable area */}
-            <div className="flex-1 overflow-y-auto min-h-0 px-3 md:px-6 lg:px-12 py-4 md:py-6 lg:py-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 lg:gap-8">
+            <div className="flex-1 overflow-y-auto min-h-0 px-4 md:px-8 lg:px-12 xl:px-16 py-4 md:py-6 lg:py-10 xl:py-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 lg:gap-6 xl:gap-8 max-w-[1400px] mx-auto">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -333,7 +333,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-4 md:p-6 lg:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl md:rounded-2xl min-h-[220px] md:min-h-[280px] ${
+                      className={`relative flex flex-col p-4 md:p-6 lg:p-7 xl:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl md:rounded-2xl min-h-[220px] md:min-h-[280px] lg:min-h-[320px] xl:min-h-[360px] ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -354,26 +354,26 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         </div>
                       )}
 
-                      <div className="mb-4 md:mb-6">
-                        <h4 className="text-lg md:text-xl lg:text-2xl font-bold mb-1 md:mb-2">{plan.name}</h4>
+                      <div className="mb-4 md:mb-6 lg:mb-8">
+                        <h4 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold mb-1 md:mb-2">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl md:text-4xl lg:text-5xl font-bold">${price}</span>
-                          <span className="text-xs md:text-sm text-muted-foreground">
+                          <span className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold">${price}</span>
+                          <span className="text-xs md:text-sm lg:text-base text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
                         </div>
-                        <p className="text-[10px] md:text-xs text-muted-foreground mt-1 md:mt-2">{plan.description}</p>
+                        <p className="text-[10px] md:text-xs lg:text-sm text-muted-foreground mt-1 md:mt-2">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-2 md:space-y-3.5 flex-1">
+                      <ul className="space-y-2 md:space-y-3 lg:space-y-4 flex-1">
                         {plan.features.slice(0, 5).map((feature, i) => (
-                          <li key={i} className="flex items-start gap-1.5 md:gap-2">
+                          <li key={i} className="flex items-start gap-1.5 md:gap-2 lg:gap-3">
                             {feature.included ? (
-                              <Check className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 flex-shrink-0 text-green-400" />
+                              <Check className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 mt-0.5 flex-shrink-0 text-green-400" />
                             ) : (
-                              <X className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 flex-shrink-0 text-white/20" />
+                              <X className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 mt-0.5 flex-shrink-0 text-white/20" />
                             )}
-                            <span className={`text-xs md:text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
+                            <span className={`text-xs md:text-sm lg:text-base ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
                               {feature.name}
                             </span>
                           </li>
@@ -386,7 +386,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer - always visible */}
-            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-3 md:p-4 lg:p-6 shrink-0">
+            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-3 md:p-4 lg:p-6 xl:p-8 shrink-0 rounded-b-2xl">
               {/* Key input (shown when expanded) */}
               {showKeyInput && !keyInfo && (
                 <div className="flex items-center gap-2 mb-3 md:mb-4 max-w-md mx-auto">
@@ -394,7 +394,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     value={redeemKey}
                     onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
                     placeholder="XXXX-XXXX-XXXX-XXXX"
-                    className="font-mono text-xs md:text-sm bg-white/5 flex-1"
+                    className="font-mono text-xs md:text-sm lg:text-base bg-white/5 flex-1"
                   />
                   <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
                     {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
@@ -404,7 +404,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                   </Button>
                 </div>
               )}
-              {keyError && <p className="text-xs text-red-400 text-center mb-2 md:mb-3">{keyError}</p>}
+              {keyError && <p className="text-xs lg:text-sm text-red-400 text-center mb-2 md:mb-3">{keyError}</p>}
 
               {/* Key applied badge */}
               {keyInfo && (
@@ -424,8 +424,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 {/* Have a key button - full width on mobile */}
                 <div className="order-2 md:order-1">
                   {!keyInfo && !showKeyInput && (
-                    <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 w-full md:w-auto text-xs md:text-sm h-9 md:h-10">
-                      <Key className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 w-full md:w-auto text-xs md:text-sm lg:text-base h-9 md:h-10 lg:h-11">
+                      <Key className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
                       Have a plan key?
                     </Button>
                   )}
@@ -433,21 +433,21 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 
                 {/* Error message */}
                 {error && (
-                  <div className="order-1 md:order-2 flex-1 flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-amber-500/10 border border-amber-500/25 min-w-0">
-                    <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400 shrink-0" />
-                    <span className="text-xs md:text-sm text-amber-300 truncate">{error}</span>
+                  <div className="order-1 md:order-2 flex-1 flex items-center gap-2 px-2 md:px-3 lg:px-4 py-1.5 md:py-2 lg:py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 min-w-0">
+                    <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 text-amber-400 shrink-0" />
+                    <span className="text-xs md:text-sm lg:text-base text-amber-300 truncate">{error}</span>
                   </div>
                 )}
                 
                 {/* Back and Create buttons - always at bottom on mobile */}
-                <div className="order-3 flex items-center gap-2 md:gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 md:px-5 h-9 md:h-10 text-xs md:text-sm flex-1 md:flex-none">
+                <div className="order-3 flex items-center gap-2 md:gap-3 lg:gap-4">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 md:px-5 lg:px-6 h-9 md:h-10 lg:h-12 text-xs md:text-sm lg:text-base flex-1 md:flex-none">
                     Back
                   </Button>
-                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 md:px-8 h-9 md:h-11 text-xs md:text-base font-medium flex-1 md:flex-none">
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 md:px-8 lg:px-10 h-9 md:h-11 lg:h-12 text-xs md:text-base lg:text-lg font-medium flex-1 md:flex-none">
                     {loading ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 mr-1.5 md:mr-2 animate-spin" />
                         <span className="hidden md:inline">Creating...</span>
                         <span className="md:hidden">...</span>
                       </>

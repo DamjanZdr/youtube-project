@@ -11,6 +11,16 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { plans } from "@/config/subscriptions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Studio {
   id: string;
@@ -57,6 +67,7 @@ export default function HubPage() {
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [cancelStudioId, setCancelStudioId] = useState<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
 
@@ -225,16 +236,14 @@ export default function HubPage() {
     }
   }
 
-  async function handleCancelPendingStudio(studioId: string) {
-    if (!confirm("Are you sure you want to cancel this studio? This cannot be undone.")) {
-      return;
-    }
+  async function handleCancelPendingStudio() {
+    if (!cancelStudioId) return;
 
     // Delete the pending organization and all related data
     const { error } = await supabase
       .from("organizations")
       .delete()
-      .eq("id", studioId)
+      .eq("id", cancelStudioId)
       .eq("status", "pending");
 
     if (error) {
@@ -244,6 +253,7 @@ export default function HubPage() {
       toast.success("Pending studio cancelled");
       loadData();
     }
+    setCancelStudioId(null);
   }
 
   function handleResumeCheckout(studio: Studio) {
@@ -421,7 +431,7 @@ export default function HubPage() {
                         size="sm"
                         variant="outline"
                         className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                        onClick={() => handleCancelPendingStudio(studio.id)}
+                        onClick={() => setCancelStudioId(studio.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -552,6 +562,27 @@ export default function HubPage() {
         )}
       </main>
       )}
+
+      {/* Cancel Studio Confirmation Dialog */}
+      <AlertDialog open={!!cancelStudioId} onOpenChange={(open) => !open && setCancelStudioId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Studio</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this studio? This will permanently delete the pending studio and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Studio</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelPendingStudio}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Cancel Studio
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
