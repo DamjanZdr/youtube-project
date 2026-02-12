@@ -6,6 +6,7 @@ import {
 import { StudioSidebar } from "./studio-sidebar";
 import { StudioTutorial } from "@/components/shared/studio-tutorial";
 import { updateUserActivity, updateOrgActivity } from "@/lib/actions/activity";
+import { PendingStudioLayout } from "./pending-studio-layout";
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -29,10 +30,10 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     .eq("id", user.id)
     .single();
 
-  // Fetch studio data
+  // Fetch studio data including status
   const { data: studio, error } = await supabase
     .from("organizations")
-    .select("id, name, slug, logo_url, owner_id")
+    .select("id, name, slug, logo_url, owner_id, status")
     .eq("slug", studioSlug)
     .single();
 
@@ -55,6 +56,20 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     if (!membership) {
       redirect("/hub");
     }
+  }
+
+  // If studio is pending (awaiting payment), show minimal layout
+  // Only checkout routes will render meaningfully
+  if (studio.status === 'pending') {
+    return (
+      <PendingStudioLayout 
+        studioName={studio.name} 
+        studioSlug={studioSlug} 
+        organizationId={studio.id}
+      >
+        {children}
+      </PendingStudioLayout>
+    );
   }
 
   // Fetch tutorial progress
