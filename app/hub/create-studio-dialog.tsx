@@ -290,13 +290,13 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
         ) : (
           <div className="flex flex-col h-full min-h-0">
             {/* Header with billing toggle */}
-            <div className="relative flex flex-col items-center gap-3 md:gap-4 p-4 md:p-6 lg:p-8 border-b border-white/10 bg-white/[0.02] shrink-0 rounded-t-2xl">
+            <div className="relative flex flex-col items-center gap-4 md:gap-5 p-5 md:p-6 lg:p-8 border-b border-white/10 bg-white/[0.02] shrink-0 rounded-t-2xl">
               {/* Close button in header */}
               <DialogClose className="absolute top-3 right-3 md:top-4 md:right-4 p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 opacity-70 hover:opacity-100 transition-all">
                 <X className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="sr-only">Close</span>
               </DialogClose>
-              <h2 className="text-lg md:text-xl lg:text-2xl font-bold">Choose a Plan</h2>
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Choose a Plan</h2>
               
               {/* Billing Interval Toggle */}
               <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10">
@@ -327,8 +327,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards */}
-            <div className="px-4 md:px-6 lg:px-10 py-4 md:py-6 lg:py-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 max-w-[1400px] mx-auto">
+            <div className="px-4 md:px-8 lg:px-12 py-6 md:py-8 lg:py-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6 max-w-[1400px] mx-auto">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -339,7 +339,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-4 md:p-5 lg:p-6 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl md:rounded-2xl ${
+                      className={`relative flex flex-col p-5 md:p-6 lg:p-8 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl md:rounded-2xl ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -360,26 +360,26 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         </div>
                       )}
 
-                      <div className="mb-3 md:mb-4">
-                        <h4 className="text-base md:text-lg lg:text-xl font-bold mb-1">{plan.name}</h4>
+                      <div className="mb-4 md:mb-5 lg:mb-6">
+                        <h4 className="text-lg md:text-xl lg:text-2xl font-bold mb-1 md:mb-2">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-2xl md:text-3xl lg:text-4xl font-bold">${price}</span>
+                          <span className="text-3xl md:text-4xl lg:text-5xl font-bold">${price}</span>
                           <span className="text-xs md:text-sm text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
                         </div>
-                        <p className="text-[10px] md:text-xs text-muted-foreground mt-1">{plan.description}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-1.5 md:space-y-2 flex-1">
+                      <ul className="space-y-2 md:space-y-3 lg:space-y-3.5 flex-1">
                         {plan.features.slice(0, 5).map((feature, i) => (
-                          <li key={i} className="flex items-start gap-1.5 md:gap-2">
+                          <li key={i} className="flex items-start gap-2 md:gap-2.5">
                             {feature.included ? (
-                              <Check className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 flex-shrink-0 text-green-400" />
+                              <Check className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0 text-green-400" />
                             ) : (
-                              <X className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 flex-shrink-0 text-white/20" />
+                              <X className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0 text-white/20" />
                             )}
-                            <span className={`text-xs md:text-sm ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
+                            <span className={`text-sm md:text-base ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
                               {feature.name}
                             </span>
                           </li>
