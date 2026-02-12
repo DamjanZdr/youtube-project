@@ -105,8 +105,14 @@ export function RichTextEditor({
 
   // Update editor content when value changes externally
   useEffect(() => {
-    if (editor && value === "") {
-      editor.commands.setContent("");
+    if (!editor) return;
+    
+    const currentContent = turndownService.turndown(editor.getHTML());
+    // Only update if content actually changed externally
+    if (value !== currentContent) {
+      editor.commands.setContent(markdownToHtml(value));
+      // Move cursor to end after setting content
+      editor.commands.focus("end");
     }
   }, [value, editor]);
 
