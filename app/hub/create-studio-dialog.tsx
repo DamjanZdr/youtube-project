@@ -227,7 +227,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "max-w-[1600px] w-[95vw] h-auto flex flex-col rounded-2xl"}`}>
+      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "w-[90vw] max-w-[90vw] h-auto flex flex-col rounded-2xl"}`}>
         <DialogTitle className="sr-only">Create Studio</DialogTitle>
         <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
@@ -328,7 +328,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
             {/* Plan Cards */}
             <div className="px-4 md:px-8 lg:px-12 py-6 md:py-8 lg:py-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6 max-w-[1400px] mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
