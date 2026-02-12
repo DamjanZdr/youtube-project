@@ -74,12 +74,6 @@ const markdownComponents = {
       if (typeof child === 'string') {
         return renderTextWithMentions(child);
       }
-      if (React.isValidElement(child) && (child.props as any)?.children) {
-        return React.cloneElement(child, {
-          ...child.props,
-          children: React.Children.map((child.props as any).children, processChildren)
-        } as any);
-      }
       return child;
     };
     return <p {...props}>{React.Children.map(children, processChildren)}</p>;
