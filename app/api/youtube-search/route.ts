@@ -26,10 +26,6 @@ function setCachedResult(key: string, data: any) {
 }
 
 export async function GET(request: NextRequest) {
-  console.log("=== YouTube Search API called ===");
-  console.log("YOUTUBE_API_KEY exists:", !!YOUTUBE_API_KEY);
-  console.log("YOUTUBE_API_KEY length:", YOUTUBE_API_KEY?.length || 0);
-  
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "10";
@@ -58,8 +54,6 @@ export async function GET(request: NextRequest) {
       url += `&videoDuration=${videoDuration}`;
     }
     url += `&key=${YOUTUBE_API_KEY}`;
-    
-    console.log("Fetching YouTube API:", url.replace(YOUTUBE_API_KEY!, "***API_KEY***"));
     
     const response = await fetch(url);
 

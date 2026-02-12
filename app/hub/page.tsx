@@ -169,9 +169,6 @@ export default function HubPage() {
       .eq("user_id", currentUser.id)
       .eq("status", "pending");
 
-    console.log("Pending invites data:", pendingData);
-    console.log("Pending invites error:", pendingError);
-
     if (pendingData) {
       setPendingInvites(pendingData as any);
     }

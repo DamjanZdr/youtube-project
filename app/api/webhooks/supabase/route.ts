@@ -36,24 +36,22 @@ export async function POST(request: Request) {
     switch (payload.table) {
       case 'profiles': {
         // Handle profile changes
-        console.log('Profile event:', payload.type, payload.record);
         break;
       }
 
       case 'organizations': {
         // Handle organization changes
-        console.log('Organization event:', payload.type, payload.record);
         break;
       }
 
       case 'projects': {
         // Handle project changes
-        console.log('Project event:', payload.type, payload.record);
         break;
       }
 
       default:
-        console.log(`Unhandled table: ${payload.table}`);
+        // Unhandled table
+        break;
     }
 
     return NextResponse.json({ received: true });

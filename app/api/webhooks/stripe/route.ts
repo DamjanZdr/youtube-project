@@ -95,8 +95,6 @@ export async function POST(request: Request) {
             }, {
               onConflict: 'organization_id',
             });
-
-          console.log(`Checkout completed for org ${organizationId}, plan: ${plan}`);
         }
         break;
       }
@@ -132,8 +130,6 @@ export async function POST(request: Request) {
                   }],
                   proration_behavior: 'none', // No proration since we're at period boundary
                 });
-                
-                console.log(`Applied pending subscription change for org ${organizationId}`);
               } catch (error) {
                 console.error('Failed to apply pending subscription change:', error);
               }
@@ -193,8 +189,6 @@ export async function POST(request: Request) {
           });
           if (eventError) console.error('Failed to log billing event:', eventError);
         }
-
-        console.log(`Subscription ${event.type} for org ${organizationId}, plan: ${plan}`);
         break;
       }
 
@@ -230,8 +224,6 @@ export async function POST(request: Request) {
           source: 'stripe',
         });
         if (cancelEventError) console.error('Failed to log billing event:', cancelEventError);
-
-        console.log(`Subscription canceled for org ${organizationId}`);
         break;
       }
 
@@ -281,8 +273,6 @@ export async function POST(request: Request) {
             }
           });
           if (paymentEventError) console.error('Failed to log billing event:', paymentEventError);
-
-          console.log(`Invoice paid for org ${organizationId}, amount: $${(invoice.amount_paid / 100).toFixed(2)}`);
         }
         break;
       }
@@ -337,14 +327,13 @@ export async function POST(request: Request) {
             }
           });
           if (failedEventError) console.error('Failed to log billing event:', failedEventError);
-
-          console.log(`Payment failed for org ${organizationId}, attempt ${failedCount}`);
         }
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Unhandled event type
+        break;
     }
 
     return NextResponse.json({ received: true });

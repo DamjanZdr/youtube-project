@@ -207,7 +207,6 @@ export default function BoardPage() {
         .in("status_id", statusList.map(s => s.id))
         .order("position");
       
-      console.log("Loaded default tasks:", tasksData);
       setDefaultTasks(tasksData || []);
     }
 

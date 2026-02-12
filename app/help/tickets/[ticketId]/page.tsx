@@ -111,7 +111,6 @@ export default function TicketDetailPage() {
           filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
-          console.log('[Realtime] New message received:', payload);
           // Check if message already exists (from optimistic update)
           const messageId = payload.new.id;
           
@@ -141,9 +140,7 @@ export default function TicketDetailPage() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('[Realtime] Messages channel status:', status);
-      });
+      .subscribe();
 
     // Subscribe to ticket status changes
     const ticketChannel = supabase

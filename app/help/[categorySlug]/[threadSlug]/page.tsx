@@ -171,8 +171,6 @@ export default function ThreadPage() {
         .eq("id", authUser.id)
         .single();
 
-      console.log("Profile data:", profile, "Error:", error);
-
       setUser({
         id: authUser.id,
         email: authUser.email || "",

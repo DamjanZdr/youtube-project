@@ -340,51 +340,6 @@ export async function createCheckout(priceId: string): Promise<ApiResponse<{ url
   }
 }
 
-export async function createBillingPortal(): Promise<ApiResponse<{ url: string }>> {
-  const supabase = await createClient();
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { data: null, error: 'Unauthorized', success: false };
-  }
-
-  try {
-    // TODO: Get Stripe customer ID from your database
-    // const { data: subscription } = await supabase
-    //   .from('subscriptions')
-    //   .select('stripe_customer_id')
-    //   .eq('user_id', user.id)
-    //   .single();
-
-    const customerId = ''; // Replace with actual customer ID lookup
-    
-    if (!customerId) {
-      return { data: null, error: 'No subscription found', success: false };
-    }
-
-    const returnUrl = stripeConfig.getPortalReturnUrl(baseUrl);
-    
-    const session = await createStripePortal({
-      customerId,
-      returnUrl,
-    });
-
-    return {
-      data: { url: session.url },
-      error: null,
-      success: true,
-    };
-  } catch (error) {
-    console.error('Portal error:', error);
-    return {
-      data: null,
-      error: 'Failed to create portal session',
-      success: false,
-    };
-  }
-}
-
 export async function undoPendingChange(organizationId: string): Promise<{ success: boolean }> {
   const supabase = await createClient();
   
@@ -436,34 +391,4 @@ export async function undoPendingChange(organizationId: string): Promise<{ succe
     .eq('organization_id', organizationId);
 
   return { success: true };
-}
-
-export async function cancelSubscription(): Promise<ApiResponse<null>> {
-  const supabase = await createClient();
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { data: null, error: 'Unauthorized', success: false };
-  }
-
-  try {
-    // TODO: Get subscription ID from your database and cancel via Stripe
-    // await stripe.subscriptions.update(subscriptionId, {
-    //   cancel_at_period_end: true,
-    // });
-
-    return {
-      data: null,
-      error: null,
-      success: true,
-    };
-  } catch (error) {
-    console.error('Cancel subscription error:', error);
-    return {
-      data: null,
-      error: 'Failed to cancel subscription',
-      success: false,
-    };
-  }
 }

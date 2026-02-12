@@ -191,7 +191,6 @@ export async function getStudios() {
       console.error("Error details:", ownedError.details);
       // If table doesn't exist, return empty array gracefully
       if (ownedError.code === "42P01" || ownedError.message?.includes("does not exist")) {
-        console.log("Tables not created yet - returning empty studios list");
         return [];
       }
       return [];
