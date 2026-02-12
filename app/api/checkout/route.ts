@@ -77,6 +77,10 @@ export async function POST(req: NextRequest) {
       sessionParams.customer_email = user.email;
     }
 
+    // Set session to expire in 30 minutes (minimum allowed is 30 mins)
+    // This ensures pending orgs don't linger too long if user abandons checkout
+    sessionParams.expires_at = Math.floor(Date.now() / 1000) + 30 * 60;
+
     const session = await stripe.checkout.sessions.create(sessionParams as any);
 
     return NextResponse.json({ clientSecret: session.client_secret });

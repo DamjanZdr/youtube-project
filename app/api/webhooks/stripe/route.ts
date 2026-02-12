@@ -95,6 +95,35 @@ export async function POST(request: Request) {
             }, {
               onConflict: 'organization_id',
             });
+
+          // Activate the organization if it was pending (new studio with paid plan)
+          await supabase
+            .from('organizations')
+            .update({ status: 'active' })
+            .eq('id', organizationId)
+            .eq('status', 'pending');
+        }
+        break;
+      }
+
+      case 'checkout.session.expired': {
+        // User abandoned checkout - delete the pending organization
+        const session = event.data.object as any;
+        const organizationId = session.metadata?.organizationId;
+
+        if (organizationId) {
+          // Only delete if still pending (hasn't been completed somehow)
+          const { error } = await supabase
+            .from('organizations')
+            .delete()
+            .eq('id', organizationId)
+            .eq('status', 'pending');
+
+          if (error) {
+            console.error('Failed to delete expired pending organization:', error);
+          } else {
+            console.log('Deleted pending organization due to expired checkout:', organizationId);
+          }
         }
         break;
       }

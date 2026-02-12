@@ -106,6 +106,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
     const formData = new FormData();
     formData.append("name", name);
+    formData.append("selectedPlan", keyInfo ? keyInfo.plan : selectedPlan);
     if (logo) {
       formData.append("logo", logo);
     }
@@ -143,6 +144,12 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
       } catch {
         toast.error("Studio created but key redemption failed");
       }
+      
+      // Key redemption activates the studio, redirect to it
+      setOpen(false);
+      resetForm();
+      router.push(`/studio/${result.slug}`);
+      return;
     }
 
     // If user selected a paid plan without a key, go to embedded checkout

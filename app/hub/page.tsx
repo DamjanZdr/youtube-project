@@ -3,18 +3,21 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Users, FolderKanban, Bell, Check, X, Youtube, Shield } from "lucide-react";
+import { Plus, Play, Users, FolderKanban, Bell, Check, X, Youtube, Shield, CreditCard, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CreateStudioDialog } from "./create-studio-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
+import { plans } from "@/config/subscriptions";
 
 interface Studio {
   id: string;
   name: string;
   slug: string;
   logo_url?: string;
+  status?: 'pending' | 'active';
   memberCount?: number;
   projectCount?: number;
   subscriberCount?: number;
@@ -55,6 +58,7 @@ export default function HubPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     loadData();
@@ -99,7 +103,8 @@ export default function HubPage() {
           id,
           name,
           slug,
-          logo_url
+          logo_url,
+          status
         )
       `)
       .eq("user_id", currentUser.id)
@@ -138,6 +143,7 @@ export default function HubPage() {
             name: org.name,
             slug: org.slug,
             logo_url: org.logo_url,
+            status: org.status || 'active',
             memberCount: memberCount || 1,
             projectCount: projectCount || 0,
             subscriberCount,
@@ -217,6 +223,45 @@ export default function HubPage() {
         loadData();
       }
     }
+  }
+
+  async function handleCancelPendingStudio(studioId: string) {
+    if (!confirm("Are you sure you want to cancel this studio? This cannot be undone.")) {
+      return;
+    }
+
+    // Delete the pending organization and all related data
+    const { error } = await supabase
+      .from("organizations")
+      .delete()
+      .eq("id", studioId)
+      .eq("status", "pending");
+
+    if (error) {
+      toast.error("Failed to cancel studio");
+      console.error("Cancel pending studio error:", error);
+    } else {
+      toast.success("Pending studio cancelled");
+      loadData();
+    }
+  }
+
+  function handleResumeCheckout(studio: Studio) {
+    // Get the plan config to find the price ID
+    const planConfig = plans.find(p => p.id === studio.plan);
+    if (!planConfig || !planConfig.stripePriceId.monthly) {
+      toast.error("Could not find plan configuration");
+      return;
+    }
+
+    // Set checkout params in sessionStorage
+    sessionStorage.setItem("checkoutParams", JSON.stringify({
+      organizationId: studio.id,
+      priceId: planConfig.stripePriceId.monthly, // Default to monthly
+    }));
+
+    // Navigate to checkout
+    router.push(`/studio/${studio.slug}/checkout`);
   }
 
   if (loading) {
@@ -333,52 +378,106 @@ export default function HubPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Active Studios */}
-            {studios.map((studio) => (
-              <Link
-                key={studio.id}
-                href={`/studio/${studio.slug}`}
-                className="glass-card p-4 md:p-6 hover-lift group"
-              >
-                <div className="flex items-start gap-3 md:gap-4">
-                  {studio.logo_url ? (
-                    <img 
-                      src={studio.logo_url} 
-                      alt={studio.name}
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                      <span className="text-base md:text-lg font-bold">{studio.name[0]}</span>
+            {studios.map((studio) => {
+              // Pending studios need different rendering
+              if (studio.status === 'pending') {
+                return (
+                  <div key={studio.id} className="glass-card p-4 md:p-6 relative border-2 border-yellow-500/30">
+                    <Badge className="absolute top-2 right-2 md:top-3 md:right-3 text-xs bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+                      <CreditCard className="w-3 h-3 mr-1" />
+                      Pending Payment
+                    </Badge>
+                    <div className="flex items-start gap-3 md:gap-4 mb-4">
+                      {studio.logo_url ? (
+                        <img 
+                          src={studio.logo_url} 
+                          alt={studio.name}
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover opacity-60"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center opacity-60">
+                          <span className="text-base md:text-lg font-bold">{studio.name[0]}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 pr-16 md:pr-28">
+                        <h3 className="font-semibold text-base md:text-lg truncate text-muted-foreground">
+                          {studio.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Complete payment to activate
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
-                        {studio.name}
-                      </h3>
-                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 shrink-0 ${
-                        studio.plan === 'enterprise' ? 'border-amber-500/50 text-amber-400' :
-                        studio.plan === 'studio' ? 'border-purple-500/50 text-purple-400' :
-                        studio.plan === 'creator' ? 'border-blue-500/50 text-blue-400' :
-                        'border-white/20 text-muted-foreground'
-                      }`}>
-                        {studio.plan === 'enterprise' ? 'Enterprise' : studio.plan === 'studio' ? 'Studio' : studio.plan === 'creator' ? 'Creator' : 'Free'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {studio.memberCount || 1}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <FolderKanban className="w-4 h-4" />
-                        {studio.projectCount || 0}
-                      </span>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+                        onClick={() => handleResumeCheckout(studio)}
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Complete Setup
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        onClick={() => handleCancelPendingStudio(studio.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                );
+              }
+              
+              // Active studios render as links
+              return (
+                <Link
+                  key={studio.id}
+                  href={`/studio/${studio.slug}`}
+                  className="glass-card p-4 md:p-6 hover-lift group"
+                >
+                  <div className="flex items-start gap-3 md:gap-4">
+                    {studio.logo_url ? (
+                      <img 
+                        src={studio.logo_url} 
+                        alt={studio.name}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-base md:text-lg font-bold">{studio.name[0]}</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
+                          {studio.name}
+                        </h3>
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 shrink-0 ${
+                          studio.plan === 'enterprise' ? 'border-amber-500/50 text-amber-400' :
+                          studio.plan === 'studio' ? 'border-purple-500/50 text-purple-400' :
+                          studio.plan === 'creator' ? 'border-blue-500/50 text-blue-400' :
+                          'border-white/20 text-muted-foreground'
+                        }`}>
+                          {studio.plan === 'enterprise' ? 'Enterprise' : studio.plan === 'studio' ? 'Studio' : studio.plan === 'creator' ? 'Creator' : 'Free'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {studio.memberCount || 1}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FolderKanban className="w-4 h-4" />
+                          {studio.projectCount || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
             
             {/* Pending Invites */}
             {pendingInvites.map((invite) => {

@@ -93,14 +93,20 @@ export async function createStudio(formData: FormData) {
     }
   }
 
+  // Check if user selected a paid plan
+  const selectedPlan = formData.get("selectedPlan") as string || "free";
+  const isPaidPlan = selectedPlan !== "free";
+
   // Create the studio
+  // If paid plan selected, create as 'pending' until checkout completes
   const { data: studio, error } = await supabase
     .from("organizations")
     .insert({
       name: name.trim(),
       slug,
       owner_id: ownerId,
-      logo_url: logoUrl
+      logo_url: logoUrl,
+      status: isPaidPlan ? "pending" : "active"
     })
     .select()
     .single();
@@ -141,20 +147,23 @@ export async function createStudio(formData: FormData) {
   // Create default board statuses with tasks using database function
   await adminClient.rpc('create_default_board_statuses', { org_id: studio.id });
 
-  // Create a free subscription for the studio
-  await adminClient
-    .from("subscriptions")
-    .insert({
-      organization_id: studio.id,
-      plan: "free",
-      status: "active",
-      source: null,
-      interval: null
-    });
+  // Only create subscription for free plan studios
+  // Paid plan studios will get their subscription created after checkout completes
+  if (!isPaidPlan) {
+    await adminClient
+      .from("subscriptions")
+      .insert({
+        organization_id: studio.id,
+        plan: "free",
+        status: "active",
+        source: null,
+        interval: null
+      });
+  }
 
   revalidatePath("/hub");
   
-  return { success: true, slug: studio.slug, id: studio.id };
+  return { success: true, slug: studio.slug, id: studio.id, isPending: isPaidPlan };
 }
 
 // Get all studios for the current user
@@ -179,6 +188,7 @@ export async function getStudios() {
         name,
         slug,
         logo_url,
+        status,
         created_at
       `)
       .eq("owner_id", userId)
@@ -208,6 +218,7 @@ export async function getStudios() {
       name,
       slug,
       logo_url,
+      status,
       created_at
     `)
     .in("id", orgIds)
