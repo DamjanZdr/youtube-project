@@ -339,7 +339,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-[1.5vw] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
+                      className={`relative flex flex-col p-[2vw] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -360,18 +360,18 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         </div>
                       )}
 
-                      <div className="mb-[1vw]">
-                        <h4 className="text-[clamp(1rem,1.2vw,1.5rem)] font-bold mb-[0.3vw]">{plan.name}</h4>
+                      <div className="mb-[1.5vw]">
+                        <h4 className="text-[clamp(1rem,1.2vw,1.5rem)] font-bold mb-[0.5vw]">{plan.name}</h4>
                         <div className="flex items-baseline gap-1">
                           <span className="text-[clamp(1.5rem,2.5vw,3.5rem)] font-bold">${price}</span>
                           <span className="text-[clamp(0.6rem,0.7vw,0.9rem)] text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
                         </div>
-                        <p className="text-[clamp(0.65rem,0.7vw,0.875rem)] text-muted-foreground mt-[0.3vw]">{plan.description}</p>
+                        <p className="text-[clamp(0.65rem,0.7vw,0.875rem)] text-muted-foreground mt-[0.5vw]">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-[0.6vw] flex-1">
+                      <ul className="space-y-[0.8vw] flex-1">
                         {plan.features.slice(0, 5).map((feature, i) => (
                           <li key={i} className="flex items-start gap-[0.5vw]">
                             {feature.included ? (
