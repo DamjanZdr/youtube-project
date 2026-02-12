@@ -334,7 +334,7 @@ export default function ThreadPage() {
     // For child replies, auto-mention the author using username if available
     if (isChild) {
       const mention = authorUsername || authorName.toLowerCase().replace(/\s+/g, "_");
-      setReplyContent(`@${mention} `);
+      setReplyContent(`@${mention}\u00A0`); // Use non-breaking space so HTML doesn't collapse it
     } else {
       setReplyContent("");
     }
