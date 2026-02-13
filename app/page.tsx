@@ -26,7 +26,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col relative">
       {/* Background gradient - scrolls with content */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="absolute top-0 left-0 w-full min-h-screen overflow-hidden pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
