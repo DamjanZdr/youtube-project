@@ -25,6 +25,7 @@ const navItems = [
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/admin/keys", label: "Keys", icon: Key },
   { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon },
+  { href: "/admin/waitlist", label: "Waitlist", icon: Mail },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

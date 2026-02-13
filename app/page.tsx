@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Sparkles, Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Palette } from "lucide-react";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -63,14 +64,9 @@ export default async function Home() {
                 </Suspense>
               </>
             ) : (
-              <>
-                <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">Login</Button>
-                </Link>
-                <Link href="/auth/sign-up">
-                  <Button size="sm">Register</Button>
-                </Link>
-              </>
+              <Link href="/auth/login">
+                <Button variant="ghost" size="sm">Sign In</Button>
+              </Link>
             )}
           </div>
         </div>
@@ -97,27 +93,18 @@ export default async function Home() {
             write scripts with storyboards, and preview how your videos will look before publishing.
           </p>
           
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 w-full px-4 sm:px-0">
+          {/* CTA */}
+          <div className="w-full px-4 sm:px-0">
             {user ? (
-              <Link href="/hub" className="w-full sm:w-auto">
-                <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8 w-full sm:w-auto">
-                  Go to Hub
-                </Button>
-              </Link>
+              <div className="flex justify-center">
+                <Link href="/hub">
+                  <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8">
+                    Go to Hub
+                  </Button>
+                </Link>
+              </div>
             ) : (
-              <>
-                <Link href="/auth/sign-up" className="w-full sm:w-auto">
-                  <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8 w-full sm:w-auto">
-                    Get Started Free
-                  </Button>
-                </Link>
-                <Link href="/auth/login" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="text-sm md:text-base px-6 md:px-8 glass w-full sm:w-auto">
-                    Sign In
-                  </Button>
-                </Link>
-              </>
+              <WaitlistForm />
             )}
           </div>
         </div>
