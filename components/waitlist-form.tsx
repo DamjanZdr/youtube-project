@@ -54,7 +54,7 @@ export function WaitlistForm() {
           </div>
           <h3 className="text-xl font-bold mb-2">You're on the list!</h3>
           <p className="text-muted-foreground mb-4">
-            Check your email for a link to join our Discord community where you'll receive your free Creator key on launch day.
+            We'll send your free Creator key to your email on launch day. Check your inbox for a confirmation!
           </p>
           <div className="text-sm text-muted-foreground">
             Launching <span className="text-primary font-semibold">February 20, 2026</span>

@@ -81,15 +81,15 @@ export async function POST(req: NextRequest) {
                           </h1>
                           
                           <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
-                            Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #ffffff;">February 20, 2026</strong> and you'll be among the first to get access.
+                            Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #ffffff;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
                           </p>
 
                           <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                             <p style="color: #60a5fa; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
-                              🎁 Your Free Creator Key
+                              📣 Follow Our Progress
                             </p>
                             <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
-                              Join our Discord community to receive your free Creator key on launch day. This gives you 1 month of Creator plan completely free!
+                              While you wait, join our Discord community to follow development updates, share feedback, and connect with other creators!
                             </p>
                           </div>
 

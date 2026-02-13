@@ -16,10 +16,14 @@ import {
   CheckCircle,
   Clock,
   Copy,
-  Check
+  Check,
+  Key,
+  Send,
+  Loader2
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
 
 interface WaitlistEntry {
   id: string;
@@ -31,6 +35,18 @@ interface WaitlistEntry {
 
 const ITEMS_PER_PAGE = 20;
 
+const planOptions = [
+  { value: "creator", label: "Creator", color: "bg-blue-500/20 text-blue-300" },
+  { value: "studio", label: "Studio", color: "bg-purple-500/20 text-purple-300" },
+  { value: "enterprise", label: "Enterprise", color: "bg-orange-500/20 text-orange-300" },
+];
+
+const durationOptions = [
+  { value: "month", label: "1 Month" },
+  { value: "year", label: "1 Year" },
+  { value: "lifetime", label: "Lifetime" },
+];
+
 export default function AdminWaitlistPage() {
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +56,12 @@ export default function AdminWaitlistPage() {
   const [filter, setFilter] = useState<"all" | "invited" | "pending">("all");
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
   const [copiedEmails, setCopiedEmails] = useState(false);
+
+  // Send keys dialog state
+  const [showSendKeys, setShowSendKeys] = useState(false);
+  const [sendPlan, setSendPlan] = useState("creator");
+  const [sendDuration, setSendDuration] = useState("month");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     fetchEntries();
@@ -146,6 +168,46 @@ export default function AdminWaitlistPage() {
     toast.success("Exported waitlist to CSV");
   }
 
+  async function sendKeysToSelected() {
+    if (selectedEntries.size === 0) return;
+
+    setSending(true);
+
+    // Get emails for selected entries
+    const selectedEmails = entries
+      .filter(e => selectedEntries.has(e.id))
+      .map(e => e.email);
+
+    try {
+      const res = await fetch("/api/admin/send-waitlist-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emails: selectedEmails,
+          plan: sendPlan,
+          duration: sendDuration,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send keys");
+      } else {
+        toast.success(`Sent ${data.summary.sent} keys successfully!`);
+        if (data.summary.failed > 0) {
+          toast.error(`${data.summary.failed} failed to send`);
+        }
+        setSelectedEntries(new Set());
+        setShowSendKeys(false);
+      }
+    } catch (error) {
+      toast.error("Failed to send keys");
+    } finally {
+      setSending(false);
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const allSelected = entries.length > 0 && entries.every(e => selectedEntries.has(e.id));
 
@@ -242,6 +304,10 @@ export default function AdminWaitlistPage() {
       {selectedEntries.size > 0 && (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <span className="text-sm">{selectedEntries.size} selected</span>
+          <Button size="sm" onClick={() => setShowSendKeys(true)} className="gap-2">
+            <Key className="w-4 h-4" />
+            Send Keys
+          </Button>
           <Button size="sm" variant="outline" onClick={markAsInvited} className="gap-2">
             <CheckCircle className="w-4 h-4" />
             Mark as Invited
@@ -364,6 +430,92 @@ export default function AdminWaitlistPage() {
           </div>
         )}
       </div>
+
+      {/* Send Keys Dialog */}
+      <Dialog open={showSendKeys} onOpenChange={setShowSendKeys}>
+        <DialogContent className="glass-strong border-white/10">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Send Keys to {selectedEntries.size} {selectedEntries.size === 1 ? "Person" : "People"}
+            </DialogTitle>
+            <DialogDescription>
+              Generate and send plan keys to the selected waitlist entries via email.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Plan Selection */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Plan</label>
+              <div className="flex gap-2">
+                {planOptions.map((plan) => (
+                  <button
+                    key={plan.value}
+                    onClick={() => setSendPlan(plan.value)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      sendPlan === plan.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-white/5 hover:bg-white/10 text-muted-foreground"
+                    }`}
+                  >
+                    {plan.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Duration Selection */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Duration</label>
+              <div className="flex gap-2">
+                {durationOptions.map((dur) => (
+                  <button
+                    key={dur.value}
+                    onClick={() => setSendDuration(dur.value)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      sendDuration === dur.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-white/5 hover:bg-white/10 text-muted-foreground"
+                    }`}
+                  >
+                    {dur.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <p className="text-sm text-muted-foreground">
+                This will generate <strong className="text-white">{selectedEntries.size}</strong> unique{" "}
+                <strong className="text-white">{planOptions.find(p => p.value === sendPlan)?.label}</strong> keys with{" "}
+                <strong className="text-white">{durationOptions.find(d => d.value === sendDuration)?.label}</strong>{" "}
+                duration and email them to each selected person.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSendKeys(false)} disabled={sending}>
+              Cancel
+            </Button>
+            <Button onClick={sendKeysToSelected} disabled={sending} className="gap-2">
+              {sending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Send Keys
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
