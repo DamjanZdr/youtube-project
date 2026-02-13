@@ -108,8 +108,8 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
       {/* Watch Page Content */}
       <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
-        {/* Main Video - 55% width */}
-        <div className="flex flex-col min-w-0" style={{ flex: '0 0 55%' }}>
+        {/* Main Video - 65% width */}
+        <div className="flex flex-col min-w-0" style={{ flex: '0 0 65%' }}>
           <div 
             className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
             style={{ aspectRatio: '16/9' }}
@@ -125,12 +125,12 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
           </div>
         </div>
 
-        {/* Suggested Sidebar - 45% width */}
-        <div className="overflow-y-auto space-y-3" style={{ flex: '0 0 calc(45% - 16px)', scrollbarWidth: "none" }}>
+        {/* Suggested Sidebar - 35% width */}
+        <div className="overflow-y-auto space-y-3" style={{ flex: '0 0 calc(35% - 16px)', scrollbarWidth: "none" }}>
           {/* Shorts Section (3 shorts) */}
           <div className="mb-3">
-            <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
-            <div className="flex gap-2">
+            <h4 className="text-white text-xs font-semibold mb-2">Shorts</h4>
+            <div className="flex gap-1">
               {[0,1,2].map(i => (
                 <ShortCard
                   key={`short-${i}`}
