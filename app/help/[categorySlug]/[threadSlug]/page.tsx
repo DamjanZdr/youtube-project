@@ -56,7 +56,7 @@ import React from "react";
 const processYoutubeEmbeds = (content: string): string => {
   return content.replace(
     /\[youtube:([a-zA-Z0-9_-]+)\]/g,
-    (_, videoId) => `<div class="youtube-embed my-4"><iframe width="100%" style="aspect-ratio: 16/9; border-radius: 8px;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+    (_, videoId) => `\n\n<div class="youtube-embed my-4"><iframe width="100%" style="aspect-ratio: 16/9; border-radius: 8px;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>\n\n`
   );
 };
 
