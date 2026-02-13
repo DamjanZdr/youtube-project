@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="margin: 0; padding: 0; background-color: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0a; padding: 40px 20px;">
+            <body style="margin: 0; padding: 0; background-color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; padding: 40px 20px;">
                 <tr>
                   <td align="center">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #111111; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #222222; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
                       <!-- Header -->
                       <tr>
                         <td style="padding: 32px 32px 24px; text-align: center;">
