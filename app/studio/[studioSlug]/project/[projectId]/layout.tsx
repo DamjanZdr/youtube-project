@@ -38,6 +38,8 @@ import {
 
 interface Project {
   id: string;
+  title: string;
+  channel_id: string;
   description: string | null;
   video_type: "long" | "short";
   due_date: string | null;
@@ -157,10 +159,11 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       .from("projects")
       .insert({
         organization_id: org.id,
+        channel_id: project.channel_id,
+        title: (activeSet?.title || project.title || "Untitled") + " (Copy)",
         description: project.description,
         video_type: project.video_type,
         due_date: project.due_date,
-        notes: null,
       })
       .select()
       .single();
@@ -182,7 +185,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           .from("packaging_sets")
           .insert({
             project_id: newProject.id,
-            title: set.title + " (Copy)",
+            title: set.title,
             thumbnail_url: set.thumbnail_url,
             is_selected: set.is_selected,
           });
