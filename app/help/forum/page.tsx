@@ -186,26 +186,43 @@ export default function ForumPage() {
       
       // Fetch author profiles from public_profiles view (secure - no email)
       const authorIds = [...new Set(userThreads.map(t => t.author_id).filter(Boolean))];
-      const { data: authorData } = await supabase
-        .from("public_profiles")
-        .select("id, username, full_name, avatar_url")
-        .in("id", authorIds);
+      let authorMap = new Map();
+      if (authorIds.length > 0) {
+        const { data: authorData } = await supabase
+          .from("public_profiles")
+          .select("id, username, full_name, avatar_url")
+          .in("id", authorIds);
+        authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
+      }
       
-      const authorMap = new Map(authorData?.map(a => [a.id, a]) || []);
-      
-      // Fetch thread categories separately if needed
+      // Fetch thread categories from junction table
       const threadIds = userThreads.map(t => t.id);
-      const { data: catData } = await supabase
-        .from("help_thread_categories")
-        .select("thread_id, category_id")
-        .in("thread_id", threadIds);
+      let catData: { thread_id: string; category_id: string }[] = [];
+      if (threadIds.length > 0) {
+        const { data: catResult, error: catError } = await supabase
+          .from("help_thread_categories")
+          .select("thread_id, category_id")
+          .in("thread_id", threadIds);
+        
+        if (catError) {
+          console.error("Error loading thread categories:", catError);
+        }
+        catData = catResult || [];
+      }
       
       // Attach categories and authors to threads
-      const threadsWithData = userThreads.map(t => ({
-        ...t,
-        author: authorMap.get(t.author_id) || null,
-        thread_categories: catData?.filter(c => c.thread_id === t.id) || []
-      }));
+      const threadsWithData = userThreads.map(t => {
+        const threadCats = catData.filter(c => c.thread_id === t.id);
+        // If no junction table entries, use the primary category_id
+        const finalCats = threadCats.length > 0 
+          ? threadCats 
+          : (t.category_id ? [{ thread_id: t.id, category_id: t.category_id }] : []);
+        return {
+          ...t,
+          author: authorMap.get(t.author_id) || null,
+          thread_categories: finalCats
+        };
+      });
       
       setThreads(threadsWithData as unknown as Thread[]);
     }
