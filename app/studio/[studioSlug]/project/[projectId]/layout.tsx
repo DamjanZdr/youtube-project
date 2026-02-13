@@ -29,6 +29,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Project {
   id: string;
@@ -56,7 +62,6 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const [project, setProject] = useState<Project | null>(null);
   const [activeSet, setActiveSet] = useState<PackagingSet | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
@@ -270,34 +275,29 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             )}
 
             {/* More Menu */}
-            <div className="relative z-50">
-              <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-                <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
-              </Button>
-
-              {showMoreMenu && (
-                <div className="absolute top-full right-0 mt-1 w-48 glass-card p-2">
-                  <button 
-                    onClick={duplicateProject}
-                    disabled={duplicating}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white/5 disabled:opacity-50"
-                  >
-                    <Copy className="w-4 h-4" />
-                    {duplicating ? "Duplicating..." : "Duplicate Project"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMoreMenu(false);
-                      setShowDeleteDialog(true);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white/5 text-red-400"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Project
-                  </button>
-                </div>
-              )}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+                  <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem 
+                  onClick={duplicateProject}
+                  disabled={duplicating}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  {duplicating ? "Duplicating..." : "Duplicate Project"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -379,16 +379,6 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Click outside to close menus */}
-      {showMoreMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => {
-            setShowMoreMenu(false);
-          }}
-        />
-      )}
     </div>
   );
 }
