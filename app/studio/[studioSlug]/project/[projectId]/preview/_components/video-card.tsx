@@ -41,7 +41,7 @@ export function VideoCard({
   if (layout === "horizontal") {
     return (
       <div className={`flex gap-2 ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
-        <div className="w-[40%] aspect-video rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative">
+        <div className="w-[50%] aspect-video rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative">
           {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
           <span className={`absolute bottom-1 right-1 ${s.duration} bg-black/80 px-1 rounded`}>12:34</span>
         </div>
