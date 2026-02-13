@@ -40,19 +40,14 @@ export function VideoCard({
 
   if (layout === "horizontal") {
     return (
-      <div className={`flex ${s.gap} ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
-        <div className={`${s.thumb} aspect-video rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative`}>
+      <div className={`flex gap-2 ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
+        <div className="w-[40%] aspect-video rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative">
           {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
           <span className={`absolute bottom-1 right-1 ${s.duration} bg-black/80 px-1 rounded`}>12:34</span>
         </div>
         <div className="flex-1 min-w-0">
           <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <div className={`${s.avatar} rounded-full bg-zinc-700 shrink-0 overflow-hidden`}>
-              {channelAvatar && <img src={channelAvatar} className="w-full h-full object-cover" alt="" />}
-            </div>
-            <p className={`${s.meta} text-zinc-400`}>{channelName}</p>
-          </div>
+          <p className={`${s.meta} text-zinc-400 mt-1`}>{channelName}</p>
           <p className={`${s.meta} text-zinc-400`}>{viewInfo}</p>
         </div>
       </div>
