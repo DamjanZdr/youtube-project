@@ -26,9 +26,12 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col relative">
       {/* Background gradient - scrolls with content */}
-      <div className="absolute top-0 left-0 w-full min-h-screen overflow-hidden pointer-events-none z-0">
+      <div className="absolute top-0 left-0 w-full min-h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+        {/* Lower section subtle blobs */}
+        <div className="absolute top-[60%] right-[15%] w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-[75%] left-[10%] w-64 h-64 bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
       {/* Navigation - Top on all devices */}
