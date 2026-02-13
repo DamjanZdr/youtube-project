@@ -127,19 +127,18 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
 
         {/* Suggested Sidebar - 30% width */}
         <div className="overflow-y-auto space-y-3" style={{ flex: '0 0 calc(30% - 16px)', scrollbarWidth: "none" }}>
-          {/* Shorts Section (3 shorts) - constrained height */}
-          <div className="mb-3 shrink-0">
+          {/* Shorts Section (3 shorts) */}
+          <div className="mb-3">
             <h4 className="text-white text-xs font-semibold mb-2">Shorts</h4>
-            <div className="flex gap-1 overflow-hidden" style={{ height: '160px' }}>
+            <div className="flex gap-2">
               {[0,1,2].map(i => (
-                <div key={`short-${i}`} className="w-[70px] shrink-0">
-                  <ShortCard
-                    isYours={isShort && i === 1}
-                    set={set}
-                    compareVideo={getShortVideo(i)}
-                    size="sm"
-                  />
-                </div>
+                <ShortCard
+                  key={`short-${i}`}
+                  isYours={isShort && i === 1}
+                  set={set}
+                  compareVideo={getShortVideo(i)}
+                  size="sm"
+                />
               ))}
             </div>
           </div>
