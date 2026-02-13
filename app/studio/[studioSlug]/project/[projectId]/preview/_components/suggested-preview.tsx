@@ -107,9 +107,9 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
       </div>
 
       {/* Watch Page Content */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0 justify-center">
-        {/* Main Video - constrained max width for large screens */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[900px]">
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
+        {/* Main Video - 55% width */}
+        <div className="flex flex-col min-w-0" style={{ flex: '0 0 55%' }}>
           <div 
             className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
             style={{ aspectRatio: '16/9' }}
@@ -125,8 +125,8 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
           </div>
         </div>
 
-        {/* Suggested Sidebar */}
-        <div className="w-[400px] shrink-0 overflow-y-auto space-y-3" style={{ scrollbarWidth: "none" }}>
+        {/* Suggested Sidebar - 45% width */}
+        <div className="overflow-y-auto space-y-3" style={{ flex: '0 0 calc(45% - 16px)', scrollbarWidth: "none" }}>
           {/* Shorts Section (3 shorts) */}
           <div className="mb-3">
             <h4 className="text-white text-sm font-semibold mb-2">Shorts</h4>
