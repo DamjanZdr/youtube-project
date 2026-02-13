@@ -31,8 +31,8 @@ export default async function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Navigation - Bottom on mobile, top on desktop */}
-      <nav className="fixed bottom-0 md:top-0 md:bottom-auto left-0 right-0 z-50 glass-strong border-t md:border-t-0 md:border-b border-white/5">
+      {/* Navigation - Top on all devices */}
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center h-14 md:h-16 px-1 md:px-2">
             <img
@@ -69,7 +69,7 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 pt-6 md:pt-32 pb-20 md:pb-20 relative z-10">
+      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 pt-20 md:pt-32 pb-20 md:pb-20 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full glass mb-6 md:mb-8">
@@ -114,8 +114,8 @@ export default async function Home() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
             {/* Feature Card 1 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <Image className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Thumbnail & Title Testing</h3>
@@ -125,8 +125,8 @@ export default async function Home() {
             </div>
             
             {/* Feature Card 2 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <PenTool className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Storyboard Script Writing</h3>
@@ -136,8 +136,8 @@ export default async function Home() {
             </div>
             
             {/* Feature Card 3 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <Palette className="w-5 h-5 md:w-6 md:h-6 text-orange-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Channel Branding</h3>
@@ -149,8 +149,8 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {/* Feature Card 4 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <FolderKanban className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Project Management</h3>
@@ -160,8 +160,8 @@ export default async function Home() {
             </div>
             
             {/* Feature Card 5 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-pink-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-pink-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <FileText className="w-5 h-5 md:w-6 md:h-6 text-pink-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Wiki & Documentation</h3>
@@ -171,8 +171,8 @@ export default async function Home() {
             </div>
             
             {/* Feature Card 6 */}
-            <div className="glass-card p-4 md:p-6 hover-lift">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-3 md:mb-4">
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <Users className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
               </div>
               <h3 className="text-base md:text-lg font-semibold mb-2">Team Collaboration</h3>
