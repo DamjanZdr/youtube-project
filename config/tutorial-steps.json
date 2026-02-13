@@ -46,13 +46,13 @@
     {
       "id": 5,
       "title": "Create Project Dialog",
-      "content": "The project creation dialogue isn't mandatory to fill out. If you don't have a name for the project yet, and just want to brainstorm, you can leave the title empty. Just select whether you are thinking of a long form video or a short video and create the project.",
+      "content": "The project creation dialog is not mandatory to fill out. If you don't have a name for the project yet, and just want to brainstorm, you can leave the title empty. Just select whether you are thinking of a long-form video or a short video and create the project.",
       "icon": "Plus"
     },
     {
       "id": 6,
       "title": "Idea Tab",
-      "content": "As you can see when creating a project, we land on the Idea tab. It's always useful to have some place to note down your brainstorming. Write down your ideas, plan your hook, what will keep the users watching after the hook, what do you want your call to action of this video to be.",
+      "content": "As you can see when creating a project, we land on the Idea tab. It's always useful to have a place to note down your brainstorming. Write down your ideas, plan your hook, think about what will keep viewers watching, and decide what your call to action will be.",
       "icon": "Lightbulb",
       "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/idea$",
       "highlights": [
@@ -62,7 +62,7 @@
     {
       "id": 7,
       "title": "Voice to Text",
-      "content": "You can also use \"Voice\" if you are not a fan of writing manually. This is a simple voice to text feature that helps people that enjoy saying their ideas out loud instead of typing them down.",
+      "content": "You can also use \"Voice\" if you are not a fan of writing manually. This is a simple voice-to-text feature that helps people who prefer speaking their ideas out loud instead of typing them.",
       "icon": "Mic",
       "highlights": [
         { "selector": "[data-tutorial='voice-button']" }
@@ -71,7 +71,7 @@
     {
       "id": 8,
       "title": "Why Idea First",
-      "content": "Something that most YouTubers do wrong, is they jump right into scriptwriting, recording and editing. But just like the idea phase is important, even more crucial is to first do the packaging, before even writing a single word for your script.",
+      "content": "Something most YouTubers do wrong is jumping right into scriptwriting, recording, and editing. But just like the idea phase is important, even more crucial is to do the packaging first, before writing a single word of your script.",
       "icon": "Lightbulb"
     },
     {
@@ -95,7 +95,7 @@
     {
       "id": 11,
       "title": "Multiple Sets",
-      "content": "You can make up to 6 different sets of titles and thumbnails. When making a video, you wanna make sure you test it as much as possible, to ensure it is something people will want to watch.",
+      "content": "You can make up to 6 different sets of titles and thumbnails. When making a video, you want to test it as much as possible to ensure it is something people will want to watch.",
       "icon": "Package",
       "highlights": [
         { "selector": "[data-tutorial='sets-section']" }
@@ -121,14 +121,14 @@
     {
       "id": 14,
       "title": "Preview Tab",
-      "content": "In the preview, you can see how your set will look like on the YouTube platform.",
+      "content": "In the preview, you can see how your set will look on the YouTube platform.",
       "icon": "Eye",
       "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/preview$"
     },
     {
       "id": 15,
       "title": "Compare Feature",
-      "content": "If you wanna compare your thumbnail to your live competition, enable the compare feature. It uses the title of the set to search and show other videos so you can see how exactly your video might look next to them.",
+      "content": "If you want to compare your thumbnail to your live competition, enable the compare feature. It uses the title of the set to search and show other videos so you can see exactly how your video might look next to them.",
       "icon": "Eye",
       "clickSelector": "[data-tutorial='compare-toggle']"
     },
@@ -168,7 +168,7 @@
     {
       "id": 20,
       "title": "Storyboard",
-      "content": "This is the storyboard. It is very user-friendly and simple, but extremely important in order to make good videos. Most people write their script, and then they go to recording and editing. This is a trap that has made many YouTuber's exhausted when making videos, and eventually led them to quit.",
+      "content": "This is the storyboard. It is very user-friendly and simple, but extremely important for making good videos. Most people write their script then go straight to recording and editing. This is a trap that has made many YouTubers exhausted and eventually led them to quit.",
       "icon": "Layout",
       "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+\\/storyboard$"
     },
@@ -273,7 +273,7 @@
     {
       "id": 33,
       "title": "Wiki Overview",
-      "content": "The Wiki is a simple concept but is crucial to ensuring not only easy access to all of your important resources, but also to maintaining your branding so that your viewers get used to your style and always recognize your videos.",
+      "content": "The Wiki is a simple concept but it is crucial to ensuring not only easy access to all of your important resources, but also to maintaining your branding so that your viewers get used to your style and always recognize your videos.",
       "icon": "BookOpen",
       "expectedPath": "^\\/studio\\/[^/]+\\/wiki"
     },
@@ -287,7 +287,7 @@
     {
       "id": 35,
       "title": "Document Editor",
-      "content": "This is the document editor. Here you want to keep stuff like the font you use on your thumbnails, text captions, links to sound effects, or background songs you want to use in your videos.",
+      "content": "This is the document editor. Here you can keep things like the font you use on your thumbnails, text captions, links to sound effects, or background songs you want to use in your videos.",
       "icon": "BookOpen",
       "expectedPath": "^\\/studio\\/[^/]+\\/wiki\\/doc\\/"
     },
@@ -396,7 +396,7 @@
     {
       "id": 48,
       "title": "Your Profile",
-      "content": "Last but not least is your profile. Click on it now. From here you can go back to the hub where you have the list of your studios, you can open your account settings, you can access the help center, enable or disable invites, and sign out.",
+      "content": "Finally, there is your profile. Click on it now. From here you can go back to the hub where you have the list of your studios, open your account settings, access the help center, enable or disable invites, and sign out.",
       "icon": "User",
       "clickSelector": "[data-tutorial='user-menu']"
     },
