@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   if (resend) {
     try {
       await resend.emails.send({
-        from: "Blueprint <noreply@useblueprint.dev>",
+        from: "Blueprint <noreply@myblueprint.studio>",
         to: email,
         subject: "You're on the Blueprint waitlist! 🎉",
         html: `
