@@ -144,7 +144,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
           </div>
 
           {/* Long Form Videos */}
-          <div className="space-y-2">
+          <div className="space-y-4">
             {[0,1,2,3,4].map(i => (
               <VideoCard
                 key={`long-${i}`}
@@ -153,7 +153,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
                 channel={channel}
                 compareVideo={getLongVideo(i)}
                 size="sm"
-                layout="horizontal"
+                layout="vertical"
               />
             ))}
           </div>
