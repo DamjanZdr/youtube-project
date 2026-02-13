@@ -921,7 +921,7 @@ export default function BoardPage() {
           {editMode && (
             <button
               onClick={addStatus}
-              className="w-56 flex flex-col items-center justify-center bg-white/[0.02] rounded-2xl border border-dashed border-white/10 hover:border-white/20 hover:bg-white/[0.04] transition-colors"
+              className="w-[180px] md:w-56 shrink-0 flex flex-col items-center justify-center bg-white/[0.02] rounded-xl md:rounded-2xl border border-dashed border-white/10 hover:border-white/20 hover:bg-white/[0.04] transition-colors min-h-[200px]"
             >
               <Plus className="w-6 h-6 text-muted-foreground mb-2" />
               <span className="text-sm text-muted-foreground">Add Status</span>

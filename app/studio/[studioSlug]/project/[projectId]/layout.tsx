@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
@@ -49,6 +49,7 @@ interface PackagingSet {
 export default function ProjectLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const pathname = usePathname();
+  const router = useRouter();
   const studioSlug = params.studioSlug as string;
   const projectId = params.projectId as string;
 
@@ -57,6 +58,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   
   // Scroll indicators state
   const tabsNavRef = useRef<HTMLElement>(null);
@@ -115,6 +118,75 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     }
     
     setLoading(false);
+  };
+
+  const deleteProject = async () => {
+    setDeleting(true);
+    const supabase = createClient();
+    await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+    
+    router.push(`/studio/${studioSlug}/projects`);
+  };
+
+  const duplicateProject = async () => {
+    setDuplicating(true);
+    setShowMoreMenu(false);
+    const supabase = createClient();
+
+    // Get the organization_id from the studio
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", studioSlug)
+      .single();
+
+    if (!org || !project) {
+      setDuplicating(false);
+      return;
+    }
+
+    // Create a new project with same data
+    const { data: newProject, error } = await supabase
+      .from("projects")
+      .insert({
+        organization_id: org.id,
+        description: project.description,
+        video_type: project.video_type,
+        due_date: project.due_date,
+        notes: null,
+      })
+      .select()
+      .single();
+
+    if (!newProject || error) {
+      setDuplicating(false);
+      return;
+    }
+
+    // Duplicate packaging sets
+    const { data: packagingSets } = await supabase
+      .from("packaging_sets")
+      .select("*")
+      .eq("project_id", projectId);
+
+    if (packagingSets && packagingSets.length > 0) {
+      for (const set of packagingSets) {
+        await supabase
+          .from("packaging_sets")
+          .insert({
+            project_id: newProject.id,
+            title: set.title + " (Copy)",
+            thumbnail_url: set.thumbnail_url,
+            is_selected: set.is_selected,
+          });
+      }
+    }
+
+    setDuplicating(false);
+    router.push(`/studio/${studioSlug}/project/${newProject.id}`);
   };
 
   const tabs = [
@@ -198,16 +270,20 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             )}
 
             {/* More Menu */}
-            <div className="relative">
+            <div className="relative z-50">
               <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10" onClick={() => setShowMoreMenu(!showMoreMenu)}>
                 <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
 
               {showMoreMenu && (
-                <div className="absolute top-full right-0 mt-1 w-48 glass-card p-2 z-50">
-                  <button className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white/5">
+                <div className="absolute top-full right-0 mt-1 w-48 glass-card p-2">
+                  <button 
+                    onClick={duplicateProject}
+                    disabled={duplicating}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-white/5 disabled:opacity-50"
+                  >
                     <Copy className="w-4 h-4" />
-                    Duplicate Project
+                    {duplicating ? "Duplicating..." : "Duplicate Project"}
                   </button>
                   <button
                     onClick={() => {
@@ -294,10 +370,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
               Cancel
             </Button>
-            <Button variant="destructive">Delete Project</Button>
+            <Button variant="destructive" onClick={deleteProject} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete Project"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
