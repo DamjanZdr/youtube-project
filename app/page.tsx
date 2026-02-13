@@ -63,11 +63,7 @@ export default async function Home() {
                   <AuthButton />
                 </Suspense>
               </>
-            ) : (
-              <Link href="/auth/login">
-                <Button variant="ghost" size="sm">Sign In</Button>
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </nav>

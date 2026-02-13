@@ -246,16 +246,7 @@ export default function NewForumThreadPage() {
                   initialAcceptInvites={acceptInvites} 
                 />
               </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/auth/login">
-                  <Button variant="ghost" size="sm" className="h-10 md:h-9">Login</Button>
-                </Link>
-                <Link href="/auth/sign-up">
-                  <Button size="sm" className="h-10 md:h-9">Register</Button>
-                </Link>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
