@@ -26,6 +26,15 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import rehypeRaw from "rehype-raw";
+
+// Process YouTube embed syntax [youtube:VIDEO_ID]
+const processYoutubeEmbeds = (content: string): string => {
+  return content.replace(
+    /\[youtube:([a-zA-Z0-9_-]+)\]/g,
+    (_, videoId) => `<div class="youtube-embed my-4"><iframe width="100%" style="aspect-ratio: 16/9; border-radius: 8px;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+  );
+};
 
 interface MarkdownEditorProps {
   value: string;
@@ -215,6 +224,7 @@ export function MarkdownEditor({
               <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-medium prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h5:text-sm prose-h5:mt-4 prose-h5:mb-2 prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-strong:text-foreground prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-primary/50 prose-blockquote:text-muted-foreground prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm, remarkBreaks]}
+                  rehypePlugins={[rehypeRaw]}
                   components={{
                     p: ({ children }) => {
                       // Check if children is empty or just whitespace
@@ -225,7 +235,7 @@ export function MarkdownEditor({
                     }
                   }}
                 >
-                  {value.replace(/\n\n+/g, '\n\n&nbsp;\n\n')}
+                  {processYoutubeEmbeds(value.replace(/\n\n+/g, '\n\n&nbsp;\n\n'))}
                 </ReactMarkdown>
               </div>
             ) : (

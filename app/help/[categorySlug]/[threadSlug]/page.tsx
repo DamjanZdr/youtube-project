@@ -52,6 +52,14 @@ import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
 import React from "react";
 
+// Process YouTube embed syntax [youtube:VIDEO_ID]
+const processYoutubeEmbeds = (content: string): string => {
+  return content.replace(
+    /\[youtube:([a-zA-Z0-9_-]+)\]/g,
+    (_, videoId) => `<div class="youtube-embed my-4"><iframe width="100%" style="aspect-ratio: 16/9; border-radius: 8px;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+  );
+};
+
 // Custom text renderer to highlight @mentions
 const renderTextWithMentions = (text: string) => {
   const parts = text.split(/(@[a-z0-9_]+)/gi);
@@ -788,7 +796,7 @@ export default function ThreadPage() {
               remarkPlugins={[remarkGfm, remarkBreaks]}
               rehypePlugins={[rehypeRaw]}
             >
-              {thread.content}
+              {processYoutubeEmbeds(thread.content)}
             </ReactMarkdown>
           </article>
           <div className="flex items-center gap-3 md:gap-4 mt-4 md:mt-6 pt-4 border-t border-white/10 text-xs md:text-sm text-muted-foreground">
@@ -964,7 +972,7 @@ export default function ThreadPage() {
                       rehypePlugins={[rehypeRaw]}
                       components={markdownComponents}
                     >
-                      {reply.content}
+                      {processYoutubeEmbeds(reply.content)}
                     </ReactMarkdown>
                   </div>
                   {/* Reply button for top-level replies */}
@@ -1125,7 +1133,7 @@ export default function ThreadPage() {
                             rehypePlugins={[rehypeRaw]}
                             components={markdownComponents}
                           >
-                            {childReply.content}
+                            {processYoutubeEmbeds(childReply.content)}
                           </ReactMarkdown>
                         </div>
                         {/* Reply button for child replies (auto @mention) */}
