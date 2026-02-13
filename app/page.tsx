@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Sparkles, Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Palette } from "lucide-react";
+import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Palette } from "lucide-react";
 import { WaitlistForm } from "@/components/waitlist-form";
 
 // Force dynamic rendering to check auth state
@@ -73,7 +73,6 @@ export default async function Home() {
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full glass mb-6 md:mb-8">
-            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
             <span className="text-xs md:text-sm text-muted-foreground">The all-in-one creator OS</span>
           </div>
           

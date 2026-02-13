@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Loader2, CheckCircle, Sparkles } from "lucide-react";
+import { Mail, Loader2, CheckCircle, Gift } from "lucide-react";
 import { toast } from "sonner";
 
 export function WaitlistForm() {
@@ -68,7 +68,7 @@ export function WaitlistForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="glass-card p-6 md:p-8">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <Gift className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium text-primary">Want a free Creator key?</span>
         </div>
         
