@@ -5,6 +5,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import {
   Rocket,
@@ -32,6 +39,7 @@ import {
   Plus,
   Eye,
   Filter,
+  ArrowUpDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -84,6 +92,7 @@ export default function ForumPage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "most-views" | "least-views" | "most-replies" | "least-replies">("newest");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
@@ -242,19 +251,40 @@ export default function ForumPage() {
     });
   };
 
-  // Filter threads
-  const filteredThreads = threads.filter((thread) => {
-    if (selectedCategoryIds.size > 0) {
-      // Check if thread has ANY of the selected categories (via junction table)
-      const threadCatIds = thread.thread_categories?.map((tc) => tc.category_id) || [thread.category_id];
-      const hasMatch = threadCatIds.some((id) => selectedCategoryIds.has(id));
-      if (!hasMatch) return false;
-    }
-    if (searchQuery.trim()) {
-      return thread.title.toLowerCase().includes(searchQuery.toLowerCase());
-    }
-    return true;
-  });
+  // Filter and sort threads
+  const filteredThreads = threads
+    .filter((thread) => {
+      if (selectedCategoryIds.size > 0) {
+        // Check if thread has ANY of the selected categories (via junction table)
+        const threadCatIds = thread.thread_categories?.map((tc) => tc.category_id) || [thread.category_id];
+        const hasMatch = threadCatIds.some((id) => selectedCategoryIds.has(id));
+        if (!hasMatch) return false;
+      }
+      if (searchQuery.trim()) {
+        return thread.title.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      // Pinned threads always come first
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+      
+      switch (sortBy) {
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "most-views":
+          return b.view_count - a.view_count;
+        case "least-views":
+          return a.view_count - b.view_count;
+        case "most-replies":
+          return b.reply_count - a.reply_count;
+        case "least-replies":
+          return a.reply_count - b.reply_count;
+        case "newest":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
   if (loading) {
     return (
@@ -406,23 +436,39 @@ export default function ForumPage() {
         <div className="flex flex-col md:flex-row gap-6 md:gap-8">
           {/* Threads List */}
           <div className="flex-1 min-w-0">
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search threads..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 bg-white/5 border-white/10"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+            {/* Search and Sort */}
+            <div className="flex gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search threads..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-10 bg-white/5 border-white/10"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-[140px] h-10 bg-white/5 border-white/10">
+                  <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="most-views">Most Views</SelectItem>
+                  <SelectItem value="least-views">Least Views</SelectItem>
+                  <SelectItem value="most-replies">Most Replies</SelectItem>
+                  <SelectItem value="least-replies">Least Replies</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Active filters */}
