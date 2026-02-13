@@ -138,7 +138,6 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
   const duplicateProject = async () => {
     setDuplicating(true);
-    setShowMoreMenu(false);
     const supabase = createClient();
 
     // Get the organization_id from the studio
