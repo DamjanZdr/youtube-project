@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Blueprint",
     description: "The all-in-one creator operating system for YouTube creators",
-    images: ["https://myblueprint.studio/twitter-image"],
+    images: ["https://myblueprint.studio/opengraph-image"],
   },
 };
 
