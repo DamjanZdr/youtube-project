@@ -87,7 +87,7 @@ export default async function Home() {
           
           {/* Subheadline */}
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-6 md:mb-8 px-2">
-            Brainstorm ideas, test thumbnails and titles, write scripts, and organize your editing notes — all in one place.
+            Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes — all in one place.
           </p>
         </div>
       </section>
