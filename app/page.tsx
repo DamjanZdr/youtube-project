@@ -111,9 +111,12 @@ export default async function Home() {
       <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
         <div className="max-w-4xl mx-auto">
           <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-            <img 
-              src="/demo.gif" 
-              alt="Blueprint in action - turning an idea into a structured video plan"
+            <video 
+              src="/demo.mp4" 
+              autoPlay
+              loop
+              muted
+              playsInline
               className="w-full"
             />
           </div>
