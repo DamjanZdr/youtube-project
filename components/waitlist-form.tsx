@@ -68,13 +68,13 @@ export function WaitlistForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="glass-card p-6 md:p-8">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Gift className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium text-primary">Want a free Creator key?</span>
+          <Gift className="w-5 h-5 text-green-400" />
+          <span className="text-sm font-medium text-green-400">100% Free for early supporters</span>
         </div>
         
-        <h3 className="text-xl md:text-2xl font-bold text-center mb-2">Join the Waitlist</h3>
+        <h3 className="text-xl md:text-2xl font-bold text-center mb-2">Get Early Access Free</h3>
         <p className="text-sm text-muted-foreground text-center mb-6">
-          Get early access and a free month of Creator plan when we launch.
+          Sign up now and get 1 month of Creator plan completely free when we launch.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,10 +93,10 @@ export function WaitlistForm() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Joining...
+                Signing up...
               </>
             ) : (
-              "Join Waitlist"
+              "Claim Free Access"
             )}
           </Button>
         </form>
