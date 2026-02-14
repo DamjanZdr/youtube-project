@@ -13,16 +13,16 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://myblueprint.studio"),
-  title: "Blueprint - Stop Starting Videos Without a Plan",
-  description: "Turn your video ideas into a clear structure before you hit record.",
+  title: "Blueprint - Stop Creating Videos Without a Plan",
+  description: "Brainstorm ideas, test thumbnails and titles, write scripts, and organize your editing notes — all in one place.",
   icons: [
     { rel: "icon", url: "/bpicon.png", type: "image/png" },
     { rel: "icon", url: "/bplogo.ico", sizes: "any" },
     { rel: "apple-touch-icon", url: "/bpicon.png" },
   ],
   openGraph: {
-    title: "Blueprint - Stop Starting Videos Without a Plan",
-    description: "Turn your video ideas into a clear structure before you hit record.",
+    title: "Blueprint - Stop Creating Videos Without a Plan",
+    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and organize your editing notes — all in one place.",
     url: "https://myblueprint.studio",
     siteName: "Blueprint",
     locale: "en_US",
@@ -32,14 +32,14 @@ export const metadata: Metadata = {
         url: "https://myblueprint.studio/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Blueprint - Stop Starting Videos Without a Plan",
+        alt: "Blueprint - The only tool a YouTuber will ever need",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blueprint - Stop Starting Videos Without a Plan",
-    description: "Turn your video ideas into a clear structure before you hit record.",
+    title: "Blueprint - Stop Creating Videos Without a Plan",
+    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and organize your editing notes — all in one place.",
     images: ["https://myblueprint.studio/opengraph-image"],
   },
 };

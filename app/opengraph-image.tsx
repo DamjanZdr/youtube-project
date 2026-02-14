@@ -51,7 +51,7 @@ export default async function Image() {
               marginBottom: 8,
             }}
           >
-            Stop Starting Videos
+            Stop Creating Videos
           </div>
           <div
             style={{
@@ -72,7 +72,7 @@ export default async function Image() {
             color: '#9CA3AF',
           }}
         >
-          Turn your ideas into a clear structure
+          The only tool a YouTuber will ever need
         </div>
 
         {/* URL */}

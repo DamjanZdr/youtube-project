@@ -76,18 +76,18 @@ export default async function Home() {
         <div className="max-w-4xl mx-auto text-center">
           {/* Trust line */}
           <p className="text-xs md:text-sm text-muted-foreground mb-6 md:mb-8">
-            Built for YouTubers who hate messy notes
+            The only tool a YouTuber will ever need
           </p>
           
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 md:mb-6">
-            Stop Starting Videos<br />
+            Stop Creating Videos<br />
             <span className="text-gradient">Without a Plan</span>
           </h1>
           
           {/* Subheadline */}
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-6 md:mb-8 px-2">
-            Turn your ideas into a clear structure before you hit record.
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-6 md:mb-8 px-2">
+            Brainstorm ideas, test thumbnails and titles, write scripts, and organize your editing notes — all in one place.
           </p>
         </div>
       </section>
