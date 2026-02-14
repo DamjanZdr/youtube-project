@@ -27,11 +27,20 @@ export const metadata: Metadata = {
     siteName: "Blueprint",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "https://myblueprint.studio/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Blueprint - The all-in-one creator OS",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Blueprint",
     description: "The all-in-one creator operating system for YouTube creators",
+    images: ["https://myblueprint.studio/twitter-image"],
   },
 };
 
