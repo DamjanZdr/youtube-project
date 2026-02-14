@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Lightbulb } from "lucide-react";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { WaitlistModal } from "@/components/waitlist-modal";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -66,7 +67,9 @@ export default async function Home() {
                   <AuthButton />
                 </Suspense>
               </>
-            ) : null}
+            ) : (
+              <WaitlistModal />
+            )}
           </div>
         </div>
       </nav>
@@ -103,7 +106,8 @@ export default async function Home() {
               muted
               playsInline
               disablePictureInPicture
-              className="w-full"
+              controlsList="nodownload noplaybackrate"
+              className="w-full pointer-events-none"
             />
           </div>
         </div>
