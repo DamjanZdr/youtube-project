@@ -14,7 +14,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL("https://myblueprint.studio"),
   title: "Blueprint - Stop Creating Videos Without a Plan",
-  description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes — all in one place.",
+  description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes. Blueprint - a step by step YouTuber Workflow.",
   icons: [
     { rel: "icon", url: "/bpicon.png", type: "image/png" },
     { rel: "icon", url: "/bplogo.ico", sizes: "any" },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Blueprint - Stop Creating Videos Without a Plan",
-    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes — all in one place.",
+    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes. Blueprint - a step by step YouTuber Workflow.",
     url: "https://myblueprint.studio",
     siteName: "Blueprint",
     locale: "en_US",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Blueprint - Stop Creating Videos Without a Plan",
-    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes — all in one place.",
+    description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes. Blueprint - a step by step YouTuber Workflow.",
     images: ["https://myblueprint.studio/opengraph-image"],
   },
 };
