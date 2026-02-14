@@ -25,14 +25,6 @@ export const metadata: Metadata = {
     description: "The all-in-one creator operating system for YouTube creators",
     url: "https://myblueprint.studio",
     siteName: "Blueprint",
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Blueprint - Creator OS",
-      },
-    ],
     locale: "en_US",
     type: "website",
   },
@@ -40,7 +32,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Blueprint",
     description: "The all-in-one creator operating system for YouTube creators",
-    images: ["/opengraph-image.png"],
   },
 };
 
