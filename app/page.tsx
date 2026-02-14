@@ -72,23 +72,22 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 pt-20 md:pt-32 pb-20 md:pb-20 relative z-10">
+      <section className="flex flex-col items-center px-4 md:px-6 pt-20 md:pt-28 pb-8 md:pb-12 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full glass mb-6 md:mb-8">
-            <span className="text-xs md:text-sm text-muted-foreground">The all-in-one creator OS</span>
-          </div>
+          {/* Trust line */}
+          <p className="text-xs md:text-sm text-muted-foreground mb-6 md:mb-8">
+            Built for YouTubers who hate messy notes
+          </p>
           
           {/* Headline */}
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-4 md:mb-6">
-            Plan, Script, and<br />
-            <span className="text-gradient">Ship Videos Faster</span>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 md:mb-6">
+            Turn Your Video Ideas<br />
+            <span className="text-gradient">Into a Clear Plan</span>
           </h1>
           
           {/* Subheadline */}
-          <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 md:mb-10 px-2">
-            The operating system for YouTube creators. Manage projects with Kanban boards, 
-            write scripts with storyboards, and preview how your videos will look before publishing.
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 md:mb-10 px-2">
+            Stop starting videos without direction. Plan everything before you hit record.
           </p>
           
           {/* CTA */}
@@ -104,6 +103,19 @@ export default async function Home() {
             ) : (
               <WaitlistForm />
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* Product Demo */}
+      <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+            <img 
+              src="/demo.gif" 
+              alt="Blueprint in action - turning an idea into a structured video plan"
+              className="w-full"
+            />
           </div>
         </div>
       </section>

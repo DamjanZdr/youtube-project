@@ -51,7 +51,7 @@ export default async function Image() {
               marginBottom: 8,
             }}
           >
-            Plan, Script, and
+            Turn Your Video Ideas
           </div>
           <div
             style={{
@@ -60,7 +60,7 @@ export default async function Image() {
               color: 'white',
             }}
           >
-            Ship Videos Faster
+            Into a Clear Plan
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default async function Image() {
             color: '#9CA3AF',
           }}
         >
-          The all-in-one creator operating system for YouTube
+          Stop starting videos without direction
         </div>
 
         {/* URL */}

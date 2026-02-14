@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Loader2, CheckCircle, Gift } from "lucide-react";
+import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export function WaitlistForm() {
@@ -65,48 +65,33 @@ export function WaitlistForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="glass-card p-6 md:p-8">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Gift className="w-5 h-5 text-green-400" />
-          <span className="text-sm font-medium text-green-400">100% Free for early supporters</span>
+    <div className="w-full max-w-lg mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="pl-10 h-12 bg-white/5 border-white/10"
+            disabled={loading}
+          />
         </div>
-        
-        <h3 className="text-xl md:text-2xl font-bold text-center mb-2">Get Early Access Free</h3>
-        <p className="text-sm text-muted-foreground text-center mb-6">
-          Sign up now and get 1 month of Creator plan completely free when we launch.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12 bg-white/5"
-              disabled={loading}
-            />
-          </div>
-          <Button type="submit" className="w-full h-12 glow-primary" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Signing up...
-              </>
-            ) : (
-              "Claim Free Access"
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-6 pt-4 border-t border-white/10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Launching <span className="text-primary font-semibold">February 20, 2026</span>
-          </p>
-        </div>
-      </div>
+        <Button type="submit" className="h-12 px-6 glow-primary whitespace-nowrap" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Signing up...
+            </>
+          ) : (
+            "Get Early Access"
+          )}
+        </Button>
+      </form>
+      <p className="text-xs text-muted-foreground text-center mt-4">
+        Free for early supporters • Launching February 20
+      </p>
     </div>
   );
 }
