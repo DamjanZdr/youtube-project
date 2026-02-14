@@ -72,7 +72,7 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center px-4 md:px-6 pt-20 md:pt-28 pb-8 md:pb-12 relative z-10">
+      <section className="flex flex-col items-center px-4 md:px-6 pt-20 md:pt-28 pb-6 md:pb-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Trust line */}
           <p className="text-xs md:text-sm text-muted-foreground mb-6 md:mb-8">
@@ -81,16 +81,37 @@ export default async function Home() {
           
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 md:mb-6">
-            Turn Your Video Ideas<br />
-            <span className="text-gradient">Into a Clear Plan</span>
+            Stop Starting Videos<br />
+            <span className="text-gradient">Without a Plan</span>
           </h1>
           
           {/* Subheadline */}
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 md:mb-10 px-2">
-            Stop starting videos without direction. Plan everything before you hit record.
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-6 md:mb-8 px-2">
+            Turn your ideas into a clear structure before you hit record.
           </p>
-          
-          {/* CTA */}
+        </div>
+      </section>
+
+      {/* Product Demo */}
+      <section className="px-4 md:px-6 pb-8 md:pb-10 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+            <video 
+              src="/demo.mp4" 
+              autoPlay
+              loop
+              muted
+              playsInline
+              disablePictureInPicture
+              className="w-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
+        <div className="max-w-4xl mx-auto">
           <div className="w-full px-4 sm:px-0">
             {user ? (
               <div className="flex justify-center">
@@ -103,22 +124,6 @@ export default async function Home() {
             ) : (
               <WaitlistForm />
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* Product Demo */}
-      <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-            <video 
-              src="/demo.mp4" 
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full"
-            />
           </div>
         </div>
       </section>

@@ -51,7 +51,7 @@ export default async function Image() {
               marginBottom: 8,
             }}
           >
-            Turn Your Video Ideas
+            Stop Starting Videos
           </div>
           <div
             style={{
@@ -60,7 +60,7 @@ export default async function Image() {
               color: 'white',
             }}
           >
-            Into a Clear Plan
+            Without a Plan
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default async function Image() {
             color: '#9CA3AF',
           }}
         >
-          Stop starting videos without direction
+          Turn your ideas into a clear structure
         </div>
 
         {/* URL */}

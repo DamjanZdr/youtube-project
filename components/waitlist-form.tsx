@@ -85,12 +85,12 @@ export function WaitlistForm() {
               Signing up...
             </>
           ) : (
-            "Get Early Access"
+            "Claim Early Access"
           )}
         </Button>
       </form>
       <p className="text-xs text-muted-foreground text-center mt-4">
-        Free for early supporters • Launching February 20
+        Limited spots • Free for early supporters
       </p>
     </div>
   );
