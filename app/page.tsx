@@ -96,7 +96,7 @@ export default async function Home() {
       </section>
 
       {/* Product Demo */}
-      <section className="px-4 md:px-6 pb-8 md:pb-10 relative z-10">
+      <section className="px-4 md:px-6 pb-12 md:pb-16 relative z-10">
         <div className="max-w-4xl mx-auto">
           <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
             <video 
@@ -114,7 +114,7 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
+      <section className="px-4 md:px-6 relative z-10">
         <div className="max-w-2xl mx-auto">
           {user ? (
             <div className="flex justify-center">
@@ -133,7 +133,7 @@ export default async function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 md:py-20 px-4 md:px-6 relative z-10">
+      <section className="pt-12 md:pt-16 pb-12 md:pb-20 px-4 md:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">
             Everything you need to create
