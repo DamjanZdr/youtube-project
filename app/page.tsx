@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Palette } from "lucide-react";
+import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Lightbulb } from "lucide-react";
 import { WaitlistForm } from "@/components/waitlist-form";
 
 // Force dynamic rendering to check auth state
@@ -133,6 +133,17 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
             {/* Feature Card 1 */}
             <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
+                <Lightbulb className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
+              </div>
+              <h3 className="text-base md:text-lg font-semibold mb-2">Brainstorming Ideas</h3>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Capture and organize your video ideas. Never lose a good concept again.
+              </p>
+            </div>
+            
+            {/* Feature Card 2 */}
+            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <Image className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
               </div>
@@ -142,7 +153,7 @@ export default async function Home() {
               </p>
             </div>
             
-            {/* Feature Card 2 */}
+            {/* Feature Card 3 */}
             <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
                 <PenTool className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
@@ -150,17 +161,6 @@ export default async function Home() {
               <h3 className="text-base md:text-lg font-semibold mb-2">Storyboard Script Writing</h3>
               <p className="text-sm md:text-base text-muted-foreground">
                 Write your script and plan visuals side-by-side. Know exactly what to film.
-              </p>
-            </div>
-            
-            {/* Feature Card 3 */}
-            <div className="glass-card p-4 md:p-6 hover-lift text-center md:text-left">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-3 md:mb-4 mx-auto md:mx-0">
-                <Palette className="w-5 h-5 md:w-6 md:h-6 text-orange-400" />
-              </div>
-              <h3 className="text-base md:text-lg font-semibold mb-2">Channel Branding</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Test different banners, profile pictures, and channel names to perfect your channel's look.
               </p>
             </div>
           </div>
