@@ -111,20 +111,20 @@ export default async function Home() {
 
       {/* CTA Section */}
       <section className="px-4 md:px-6 pb-12 md:pb-20 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="w-full px-4 sm:px-0">
-            {user ? (
-              <div className="flex justify-center">
-                <Link href="/hub">
-                  <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8">
-                    Go to Hub
-                  </Button>
-                </Link>
-              </div>
-            ) : (
+        <div className="max-w-2xl mx-auto">
+          {user ? (
+            <div className="flex justify-center">
+              <Link href="/hub">
+                <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8">
+                  Go to Hub
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="glass-card p-6 md:p-8">
               <WaitlistForm />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
