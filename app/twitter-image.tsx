@@ -23,41 +23,16 @@ export default async function Image() {
           backgroundColor: '#0a0a0b',
         }}
       >
-        {/* Logo text */}
-        <div
+        {/* Logo */}
+        <img
+          src="https://myblueprint.studio/bplogo.png"
+          alt="Blueprint"
+          width={280}
+          height={70}
           style={{
-            display: 'flex',
-            alignItems: 'center',
             marginBottom: 40,
           }}
-        >
-          <div
-            style={{
-              width: 60,
-              height: 60,
-              backgroundColor: '#2563EB',
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 16,
-              fontSize: 32,
-              fontWeight: 'bold',
-              color: 'white',
-            }}
-          >
-            B
-          </div>
-          <div
-            style={{
-              fontSize: 48,
-              fontWeight: 'bold',
-              color: '#3B82F6',
-            }}
-          >
-            Blueprint
-          </div>
-        </div>
+        />
 
         {/* Headline */}
         <div
@@ -81,7 +56,7 @@ export default async function Image() {
             style={{
               fontSize: 64,
               fontWeight: 'bold',
-              color: '#3B82F6',
+              color: 'white',
             }}
           >
             Ship Videos Faster
