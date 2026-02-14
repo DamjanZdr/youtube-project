@@ -12,7 +12,7 @@ const defaultUrl = process.env.VERCEL_URL
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase: new URL("https://myblueprint.studio"),
   title: "Blueprint",
   description: "The all-in-one creator operating system for YouTube creators",
   icons: [
@@ -20,6 +20,28 @@ export const metadata: Metadata = {
     { rel: "icon", url: "/bplogo.ico", sizes: "any" },
     { rel: "apple-touch-icon", url: "/bpicon.png" },
   ],
+  openGraph: {
+    title: "Blueprint",
+    description: "The all-in-one creator operating system for YouTube creators",
+    url: "https://myblueprint.studio",
+    siteName: "Blueprint",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Blueprint - Creator OS",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blueprint",
+    description: "The all-in-one creator operating system for YouTube creators",
+    images: ["/opengraph-image.png"],
+  },
 };
 
 const inter = Inter({
