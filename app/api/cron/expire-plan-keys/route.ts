@@ -127,29 +127,29 @@ export async function GET(req: NextRequest) {
                       <meta charset="utf-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     </head>
-                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
-                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Your Gift Has Expired</h1>
+                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #18181b;">Your Gift Has Expired</h1>
                                   </div>
                                   
-                                  <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
-                                    Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired.
+                                  <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                                    Your gifted plan for <strong style="color: #18181b;">${org.name}</strong> has expired.
                                   </p>
                                   
-                                  <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                                    <p style="color: #a1a1aa; font-size: 13px; margin: 0 0 12px 0;">
+                                  <div style="background-color: #e4e4e7; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                                    <p style="color: #52525b; font-size: 13px; margin: 0 0 12px 0;">
                                       You previously scheduled to continue with:
                                     </p>
-                                    <p style="color: #fff; font-size: 22px; font-weight: bold; margin: 0;">
+                                    <p style="color: #18181b; font-size: 22px; font-weight: bold; margin: 0;">
                                       ${planName} ${intervalText}
                                     </p>
-                                    <p style="color: #a1a1aa; font-size: 15px; margin: 8px 0 0 0;">
+                                    <p style="color: #52525b; font-size: 15px; margin: 8px 0 0 0;">
                                       $${price}/${interval === "year" ? "year" : "month"}
                                     </p>
                                   </div>
@@ -164,8 +164,8 @@ export async function GET(req: NextRequest) {
                                     </a>
                                   </div>
                                   
-                                  <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
-                                    <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                  <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
+                                    <p style="color: #71717a; font-size: 12px; margin: 0;">
                                       © Blueprint Studio
                                     </p>
                                   </div>
@@ -256,19 +256,19 @@ export async function GET(req: NextRequest) {
                       <meta charset="utf-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     </head>
-                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
-                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Welcome Back! 👋</h1>
+                                    <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #18181b;">Welcome Back! 👋</h1>
                                   </div>
                                   
-                                  <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-                                    Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired, and your previous <strong style="color: #fff;">${planConfig?.name || sub.previous_plan}</strong> subscription has automatically resumed.
+                                  <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    Your gifted plan for <strong style="color: #18181b;">${org.name}</strong> has expired, and your previous <strong style="color: #18181b;">${planConfig?.name || sub.previous_plan}</strong> subscription has automatically resumed.
                                   </p>
                                   
                                   <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
@@ -281,8 +281,8 @@ export async function GET(req: NextRequest) {
                                     </a>
                                   </div>
                                   
-                                  <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
-                                    <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                  <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
+                                    <p style="color: #71717a; font-size: 12px; margin: 0;">
                                       © Blueprint Studio
                                     </p>
                                   </div>
@@ -341,19 +341,19 @@ export async function GET(req: NextRequest) {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                   </head>
-                  <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+                  <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                       <tr>
                         <td align="center" style="padding: 40px 20px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
                             <tr>
                               <td style="padding: 40px 32px;">
                                 <div style="text-align: center; margin-bottom: 32px;">
-                                  <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff;">Your Gift Has Expired</h1>
+                                  <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #18181b;">Your Gift Has Expired</h1>
                                 </div>
                                 
-                                <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-                                  Your gifted plan for <strong style="color: #fff;">${org.name}</strong> has expired. You've been moved to the Free tier.
+                                <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                                  Your gifted plan for <strong style="color: #18181b;">${org.name}</strong> has expired. You've been moved to the Free tier.
                                 </p>
                                 
                                 <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
@@ -366,8 +366,8 @@ export async function GET(req: NextRequest) {
                                   </a>
                                 </div>
                                 
-                                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
-                                  <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                                <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
+                                  <p style="color: #71717a; font-size: 12px; margin: 0;">
                                     © Blueprint Studio
                                   </p>
                                 </div>

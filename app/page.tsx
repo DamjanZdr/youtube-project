@@ -125,8 +125,8 @@ export default async function Home() {
               muted
               playsInline
               disablePictureInPicture
-              controlsList="nodownload noplaybackrate"
-              className="w-full pointer-events-none"
+              controlsList="nodownload noplaybackrate nofullscreen"
+              className="w-full no-controls"
             />
           </div>
         </div>

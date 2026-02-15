@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="margin: 0; padding: 0; background-color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; padding: 40px 20px;">
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
                 <tr>
                   <td align="center">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #222222; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
                       <!-- Header -->
                       <tr>
                         <td style="padding: 32px 32px 24px; text-align: center;">
@@ -76,19 +76,19 @@ export async function POST(req: NextRequest) {
                       <!-- Content -->
                       <tr>
                         <td style="padding: 0 32px 32px;">
-                          <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0 0 16px; text-align: center;">
+                          <h1 style="color: #18181b; font-size: 24px; font-weight: 700; margin: 0 0 16px; text-align: center;">
                             You're on the list! 🎉
                           </h1>
                           
-                          <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
-                            Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #ffffff;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
+                          <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
+                            Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #18181b;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
                           </p>
 
-                          <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                            <p style="color: #60a5fa; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
+                          <div style="background-color: #e4e4e7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                            <p style="color: #6366f1; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
                               📣 Follow Our Progress
                             </p>
-                            <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                            <p style="color: #52525b; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
                               While you wait, join our Discord community to follow development updates, share feedback, and connect with other creators!
                             </p>
                           </div>
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
                           <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                               <td align="center">
-                                <a href="${discordInvite}" style="display: inline-block; background-color: #5865F2; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
+                                <a href="${discordInvite}" style="display: inline-block; background-color: #5865F2; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 10px;">
                                   Join Discord Community
                                 </a>
                               </td>
@@ -107,9 +107,9 @@ export async function POST(req: NextRequest) {
 
                       <!-- Footer -->
                       <tr>
-                        <td style="padding: 24px 32px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <td style="padding: 24px 32px; border-top: 1px solid #d4d4d8; text-align: center;">
                           <p style="color: #71717a; font-size: 12px; margin: 0;">
-                            Blueprint - The operating system for YouTube creators
+                            Blueprint — The operating system for YouTube creators
                           </p>
                         </td>
                       </tr>

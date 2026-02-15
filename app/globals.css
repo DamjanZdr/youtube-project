@@ -434,3 +434,29 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Hide all video controls including screenshot/PiP buttons */
+video.no-controls {
+  pointer-events: none;
+}
+video.no-controls::-webkit-media-controls {
+  display: none !important;
+}
+video.no-controls::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+video.no-controls::-webkit-media-controls-panel {
+  display: none !important;
+}
+video.no-controls::-webkit-media-controls-overlay-enclosure {
+  display: none !important;
+}
+video.no-controls::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+video.no-controls::-webkit-media-controls-picture-in-picture-button {
+  display: none !important;
+}
+video.no-controls::-moz-media-controls {
+  display: none !important;
+}
