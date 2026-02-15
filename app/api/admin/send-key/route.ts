@@ -98,7 +98,73 @@ export async function POST(req: NextRequest) {
         from: "Blueprint <noreply@myblueprint.studio>",
         to: email,
         subject: `Your ${planText} Plan Key is Ready! 🎉`,
-        html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px;font-family:sans-serif;background:#f5f5f5;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table width="480" cellpadding="32" cellspacing="0" style="background:#18181b;border-radius:12px;"><tr><td align="center"><h1 style="color:#fff;margin:0 0 8px;">🎉 Your Plan Key</h1><p style="color:#a1a1aa;margin:0 0 24px;">You've received a <strong style="color:#fff;">${planText}</strong> plan key!</p><div style="background:#2d2d33;padding:20px;border-radius:8px;margin-bottom:24px;"><p style="color:#a1a1aa;font-size:11px;margin:0 0 8px;text-transform:uppercase;letter-spacing:2px;">Your Key</p><p style="font-family:monospace;font-size:20px;color:#fff;margin:0;letter-spacing:2px;">${key}</p></div><p style="color:#71717a;font-size:14px;margin:0 0 4px;"><strong style="color:#d4d4d8;">Plan:</strong> ${planText}</p><p style="color:#71717a;font-size:14px;margin:0 0 24px;"><strong style="color:#d4d4d8;">Duration:</strong> ${durationText}</p><a href="${redeemUrl}" style="display:inline-block;background:#6366f1;color:#fff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;">Redeem Key</a><p style="color:#52525b;font-size:13px;margin:24px 0 0;">Or enter manually in Studio Settings → Billing</p></td></tr></table></td></tr></table></body></html>`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding: 40px 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
+                      <tr>
+                        <td style="padding: 40px 32px;">
+                          <div style="text-align: center; margin-bottom: 32px;">
+                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #1a1a1a;">🎉 Your Plan Key</h1>
+                            <p style="color: #52525b; margin: 0; font-size: 15px;">
+                              ${orgName 
+                                ? `A <strong style="color: #1a1a1a;">${planText}</strong> plan key for <strong style="color: #1a1a1a;">${orgName}</strong>`
+                                : `You've received a <strong style="color: #1a1a1a;">${planText}</strong> plan key!`
+                              }
+                            </p>
+                          </div>
+
+                          <div style="background-color: #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                            <p style="color: #71717a; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                            <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #18181b; margin: 0; font-weight: 700;">
+                              ${key}
+                            </p>
+                          </div>
+
+                          <div style="background-color: #e4e4e7; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
+                              </tr>
+                              <tr>
+                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Duration:</strong> ${durationText}</td>
+                              </tr>
+                              ${orgName ? `<tr><td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">For:</strong> ${orgName}</td></tr>` : ''}
+                            </table>
+                          </div>
+                          
+                          <div style="text-align: center; margin-bottom: 28px;">
+                            <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 8px rgba(99,102,241,0.3);">
+                              Redeem Your Key →
+                            </a>
+                          </div>
+                          
+                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                            Or go to your Studio Settings → Billing and enter the key manually.
+                          </p>
+
+                          <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
+                            <p style="color: #71717a; font-size: 12px; margin: 0;">
+                              © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
+        `,
       });
       emailSent = true;
     } catch (emailError) {
