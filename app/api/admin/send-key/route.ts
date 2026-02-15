@@ -147,15 +147,9 @@ export async function POST(req: NextRequest) {
                             </a>
                           </div>
 
-                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0; line-height: 1.5;">
                             Or go to your Studio Settings → Billing and enter the key manually.
                           </p>
-
-                          <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
-                            <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                              © Blueprint Studio
-                            </p>
-                          </div>
                         </td>
                       </tr>
                     </table>
