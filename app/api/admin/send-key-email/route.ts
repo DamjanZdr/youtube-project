@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
                       <td style="padding: 40px 32px;">
                         <div style="text-align: center; margin-bottom: 32px;">
                           <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🎁 Your Plan Key</h1>
-                          <p style="color: #52525b; margin: 0; font-size: 15px;">You've received a subscription key</p>
+                          <p style="color: #52525b; margin: 0; font-size: 15px;">You've received a <strong>${planText}</strong> key (${durationText})</p>
                         </div>
 
                         <div style="background-color: #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
@@ -117,43 +117,18 @@ export async function POST(req: NextRequest) {
                           </p>
                         </div>
 
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
-                          <tr>
-                            <td width="48%" style="background-color: #e4e4e7; border-radius: 10px; padding: 16px; text-align: center;">
-                              <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Plan</p>
-                              <p style="font-size: 16px; font-weight: 600; margin: 0; color: #6366f1;">${planText}</p>
-                            </td>
-                            <td width="4%"></td>
-                            <td width="48%" style="background-color: #e4e4e7; border-radius: 10px; padding: 16px; text-align: center;">
-                              <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Duration</p>
-                              <p style="font-size: 16px; font-weight: 600; margin: 0; color: #18181b;">${durationText}</p>
-                            </td>
-                          </tr>
-                        </table>
-
-                        <div style="text-align: center; margin-bottom: 28px;">
-                          <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 8px rgba(99,102,241,0.3);">
+                        <div style="text-align: center; margin-bottom: 24px;">
+                          <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
                             Redeem Your Key →
                           </a>
                         </div>
-
-                        <div style="background-color: #e4e4e7; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;">
-                          <p style="color: #52525b; font-size: 12px; margin: 0 0 10px 0; font-weight: 600;">How to redeem:</p>
-                          <table role="presentation" cellspacing="0" cellpadding="0">
-                            <tr>
-                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">1. Click the button above or go to your studio settings</td>
-                            </tr>
-                            <tr>
-                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">2. Navigate to the Billing tab</td>
-                            </tr>
-                            <tr>
-                              <td style="color: #52525b; font-size: 13px; padding: 3px 0;">3. Enter your key in the "Have a plan key?" section</td>
-                            </tr>
-                          </table>
-                        </div>
+                        
+                        <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0;">
+                          Or go to Studio Settings → Billing and enter the key manually.
+                        </p>
 
                         <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
-                          <p style="color: #71717a; font-size: 12px; margin: 0;">
+                          <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
                             Blueprint — Making video planning simple
                           </p>
                         </div>

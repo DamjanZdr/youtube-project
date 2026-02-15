@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
                           <td style="padding: 40px 32px;">
                             <div style="text-align: center; margin-bottom: 32px;">
                               <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🎁 Your Free Key is Here!</h1>
-                              <p style="color: #52525b; margin: 0; font-size: 15px;">Thanks for being on the Blueprint waitlist</p>
+                              <p style="color: #52525b; margin: 0; font-size: 15px;"><strong>${planText}</strong> plan (${durationText}) — thanks for joining the waitlist!</p>
                             </div>
 
                             <div style="background-color: #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
@@ -137,28 +137,14 @@ export async function POST(req: NextRequest) {
                               </p>
                             </div>
 
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
-                              <tr>
-                                <td width="48%" style="background-color: #e4e4e7; border-radius: 10px; padding: 16px; text-align: center;">
-                                  <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Plan</p>
-                                  <p style="font-size: 16px; font-weight: 600; margin: 0; color: #6366f1;">${planText}</p>
-                                </td>
-                                <td width="4%"></td>
-                                <td width="48%" style="background-color: #e4e4e7; border-radius: 10px; padding: 16px; text-align: center;">
-                                  <p style="color: #71717a; font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px;">Duration</p>
-                                  <p style="font-size: 16px; font-weight: 600; margin: 0; color: #18181b;">${durationText}</p>
-                                </td>
-                              </tr>
-                            </table>
-
-                            <div style="text-align: center; margin-bottom: 28px;">
-                              <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 8px rgba(99,102,241,0.3);">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                              <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
                                 Redeem Your Key →
                               </a>
                             </div>
 
                             <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
-                              <p style="color: #71717a; font-size: 12px; margin: 0;">
+                              <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
                                 Blueprint — The operating system for YouTube creators
                               </p>
                             </div>

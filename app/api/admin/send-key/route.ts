@@ -113,11 +113,11 @@ export async function POST(req: NextRequest) {
                       <tr>
                         <td style="padding: 40px 32px;">
                           <div style="text-align: center; margin-bottom: 32px;">
-                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #1a1a1a;">🎉 Your Plan Key</h1>
+                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🎉 Your Plan Key</h1>
                             <p style="color: #52525b; margin: 0; font-size: 15px;">
                               ${orgName 
-                                ? `A <strong style="color: #1a1a1a;">${planText}</strong> plan key for <strong style="color: #1a1a1a;">${orgName}</strong>`
-                                : `You've received a <strong style="color: #1a1a1a;">${planText}</strong> plan key!`
+                                ? `A <strong>${planText}</strong> key (${durationText}) for <strong>${orgName}</strong>`
+                                : `You've received a <strong>${planText}</strong> key (${durationText})`
                               }
                             </p>
                           </div>
@@ -128,32 +128,20 @@ export async function POST(req: NextRequest) {
                               ${key}
                             </p>
                           </div>
-
-                          <div style="background-color: #e4e4e7; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                              <tr>
-                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
-                              </tr>
-                              <tr>
-                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Duration:</strong> ${durationText}</td>
-                              </tr>
-                              ${orgName ? `<tr><td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">For:</strong> ${orgName}</td></tr>` : ''}
-                            </table>
-                          </div>
                           
-                          <div style="text-align: center; margin-bottom: 28px;">
-                            <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 8px rgba(99,102,241,0.3);">
+                          <div style="text-align: center; margin-bottom: 24px;">
+                            <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
                               Redeem Your Key →
                             </a>
                           </div>
                           
-                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
-                            Or go to your Studio Settings → Billing and enter the key manually.
+                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0;">
+                            Or go to Studio Settings → Billing and enter the key manually.
                           </p>
 
                           <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
-                            <p style="color: #71717a; font-size: 12px; margin: 0;">
-                              © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
+                            <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
+                              © Blueprint Studio
                             </p>
                           </div>
                         </td>
