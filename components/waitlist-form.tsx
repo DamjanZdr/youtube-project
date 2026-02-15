@@ -64,11 +64,16 @@ export function WaitlistForm() {
 
   return (
     <div className="w-full max-w-xl mx-auto text-center">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        <span className="text-xs font-medium text-green-400">50+ creators already joined</span>
+      </div>
+      
       <h2 className="text-xl md:text-2xl font-bold mb-2">
         Get Your Free Key
       </h2>
       <p className="text-sm md:text-base text-muted-foreground mb-6">
-        Early supporters get a free Creator key ($12/mo value) when we launch.
+        Join now and get a free Creator key ($12/mo value) when we launch.
       </p>
       
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mb-4">
