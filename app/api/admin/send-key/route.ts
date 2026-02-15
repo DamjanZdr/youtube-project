@@ -105,11 +105,11 @@ export async function POST(req: NextRequest) {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff;">
+            <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; overflow: hidden;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                       <tr>
                         <td style="padding: 40px 32px;">
                           <div style="text-align: center; margin-bottom: 32px;">
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
                             </p>
                           </div>
 
-                          <div style="background-color: #e4e4e7; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
+                          <div style="background: rgba(0,0,0,0.04); border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                               <tr>
                                 <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
@@ -147,9 +147,15 @@ export async function POST(req: NextRequest) {
                             </a>
                           </div>
 
-                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0; line-height: 1.5;">
+                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
                             Or go to your Studio Settings → Billing and enter the key manually.
                           </p>
+
+                          <div style="border-top: 1px solid rgba(0,0,0,0.08); padding-top: 24px; text-align: center;">
+                            <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
+                              © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
+                            </p>
+                          </div>
                         </td>
                       </tr>
                     </table>
