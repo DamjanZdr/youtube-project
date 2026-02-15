@@ -109,35 +109,35 @@ export async function POST(req: NextRequest) {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
                       <tr>
                         <td style="padding: 40px 32px;">
                           <div style="text-align: center; margin-bottom: 32px;">
-                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🎉 Your Plan Key</h1>
-                            <p style="color: #52525b; margin: 0; font-size: 15px;">
+                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #ffffff;">🎉 Your Plan Key</h1>
+                            <p style="color: #a1a1aa; margin: 0; font-size: 15px;">
                               ${orgName 
-                                ? `A <strong style="color: #18181b;">${planText}</strong> plan key for <strong style="color: #18181b;">${orgName}</strong>`
-                                : `You've received a <strong style="color: #18181b;">${planText}</strong> plan key!`
+                                ? `A <strong style="color: #fff;">${planText}</strong> plan key for <strong style="color: #fff;">${orgName}</strong>`
+                                : `You've received a <strong style="color: #fff;">${planText}</strong> plan key!`
                               }
                             </p>
                           </div>
 
                           <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                            <p style="color: #6366f1; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
-                            <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #18181b; margin: 0; font-weight: 700;">
+                            <p style="color: #a1a1aa; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                            <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #ffffff; margin: 0; font-weight: 700;">
                               ${key}
                             </p>
                           </div>
 
-                          <div style="background: rgba(0,0,0,0.04); border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
+                          <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
+                                <td style="color: #71717a; font-size: 14px; padding: 4px 0;"><strong style="color: #d4d4d8;">Plan:</strong> ${planText}</td>
                               </tr>
                               <tr>
-                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Duration:</strong> ${durationText}</td>
+                                <td style="color: #71717a; font-size: 14px; padding: 4px 0;"><strong style="color: #d4d4d8;">Duration:</strong> ${durationText}</td>
                               </tr>
-                              ${orgName ? `<tr><td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">For:</strong> ${orgName}</td></tr>` : ''}
+                              ${orgName ? `<tr><td style="color: #71717a; font-size: 14px; padding: 4px 0;"><strong style="color: #d4d4d8;">For:</strong> ${orgName}</td></tr>` : ''}
                             </table>
                           </div>
 
@@ -147,12 +147,12 @@ export async function POST(req: NextRequest) {
                             </a>
                           </div>
 
-                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                          <p style="color: #52525b; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
                             Or go to your Studio Settings → Billing and enter the key manually.
                           </p>
 
-                          <div style="border-top: 1px solid rgba(0,0,0,0.08); padding-top: 24px; text-align: center;">
-                            <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
+                          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                            <p style="color: #3f3f46; font-size: 12px; margin: 0;">
                               © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
                             </p>
                           </div>
