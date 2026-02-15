@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
+            <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5;">
                 <tr>
-                  <td align="center">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px;">
+                  <td align="center" style="padding: 40px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                       <!-- Header -->
                       <tr>
                         <td style="padding: 32px 32px 24px; text-align: center;">
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
                             Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #18181b;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
                           </p>
 
-                          <div style="background-color: #e4e4e7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                          <div style="background-color: #f4f4f5; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                             <p style="color: #6366f1; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
                               📣 Follow Our Progress
                             </p>
@@ -107,9 +107,9 @@ export async function POST(req: NextRequest) {
 
                       <!-- Footer -->
                       <tr>
-                        <td style="padding: 24px 32px; border-top: 1px solid #d4d4d8; text-align: center;">
-                          <p style="color: #71717a; font-size: 12px; margin: 0;">
-                            Blueprint — The operating system for YouTube creators
+                        <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
+                          <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
+                            © Blueprint Studio
                           </p>
                         </td>
                       </tr>

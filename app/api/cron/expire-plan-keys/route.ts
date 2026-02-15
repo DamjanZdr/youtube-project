@@ -127,11 +127,8 @@ export async function GET(req: NextRequest) {
                       <meta charset="utf-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     </head>
-                    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                        <tr>
-                          <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
+                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;"><tr><td align="center" style="padding: 40px 20px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
@@ -256,11 +253,8 @@ export async function GET(req: NextRequest) {
                       <meta charset="utf-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     </head>
-                    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                        <tr>
-                          <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
+                    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;"><tr><td align="center" style="padding: 40px 20px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
@@ -341,11 +335,8 @@ export async function GET(req: NextRequest) {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                   </head>
-                  <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td align="center" style="padding: 40px 20px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
+                  <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;"><tr><td align="center" style="padding: 40px 20px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                             <tr>
                               <td style="padding: 40px 32px;">
                                 <div style="text-align: center; margin-bottom: 32px;">
@@ -435,3 +426,4 @@ export async function GET(req: NextRequest) {
     results 
   });
 }
+
