@@ -62,55 +62,45 @@ export async function POST(req: NextRequest) {
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
             <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
-                      <!-- Header -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
                       <tr>
-                        <td style="padding: 32px 32px 24px; text-align: center;">
-                          <img src="${appUrl}/bplogo.png" alt="Blueprint" style="height: 40px; width: auto;" />
-                        </td>
-                      </tr>
-                      
-                      <!-- Content -->
-                      <tr>
-                        <td style="padding: 0 32px 32px;">
-                          <h1 style="color: #18181b; font-size: 24px; font-weight: 700; margin: 0 0 16px; text-align: center;">
-                            You're on the list! 🎉
-                          </h1>
-                          
-                          <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
-                            Thanks for joining the Blueprint waitlist. We're launching on <strong style="color: #18181b;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
-                          </p>
-
-                          <div style="background-color: #f4f4f5; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                            <p style="color: #6366f1; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
-                              📣 Follow Our Progress
-                            </p>
-                            <p style="color: #52525b; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
-                              While you wait, join our Discord community to follow development updates, share feedback, and connect with other creators!
+                        <td style="padding: 40px 32px;">
+                          <div style="text-align: center; margin-bottom: 32px;">
+                            <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #ffffff;">🎉 You're on the list!</h1>
+                            <p style="color: #a1a1aa; margin: 0; font-size: 15px;">
+                              Thanks for joining the Blueprint waitlist
                             </p>
                           </div>
 
-                          <table width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                              <td align="center">
-                                <a href="${discordInvite}" style="display: inline-block; background-color: #5865F2; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 10px;">
-                                  Join Discord Community
-                                </a>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
+                          <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+                            <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6; margin: 0; text-align: center;">
+                              We're launching on <strong style="color: #fff;">February 20, 2026</strong> and you'll receive your free Creator key via email on launch day.
+                            </p>
+                          </div>
 
-                      <!-- Footer -->
-                      <tr>
-                        <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
-                          <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                            © Blueprint Studio
-                          </p>
+                          <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+                            <p style="color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0 0 8px; text-align: center;">
+                              📣 Follow Our Progress
+                            </p>
+                            <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                              Join our Discord community to follow development updates, share feedback, and connect with other creators!
+                            </p>
+                          </div>
+
+                          <div style="text-align: center; margin-bottom: 28px;">
+                            <a href="${discordInvite}" style="display: inline-block; background: #5865F2; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                              Join Discord Community
+                            </a>
+                          </div>
+
+                          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; text-align: center;">
+                            <p style="color: #3f3f46; font-size: 12px; margin: 0;">
+                              © Blueprint Studio
+                            </p>
+                          </div>
                         </td>
                       </tr>
                     </table>
