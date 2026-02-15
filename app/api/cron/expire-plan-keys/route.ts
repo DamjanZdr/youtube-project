@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; border: 1px solid #e4e4e7; overflow: hidden;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
@@ -260,7 +260,7 @@ export async function GET(req: NextRequest) {
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; border: 1px solid #e4e4e7; overflow: hidden;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
                               <tr>
                                 <td style="padding: 40px 32px;">
                                   <div style="text-align: center; margin-bottom: 32px;">
@@ -345,7 +345,7 @@ export async function GET(req: NextRequest) {
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                       <tr>
                         <td align="center" style="padding: 40px 20px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; border: 1px solid #e4e4e7; overflow: hidden;">
+                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; ">
                             <tr>
                               <td style="padding: 40px 32px;">
                                 <div style="text-align: center; margin-bottom: 32px;">

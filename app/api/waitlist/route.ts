@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
               <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
                 <tr>
                   <td align="center">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; border: 1px solid #e4e4e7; overflow: hidden;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px;">
                       <!-- Header -->
                       <tr>
                         <td style="padding: 32px 32px 24px; text-align: center;">
