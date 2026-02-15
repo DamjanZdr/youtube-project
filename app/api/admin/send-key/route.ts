@@ -109,39 +109,51 @@ export async function POST(req: NextRequest) {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 20px; border: 1px solid #e4e4e7; overflow: hidden;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #f4f4f5; border-radius: 16px; border: 1px solid #e4e4e7; overflow: hidden;">
                       <tr>
                         <td style="padding: 40px 32px;">
                           <div style="text-align: center; margin-bottom: 32px;">
                             <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🎉 Your Plan Key</h1>
                             <p style="color: #52525b; margin: 0; font-size: 15px;">
                               ${orgName 
-                                ? `A <strong>${planText}</strong> key (${durationText}) for <strong>${orgName}</strong>`
-                                : `You've received a <strong>${planText}</strong> key (${durationText})`
+                                ? `A <strong style="color: #18181b;">${planText}</strong> plan key for <strong style="color: #18181b;">${orgName}</strong>`
+                                : `You've received a <strong style="color: #18181b;">${planText}</strong> plan key!`
                               }
                             </p>
                           </div>
 
-                          <div style="background-color: #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                            <p style="color: #71717a; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                          <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                            <p style="color: #6366f1; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
                             <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #18181b; margin: 0; font-weight: 700;">
                               ${key}
                             </p>
                           </div>
+
+                          <div style="background-color: #e4e4e7; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
+                              </tr>
+                              <tr>
+                                <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Duration:</strong> ${durationText}</td>
+                              </tr>
+                              ${orgName ? `<tr><td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">For:</strong> ${orgName}</td></tr>` : ''}
+                            </table>
+                          </div>
                           
-                          <div style="text-align: center; margin-bottom: 24px;">
+                          <div style="text-align: center; margin-bottom: 28px;">
                             <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
                               Redeem Your Key →
                             </a>
                           </div>
                           
-                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0;">
-                            Or go to Studio Settings → Billing and enter the key manually.
+                          <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                            Or go to your Studio Settings → Billing and enter the key manually.
                           </p>
 
                           <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
                             <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                              © Blueprint Studio
+                              © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
                             </p>
                           </div>
                         </td>
