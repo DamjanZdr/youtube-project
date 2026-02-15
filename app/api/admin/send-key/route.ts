@@ -105,8 +105,8 @@ export async function POST(req: NextRequest) {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff;">
+            <body style="margin: 0; padding: 0; background-color: transparent; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: transparent;">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
