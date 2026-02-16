@@ -393,87 +393,83 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer - always visible */}
-            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-[1vw] shrink-0 rounded-b-2xl">
-              {/* Key error message */}
-              {keyError && (
-                <div className="flex flex-col items-center gap-2 mb-3 md:mb-4">
-                  <p className="text-xs lg:text-sm text-red-400 text-center">{keyError}</p>
-                  <Link href="/help/tickets/new" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors">
-                    <MessageSquare className="w-3 h-3" />
-                    Contact Support
-                  </Link>
-                </div>
-              )}
-
+            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-4 md:p-5 shrink-0 rounded-b-2xl space-y-4">
               {/* Key applied badge */}
               {keyInfo && (
-                <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-3 md:mb-4 flex-wrap">
-                  <Key className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-400" />
-                  <span className="text-xs md:text-sm font-medium text-green-400">Key Applied:</span>
-                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-[10px] md:text-xs">{keyInfo.plan}</Badge>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px] md:text-xs">{formatDuration(keyInfo.duration)}</Badge>
-                  <Button size="sm" variant="ghost" className="h-5 w-5 md:h-6 md:w-6 p-0 hover:bg-white/10" onClick={clearKey}>
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <Key className="w-4 h-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">Key Applied:</span>
+                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-xs">{keyInfo.plan}</Badge>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">{formatDuration(keyInfo.duration)}</Badge>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
               )}
 
-              {/* Action buttons - stack on mobile */}
-              <div className="flex flex-col gap-3 md:gap-4">
-                {/* Have a key button / Key input - centered */}
-                {!keyInfo && (
-                  <div className="flex justify-center">
-                    {!showKeyInput ? (
-                      <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-xs md:text-sm h-9 md:h-10">
-                        <Key className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              {/* General error message */}
+              {error && (
+                <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/25">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-sm text-amber-300">{error}</span>
+                </div>
+              )}
+
+              {/* Main action row */}
+              <div className="flex items-start justify-between gap-4">
+                {/* Left: Key section */}
+                <div className="flex-1">
+                  {!keyInfo && (
+                    !showKeyInput ? (
+                      <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
+                        <Key className="w-4 h-4" />
                         Have a plan key?
                       </Button>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={redeemKey}
-                          onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                          placeholder="XXXX-XXXX-XXXX-XXXX"
-                          className="font-mono text-xs md:text-sm bg-white/5 w-48 md:w-56 h-9 md:h-10"
-                        />
-                        <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-9 md:h-10">
-                          {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-9 md:h-10 px-2">
-                          <X className="w-4 h-4" />
-                        </Button>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={redeemKey}
+                            onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                            placeholder="XXXX-XXXX-XXXX-XXXX"
+                            className="font-mono text-sm bg-white/5 w-56 h-10"
+                          />
+                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-4">
+                            {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                          </Button>
+                          <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {keyError && (
+                          <div className="flex items-center gap-3 text-sm text-red-400">
+                            <span>{keyError}</span>
+                            <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
+                              <MessageSquare className="w-3 h-3" />
+                              Contact Support
+                            </Link>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Error message */}
-                {error && (
-                  <div className="flex items-center justify-center gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-amber-500/10 border border-amber-500/25">
-                    <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400 shrink-0" />
-                    <span className="text-xs md:text-sm text-amber-300">{error}</span>
-                  </div>
-                )}
-                
-                {/* Back and Create buttons */}
-                <div className="flex items-center justify-end gap-2 md:gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 md:px-5 h-9 md:h-10 text-xs md:text-sm">
+                    )
+                  )}
+                </div>
+
+                {/* Right: Back and Create buttons */}
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-5 h-10">
                     Back
                   </Button>
-                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 md:px-8 h-9 md:h-11 text-xs md:text-base font-medium">
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 font-medium">
                     {loading ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
-                        <span className="hidden md:inline">Creating...</span>
-                        <span className="md:hidden">...</span>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
                       </>
                     ) : selectedPlan === "free" || keyInfo ? (
                       "Create Studio"
                     ) : (
-                      <>
-                        <span className="hidden md:inline">Continue to Checkout</span>
-                        <span className="md:hidden">Checkout</span>
-                      </>
+                      "Continue to Checkout"
                     )}
                   </Button>
                 </div>
