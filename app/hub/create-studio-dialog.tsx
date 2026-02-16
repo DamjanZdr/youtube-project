@@ -228,7 +228,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 overflow-hidden ${step === 1 ? "max-w-[520px] w-[95vw]" : "w-[90vw] max-w-[90vw] h-[85vh] flex flex-col rounded-2xl"}`}>
+      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 ${step === 1 ? "max-w-[520px] w-[95vw]" : "w-[90vw] max-w-[90vw] max-h-[90vh] flex flex-col rounded-2xl"}`}>
         <DialogTitle className="sr-only">Create Studio</DialogTitle>
         <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
@@ -328,7 +328,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards */}
-            <div className="px-[2vw] py-[2vw] flex-1 flex items-center">
+            <div className="px-[2vw] py-[2vw] flex-1 min-h-0 overflow-y-auto flex items-center">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1.5vw] w-full">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
@@ -415,24 +415,13 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Key error - show above input */}
-              {keyError && (
-                <div className="flex items-center justify-center gap-3 text-sm text-red-400">
-                  <span>{keyError}</span>
-                  <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
-                    <MessageSquare className="w-3 h-3" />
-                    Contact Support
-                  </Link>
-                </div>
-              )}
-
               {/* Three column layout: spacer | key centered | buttons */}
-              <div className="flex items-center">
+              <div className="flex items-start">
                 {/* Left spacer - matches right column width */}
                 <div className="flex-1" />
 
                 {/* Center: Key section */}
-                <div className="flex-1 flex justify-center">
+                <div className="flex-1 flex flex-col items-center gap-2">
                   {!keyInfo && (
                     !showKeyInput ? (
                       <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
@@ -440,20 +429,31 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         Have a plan key?
                       </Button>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={redeemKey}
-                          onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                          placeholder="XXXX-XXXX-XXXX-XXXX"
-                          className="font-mono text-sm bg-white/5 w-44 sm:w-56 h-10"
-                        />
-                        <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-3 sm:px-4">
-                          {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                        </Button>
-                        <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={redeemKey}
+                            onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                            placeholder="XXXX-XXXX-XXXX-XXXX"
+                            className="font-mono text-sm bg-white/5 w-44 sm:w-56 h-10"
+                          />
+                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-3 sm:px-4">
+                            {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                          </Button>
+                          <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {keyError && (
+                          <div className="flex items-center justify-center gap-3 text-sm text-red-400">
+                            <span>{keyError}</span>
+                            <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
+                              <MessageSquare className="w-3 h-3" />
+                              Contact Support
+                            </Link>
+                          </div>
+                        )}
+                      </>
                     )
                   )}
                 </div>
