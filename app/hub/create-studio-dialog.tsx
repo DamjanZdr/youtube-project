@@ -415,13 +415,13 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Single row: key centered, buttons right */}
-              <div className="flex items-center justify-between relative">
-                {/* Empty left spacer */}
-                <div className="w-32" />
+              {/* Three column layout: spacer | key centered | buttons */}
+              <div className="flex items-start">
+                {/* Left spacer - matches right column width */}
+                <div className="flex-1" />
 
                 {/* Center: Key section */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+                <div className="flex-1 flex flex-col items-center gap-2">
                   {!keyInfo && (
                     !showKeyInput ? (
                       <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
@@ -435,9 +435,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                             value={redeemKey}
                             onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
                             placeholder="XXXX-XXXX-XXXX-XXXX"
-                            className="font-mono text-sm bg-white/5 w-56 h-10"
+                            className="font-mono text-sm bg-white/5 w-44 sm:w-56 h-10"
                           />
-                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-4">
+                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-3 sm:px-4">
                             {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                           </Button>
                           <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
@@ -445,7 +445,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                           </Button>
                         </div>
                         {keyError && (
-                          <div className="flex items-center gap-3 text-sm text-red-400">
+                          <div className="flex items-center gap-2 text-sm text-red-400 flex-wrap justify-center">
                             <span>{keyError}</span>
                             <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
                               <MessageSquare className="w-3 h-3" />
@@ -459,11 +459,11 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
 
                 {/* Right: Back and Create buttons */}
-                <div className="flex items-center gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)} className="px-5 h-10">
+                <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 sm:px-5 h-10">
                     Back
                   </Button>
-                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 font-medium">
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 sm:px-8 h-11 font-medium">
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
