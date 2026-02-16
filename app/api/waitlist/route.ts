@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   // Send Discord invite email
   const resend = getResend();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const discordInvite = "https://discord.gg/tJ6pcNezC8";
+  const discordInvite = "https://discord.gg/jtcvNM4Asw";
 
   if (resend) {
     try {
