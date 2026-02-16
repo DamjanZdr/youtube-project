@@ -415,61 +415,67 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Key section - centered */}
-              {!keyInfo && (
-                <div className="flex flex-col items-center gap-2">
-                  {!showKeyInput ? (
-                    <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
-                      <Key className="w-4 h-4" />
-                      Have a plan key?
-                    </Button>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={redeemKey}
-                          onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                          placeholder="XXXX-XXXX-XXXX-XXXX"
-                          className="font-mono text-sm bg-white/5 w-56 h-10"
-                        />
-                        <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-4">
-                          {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                        </Button>
-                        <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      {keyError && (
-                        <div className="flex items-center gap-3 text-sm text-red-400">
-                          <span>{keyError}</span>
-                          <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
-                            <MessageSquare className="w-3 h-3" />
-                            Contact Support
-                          </Link>
+              {/* Single row: key centered, buttons right */}
+              <div className="flex items-center justify-between relative">
+                {/* Empty left spacer */}
+                <div className="w-32" />
+
+                {/* Center: Key section */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+                  {!keyInfo && (
+                    !showKeyInput ? (
+                      <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
+                        <Key className="w-4 h-4" />
+                        Have a plan key?
+                      </Button>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={redeemKey}
+                            onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                            placeholder="XXXX-XXXX-XXXX-XXXX"
+                            className="font-mono text-sm bg-white/5 w-56 h-10"
+                          />
+                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-4">
+                            {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                          </Button>
+                          <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
-                      )}
-                    </>
+                        {keyError && (
+                          <div className="flex items-center gap-3 text-sm text-red-400">
+                            <span>{keyError}</span>
+                            <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
+                              <MessageSquare className="w-3 h-3" />
+                              Contact Support
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    )
                   )}
                 </div>
-              )}
 
-              {/* Back and Create buttons - right aligned */}
-              <div className="flex items-center justify-end gap-3">
-                <Button variant="ghost" onClick={() => setStep(1)} className="px-5 h-10">
-                  Back
-                </Button>
-                <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 font-medium">
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : selectedPlan === "free" || keyInfo ? (
-                    "Create Studio"
-                  ) : (
-                    "Continue to Checkout"
-                  )}
-                </Button>
+                {/* Right: Back and Create buttons */}
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-5 h-10">
+                    Back
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-8 h-11 font-medium">
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : selectedPlan === "free" || keyInfo ? (
+                      "Create Studio"
+                    ) : (
+                      "Continue to Checkout"
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
