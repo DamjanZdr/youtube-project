@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { plans, type Plan } from "@/config/subscriptions";
-import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift, Users, Loader2 } from "lucide-react";
+import { Check, AlertCircle, CreditCard, Calendar, Download, X, Key, Sparkles, Gift, Users, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { createCheckoutSession, createPortalSession, undoPendingChange } from "@/lib/actions/billing";
 import { createClient } from "@/lib/supabase/client";
@@ -939,7 +940,15 @@ export function BillingTab({ subscription, studioId }: BillingTabProps) {
                 {redeemLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
               </Button>
             </div>
-            {redeemError && <p className="text-xs text-red-400">{redeemError}</p>}
+            {redeemError && (
+              <div className="flex flex-col items-center gap-1.5">
+                <p className="text-xs text-red-400">{redeemError}</p>
+                <Link href="/help/tickets/new" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors">
+                  <MessageSquare className="w-3 h-3" />
+                  Contact Support
+                </Link>
+              </div>
+            )}
             {redeemSuccess && <p className="text-xs text-green-400">{redeemSuccess}</p>}
           </div>
         ) : (

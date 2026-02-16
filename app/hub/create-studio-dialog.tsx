@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Check, Key, X, ImageIcon, AlertCircle } from "lucide-react";
+import { Plus, Loader2, Check, Key, X, ImageIcon, AlertCircle, MessageSquare } from "lucide-react";
 import { createStudio } from "@/lib/actions/studio";
 import { plans as allPlans } from "@/config/subscriptions";
 import { toast } from "sonner";
@@ -410,7 +411,15 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                   </Button>
                 </div>
               )}
-              {keyError && <p className="text-xs lg:text-sm text-red-400 text-center mb-2 md:mb-3">{keyError}</p>}
+              {keyError && (
+                <div className="flex flex-col items-center gap-2 mb-3 md:mb-4">
+                  <p className="text-xs lg:text-sm text-red-400 text-center">{keyError}</p>
+                  <Link href="/help/tickets/new" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors">
+                    <MessageSquare className="w-3 h-3" />
+                    Contact Support
+                  </Link>
+                </div>
+              )}
 
               {/* Key applied badge */}
               {keyInfo && (

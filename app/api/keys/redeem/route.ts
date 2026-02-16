@@ -56,16 +56,16 @@ export async function POST(req: NextRequest) {
     .single();
   
   if (keyError || !planKey) {
-    return NextResponse.json({ error: "Invalid or expired key" }, { status: 404 });
+    return NextResponse.json({ error: "Key not found. Please check the key and try again." }, { status: 404 });
   }
   if (planKey.deactivated_at) {
-    return NextResponse.json({ error: "This key has been deactivated" }, { status: 410 });
+    return NextResponse.json({ error: "This key has been deactivated and can no longer be used." }, { status: 410 });
   }
   if (planKey.redeemed_at) {
-    return NextResponse.json({ error: "Key already redeemed" }, { status: 409 });
+    return NextResponse.json({ error: "This key has already been redeemed." }, { status: 409 });
   }
   if (planKey.assigned_org_id && planKey.assigned_org_id !== organization_id) {
-    return NextResponse.json({ error: "Key is not valid for this organization" }, { status: 403 });
+    return NextResponse.json({ error: "This key is assigned to a different studio." }, { status: 403 });
   }
 
   // Check user is owner/admin of org

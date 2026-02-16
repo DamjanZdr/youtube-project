@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,17 +22,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use admin client to bypass RLS (users can't SELECT unredeemed keys)
+    const adminClient = createAdminClient();
+
     // Look up the key
-    const { data: keyData, error } = await supabase
+    const { data: keyData, error } = await adminClient
       .from("plan_keys")
-      .select("id, plan, duration, assigned_org_id, redeemed_at")
+      .select("id, plan, duration, assigned_org_id, redeemed_at, deactivated_at")
       .eq("key", key.trim().toUpperCase())
       .single();
 
     if (error || !keyData) {
       return NextResponse.json(
-        { error: "Invalid key. Please check and try again." },
+        { error: "Key not found. Please check the key and try again." },
         { status: 404 }
+      );
+    }
+
+    if (keyData.deactivated_at) {
+      return NextResponse.json(
+        { error: "This key has been deactivated and can no longer be used." },
+        { status: 410 }
       );
     }
 
