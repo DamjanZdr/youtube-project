@@ -82,25 +82,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Only the owner can redeem keys" }, { status: 403 });
   }
 
-  // Fetch current subscription
-  const { data: sub, error: subError } = await supabase
+  // Fetch current subscription (may not exist for new studios using keys)
+  const { data: sub } = await supabase
     .from("subscriptions")
     .select("*")
     .eq("organization_id", organization_id)
     .single();
-  if (subError || !sub) {
-    return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
-  }
+  
+  // If no subscription exists, we'll create one when redeeming the key
+  const isNewSubscription = !sub;
 
-  // Compare plan levels
-  const currentPlanLevel = getPlanLevel(sub.plan);
+  // Compare plan levels (default to free if no subscription)
+  const currentPlanLevel = sub ? getPlanLevel(sub.plan) : 0;
   const keyPlanLevel = getPlanLevel(planKey.plan);
-  const isSamePlan = sub.plan === planKey.plan;
+  const isSamePlan = sub ? sub.plan === planKey.plan : false;
   const isUpgrade = keyPlanLevel > currentPlanLevel;
   const isDowngrade = keyPlanLevel < currentPlanLevel;
 
-  // Prevent downgrading with a key
-  if (isDowngrade) {
+  // Prevent downgrading with a key (only relevant if subscription exists)
+  if (sub && isDowngrade) {
     const currentPlanName = sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1);
     const keyPlanName = planKey.plan.charAt(0).toUpperCase() + planKey.plan.slice(1);
     return NextResponse.json({ 
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   if (planKey.duration === "lifetime") {
     // Lifetime keys never expire
     expiresAt = null;
-  } else if (isSamePlan && sub.source === "key" && sub.current_period_end) {
+  } else if (sub && isSamePlan && sub.source === "key" && sub.current_period_end) {
     // Same plan + already on a key: EXTEND the existing time
     // Start from current expiration date instead of now
     const currentExpiration = new Date(sub.current_period_end);
@@ -143,14 +143,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to redeem key", details: redeemError.message }, { status: 500 });
   }
 
-  // Build the subscription update
-  // Only backup previous plan if this is an upgrade AND they were on a Stripe plan
-  const subscriptionUpdate: Record<string, any> = {
+  // Build the subscription data
+  const subscriptionData: Record<string, any> = {
+    organization_id: organization_id,
     plan: planKey.plan,
     source: "key",
     key_id: planKey.id, // Track which key is active
     status: "active", // Ensure subscription is marked active
-    current_period_start: isSamePlan && sub.source === "key" ? sub.current_period_start : now.toISOString(),
+    current_period_start: (sub && isSamePlan && sub.source === "key") ? sub.current_period_start : now.toISOString(),
     current_period_end: expiresAt ? expiresAt.toISOString() : null,
     // Clear pending changes when redeeming a key
     pending_plan: null,
@@ -159,32 +159,57 @@ export async function POST(req: NextRequest) {
   };
 
   // If they're on a paid Stripe plan, store the previous info so we can resume when key expires
-  if (sub.source === "stripe" && sub.plan !== "free" && sub.stripe_subscription_id) {
-    subscriptionUpdate.previous_plan = sub.plan;
-    subscriptionUpdate.previous_stripe_subscription_id = sub.stripe_subscription_id;
+  if (sub && sub.source === "stripe" && sub.plan !== "free" && sub.stripe_subscription_id) {
+    subscriptionData.previous_plan = sub.plan;
+    subscriptionData.previous_stripe_subscription_id = sub.stripe_subscription_id;
     // Note: We should ideally pause the Stripe subscription here
     // For now, the admin should manually pause/cancel via Stripe dashboard
   } else {
     // Clear any stale previous plan data if they weren't on a paid Stripe plan
-    subscriptionUpdate.previous_plan = null;
-    subscriptionUpdate.previous_stripe_subscription_id = null;
+    subscriptionData.previous_plan = null;
+    subscriptionData.previous_stripe_subscription_id = null;
   }
 
-  const { error: subUpdateError } = await adminClient
-    .from("subscriptions")
-    .update(subscriptionUpdate)
-    .eq("id", sub.id);
+  let subscriptionId: string;
+  
+  if (isNewSubscription) {
+    // Create new subscription for studios that don't have one yet
+    const { data: newSub, error: subInsertError } = await adminClient
+      .from("subscriptions")
+      .insert(subscriptionData)
+      .select("id")
+      .single();
+      
+    if (subInsertError || !newSub) {
+      console.error("Failed to create subscription:", subInsertError);
+      return NextResponse.json({ error: "Failed to create subscription", details: subInsertError?.message }, { status: 500 });
+    }
+    subscriptionId = newSub.id;
     
-  if (subUpdateError) {
-    console.error("Failed to update subscription:", subUpdateError);
-    return NextResponse.json({ error: "Failed to update subscription", details: subUpdateError.message }, { status: 500 });
+    // Also activate the organization if it was pending
+    await adminClient
+      .from("organizations")
+      .update({ status: "active" })
+      .eq("id", organization_id);
+  } else {
+    // Update existing subscription
+    const { error: subUpdateError } = await adminClient
+      .from("subscriptions")
+      .update(subscriptionData)
+      .eq("id", sub.id);
+      
+    if (subUpdateError) {
+      console.error("Failed to update subscription:", subUpdateError);
+      return NextResponse.json({ error: "Failed to update subscription", details: subUpdateError.message }, { status: 500 });
+    }
+    subscriptionId = sub.id;
   }
   
-  // Verify the update worked by fetching it
+  // Verify the update/insert worked by fetching it
   const { data: updatedSub } = await adminClient
     .from("subscriptions")
     .select("*")
-    .eq("id", sub.id)
+    .eq("id", subscriptionId)
     .single();
   
   // VERIFY the plan actually changed
@@ -194,10 +219,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Log billing event
-  const eventType = isSamePlan && sub.source === "key" 
-    ? "key_extended" 
-    : isUpgrade 
-      ? "key_upgrade" 
+  const eventType = isNewSubscription 
+    ? "key_activated"
+    : (isSamePlan && sub?.source === "key") 
+      ? "key_extended" 
+      : isUpgrade 
+        ? "key_upgrade" 
       : "key_redeemed";
   
   // Log billing event (non-blocking)
@@ -205,7 +232,7 @@ export async function POST(req: NextRequest) {
     organization_id: organization_id,
     user_id: user.id,
     event_type: eventType,
-    previous_plan: sub.plan,
+    previous_plan: sub?.plan || null,
     new_plan: planKey.plan,
     amount_cents: 0, // Key = free
     source: "key",
@@ -214,7 +241,7 @@ export async function POST(req: NextRequest) {
     period_end: expiresAt?.toISOString() || null,
     metadata: {
       key_duration: planKey.duration,
-      extended: isSamePlan && sub.source === "key",
+      extended: isSamePlan && sub?.source === "key",
     }
   }).then(({ error }) => {
     if (error) console.error("Failed to log billing event:", error);
@@ -222,7 +249,7 @@ export async function POST(req: NextRequest) {
 
   // Build response message
   let message = "";
-  if (isSamePlan && sub.source === "key") {
+  if (isSamePlan && sub?.source === "key") {
     message = `Extended your ${planKey.plan} plan`;
   } else if (isUpgrade) {
     message = `Upgraded to ${planKey.plan}`;
@@ -235,8 +262,8 @@ export async function POST(req: NextRequest) {
     plan: planKey.plan, 
     expires_at: expiresAt,
     message,
-    extended: isSamePlan && sub.source === "key",
+    extended: isSamePlan && sub?.source === "key",
     upgraded: isUpgrade,
-    previous_plan: isUpgrade ? sub.plan : null,
+    previous_plan: isUpgrade ? sub?.plan : null,
   });
 }
