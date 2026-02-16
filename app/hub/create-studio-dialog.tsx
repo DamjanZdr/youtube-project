@@ -393,7 +393,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer - always visible */}
-            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-4 md:p-5 shrink-0 rounded-b-2xl space-y-4">
+            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-4 md:p-5 shrink-0 rounded-b-2xl space-y-3">
               {/* Key applied badge */}
               {keyInfo && (
                 <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -415,13 +415,24 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
+              {/* Key error - show above input */}
+              {keyError && (
+                <div className="flex items-center justify-center gap-3 text-sm text-red-400">
+                  <span>{keyError}</span>
+                  <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
+                    <MessageSquare className="w-3 h-3" />
+                    Contact Support
+                  </Link>
+                </div>
+              )}
+
               {/* Three column layout: spacer | key centered | buttons */}
-              <div className="flex items-start">
+              <div className="flex items-center">
                 {/* Left spacer - matches right column width */}
                 <div className="flex-1" />
 
                 {/* Center: Key section */}
-                <div className="flex-1 flex flex-col items-center gap-2">
+                <div className="flex-1 flex justify-center">
                   {!keyInfo && (
                     !showKeyInput ? (
                       <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
@@ -429,31 +440,20 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                         Have a plan key?
                       </Button>
                     ) : (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={redeemKey}
-                            onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                            placeholder="XXXX-XXXX-XXXX-XXXX"
-                            className="font-mono text-sm bg-white/5 w-44 sm:w-56 h-10"
-                          />
-                          <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-3 sm:px-4">
-                            {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                          </Button>
-                          <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        {keyError && (
-                          <div className="flex items-center gap-2 text-sm text-red-400 flex-wrap justify-center">
-                            <span>{keyError}</span>
-                            <Link href="/help/tickets/new" className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors text-xs">
-                              <MessageSquare className="w-3 h-3" />
-                              Contact Support
-                            </Link>
-                          </div>
-                        )}
-                      </>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={redeemKey}
+                          onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                          placeholder="XXXX-XXXX-XXXX-XXXX"
+                          className="font-mono text-sm bg-white/5 w-44 sm:w-56 h-10"
+                        />
+                        <Button onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-10 px-3 sm:px-4">
+                          {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                        </Button>
+                        <Button variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-10 w-10 p-0">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )
                   )}
                 </div>
