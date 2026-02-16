@@ -1,6 +1,13 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+// Plan prices (monthly) for MRR calculation
+const PLAN_PRICES: Record<string, number> = {
+  creator: 9,
+  studio: 29,
+  enterprise: 99,
+};
+
 export async function GET() {
   try {
     // First verify the user is an admin
@@ -38,7 +45,7 @@ export async function GET() {
       adminClient.from("projects").select("*", { count: "exact", head: true }),
       adminClient.from("plan_keys").select("*", { count: "exact", head: true }),
       adminClient.from("plan_keys").select("*", { count: "exact", head: true }).not("redeemed_at", "is", null),
-      adminClient.from("subscriptions").select("plan"),
+      adminClient.from("subscriptions").select("plan, source, status"),
       adminClient.from("profiles").select("*", { count: "exact", head: true })
         .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     ]);
@@ -49,8 +56,27 @@ export async function GET() {
     if (projectError) console.error("Project count error:", projectError);
     if (keyError) console.error("Key count error:", keyError);
 
-    const freeCount = subscriptions?.filter(s => s.plan === "free" || !s.plan).length || 0;
-    const paidCount = subscriptions?.filter(s => s.plan && s.plan !== "free").length || 0;
+    // Count subscription types
+    const activeSubscriptions = subscriptions?.filter(s => s.status === "active") || [];
+    
+    // Free: plan is free (never paid)
+    const freeCount = activeSubscriptions.filter(s => s.plan === "free" || !s.plan).length;
+    
+    // Key users: have a paid plan but source is "key" (gifted, not paying)
+    const keyUserCount = activeSubscriptions.filter(s => 
+      s.plan && s.plan !== "free" && s.source === "key"
+    ).length;
+    
+    // Paid users: have a paid plan AND source is "stripe" (actually paying)
+    const paidSubscriptions = activeSubscriptions.filter(s => 
+      s.plan && s.plan !== "free" && s.source === "stripe"
+    );
+    const paidCount = paidSubscriptions.length;
+
+    // Calculate MRR from actual paid users
+    const mrr = paidSubscriptions.reduce((total, sub) => {
+      return total + (PLAN_PRICES[sub.plan] || 0);
+    }, 0);
 
     return NextResponse.json({
       totalUsers: userCount || 0,
@@ -59,7 +85,10 @@ export async function GET() {
       totalKeys: keyCount || 0,
       usedKeys: usedKeyCount || 0,
       freeStudios: freeCount,
+      keyStudios: keyUserCount,
       paidStudios: paidCount,
+      mrr,
+      arr: mrr * 12,
       signupsThisWeek: weeklySignups || 0,
     });
   } catch (error) {

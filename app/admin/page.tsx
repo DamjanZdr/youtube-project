@@ -7,7 +7,9 @@ import {
   Key, 
   CreditCard,
   TrendingUp,
-  UserPlus
+  UserPlus,
+  DollarSign,
+  Gift
 } from "lucide-react";
 
 interface Stats {
@@ -17,7 +19,10 @@ interface Stats {
   totalKeys: number;
   usedKeys: number;
   freeStudios: number;
+  keyStudios: number;
   paidStudios: number;
+  mrr: number;
+  arr: number;
   signupsThisWeek: number;
 }
 
@@ -29,7 +34,10 @@ export default function AdminDashboard() {
     totalKeys: 0,
     usedKeys: 0,
     freeStudios: 0,
+    keyStudios: 0,
     paidStudios: 0,
+    mrr: 0,
+    arr: 0,
     signupsThisWeek: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -107,18 +115,56 @@ export default function AdminDashboard() {
               <span className="font-medium">{stats.freeStudios}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Paid</span>
+              <div className="flex items-center gap-2">
+                <Gift className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-muted-foreground">Key (Gifted)</span>
+              </div>
+              <span className="font-medium text-purple-400">{stats.keyStudios}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-muted-foreground">Paying</span>
+              </div>
               <span className="font-medium text-green-400">{stats.paidStudios}</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
               <div 
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
+                className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
                 style={{ width: `${stats.totalStudios ? (stats.paidStudios / stats.totalStudios * 100) : 0}%` }}
+              />
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-violet-500"
+                style={{ width: `${stats.totalStudios ? (stats.keyStudios / stats.totalStudios * 100) : 0}%` }}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalStudios ? Math.round(stats.paidStudios / stats.totalStudios * 100) : 0}% conversion rate
+              {stats.totalStudios ? Math.round(stats.paidStudios / stats.totalStudios * 100) : 0}% paid • {stats.totalStudios ? Math.round(stats.keyStudios / stats.totalStudios * 100) : 0}% gifted
             </p>
+          </div>
+        </div>
+
+        {/* Revenue */}
+        <div className="glass-card p-4 md:p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <DollarSign className="w-5 h-5 text-muted-foreground" />
+            <h3 className="font-semibold">Revenue</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">MRR</span>
+              <span className="font-medium text-green-400">${stats.mrr.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">ARR</span>
+              <span className="font-medium text-green-400">${stats.arr.toLocaleString()}</span>
+            </div>
+            <div className="pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Paying Studios</span>
+                <span className="font-medium">{stats.paidStudios}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -143,39 +189,39 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="glass-card p-4 md:p-5">
-          <h3 className="font-semibold text-sm md:text-base mb-4">Quick Actions</h3>
-          <div className="space-y-2">
-            <a 
-              href="/admin/keys" 
-              className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Key className="w-4 h-4 text-muted-foreground" />
-                <span>Generate Keys</span>
-              </div>
-            </a>
-            <a 
-              href="/admin/studios" 
-              className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                <span>Manage Studios</span>
-              </div>
-            </a>
-            <a 
-              href="/admin/users" 
-              className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <span>View Users</span>
-              </div>
-            </a>
-          </div>
+      {/* Quick Actions */}
+      <div className="glass-card p-4 md:p-5">
+        <h3 className="font-semibold text-sm md:text-base mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <a 
+            href="/admin/keys" 
+            className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Key className="w-4 h-4 text-muted-foreground" />
+              <span>Generate Keys</span>
+            </div>
+          </a>
+          <a 
+            href="/admin/studios" 
+            className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              <span>Manage Studios</span>
+            </div>
+          </a>
+          <a 
+            href="/admin/users" 
+            className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <span>View Users</span>
+            </div>
+          </a>
         </div>
       </div>
     </div>
