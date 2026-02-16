@@ -328,8 +328,8 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Plan Cards */}
-            <div className="px-[2vw] py-[2vw] flex-1 min-h-0 overflow-y-auto flex items-center">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1.5vw] w-full">
+            <div className="px-[2vw] py-[1.5vw] flex-1 min-h-0 overflow-y-auto flex items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1.2vw] w-full">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id;
                   const isKeyPlan = keyInfo?.plan === plan.id;
@@ -340,47 +340,47 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-[2vw] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-2xl ${
+                      className={`relative flex flex-col p-[1.2vw] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
                       }`}
                     >
                       {plan.popular && !keyInfo && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg">
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                          <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-semibold shadow-lg">
                             Most Popular
                           </Badge>
                         </div>
                       )}
                       {isKeyPlan && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-green-500 text-white px-3 py-1 text-xs font-semibold shadow-lg">
-                            <Key className="w-3 h-3 mr-1" /> Key Applied
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                          <Badge className="bg-green-500 text-white px-2 py-0.5 text-[10px] font-semibold shadow-lg">
+                            <Key className="w-2.5 h-2.5 mr-1" /> Key Applied
                           </Badge>
                         </div>
                       )}
 
-                      <div className="mb-[1.5vw]">
-                        <h4 className="text-[clamp(1rem,1.2vw,1.5rem)] font-bold mb-[0.5vw]">{plan.name}</h4>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-[clamp(1.5rem,2.5vw,3.5rem)] font-bold">${price}</span>
-                          <span className="text-[clamp(0.6rem,0.7vw,0.9rem)] text-muted-foreground">
+                      <div className="mb-[1vw]">
+                        <h4 className="text-[clamp(0.875rem,1vw,1.25rem)] font-bold mb-[0.3vw]">{plan.name}</h4>
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-[clamp(1.25rem,2vw,2.5rem)] font-bold">${price}</span>
+                          <span className="text-[clamp(0.5rem,0.6vw,0.75rem)] text-muted-foreground">
                             /{billingInterval === "monthly" ? "mo" : "yr"}
                           </span>
                         </div>
-                        <p className="text-[clamp(0.65rem,0.7vw,0.875rem)] text-muted-foreground mt-[0.5vw]">{plan.description}</p>
+                        <p className="text-[clamp(0.6rem,0.65vw,0.75rem)] text-muted-foreground mt-[0.3vw]">{plan.description}</p>
                       </div>
 
-                      <ul className="space-y-[0.8vw] flex-1">
+                      <ul className="space-y-[0.5vw] flex-1">
                         {plan.features.slice(0, 5).map((feature, i) => (
-                          <li key={i} className="flex items-start gap-[0.5vw]">
+                          <li key={i} className="flex items-start gap-[0.4vw]">
                             {feature.included ? (
-                              <Check className="w-[1vw] h-[1vw] min-w-4 min-h-4 mt-0.5 flex-shrink-0 text-green-400" />
+                              <Check className="w-[0.9vw] h-[0.9vw] min-w-3 min-h-3 mt-0.5 flex-shrink-0 text-green-400" />
                             ) : (
-                              <X className="w-[1vw] h-[1vw] min-w-4 min-h-4 mt-0.5 flex-shrink-0 text-white/20" />
+                              <X className="w-[0.9vw] h-[0.9vw] min-w-3 min-h-3 mt-0.5 flex-shrink-0 text-white/20" />
                             )}
-                            <span className={`text-[clamp(0.75rem,0.85vw,1rem)] ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
+                            <span className={`text-[clamp(0.65rem,0.7vw,0.875rem)] leading-tight ${!feature.included ? 'text-white/30' : 'text-white/80'}`}>
                               {feature.name}
                             </span>
                           </li>
