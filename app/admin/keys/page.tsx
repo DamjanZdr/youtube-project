@@ -19,7 +19,8 @@ import {
   Mail,
   Send,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
@@ -104,6 +105,10 @@ export default function AdminKeysPage() {
 
   // Single key deactivate dialog
   const [singleDeactivateKey, setSingleDeactivateKey] = useState<PlanKey | null>(null);
+
+  // Single key delete dialog (permanent deletion for deactivated keys)
+  const [singleDeleteKey, setSingleDeleteKey] = useState<PlanKey | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Send email dialog
   const [showSendEmail, setShowSendEmail] = useState(false);
@@ -244,6 +249,34 @@ export default function AdminKeysPage() {
     
     setSingleDeactivateKey(null);
     setDeactivating(false);
+    loadKeys();
+  }
+
+  async function confirmSingleDelete() {
+    if (!singleDeleteKey) return;
+
+    setDeleting(true);
+
+    try {
+      const response = await fetch("/api/admin/keys/hard-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyIds: [singleDeleteKey.id] }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        toast.error(result.error || "Failed to delete key");
+      } else {
+        toast.success("Key permanently deleted");
+      }
+    } catch (err) {
+      toast.error("Failed to delete key");
+    }
+    
+    setSingleDeleteKey(null);
+    setDeleting(false);
     loadKeys();
   }
 
@@ -599,6 +632,15 @@ export default function AdminKeysPage() {
                             title="Deactivate key"
                           >
                             <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                        {status === "deactivated" && (
+                          <button
+                            onClick={() => setSingleDeleteKey(key)}
+                            className="p-2 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                            title="Delete permanently"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -996,6 +1038,62 @@ export default function AdminKeysPage() {
                 <>
                   <Ban className="w-4 h-4" />
                   Deactivate
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Single Key Delete Dialog (Permanent) */}
+      <Dialog open={!!singleDeleteKey} onOpenChange={(open) => !open && setSingleDeleteKey(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <Trash2 className="w-5 h-5" />
+              Delete Key Permanently
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently remove the key from the database. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {singleDeleteKey && (
+            <div className="bg-white/5 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Key</span>
+                <code className="font-mono text-sm">{singleDeleteKey.key}</code>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Plan</span>
+                <span className="capitalize">{singleDeleteKey.plan}</span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSingleDeleteKey(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmSingleDelete}
+              disabled={deleting}
+              className="gap-2"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Delete Permanently
                 </>
               )}
             </Button>
