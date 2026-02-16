@@ -419,47 +419,48 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               )}
 
               {/* Action buttons - stack on mobile */}
-              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 md:gap-3">
-                {/* Have a key button / Key input - full width on mobile */}
-                <div className="order-2 md:order-1">
-                  {!keyInfo && !showKeyInput && (
-                    <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 w-full md:w-auto text-xs md:text-sm h-9 md:h-10">
-                      <Key className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      Have a plan key?
-                    </Button>
-                  )}
-                  {showKeyInput && !keyInfo && (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={redeemKey}
-                        onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                        placeholder="XXXX-XXXX-XXXX-XXXX"
-                        className="font-mono text-xs md:text-sm bg-white/5 w-48 md:w-56 h-9 md:h-10"
-                      />
-                      <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-9 md:h-10">
-                        {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+              <div className="flex flex-col gap-3 md:gap-4">
+                {/* Have a key button / Key input - centered */}
+                {!keyInfo && (
+                  <div className="flex justify-center">
+                    {!showKeyInput ? (
+                      <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-xs md:text-sm h-9 md:h-10">
+                        <Key className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                        Have a plan key?
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-9 md:h-10 px-2">
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Error message */}
-                {error && (
-                  <div className="order-1 md:order-2 flex-1 flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-amber-500/10 border border-amber-500/25 min-w-0">
-                    <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400 shrink-0" />
-                    <span className="text-xs md:text-sm text-amber-300 truncate">{error}</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={redeemKey}
+                          onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                          placeholder="XXXX-XXXX-XXXX-XXXX"
+                          className="font-mono text-xs md:text-sm bg-white/5 w-48 md:w-56 h-9 md:h-10"
+                        />
+                        <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-9 md:h-10">
+                          {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-9 md:h-10 px-2">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
                 
-                {/* Back and Create buttons - always at bottom on mobile */}
-                <div className="order-3 flex items-center gap-2 md:gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 md:px-5 h-9 md:h-10 text-xs md:text-sm flex-1 md:flex-none">
+                {/* Error message */}
+                {error && (
+                  <div className="flex items-center justify-center gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-amber-500/10 border border-amber-500/25">
+                    <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400 shrink-0" />
+                    <span className="text-xs md:text-sm text-amber-300">{error}</span>
+                  </div>
+                )}
+                
+                {/* Back and Create buttons */}
+                <div className="flex items-center justify-end gap-2 md:gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 md:px-5 h-9 md:h-10 text-xs md:text-sm">
                     Back
                   </Button>
-                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 md:px-8 h-9 md:h-11 text-xs md:text-base font-medium flex-1 md:flex-none">
+                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 md:px-8 h-9 md:h-11 text-xs md:text-base font-medium">
                     {loading ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
