@@ -228,7 +228,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 ${step === 1 ? "max-w-[520px] w-[95vw]" : "w-[90vw] max-w-[90vw] max-h-[90vh] flex flex-col rounded-2xl"}`}>
+      <DialogContent showCloseButton={step === 1} className={`glass-strong border-white/10 p-0 ${step === 1 ? "max-w-[520px] w-[95vw]" : "w-[90vw] max-w-[1600px] h-[80vh] flex flex-col rounded-2xl"}`}>
         <DialogTitle className="sr-only">Create Studio</DialogTitle>
         <DialogDescription className="sr-only">Create a new studio and choose a plan</DialogDescription>
         {step === 1 ? (
@@ -393,7 +393,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer - always visible */}
-            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-4 md:p-5 shrink-0 rounded-b-2xl space-y-3">
+            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm px-4 md:px-5 py-3 shrink-0 rounded-b-2xl space-y-2 min-h-[100px]">
               {/* Key applied badge */}
               {keyInfo && (
                 <div className="flex items-center justify-center gap-2 flex-wrap">
