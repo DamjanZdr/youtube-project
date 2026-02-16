@@ -155,8 +155,8 @@ export async function POST(req: NextRequest) {
                             <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
                               <p style="color: #d4d4d8; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-align: center;">How to redeem your key:</p>
                               <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6; margin: 0;">
-                                <strong style="color: #d4d4d8;">New user?</strong> Create an account → Create a studio → On the payment page, click "Have a key?" and enter your key.<br><br>
-                                <strong style="color: #d4d4d8;">Already have a studio?</strong> Go to Settings → Billing → Click "Have a key?" and enter your key.
+                                <strong style="color: #d4d4d8;">New user?</strong> Create an account → Create a studio → On the payment page, click "Have a plan key?" and enter your key.<br><br>
+                                <strong style="color: #d4d4d8;">Already have a studio?</strong> Go to Settings → Billing → Click "Have a plan key?" and enter your key.
                               </p>
                             </div>
 
