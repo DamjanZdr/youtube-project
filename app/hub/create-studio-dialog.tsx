@@ -394,23 +394,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
             {/* Footer - always visible */}
             <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm p-[1vw] shrink-0 rounded-b-2xl">
-              {/* Key input (shown when expanded) */}
-              {showKeyInput && !keyInfo && (
-                <div className="flex items-center gap-2 mb-3 md:mb-4 max-w-md mx-auto">
-                  <Input
-                    value={redeemKey}
-                    onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
-                    placeholder="XXXX-XXXX-XXXX-XXXX"
-                    className="font-mono text-xs md:text-sm lg:text-base bg-white/5 flex-1"
-                  />
-                  <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()}>
-                    {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+              {/* Key error message */}
               {keyError && (
                 <div className="flex flex-col items-center gap-2 mb-3 md:mb-4">
                   <p className="text-xs lg:text-sm text-red-400 text-center">{keyError}</p>
@@ -436,13 +420,29 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
 
               {/* Action buttons - stack on mobile */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 md:gap-3">
-                {/* Have a key button - full width on mobile */}
+                {/* Have a key button / Key input - full width on mobile */}
                 <div className="order-2 md:order-1">
                   {!keyInfo && !showKeyInput && (
                     <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 w-full md:w-auto text-xs md:text-sm h-9 md:h-10">
                       <Key className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       Have a plan key?
                     </Button>
+                  )}
+                  {showKeyInput && !keyInfo && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={redeemKey}
+                        onChange={(e) => { setRedeemKey(e.target.value.toUpperCase()); setKeyError(""); }}
+                        placeholder="XXXX-XXXX-XXXX-XXXX"
+                        className="font-mono text-xs md:text-sm bg-white/5 w-48 md:w-56 h-9 md:h-10"
+                      />
+                      <Button size="sm" onClick={validateKey} disabled={validatingKey || !redeemKey.trim()} className="h-9 md:h-10">
+                        {validatingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setShowKeyInput(false); setKeyError(""); setRedeemKey(""); }} className="h-9 md:h-10 px-2">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
                 
