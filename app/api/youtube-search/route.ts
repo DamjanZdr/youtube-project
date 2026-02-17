@@ -1,4 +1,5 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientIP, RATE_LIMITS } from "@/lib/rate-limit";
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
@@ -26,6 +27,17 @@ function setCachedResult(key: string, data: any) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit by IP - public endpoint
+  const ip = getClientIP(request);
+  const rateLimit = checkRateLimit(`youtube-search:${ip}`, RATE_LIMITS.PUBLIC_READ);
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down.", retryAfter: rateLimit.resetIn },
+      { status: 429, headers: { "Retry-After": String(rateLimit.resetIn) } }
+    );
+  }
+
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "10";

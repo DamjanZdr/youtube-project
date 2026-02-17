@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIP, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Plan hierarchy (higher index = better plan)
 const PLAN_HIERARCHY = ["free", "creator", "studio", "enterprise"];
@@ -19,6 +20,17 @@ function getDurationMonths(duration: string): number {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit by IP - prevent abuse
+  const ip = getClientIP(req);
+  const rateLimit = checkRateLimit(`key-redeem:${ip}`, RATE_LIMITS.KEY_OPERATIONS);
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please wait before trying again.", retryAfter: rateLimit.resetIn },
+      { status: 429, headers: { "Retry-After": String(rateLimit.resetIn) } }
+    );
+  }
+
   const supabase = await createClient();
   const adminClient = createAdminClient(); // Use admin client for updates (bypasses RLS)
   

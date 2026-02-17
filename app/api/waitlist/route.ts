@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { checkRateLimit, getClientIP, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Lazy init to avoid build errors when env var is missing
 function getResend() {
@@ -12,6 +13,17 @@ function getResend() {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit by IP - public endpoint, very strict
+  const ip = getClientIP(req);
+  const rateLimit = checkRateLimit(`waitlist:${ip}`, RATE_LIMITS.PUBLIC_WRITE);
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: "Too many signup attempts. Please try again later.", retryAfter: rateLimit.resetIn },
+      { status: 429, headers: { "Retry-After": String(rateLimit.resetIn) } }
+    );
+  }
+
   const adminClient = createAdminClient();
 
   const { email } = await req.json();

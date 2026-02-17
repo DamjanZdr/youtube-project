@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIP, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit by IP - prevent brute force key guessing
+    const ip = getClientIP(request);
+    const rateLimit = checkRateLimit(`key-validate:${ip}`, RATE_LIMITS.KEY_OPERATIONS);
+    
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please wait before trying again.", retryAfter: rateLimit.resetIn },
+        { status: 429, headers: { "Retry-After": String(rateLimit.resetIn) } }
+      );
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

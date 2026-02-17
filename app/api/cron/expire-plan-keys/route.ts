@@ -20,6 +20,18 @@ function getResend() {
 }
 
 export async function GET(req: NextRequest) {
+  // Verify this is a legitimate Vercel cron request
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  
+  // Check for Vercel's cron header OR a secret token for manual triggers
+  const isVercelCron = req.headers.get("x-vercel-cron") === "true";
+  const hasValidSecret = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  
+  if (!isVercelCron && !hasValidSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const supabase = await createClient();
   const now = new Date();
 
