@@ -64,8 +64,8 @@ PostgreSQL (RLS policies filter data)
 A **studio** is the central workspace. Everything belongs to a studio.
 
 - Each studio has one **owner** (the person who created it or received ownership)
-- Studios can have multiple **members** with different roles
-- Studios have one **subscription** (Free, Creator, or Studio plan)
+- Studios can have multiple **members** with different roles (limited by plan)
+- Studios have one **subscription** (Free, Creator, Studio, or Enterprise plan)
 - The `slug` is the URL-safe identifier (`/studio/my-studio/...`)
 
 **Key columns in `organizations`:**
@@ -89,8 +89,11 @@ Subscriptions control what a studio can do.
 | Plan | Projects | Team Size | Price |
 |------|----------|-----------|-------|
 | Free | 1 (lifetime) | 1 | $0 |
-| Creator | Unlimited | 1 | $X/mo |
-| Studio | Unlimited | Unlimited | $X/mo |
+| Creator | Unlimited | 1 | $12/mo |
+| Studio | Unlimited | 4 | $29/mo |
+| Enterprise | Unlimited | Unlimited | $99/mo |
+
+**Note:** Prices are hardcoded in `config/subscriptions.ts`, not pulled from Stripe. If you change prices or add discounts in Stripe, you must update this file manually for the frontend to reflect changes.
 
 **How subscriptions work:**
 1. Stripe manages billing, renewals, cancellations
@@ -99,7 +102,7 @@ Subscriptions control what a studio can do.
 4. Database triggers check subscription when creating projects/members
 
 **Key columns in `subscriptions`:**
-- `plan` - Current plan (`free`, `creator`, `studio`)
+- `plan` - Current plan (`free`, `creator`, `studio`, `enterprise`)
 - `status` - Stripe status (`active`, `past_due`, `canceled`)
 - `source` - How they got the plan (`stripe`, `key`)
 - `current_period_end` - When subscription renews/expires
@@ -113,10 +116,11 @@ Subscriptions control what a studio can do.
 The board at `/studio/[slug]/board` shows projects as cards in status columns.
 
 **Data flow:**
-1. `board_statuses` table defines columns (Idea, Script, etc.) per organization
-2. `projects.board_status_id` links each project to a column
-3. Drag-drop updates `board_status_id` and `position`
-4. Moving a project triggers `copy_default_tasks_to_project()` function
+1. `board_statuses` table defines columns per organization
+2. Default statuses: Idea → Package → Script → Record → Edit → Review → Complete
+3. `projects.board_status_id` links each project to a column
+4. Drag-drop updates `board_status_id` and `position`
+5. Moving a project triggers `copy_default_tasks_to_project()` function
 
 **Edit mode:**
 - Toggle "Edit Board" to reorder statuses and manage default tasks
@@ -164,10 +168,11 @@ Two-column editor: script on left, visual notes on right.
 Shows how thumbnail/title will look in YouTube's UI.
 
 **How it works:**
-- Pulls active thumbnail and title from `project_thumbnails`/`project_titles`
+- Uses `packaging_sets` table (title + thumbnail pairs for A/B testing)
 - Renders mock YouTube feed with grey placeholder cards
-- User can switch between different saved titles/thumbnails
-- No actual YouTube API - pure visual mockup
+- User can switch between different saved packaging sets
+- Searches real YouTube videos to show alongside your video for comparison
+- No actual YouTube upload - pure visual mockup
 
 ### Wiki
 
@@ -177,6 +182,8 @@ Knowledge base for storing team documentation.
 - `wiki_folders` - Folders with optional nesting (`parent_folder_id`)
 - `wiki_documents` - Documents belong to org, optionally in a folder
 - Content stored as HTML (Tiptap rich text editor)
+
+**Note:** Free tier shows "Up to 3 wiki documents" in plan features, but this limit is NOT currently enforced in the database.
 
 **Features:**
 - Create/rename/delete folders
@@ -335,8 +342,7 @@ profiles (users)
     │                                   └── projects
     │                                           │
     │                                           ├── project_tasks
-    │                                           ├── project_titles
-    │                                           ├── project_thumbnails
+    │                                           ├── packaging_sets
     │                                           ├── project_tags
     │                                           └── scripts ─── scenes
 ```
@@ -435,7 +441,8 @@ Located in `supabase/migrations/`, numbered in order (00001, 00002, etc.).
 |----------|--------|---------|
 | `/api/youtube-search` | GET | Search YouTube videos |
 | `/api/checkout` | POST | Create Stripe checkout session |
-| `/api/portal` | POST | Create Stripe billing portal session |
+
+**Note:** Billing portal access is handled via server action (`lib/actions/billing.ts`), not an API route.
 
 ### Webhook Endpoints
 
