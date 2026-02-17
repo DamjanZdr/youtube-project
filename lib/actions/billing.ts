@@ -77,7 +77,7 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     // Get organization
     const { data: org, error: orgError } = await supabase
       .from('organizations')
-      .select('id, name, slug')
+      .select('id, name, slug, owner_id')
       .eq('id', organizationId)
       .single();
 
@@ -87,6 +87,11 @@ export async function createCheckoutSession(organizationId: string, priceId: str
     }
     if (!org) {
       throw new Error('Organization not found');
+    }
+
+    // Only owner can manage billing
+    if (org.owner_id !== user.id) {
+      throw new Error('Only the studio owner can manage billing');
     }
 
     // Check if subscription exists
@@ -270,12 +275,17 @@ export async function createPortalSession(organizationId: string): Promise<{ url
   // Get organization
   const { data: org } = await supabase
     .from('organizations')
-    .select('id, slug')
+    .select('id, slug, owner_id')
     .eq('id', organizationId)
     .single();
 
   if (!org) {
     throw new Error('Organization not found');
+  }
+
+  // Only owner can access billing portal
+  if (org.owner_id !== user.id) {
+    throw new Error('Only the studio owner can manage billing');
   }
 
   // Get subscription

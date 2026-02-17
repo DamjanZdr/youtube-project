@@ -29,12 +29,17 @@ export async function POST(req: NextRequest) {
     // Get organization
     const { data: org, error: orgError } = await supabase
       .from('organizations')
-      .select('id, name, slug')
+      .select('id, name, slug, owner_id')
       .eq('id', organizationId)
       .single();
 
     if (orgError || !org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    // Only owner can manage billing
+    if (org.owner_id !== user.id) {
+      return NextResponse.json({ error: 'Only the studio owner can manage billing' }, { status: 403 });
     }
 
     // Check if subscription exists (for existing customer ID)
