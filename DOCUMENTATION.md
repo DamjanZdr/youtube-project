@@ -1,407 +1,507 @@
-# YouTuber Studio - Complete Documentation
+# YouTuber Studio - System Documentation
 
-> The all-in-one creator operating system for YouTubers and content studios.
+> How this application works - architecture, features, and operational details.
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Tech Stack](#tech-stack)
-3. [Getting Started](#getting-started)
-4. [Application Routes](#application-routes)
-5. [Database Schema](#database-schema)
-6. [Key Features](#key-features)
-   - [Free Tier Limits](#free-tier-limits)
-   - [Default Tasks System](#default-tasks-system)
-   - [Rate Limiting](#rate-limiting)
-   - [Security Model](#security-model)
-7. [Admin Operations](#admin-operations)
-8. [Mobile Responsiveness](#mobile-responsiveness)
+1. [Architecture Overview](#architecture-overview)
+2. [Core Concepts](#core-concepts)
+3. [How Features Work](#how-features-work)
+4. [Security & Permissions](#security--permissions)
+5. [Database Design](#database-design)
+6. [Admin Operations](#admin-operations)
+7. [API Endpoints](#api-endpoints)
+8. [File Structure](#file-structure)
 
 ---
 
-## Overview
+## Architecture Overview
 
-YouTuber Studio is a SaaS application for YouTube creators and content studios. It provides:
+### Tech Stack
 
-- **Channel Branding Preview** - See your logo, banner, thumbnails in real YouTube layouts
-- **Script Writing System** - Scripts with structure, notes, visual cues, and pacing
-- **Project Management** - Videos grouped into projects with kanban workflow
-- **Kanban Board** - Idea → Script → Recording → Editing → Scheduled → Published
-- **Asset Storage** - Thumbnails, exports, shorts, raw files
-- **Wiki/Knowledge Base** - Documentation organized in folders
-- **Multi-Studio Support** - Creator, editor, and manager roles per studio
-- **Monetization** - Stripe subscriptions (Free, Creator, Studio plans)
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Frontend | Next.js 15 (App Router) | Server-rendered React with file-based routing |
+| Database | Supabase (PostgreSQL) | Data storage with Row Level Security |
+| Auth | Supabase Auth | Session management via SSR cookies |
+| Payments | Stripe | Subscriptions and billing portal |
+| State | Zustand | Client-side state (sidebar, modals) |
+| Data Fetching | TanStack Query | Caching, refetching, optimistic updates |
+| Styling | Tailwind + shadcn/ui | Utility-first CSS with component library |
+| Deployment | Vercel | Edge network, serverless functions |
 
----
+### Request Flow
 
-## Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Framework | [Next.js 15](https://nextjs.org/) (App Router) |
-| Database & Auth | [Supabase](https://supabase.com/) |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) |
-| UI Components | [shadcn/ui](https://ui.shadcn.com/) |
-| Payments | [Stripe](https://stripe.com/) |
-| State Management | [Zustand](https://zustand-demo.pmnd.rs/) |
-| Data Fetching | [TanStack Query](https://tanstack.com/query) |
-| Forms | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
-| Deployment | [Vercel](https://vercel.com/) |
-
----
-
-## Getting Started
-
-### 1. Clone and Install
-
-```bash
-git clone <your-repo-url>
-cd youtube-project
-npm install
+```
+User Request
+    ↓
+Vercel Edge (DDoS protection)
+    ↓
+Next.js Middleware (auth check)
+    ↓
+App Router (page/api route)
+    ↓
+Supabase Client (with user's session)
+    ↓
+PostgreSQL (RLS policies filter data)
 ```
 
-### 2. Set Up Supabase
+### Key Architectural Decisions
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run migrations from `supabase/migrations/` folder in order (00001, 00002, etc.)
-3. Copy your project URL and keys
+1. **Server-first rendering**: Pages fetch data server-side for SEO and initial load performance
+2. **Database-level security**: RLS policies enforce permissions, not just application code
+3. **Triggers for business logic**: Free tier limits, task copying handled by PostgreSQL triggers
+4. **Stripe as source of truth**: Webhooks sync subscription state from Stripe to database
 
-### 3. Set Up Stripe
+---
 
-1. Create products for your subscription plans (Free, Creator, Studio)
-2. Set up webhook endpoint: `https://your-domain.com/api/webhooks/stripe`
-3. Copy your API keys and webhook secret
+## Core Concepts
 
-### 4. Configure Environment Variables
+### Studios (Organizations)
 
-Required environment variables:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `NEXT_PUBLIC_SITE_URL`
+A **studio** is the central workspace. Everything belongs to a studio.
 
-### 5. Run Development Server
+- Each studio has one **owner** (the person who created it or received ownership)
+- Studios can have multiple **members** with different roles
+- Studios have one **subscription** (Free, Creator, or Studio plan)
+- The `slug` is the URL-safe identifier (`/studio/my-studio/...`)
 
-```bash
-npm run dev
+**Key columns in `organizations`:**
+- `owner_id` - The user who owns this studio (for billing)
+- `status` - `active`, `pending`, or `inactive`
+- `project_initiations_count` - Lifetime project creates (for free tier abuse prevention)
+
+### Projects
+
+A **project** represents one video being produced.
+
+- Projects move through **statuses** on the kanban board (Idea → Package → Script → etc.)
+- Each project can have multiple **titles** and **thumbnails** (A/B testing)
+- Projects have **tasks** (copied from board defaults + custom)
+- The **storyboard** is the script editor with visual notes
+
+### Subscriptions
+
+Subscriptions control what a studio can do.
+
+| Plan | Projects | Team Size | Price |
+|------|----------|-----------|-------|
+| Free | 1 (lifetime) | 1 | $0 |
+| Creator | Unlimited | 1 | $X/mo |
+| Studio | Unlimited | Unlimited | $X/mo |
+
+**How subscriptions work:**
+1. Stripe manages billing, renewals, cancellations
+2. Stripe webhooks hit `/api/webhooks/stripe`
+3. Webhook updates `subscriptions` table
+4. Database triggers check subscription when creating projects/members
+
+**Key columns in `subscriptions`:**
+- `plan` - Current plan (`free`, `creator`, `studio`)
+- `status` - Stripe status (`active`, `past_due`, `canceled`)
+- `source` - How they got the plan (`stripe`, `key`)
+- `current_period_end` - When subscription renews/expires
+
+---
+
+## How Features Work
+
+### Kanban Board
+
+The board at `/studio/[slug]/board` shows projects as cards in status columns.
+
+**Data flow:**
+1. `board_statuses` table defines columns (Idea, Script, etc.) per organization
+2. `projects.board_status_id` links each project to a column
+3. Drag-drop updates `board_status_id` and `position`
+4. Moving a project triggers `copy_default_tasks_to_project()` function
+
+**Edit mode:**
+- Toggle "Edit Board" to reorder statuses and manage default tasks
+- Default tasks are stored in `status_default_tasks` table
+- When a project enters a status, those tasks copy to `project_tasks`
+
+### Default Tasks Auto-Copy
+
+When a project is created or moved to a new status, default tasks automatically copy.
+
+**The trigger flow:**
+```
+Project INSERT or UPDATE (board_status_id changes)
+    ↓
+trigger_copy_default_tasks fires
+    ↓
+copy_default_tasks_to_project() function runs
+    ↓
+SELECT tasks from status_default_tasks WHERE status_id = NEW.board_status_id
+    ↓
+INSERT into project_tasks (only tasks that don't already exist)
 ```
 
----
+**Why it works this way:**
+- Tasks are templates, not foreign keys - projects own their tasks
+- Moving to a status **adds** new tasks, doesn't replace existing
+- Each studio can customize default tasks without affecting others
 
-## Application Routes
+### Storyboard (Script Editor)
 
-### Public Routes
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page |
-| `/privacy` | Privacy policy |
-| `/terms` | Terms of service |
-| `/auth/login` | Login page |
-| `/auth/sign-up` | Registration page |
-| `/auth/forgot-password` | Password reset request |
-| `/auth/update-password` | Set new password |
+Two-column editor: script on left, visual notes on right.
 
-### Authenticated Routes
-| Route | Description |
-|-------|-------------|
-| `/hub` | User's studios list (main dashboard) |
-| `/account` | User account settings |
-| `/redeem` | Redeem plan keys |
-| `/help` | Help center |
-| `/help/tickets` | User's support tickets |
+**Data model:**
+- `scripts` table - One per project, has metadata
+- `scenes` table - Many per script, ordered by `position`
+- Each scene has `content` (script text) and `visual_notes`
 
-### Studio Routes (`/studio/[studioSlug]/*`)
-| Route | Description |
-|-------|-------------|
-| `/studio/[slug]/board` | Kanban board view |
-| `/studio/[slug]/projects` | Projects list view |
-| `/studio/[slug]/channel` | Channel branding |
-| `/studio/[slug]/wiki` | Knowledge base |
-| `/studio/[slug]/settings` | Studio settings, team, billing |
+**Features:**
+- Word count and estimated video duration (calculated client-side)
+- Scenes reorderable via drag-drop
+- Auto-saves with debounce
 
-### Project Routes (`/studio/[slug]/project/[id]/*`)
-| Route | Description |
-|-------|-------------|
-| `.../project/[id]` | Project packaging (titles, thumbnails, description, tags) |
-| `.../project/[id]/preview` | YouTube preview mockup |
-| `.../project/[id]/storyboard` | Script editor with visual notes |
-| `.../project/[id]/idea` | Project idea/notes |
-| `.../project/[id]/tasks` | Project task checklist |
-| `.../project/[id]/settings` | Project settings |
+### Preview Tab
 
-### Admin Routes (`/admin/*`)
-| Route | Description |
-|-------|-------------|
-| `/admin` | Admin dashboard |
-| `/admin/users` | User management |
-| `/admin/studios` | Studios management |
-| `/admin/subscriptions` | Subscription management |
-| `/admin/keys` | Plan key management |
-| `/admin/tickets` | Support ticket management |
-| `/admin/waitlist` | Waitlist management |
+Shows how thumbnail/title will look in YouTube's UI.
 
----
+**How it works:**
+- Pulls active thumbnail and title from `project_thumbnails`/`project_titles`
+- Renders mock YouTube feed with grey placeholder cards
+- User can switch between different saved titles/thumbnails
+- No actual YouTube API - pure visual mockup
 
-## Database Schema
+### Wiki
 
-### Core Tables
+Knowledge base for storing team documentation.
 
-| Table | Description |
-|-------|-------------|
-| `profiles` | User profiles (extends Supabase auth) |
-| `organizations` | Studios/workspaces |
-| `organization_members` | Team members with roles |
-| `subscriptions` | Stripe subscriptions per organization |
+**Data model:**
+- `wiki_folders` - Folders with optional nesting (`parent_folder_id`)
+- `wiki_documents` - Documents belong to org, optionally in a folder
+- Content stored as HTML (Tiptap rich text editor)
 
-### Channel & Projects
-
-| Table | Description |
-|-------|-------------|
-| `channels` | YouTube channels |
-| `channel_brandings` | Channel branding assets (logo, banner) |
-| `channel_links` | Social links for channels |
-| `projects` | Video projects |
-| `project_titles` | Multiple title options (up to 5) |
-| `project_thumbnails` | Multiple thumbnail options (up to 5) |
-| `project_tags` | Video tags |
-| `playlists` | Video playlists |
-
-### Kanban & Tasks
-
-| Table | Description |
-|-------|-------------|
-| `board_statuses` | Kanban columns (Idea, Script, etc.) |
-| `status_default_tasks` | Default tasks per status |
-| `project_tasks` | Tasks copied to individual projects |
-
-### Scripts & Wiki
-
-| Table | Description |
-|-------|-------------|
-| `scripts` | Video scripts |
-| `scenes` | Individual scenes in scripts |
-| `wiki_folders` | Knowledge base folders |
-| `wiki_documents` | Documents in wiki |
-
-### Admin & Support
-
-| Table | Description |
-|-------|-------------|
-| `plan_keys` | Redemption keys for plans |
-| `waitlist` | Beta waitlist entries |
-| `support_tickets` | Support tickets |
-| `support_ticket_messages` | Messages in tickets |
-
----
-
-## Key Features
+**Features:**
+- Create/rename/delete folders
+- Move documents between folders
+- Auto-save with "Saving..." indicator
 
 ### Free Tier Limits
 
-The system prevents abuse of the free tier through database triggers.
+Prevents abuse by tracking project creations.
+
+**The problem it solves:**
+Without this, users could create/delete indefinitely on free tier.
 
 **How it works:**
+1. `organizations.project_initiations_count` tracks lifetime creates
+2. `trigger_check_project_creation_limit` fires BEFORE INSERT on `projects`
+3. Compares count to plan limit (Free = 1, others = unlimited)
+4. Rejects with error if limit exceeded
+5. If allowed, `trigger_increment_project_initiations` adds 1 to counter
 
-1. **Project Initiation Counter**: The `project_initiations_count` column on `organizations` tracks lifetime project creations (never decrements when deleted).
+**Important:** Counter never decreases when deleting projects.
 
-2. **Plan Limits**:
-   - Free: 1 project (lifetime)
-   - Creator: Unlimited
-   - Studio: Unlimited
+### Plan Keys (Beta/Gift Access)
 
-3. **One Free Org Per User**: Users can only be a member of one free organization at a time.
+Admins can generate keys that grant plan access without Stripe payment.
 
-**Database Triggers:**
-- `trigger_check_project_creation_limit` - Validates project limits before INSERT
-- `trigger_check_free_tier_limit` - Validates free tier membership before member INSERT
-- `trigger_increment_project_initiations` - Increments counter after project INSERT
+**Key lifecycle:**
+1. Admin creates key at `/admin/keys` (specifies plan + duration)
+2. Key stored in `plan_keys` table with unique code
+3. User redeems at `/redeem` or via waitlist email
+4. `redeemed_at` timestamp set, subscription created/updated
+5. `source: 'key'` on subscription marks it as gifted
 
-**Error Messages:**
-- "Project creation limit reached for free plan (1 projects). Upgrade to create more projects."
-- "You can only be a member of one free tier organization."
+**Duration options:**
+- `1_month`, `3_months`, `6_months`, `1_year`, `lifetime`
+- Lifetime keys have no `current_period_end`
 
-### Default Tasks System
+### Waitlist Flow
 
-Each kanban status has configurable default tasks that auto-copy to projects.
+Beta access management for launch.
 
-**Default Tasks by Status:**
+**Flow:**
+1. User signs up on landing page → row in `waitlist`
+2. Admin sees pending entries at `/admin/waitlist`
+3. Admin clicks "Send Key" → generates plan key, emails user
+4. `key_sent_at` timestamp tracked
+5. User redeems key → becomes active subscriber
 
-| Status | Default Tasks |
-|--------|---------------|
-| **Idea** | One sentence description, Intro hook, Loop, Call to action target, Call to action implementation, Video length and reason |
-| **Package** | Make 1-5 thumbnails, Compare and choose best, SEO description, SEO tags, Select playlist |
-| **Script** | Write script scene by scene, Write editing visualization |
-| **Record** | Record video/voiceovers, Record/download materials |
-| **Edit** | Follow visualization to match script |
-| **Review** | Watch video entirely, Confirm no mistakes |
-| **Complete** | Make new upload, Set packaging data, Publish/schedule |
+---
 
-**How to Manage Default Tasks:**
-1. Go to `/studio/[slug]/board`
-2. Click "Edit Board" (top right)
-3. Click chevron (>) next to any status
-4. Add/remove tasks as needed
+## Security & Permissions
 
-**Automatic Copying:**
-- When projects are created, they get default tasks from their status
-- When projects move to a new status, they get that status's default tasks
-- Existing tasks are preserved; only new ones are added
+### Authentication Flow
+
+```
+User logs in
+    ↓
+Supabase Auth creates session (stored in cookies)
+    ↓
+middleware.ts checks cookies on every request
+    ↓
+If no session → redirect to /auth/login
+    ↓
+If session → createServerClient() has user context
+    ↓
+All Supabase queries run AS that user (RLS applies)
+```
+
+### Row Level Security (RLS)
+
+Every table has RLS enabled. Users only see data they have access to.
+
+**Common pattern:**
+```sql
+CREATE POLICY "Users can view org data" ON some_table
+FOR SELECT USING (
+  organization_id IN (
+    SELECT organization_id FROM organization_members
+    WHERE user_id = auth.uid()
+  )
+);
+```
+
+**What this means:**
+- Even if someone guesses a project ID, they can't access it
+- Cross-organization data leaks are impossible at the database level
+- Frontend doesn't need permission checks for read operations
+
+### Role-Based Permissions
+
+| Role | View | Edit | Manage Team | Billing | Delete Studio |
+|------|------|------|-------------|---------|---------------|
+| Viewer | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Editor | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Admin | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Owner | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**How roles work:**
+- `organization_members.role` stores the role
+- Owner is also stored as `organizations.owner_id`
+- RLS policies check role for write operations
+- Billing actions (`lib/actions/billing.ts`) explicitly check `owner_id`
+
+### Billing Security
+
+Only the studio owner can:
+- Start Stripe checkout
+- Access billing portal
+- Redeem plan keys for the studio
+
+**Implementation:**
+```typescript
+// In billing actions
+if (org.owner_id !== user.id) {
+  return { error: "Only the studio owner can manage billing" };
+}
+```
 
 ### Rate Limiting
 
-API endpoints are protected by in-memory rate limiting (`lib/rate-limit.ts`).
+Protects public endpoints from abuse.
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| `/api/youtube-search` | 30 requests | 1 minute |
-| `/api/waitlist` | 5 requests | 1 minute |
-| `/api/keys/validate` | 10 requests | 1 minute |
-| `/api/keys/redeem` | 10 requests | 1 minute |
+**Implementation:** `lib/rate-limit.ts` - in-memory store keyed by IP
 
-Rate limits are per-IP address. Returns 429 "Too Many Requests" when exceeded.
+| Endpoint | Limit | Why |
+|----------|-------|-----|
+| `/api/youtube-search` | 30/min | Prevents YouTube API quota abuse |
+| `/api/waitlist` | 5/min | Prevents waitlist spam |
+| `/api/keys/validate` | 10/min | Prevents key brute-forcing |
+| `/api/keys/redeem` | 10/min | Prevents redemption spam |
 
-### Security Model
+### Admin Access
 
-**Authentication:**
-- Supabase Auth with SSR sessions
-- Middleware validates auth on protected routes
+Admin role stored in `profiles.role = 'admin'`.
 
-**Row Level Security (RLS):**
-- All tables have RLS enabled
-- Policies ensure users only access their own organization's data
-- Cross-organization access is prevented at the database level
+**Admin-only endpoints:**
+- `/admin/*` pages check role in layout
+- `/api/admin/*` routes check role before processing
+- `/api/cron/*` routes require Vercel cron header
 
-**Billing Security:**
-- Only studio owners can access billing operations
-- Team members (editors, viewers) cannot upgrade/downgrade plans
+---
 
-**Endpoint Security:**
-- Cron endpoints require Vercel cron header
-- Admin endpoints require admin role check
-- API routes check user permissions
+## Database Design
 
-**DDoS Protection:**
-- Vercel edge network handles L3/L4 attacks
-- Rate limiting handles application-level abuse
+### Entity Relationships
+
+```
+profiles (users)
+    │
+    ├── organization_members ─── organizations (studios)
+    │                                   │
+    │                                   ├── channels
+    │                                   ├── subscriptions
+    │                                   ├── board_statuses ─── status_default_tasks
+    │                                   ├── wiki_folders ─── wiki_documents
+    │                                   └── projects
+    │                                           │
+    │                                           ├── project_tasks
+    │                                           ├── project_titles
+    │                                           ├── project_thumbnails
+    │                                           ├── project_tags
+    │                                           └── scripts ─── scenes
+```
+
+### Key Tables Explained
+
+**`organizations`**
+- Central entity, everything else belongs to an org
+- `owner_id` is the billing contact
+- `slug` is URL identifier (unique)
+- `project_initiations_count` for free tier enforcement
+
+**`subscriptions`**
+- One per organization
+- `source` distinguishes Stripe vs key grants
+- `stripe_customer_id` and `stripe_subscription_id` for Stripe sync
+
+**`board_statuses`**
+- Kanban columns, customizable per org
+- `position` for ordering
+- Default statuses seeded on org creation
+
+**`status_default_tasks`**
+- Templates that copy to projects
+- Belong to a status, not directly to org
+
+**`project_tasks`**
+- Actual tasks on a project (copied from defaults + manual)
+- `is_complete` for checkbox state
+
+### Database Triggers
+
+| Trigger | Table | When | What it does |
+|---------|-------|------|--------------|
+| `trigger_check_project_creation_limit` | projects | BEFORE INSERT | Enforces plan project limits |
+| `trigger_increment_project_initiations` | projects | AFTER INSERT | Increments org counter |
+| `trigger_check_free_tier_limit` | organization_members | BEFORE INSERT | One free org per user |
+| `trigger_copy_default_tasks` | projects | AFTER INSERT/UPDATE | Copies default tasks to project |
+
+### Migrations
+
+Located in `supabase/migrations/`, numbered in order (00001, 00002, etc.).
+
+**One-off scripts** in `supabase/scripts/`:
+- `diagnostic_*.sql` - Debugging queries
+- `fix_*.sql` - One-time data fixes
+- `sync_*.sql` - Data synchronization scripts
 
 ---
 
 ## Admin Operations
 
-### Managing Waitlist
+### Adding Someone to the Beta
 
 1. Go to `/admin/waitlist`
-2. Filter by status: All, Pending, Key Sent
-3. Click "Send Key" to generate and email a plan key
-4. Track when keys were sent with `key_sent_at` column
+2. Find their email (or have them sign up first)
+3. Click "Send Key" → generates Creator key, emails them
+4. They click link in email → redemption page → activated
 
-### Managing Plan Keys
+### Manually Granting a Plan
 
 1. Go to `/admin/keys`
-2. Generate keys with specific plan and duration
-3. Keys can be:
-   - Redeemed by users at `/redeem`
-   - Assigned to specific studios
-   - Sent via waitlist emails
+2. Click "Generate Key"
+3. Select plan and duration
+4. Copy key, send to user manually
+5. User redeems at `/redeem`
 
-### User Roles
+### Checking a User's Subscription
 
-| Role | Permissions |
-|------|-------------|
-| **Viewer** | View-only access |
-| **Editor** | Create/edit projects, move cards |
-| **Admin** | Team management, studio settings |
-| **Owner** | Full access including billing, deletion |
+1. Go to `/admin/studios`
+2. Search by studio name or owner email
+3. See subscription status, plan, expiration
 
----
+### Handling Support Tickets
 
-## Mobile Responsiveness
-
-All pages are mobile-responsive. Key patterns used:
-
-- Responsive Tailwind classes (`md:flex-row`, `lg:px-8`)
-- Column stacking on mobile
-- Conditional visibility (`hidden md:block`)
-- Responsive text sizes (`text-sm md:text-base`)
-- Mobile slide-out sidebar navigation
-- Touch-friendly targets (min 44px)
+1. Go to `/admin/tickets`
+2. Filter by status (open, in_progress, resolved)
+3. Click ticket to view conversation
+4. Reply or change status
 
 ---
 
-## Project Structure
+## API Endpoints
+
+### Public APIs
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/waitlist` | POST | Join waitlist |
+| `/api/keys/validate` | POST | Check if key is valid |
+| `/api/keys/redeem` | POST | Redeem a plan key |
+
+### Authenticated APIs
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/youtube-search` | GET | Search YouTube videos |
+| `/api/checkout` | POST | Create Stripe checkout session |
+| `/api/portal` | POST | Create Stripe billing portal session |
+
+### Webhook Endpoints
+
+| Endpoint | Source | Purpose |
+|----------|--------|---------|
+| `/api/webhooks/stripe` | Stripe | Subscription lifecycle events |
+
+### Cron Endpoints
+
+| Endpoint | Schedule | Purpose |
+|----------|----------|---------|
+| `/api/cron/expire-plan-keys` | Daily | Deactivate expired key-based subscriptions |
+
+---
+
+## File Structure
 
 ```
-├── app/
-│   ├── (auth)/              # Auth routes
-│   ├── admin/               # Admin panel
-│   ├── api/                 # API routes
-│   ├── auth/                # Auth callback routes
-│   ├── help/                # Help center
-│   ├── hub/                 # Studio hub
-│   ├── studio/              # Studio pages
-│   └── page.tsx             # Landing page
-├── components/
-│   ├── billing/             # Billing components
-│   ├── forms/               # Form components
-│   ├── layouts/             # Layout components
-│   ├── providers/           # Context providers
-│   ├── shared/              # Shared components
-│   └── ui/                  # shadcn/ui components
-├── config/
-│   ├── navigation.ts        # Navigation config
-│   ├── site.ts              # Site config
-│   └── subscriptions.ts     # Plan definitions
-├── lib/
-│   ├── actions/             # Server actions
-│   ├── hooks/               # Custom hooks
-│   ├── stores/              # Zustand stores
-│   ├── stripe/              # Stripe utilities
-│   ├── supabase/            # Supabase clients
-│   └── validators/          # Zod schemas
-├── supabase/
-│   ├── migrations/          # Database migrations (run in order)
-│   └── scripts/             # One-off diagnostic/fix scripts
-└── types/                   # TypeScript types
-```
+app/
+├── (auth)/              # Route group for auth pages
+├── admin/               # Admin panel pages
+├── api/                 # API route handlers
+├── auth/                # Auth callbacks (Supabase redirects here)
+├── help/                # Help center & support tickets
+├── hub/                 # Main dashboard (studio list)
+├── studio/              # All studio pages
+│   └── [studioSlug]/
+│       ├── board/       # Kanban board
+│       ├── channel/     # Channel branding
+│       ├── project/     # Project pages (nested)
+│       ├── settings/    # Studio settings
+│       └── wiki/        # Knowledge base
+└── page.tsx             # Landing page
 
----
+components/
+├── billing/             # Subscription UI, plan cards
+├── forms/               # Form components
+├── layouts/             # Sidebar, dashboard wrapper
+├── project/             # Project-specific components
+├── settings/            # Settings page tabs
+├── shared/              # Reusable components
+└── ui/                  # shadcn/ui primitives
 
-## Scripts
+lib/
+├── actions/             # Server actions (mutations)
+├── hooks/               # Custom React hooks
+├── stores/              # Zustand stores
+├── stripe/              # Stripe utilities
+├── supabase/            # Supabase client factories
+│   ├── client.ts        # Browser client
+│   ├── server.ts        # Server component client
+│   └── middleware.ts    # Middleware client
+└── validators/          # Zod schemas
 
-```bash
-npm run dev        # Start development server
-npm run build      # Build for production
-npm run start      # Start production server
-npm run lint       # Run ESLint
-```
+config/
+├── navigation.ts        # Sidebar nav items
+├── site.ts              # Site metadata
+└── subscriptions.ts     # Plan definitions
 
----
+supabase/
+├── migrations/          # Numbered schema changes
+└── scripts/             # One-off diagnostic/fix scripts
 
-## Environment Variables Reference
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
-
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-
-# App
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-
-# YouTube API (optional)
-YOUTUBE_API_KEY=...
-
-# Email (optional)
-RESEND_API_KEY=re_...
+types/
+├── database.ts          # Entity types
+└── supabase.ts          # Generated Supabase types
 ```
 
 ---
