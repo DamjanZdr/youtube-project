@@ -97,6 +97,12 @@ export async function POST(req: NextRequest) {
         })
         .select()
         .single();
+      
+      // Update waitlist entry to mark key as sent
+      await adminClient
+        .from("waitlist")
+        .update({ key_sent_at: new Date().toISOString() })
+        .eq("email", email.toLowerCase().trim());
 
       if (insertError) {
         results.push({ email, success: false, error: insertError.message });

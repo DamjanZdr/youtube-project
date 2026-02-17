@@ -30,6 +30,7 @@ interface WaitlistEntry {
   email: string;
   created_at: string;
   discord_invite_sent: boolean;
+  key_sent_at: string | null;
   notes: string | null;
 }
 
@@ -53,7 +54,7 @@ export default function AdminWaitlistPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const [filter, setFilter] = useState<"all" | "invited" | "pending">("all");
+  const [filter, setFilter] = useState<"all" | "invited" | "pending" | "key_sent" | "no_key">("all");
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
   const [copiedEmails, setCopiedEmails] = useState(false);
 
@@ -80,6 +81,10 @@ export default function AdminWaitlistPage() {
       query = query.eq("discord_invite_sent", true);
     } else if (filter === "pending") {
       query = query.eq("discord_invite_sent", false);
+    } else if (filter === "key_sent") {
+      query = query.not("key_sent_at", "is", null);
+    } else if (filter === "no_key") {
+      query = query.is("key_sent_at", null);
     }
 
     // Apply search
@@ -150,10 +155,11 @@ export default function AdminWaitlistPage() {
   }
 
   function exportCSV() {
-    const headers = ["email", "signed_up", "discord_invite_sent"];
+    const headers = ["email", "signed_up", "key_sent", "discord_invite_sent"];
     const rows = entries.map(e => [
       e.email,
       format(new Date(e.created_at), "yyyy-MM-dd HH:mm"),
+      e.key_sent_at ? format(new Date(e.key_sent_at), "yyyy-MM-dd HH:mm") : "",
       e.discord_invite_sent ? "Yes" : "No"
     ]);
     
@@ -200,6 +206,7 @@ export default function AdminWaitlistPage() {
         }
         setSelectedEntries(new Set());
         setShowSendKeys(false);
+        fetchEntries(); // Refresh to show updated key_sent_at
       }
     } catch (error) {
       toast.error("Failed to send keys");
@@ -215,6 +222,7 @@ export default function AdminWaitlistPage() {
     total: totalCount,
     invited: entries.filter(e => e.discord_invite_sent).length,
     pending: entries.filter(e => !e.discord_invite_sent).length,
+    keySent: entries.filter(e => e.key_sent_at).length,
   };
 
   return (
@@ -238,7 +246,7 @@ export default function AdminWaitlistPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="glass border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/20">
@@ -263,6 +271,17 @@ export default function AdminWaitlistPage() {
         </div>
         <div className="glass border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/20">
+              <Key className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.keySent}</p>
+              <p className="text-sm text-muted-foreground">Keys Sent</p>
+            </div>
+          </div>
+        </div>
+        <div className="glass border border-white/10 rounded-xl p-4">
+          <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-yellow-500/20">
               <Clock className="w-5 h-5 text-yellow-400" />
             </div>
@@ -276,8 +295,8 @@ export default function AdminWaitlistPage() {
 
       {/* Filters & Search */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex gap-2">
-          {(["all", "pending", "invited"] as const).map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {(["all", "no_key", "key_sent", "pending", "invited"] as const).map((f) => (
             <Button
               key={f}
               variant={filter === f ? "default" : "outline"}
@@ -285,7 +304,7 @@ export default function AdminWaitlistPage() {
               onClick={() => { setFilter(f); setPage(0); }}
               className="capitalize"
             >
-              {f}
+              {f === "key_sent" ? "Key Sent" : f === "no_key" ? "No Key" : f}
             </Button>
           ))}
         </div>
@@ -340,19 +359,20 @@ export default function AdminWaitlistPage() {
               </th>
               <th className="p-4 text-left text-sm font-medium text-muted-foreground">Email</th>
               <th className="p-4 text-left text-sm font-medium text-muted-foreground">Signed Up</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Key Sent</th>
               <th className="p-4 text-left text-sm font-medium text-muted-foreground">Status</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                <td colSpan={5} className="p-8 text-center text-muted-foreground">
                   Loading...
                 </td>
               </tr>
             ) : entries.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                <td colSpan={5} className="p-8 text-center text-muted-foreground">
                   No waitlist entries found
                 </td>
               </tr>
@@ -383,6 +403,16 @@ export default function AdminWaitlistPage() {
                       <Calendar className="w-4 h-4" />
                       {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
                     </div>
+                  </td>
+                  <td className="p-4">
+                    {entry.key_sent_at ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400">
+                        <Key className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(entry.key_sent_at), { addSuffix: true })}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
                   </td>
                   <td className="p-4">
                     {entry.discord_invite_sent ? (
