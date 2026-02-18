@@ -59,6 +59,13 @@ interface ProjectAssignee {
   user_id: string;
 }
 
+interface DefaultTask {
+  id: string;
+  status_id: string;
+  name: string;
+  position: number;
+}
+
 export default function TasksPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -67,6 +74,7 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [statuses, setStatuses] = useState<BoardStatus[]>([]);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
+  const [defaultTasks, setDefaultTasks] = useState<DefaultTask[]>([]);
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [currentStatusId, setCurrentStatusId] = useState<string | null>(null);
   const [orgMembers, setOrgMembers] = useState<OrgMember[]>([]);
@@ -98,7 +106,7 @@ export default function TasksPage() {
     setCurrentStatusId(project.board_status_id);
 
     // Load all data in parallel
-    const [statusesRes, tasksRes, membersRes, assigneesRes, statusDetailsRes] = await Promise.all([
+    const [statusesRes, tasksRes, defaultTasksRes, membersRes, assigneesRes, statusDetailsRes] = await Promise.all([
       supabase
         .from("board_statuses")
         .select("*")
@@ -107,7 +115,11 @@ export default function TasksPage() {
       supabase
         .from("project_tasks")
         .select("*")
-        .eq("project_id", projectId)
+        .eq("project_id", projectId),
+      supabase
+        .from("status_default_tasks")
+        .select("*, board_statuses!inner(organization_id)")
+        .eq("board_statuses.organization_id", project.organization_id)
         .order("position"),
       supabase
         .from("organization_members")
@@ -130,6 +142,7 @@ export default function TasksPage() {
 
     if (statusesRes.data) setStatuses(statusesRes.data);
     if (tasksRes.data) setTasks(tasksRes.data);
+    if (defaultTasksRes.data) setDefaultTasks(defaultTasksRes.data);
     if (membersRes.data) setOrgMembers(membersRes.data as unknown as OrgMember[]);
     if (assigneesRes.data) setProjectAssignees(assigneesRes.data);
     if (statusDetailsRes.data) setProjectStatusDetails(statusDetailsRes.data);
@@ -254,9 +267,26 @@ export default function TasksPage() {
   };
 
   const getTasksForStatus = (statusId: string) => {
-    return tasks
-      .filter(t => t.status_id === statusId)
+    // Get defaults for this status, sorted by position
+    const statusDefaults = defaultTasks
+      .filter(dt => dt.status_id === statusId)
       .sort((a, b) => a.position - b.position);
+    
+    // Get project tasks for this status
+    const statusProjectTasks = tasks.filter(t => t.status_id === statusId);
+    
+    // Sort project tasks by matching default position
+    return statusProjectTasks.sort((a, b) => {
+      const aDefault = statusDefaults.find(dt => dt.name.toLowerCase() === a.name.toLowerCase());
+      const bDefault = statusDefaults.find(dt => dt.name.toLowerCase() === b.name.toLowerCase());
+      
+      // Tasks with matching defaults sort by default position
+      // Tasks without matching defaults go to the end
+      const aPos = aDefault ? aDefault.position : 999999;
+      const bPos = bDefault ? bDefault.position : 999999;
+      
+      return aPos - bPos;
+    });
   };
 
   const getCompletionStats = (statusId: string) => {

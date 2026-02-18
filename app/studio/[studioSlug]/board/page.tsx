@@ -625,9 +625,24 @@ export default function BoardPage() {
     const grouped: Record<string, ProjectTask[]> = {};
     
     statuses.forEach(s => {
-      grouped[s.id] = projectTasks
-        .filter(t => t.status_id === s.id)
+      // Get defaults for this status, sorted by position
+      const statusDefaults = defaultTasks
+        .filter(dt => dt.status_id === s.id)
         .sort((a, b) => a.position - b.position);
+      
+      // Get project tasks for this status
+      const statusProjectTasks = projectTasks.filter(t => t.status_id === s.id);
+      
+      // Sort by matching default position
+      grouped[s.id] = statusProjectTasks.sort((a, b) => {
+        const aDefault = statusDefaults.find(dt => dt.name.toLowerCase() === a.name.toLowerCase());
+        const bDefault = statusDefaults.find(dt => dt.name.toLowerCase() === b.name.toLowerCase());
+        
+        const aPos = aDefault ? aDefault.position : 999999;
+        const bPos = bDefault ? bDefault.position : 999999;
+        
+        return aPos - bPos;
+      });
     });
     
     // Also include tasks without a status
