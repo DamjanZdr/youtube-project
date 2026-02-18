@@ -132,7 +132,7 @@ export default function StudioHomePage() {
     toast.success("Project created successfully!");
     
     // Navigate to the project
-    router.push(`/studio/${studioSlug}/project/${newProject.id}`);
+    router.push(`/studio/${studioSlug}/project/${newProject.id}/idea`);
   }
 
   // Find the last board status (highest position)
@@ -262,7 +262,7 @@ export default function StudioHomePage() {
               <h3 className="text-xs md:text-sm font-medium text-muted-foreground mb-3">Shorts</h3>
               {projects.filter(p => p.video_type === "short").length > 0 ? (
                 projects.filter(p => p.video_type === "short").map((project) => (
-                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}`} className="flex items-center justify-between p-2.5 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                  <a key={project.id} href={`/studio/${studioSlug}/project/${project.id}/idea`} className="flex items-center justify-between p-2.5 md:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0">
                       <div className="w-7 h-7 md:w-8 md:h-8 rounded bg-white/10 flex items-center justify-center shrink-0">
                         <Video className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />

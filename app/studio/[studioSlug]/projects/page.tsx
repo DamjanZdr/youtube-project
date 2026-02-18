@@ -413,7 +413,7 @@ function ProjectCard({ project, studioSlug, boardStatuses }: { project: Project;
 
   return (
     <Link
-      href={`/studio/${studioSlug}/project/${project.id}`}
+      href={`/studio/${studioSlug}/project/${project.id}/idea`}
       className="glass-card p-4 hover-lift group block"
     >
       {/* Thumbnail */}
@@ -476,7 +476,7 @@ function ProjectListItem({ project, studioSlug, boardStatuses }: { project: Proj
 
   return (
     <Link
-      href={`/studio/${studioSlug}/project/${project.id}`}
+      href={`/studio/${studioSlug}/project/${project.id}/idea`}
       className="glass-card p-3 md:p-4 hover:bg-white/5 transition-colors flex flex-col md:flex-row md:items-center gap-3 md:gap-4 group"
     >
       <div className="flex items-center gap-3 md:gap-4 min-w-0">

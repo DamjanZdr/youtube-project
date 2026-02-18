@@ -6,5 +6,5 @@ interface PageProps {
 
 export default async function ProjectPage({ params }: PageProps) {
   const { studioSlug, projectId } = await params;
-  redirect(`/studio/${studioSlug}/project/${projectId}/idea`);
+  redirect(+""+/studio/+""+${studioSlug}/project/+""+${projectId}/idea+""+);
 }

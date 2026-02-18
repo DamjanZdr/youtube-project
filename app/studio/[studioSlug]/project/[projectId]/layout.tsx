@@ -193,12 +193,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     }
 
     setDuplicating(false);
-    router.push(`/studio/${studioSlug}/project/${newProject.id}`);
+    router.push(`/studio/${studioSlug}/project/${newProject.id}/idea`);
   };
 
   const tabs = [
     { href: `/studio/${studioSlug}/project/${projectId}/idea`, icon: Lightbulb, label: "Idea" },
-    { href: `/studio/${studioSlug}/project/${projectId}`, icon: Package, label: "Packaging", exact: true, tutorialId: "nav-packaging" },
+    { href: `/studio/${studioSlug}/project/${projectId}/packaging`, icon: Package, label: "Packaging", tutorialId: "nav-packaging" },
     { href: `/studio/${studioSlug}/project/${projectId}/preview`, icon: Eye, label: "Preview", tutorialId: "nav-preview" },
     { href: `/studio/${studioSlug}/project/${projectId}/storyboard`, icon: Film, label: "Storyboard", tutorialId: "nav-storyboard" },
     { href: `/studio/${studioSlug}/project/${projectId}/tasks`, icon: ListTodo, label: "Tasks", tutorialId: "nav-tasks" },
@@ -206,10 +206,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   ];
 
   const isTabActive = (tab: typeof tabs[0]) => {
-    if (tab.exact) {
-      return pathname === tab.href || pathname === `${tab.href}/packaging`;
-    }
-    return pathname.startsWith(tab.href);
+    return pathname === tab.href || pathname.startsWith(tab.href + '/');
   };
 
   if (loading) {

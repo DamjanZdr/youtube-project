@@ -458,7 +458,7 @@ export default function BoardPage() {
       throw error;
     } else if (project) {
       // Navigate to the new project
-      router.push(`/studio/${studioSlug}/project/${project.id}`);
+      router.push(`/studio/${studioSlug}/project/${project.id}/idea`);
     }
   };
 
