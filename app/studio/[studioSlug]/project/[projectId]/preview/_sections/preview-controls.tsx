@@ -51,22 +51,22 @@ export function PreviewControls({
 
       {/* Center: Set Picker (absolutely positioned on desktop, inline on mobile) */}
       {sets.length > 1 && (
-        <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-2 p-1.5 rounded-lg bg-muted">
+        <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-2 p-1.5 rounded-lg bg-muted overflow-x-auto max-w-[90vw] sm:max-w-[50vw]">
           {sets.map((set, index) => (
             <button
               key={set.id}
               onClick={() => onSetChange(index)}
-              className={`relative rounded-lg overflow-hidden transition-all flex flex-col items-center ${
+              className={`relative rounded-lg overflow-hidden transition-all flex flex-col items-center shrink-0 ${
                 index === currentSetIndex 
                   ? "ring-2 ring-primary ring-offset-2 ring-offset-background" 
                   : "opacity-50 hover:opacity-100"
               }`}
             >
-              <div className="w-16 sm:w-20 aspect-video bg-zinc-800 rounded-md overflow-hidden">
+              <div className="w-14 sm:w-16 aspect-video bg-zinc-800 rounded-md overflow-hidden">
                 {set.thumbnail_url ? (
                   <img src={set.thumbnail_url} className="w-full h-full object-cover" alt="" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                  <div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground">
                     No thumb
                   </div>
                 )}
