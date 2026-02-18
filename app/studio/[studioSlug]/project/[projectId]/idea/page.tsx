@@ -89,6 +89,39 @@ interface SectionContent {
   cta: string;
 }
 
+// Grammar cleanup for voice-to-text transcription
+function cleanupTranscript(text: string): string {
+  let result = text.trim();
+  if (!result) return result;
+  
+  // Replace spoken punctuation commands
+  result = result
+    .replace(/\b(period|full stop)\b/gi, '.')
+    .replace(/\bcomma\b/gi, ',')
+    .replace(/\b(question mark)\b/gi, '?')
+    .replace(/\b(exclamation point|exclamation mark)\b/gi, '!')
+    .replace(/\bcolon\b/gi, ':')
+    .replace(/\bsemicolon\b/gi, ';')
+    .replace(/\b(new line|newline|next line)\b/gi, '\n')
+    .replace(/\b(new paragraph)\b/gi, '\n\n');
+  
+  // Fix spacing around punctuation
+  result = result
+    .replace(/\s+([.,!?;:])/g, '$1')  // Remove space before punctuation
+    .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')  // Add space after punctuation if missing
+    .replace(/\s+/g, ' ');  // Collapse multiple spaces
+  
+  // Capitalize first letter and after sentence-ending punctuation
+  result = result.charAt(0).toUpperCase() + result.slice(1);
+  result = result.replace(/([.!?]\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+  
+  // Capitalize common proper nouns and "I"
+  result = result.replace(/\bi\b/g, 'I');
+  result = result.replace(/\byoutube\b/gi, 'YouTube');
+  
+  return result;
+}
+
 export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -162,7 +195,9 @@ export default function IdeaPage() {
         }
         
         if (finalTranscript) {
-          editor.commands.insertContent(finalTranscript + " ");
+          // Apply grammar cleanup to final transcript
+          const cleanedText = cleanupTranscript(finalTranscript);
+          editor.commands.insertContent(cleanedText + " ");
         }
         
         if (interimTranscript) {
@@ -376,7 +411,6 @@ export default function IdeaPage() {
         <div className="max-w-4xl mx-auto space-y-2">
           {IDEA_SECTIONS.map((section) => {
             const isExpanded = expandedSections.has(section.key);
-            const hasContent = content[section.key]?.trim().length > 0;
             const isFocused = focusedSection === section.key;
             
             return (
@@ -395,9 +429,6 @@ export default function IdeaPage() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   )}
                   <span className="font-medium text-sm">{section.title}</span>
-                  {hasContent && !isExpanded && (
-                    <span className="text-xs text-green-500">●</span>
-                  )}
                 </button>
                 
                 {/* Section Content */}
