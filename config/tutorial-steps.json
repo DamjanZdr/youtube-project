@@ -360,6 +360,20 @@
     },
     {
       "id": 44,
+      "title": "Go to Board",
+      "content": "Next, let's check out the Board settings.",
+      "icon": "ListTodo",
+      "clickSelector": "[data-tutorial='settings-board']",
+      "autoAdvanceOnClick": "[data-tutorial='settings-board']"
+    },
+    {
+      "id": 45,
+      "title": "Board Settings",
+      "content": "This is where you customize your workflow. You can add, edit, rename, or reorder the default tasks that appear in every new project. Drag tasks to change their order, or double-click to rename them.",
+      "icon": "ListTodo"
+    },
+    {
+      "id": 46,
       "title": "Go to Billing",
       "content": "And last is the billing settings. Open it up.",
       "icon": "CreditCard",
@@ -367,7 +381,7 @@
       "autoAdvanceOnClick": "[data-tutorial='settings-billing']"
     },
     {
-      "id": 45,
+      "id": 47,
       "title": "Billing Overview",
       "content": "Here you can see your billing overview, such as your current billing cycle, and the upcoming one (if there is one).",
       "icon": "CreditCard",
@@ -376,7 +390,7 @@
       ]
     },
     {
-      "id": 46,
+      "id": 48,
       "title": "Plans",
       "content": "You can see the plan options and what they include as well as the prices. Keep in mind, yearly subscriptions are 17% cheaper.",
       "icon": "CreditCard",
@@ -385,7 +399,7 @@
       ]
     },
     {
-      "id": 47,
+      "id": 49,
       "title": "Redeem Code",
       "content": "Here you can use a key if you have one to obtain a gifted subscription.",
       "icon": "CreditCard",
@@ -394,14 +408,14 @@
       ]
     },
     {
-      "id": 48,
+      "id": 50,
       "title": "Your Profile",
       "content": "Finally, there is your profile. Click on it now. From here you can go back to the hub where you have the list of your studios, open your account settings, access the help center, enable or disable invites, and sign out.",
       "icon": "User",
       "clickSelector": "[data-tutorial='user-menu']"
     },
     {
-      "id": 49,
+      "id": 51,
       "title": "That's All!",
       "content": "That's all for now. Go ahead and get started on your first project.",
       "icon": "Play"

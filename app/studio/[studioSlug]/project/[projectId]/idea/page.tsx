@@ -566,7 +566,7 @@ export default function IdeaPage() {
                 font-medium transition-colors duration-300
                 ${isListening ? "text-red-300" : "text-white/80 group-hover:text-white"}
               `}>
-                {isListening ? `Recording → ${IDEA_SECTIONS.find(s => s.key === focusedSection)?.title}` : "Voice"}
+                {isListening ? "Recording" : "Voice"}
               </span>
               
               {/* Live indicator dot */}

@@ -774,7 +774,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
-          <TabsTrigger value="board" className="gap-2 text-sm px-5 py-2.5">
+          <TabsTrigger value="board" data-tutorial="settings-board" className="gap-2 text-sm px-5 py-2.5">
             <ListTodo className="w-4 h-4" />
             <span className="hidden sm:inline">Board</span>
           </TabsTrigger>
@@ -954,14 +954,16 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={handleRestartTutorial}
-            >
-              <Sparkles className="w-4 h-4" />
-              Restart Tutorial
-            </Button>
+            <div className="flex justify-center">
+              <Button 
+                variant="outline" 
+                className="gap-2 w-full sm:w-auto"
+                onClick={handleRestartTutorial}
+              >
+                <Sparkles className="w-4 h-4" />
+                Restart Tutorial
+              </Button>
+            </div>
           </div>
 
           {/* Danger Zone */}
