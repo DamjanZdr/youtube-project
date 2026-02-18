@@ -28,7 +28,8 @@ import {
   Check,
   ListVideo
 } from "lucide-react";
-import { YouTubePush } from "@/components/project/youtube-push";
+// YouTubePush hidden until YouTube connection is re-enabled
+// import { YouTubePush } from "@/components/project/youtube-push";
 
 interface PackagingSet {
   id: string;
@@ -463,26 +464,12 @@ export default function PackagingPage({ params }: PackagingPageProps) {
       </div>
 
       {/* Description, Video Type & Other Fields */}
-      <div data-tutorial="metadata-section" className="grid grid-cols-1 lg:grid-cols-[0.7fr_1fr] gap-6">
-        {/* Left Column: Description & Video Type */}
-        <div className="space-y-6">
-          {/* Description */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Description</h2>
-            <Textarea 
-              value={description}
-              onChange={(e) => saveDescription(e.target.value)}
-              placeholder="Write your video description..."
-              className="glass border-white/10 min-h-[180px]"
-            />
-            <p className="text-sm text-muted-foreground mt-2">
-              {description.length} characters
-            </p>
-          </div>
-          
+      <div data-tutorial="metadata-section" className="space-y-4">
+        {/* Row 1: Video Type (30%) + Description (70%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[0.3fr_0.7fr] gap-4">
           {/* Video Type */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Video Type</h2>
+          <div className="glass-card p-5">
+            <h2 className="text-sm font-semibold mb-3">Video Type</h2>
             <Select value={videoType} onValueChange={saveVideoType}>
               <SelectTrigger className="glass border-white/10">
                 <SelectValue />
@@ -493,15 +480,29 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Description */}
+          <div className="glass-card p-5">
+            <h2 className="text-sm font-semibold mb-3">Description</h2>
+            <Textarea 
+              value={description}
+              onChange={(e) => saveDescription(e.target.value)}
+              placeholder="Write your video description..."
+              className="glass border-white/10 min-h-[100px]"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              {description.length} characters
+            </p>
+          </div>
         </div>
 
-        {/* Right Column: Tags & Playlist */}
-        <div className="space-y-6">
+        {/* Row 2: Playlist (50%) + Tags (50%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Playlist */}
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <ListVideo className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Playlist</h2>
+          <div className="glass-card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <ListVideo className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">Playlist</h2>
             </div>
             <div className="flex gap-2">
               <Select 
@@ -538,13 +539,13 @@ export default function PackagingPage({ params }: PackagingPageProps) {
           </div>
 
           {/* Tags */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Tags</h2>
-            <div className="flex flex-wrap gap-2 mb-4 min-h-[40px]">
+          <div className="glass-card p-5">
+            <h2 className="text-sm font-semibold mb-3">Tags</h2>
+            <div className="flex flex-wrap gap-2 mb-3 min-h-[32px]">
               {tags.map((tag, i) => (
                 <span 
                   key={i}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 text-sm"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 text-xs"
                 >
                   #{tag}
                   <button 
@@ -581,26 +582,6 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               </Button>
             </div>
           </div>
-
-          {/* YouTube Push */}
-          {organizationId && (
-            <div className="glass-card p-6">
-              <YouTubePush
-                projectId={projectId}
-                organizationId={organizationId}
-                linkedVideoId={youtubeVideoId}
-                lastSyncedAt={youtubeLastSynced}
-                hasTitle={sets.some(s => s.selected && s.title.trim().length > 0)}
-                hasDescription={description.trim().length > 0}
-                hasTags={tags.length > 0}
-                hasThumbnail={sets.some(s => s.selected && s.thumbnail)}
-                onVideoLinked={(videoId) => {
-                  setYoutubeVideoId(videoId);
-                  if (!videoId) setYoutubeLastSynced(null);
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
 
