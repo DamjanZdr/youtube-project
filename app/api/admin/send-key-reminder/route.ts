@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: "Blueprint <noreply@myblueprint.studio>",
       to: recipientEmail,
-      subject: `Reminder: Your ${planText} Plan Key is Waiting! ⏰`,
+      subject: `Reminder: Your ${planText} Plan Key is Waiting! 🔔`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -130,15 +130,15 @@ export async function POST(req: NextRequest) {
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                     <tr>
                       <td style="padding: 40px 32px;">
-                        <div style="text-align: center; margin-bottom: 24px;">
-                          <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">⏰ Don't Forget Your Key!</h1>
+                        <div style="text-align: center; margin-bottom: 32px;">
+                          <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🔔 Don't Forget Your Key!</h1>
                           <p style="color: #52525b; margin: 0; font-size: 15px;">
                             ${greeting} You have an unused <strong style="color: #18181b;">${planText}</strong> plan key ${studioContext} waiting to be redeemed.
                           </p>
                         </div>
 
-                        <div style="background: linear-gradient(135deg, rgba(234,179,8,0.15) 0%, rgba(251,146,60,0.15) 100%); border: 1px solid rgba(234,179,8,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                          <p style="color: #ca8a04; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                          <p style="color: #6366f1; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
                           <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #18181b; margin: 0; font-weight: 700;">
                             ${keyData.key}
                           </p>
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
                         </div>
 
                         <div style="text-align: center; margin-bottom: 28px;">
-                          <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #eab308 0%, #f97316 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                          <a href="${redeemUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
                             Redeem Your Key Now →
                           </a>
                         </div>
