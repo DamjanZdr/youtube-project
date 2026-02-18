@@ -26,6 +26,12 @@ export async function GET(req: NextRequest) {
     lastLogin: "last_login_at",
     totalLogins: "total_logins",
     totalTime: "total_time",
+    desktopLogins: "desktop_logins",
+    mobileLogins: "mobile_logins",
+    tabletLogins: "tablet_logins",
+    desktopTime: "desktop_time_seconds",
+    mobileTime: "mobile_time_seconds",
+    tabletTime: "tablet_time_seconds",
   };
   const dbSortColumn = sortColumnMap[sortBy] || "created_at";
   const ascending = sortOrder === "asc";
@@ -51,8 +57,13 @@ export async function GET(req: NextRequest) {
 
     if (search) query = query.ilike("profiles.email", `%${search}%`);
 
+    // Determine which column to sort by (handle computed fields differently)
+    const activitySortColumn = ["total_logins", "total_time"].includes(dbSortColumn) 
+      ? "last_login_at" 
+      : dbSortColumn;
+
     const { data, count, error } = await query
-      .order("last_login_at", { ascending, nullsFirst: false })
+      .order(activitySortColumn, { ascending, nullsFirst: false })
       .range(page * limit, (page + 1) * limit - 1);
 
     // Flatten the data to include email directly and compute totals
@@ -82,6 +93,15 @@ export async function GET(req: NextRequest) {
         last_activity_at: stats.last_activity_at,
       };
     });
+
+    // Client-side sorting for computed fields (total_logins, total_time)
+    if (flattenedData && ["total_logins", "total_time"].includes(dbSortColumn)) {
+      const sortKey = dbSortColumn === "total_logins" ? "total_logins" : "total_time_seconds";
+      flattenedData.sort((a: { [x: string]: number }, b: { [x: string]: number }) => {
+        const diff = a[sortKey] - b[sortKey];
+        return ascending ? diff : -diff;
+      });
+    }
 
     return Response.json({ 
       data: flattenedData, 

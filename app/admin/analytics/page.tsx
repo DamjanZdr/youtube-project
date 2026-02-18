@@ -65,7 +65,7 @@ interface UserActivityStats {
   last_activity_at: string | null;
 }
 
-type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date" | "totalLogins" | "totalTime" | "lastLogin";
+type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date" | "totalLogins" | "desktopLogins" | "mobileLogins" | "tabletLogins" | "totalTime" | "desktopTime" | "mobileTime" | "tabletTime" | "lastLogin";
 type SortOrder = "asc" | "desc";
 type View = "registrations" | "activity";
 type RegistrationTab = "users" | "waitlist";
@@ -339,24 +339,6 @@ export default function AnalyticsPage() {
                   >
                     <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
                   </th>
-                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Monitor className="w-4 h-4 mr-1" />
-                      Desktop
-                    </div>
-                  </th>
-                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Smartphone className="w-4 h-4 mr-1" />
-                      Mobile
-                    </div>
-                  </th>
-                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Tablet className="w-4 h-4 mr-1" />
-                      Tablet
-                    </div>
-                  </th>
                   <th 
                     onClick={() => handleSort("totalLogins")} 
                     className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
@@ -364,13 +346,46 @@ export default function AnalyticsPage() {
                     <div className="flex items-center gap-1">Total Logins <SortIcon column="totalLogins" /></div>
                   </th>
                   <th 
+                    onClick={() => handleSort("desktopLogins")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Monitor className="w-4 h-4" /> <SortIcon column="desktopLogins" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("mobileLogins")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Smartphone className="w-4 h-4" /> <SortIcon column="mobileLogins" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("tabletLogins")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Tablet className="w-4 h-4" /> <SortIcon column="tabletLogins" /></div>
+                  </th>
+                  <th 
                     onClick={() => handleSort("totalTime")} 
                     className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 mr-1" />
-                      Total Time <SortIcon column="totalTime" />
-                    </div>
+                    <div className="flex items-center gap-1"><Clock className="w-4 h-4" /> Total <SortIcon column="totalTime" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("desktopTime")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Monitor className="w-4 h-4" /> <SortIcon column="desktopTime" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("mobileTime")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Smartphone className="w-4 h-4" /> <SortIcon column="mobileTime" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("tabletTime")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1"><Tablet className="w-4 h-4" /> <SortIcon column="tabletTime" /></div>
                   </th>
                   <th 
                     onClick={() => handleSort("lastLogin")} 
@@ -383,13 +398,13 @@ export default function AnalyticsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       No activity found
                     </td>
                   </tr>
@@ -400,45 +415,24 @@ export default function AnalyticsPage() {
                         <span className="font-medium">{entry.email}</span>
                       </td>
                       <td className="p-4">
-                        <div className="text-sm">
-                          <span className="font-medium">{entry.desktop_logins}</span>
-                          <span className="text-muted-foreground ml-1">logins</span>
-                          {entry.desktop_time_seconds > 0 && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({formatDuration(entry.desktop_time_seconds)})
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm">
-                          <span className="font-medium">{entry.mobile_logins}</span>
-                          <span className="text-muted-foreground ml-1">logins</span>
-                          {entry.mobile_time_seconds > 0 && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({formatDuration(entry.mobile_time_seconds)})
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm">
-                          <span className="font-medium">{entry.tablet_logins}</span>
-                          <span className="text-muted-foreground ml-1">logins</span>
-                          {entry.tablet_time_seconds > 0 && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({formatDuration(entry.tablet_time_seconds)})
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
                         <Badge variant="secondary">{entry.total_logins}</Badge>
                       </td>
+                      <td className="p-4 text-sm">{entry.desktop_logins}</td>
+                      <td className="p-4 text-sm">{entry.mobile_logins}</td>
+                      <td className="p-4 text-sm">{entry.tablet_logins}</td>
                       <td className="p-4">
                         <span className="text-sm font-medium">
                           {entry.total_time_seconds > 0 ? formatDuration(entry.total_time_seconds) : "—"}
                         </span>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {entry.desktop_time_seconds > 0 ? formatDuration(entry.desktop_time_seconds) : "—"}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {entry.mobile_time_seconds > 0 ? formatDuration(entry.mobile_time_seconds) : "—"}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {entry.tablet_time_seconds > 0 ? formatDuration(entry.tablet_time_seconds) : "—"}
                       </td>
                       <td className="p-4">
                         {entry.last_login_at ? (
