@@ -28,6 +28,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   fontFamily?: string;
   fontSize?: string;
+  minHeight?: string;
 }
 
 export function RichTextEditor({
@@ -37,6 +38,7 @@ export function RichTextEditor({
   placeholder = "Start writing...",
   fontFamily = "Inter",
   fontSize = "16px",
+  minHeight = "600px",
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -58,8 +60,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-invert max-w-none focus:outline-none min-h-[600px] py-4",
-        style: `font-family: ${fontFamily}; font-size: ${fontSize}; line-height: 1.75;`,
+          "prose prose-invert max-w-none focus:outline-none py-4",
+        style: `font-family: ${fontFamily}; font-size: ${fontSize}; line-height: 1.75; min-height: ${minHeight};`,
       },
     },
     onUpdate: ({ editor }) => {

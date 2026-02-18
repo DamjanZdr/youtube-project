@@ -411,6 +411,7 @@ export default function IdeaPage() {
                       onChange={(value) => updateSection(section.key, value)}
                       onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
                       placeholder={section.placeholder}
+                      minHeight="140px"
                     />
                   </div>
                 )}
