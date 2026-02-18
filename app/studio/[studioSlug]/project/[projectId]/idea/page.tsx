@@ -409,41 +409,42 @@ export default function IdeaPage() {
                       const editor = editorRefs.current[section.key];
                       if (!editor) return;
                       
-                      // Get click position relative to the editor container
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const clickY = e.clientY - rect.top;
-                      const lineHeight = 28; // approximate line height
-                      const targetLine = Math.floor(clickY / lineHeight);
-                      
-                      // Count existing paragraphs
-                      let existingParagraphs = 0;
-                      editor.state.doc.forEach((node: any) => {
-                        if (node.type.name === 'paragraph') existingParagraphs++;
-                      });
-                      
-                      // Focus first
-                      editor.commands.focus();
-                      
-                      // Add paragraphs to reach the target line
-                      const paragraphsNeeded = targetLine - existingParagraphs + 1;
-                      if (paragraphsNeeded > 0) {
-                        editor.commands.focus('end');
-                        for (let i = 0; i < paragraphsNeeded; i++) {
-                          editor.commands.enter();
-                        }
+                      // Use TipTap's posAtCoords to get document position from click
+                      const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+                      if (pos) {
+                        editor.commands.focus();
+                        editor.commands.setTextSelection(pos.pos);
                       } else {
-                        // Navigate to the clicked line
-                        let currentLine = 0;
-                        let targetPos = 0;
-                        editor.state.doc.forEach((node: any, offset: number) => {
-                          if (currentLine === targetLine) {
-                            targetPos = offset + node.nodeSize - 1;
-                            return false; // stop iterating
+                        // Clicked below content - calculate target line
+                        const editorEl = e.currentTarget.querySelector('.ProseMirror');
+                        if (editorEl) {
+                          const rect = editorEl.getBoundingClientRect();
+                          const clickY = e.clientY - rect.top;
+                          const lineHeight = 28;
+                          const targetLine = Math.floor(clickY / lineHeight);
+                          
+                          // Get current HTML and add paragraphs atomically
+                          const currentHtml = editor.getHTML();
+                          const currentParagraphs = (currentHtml.match(/<p>/g) || []).length;
+                          const paragraphsNeeded = Math.max(0, targetLine - currentParagraphs + 1);
+                          
+                          if (paragraphsNeeded > 0) {
+                            const newHtml = currentHtml + '<p></p>'.repeat(paragraphsNeeded);
+                            editor.commands.setContent(newHtml);
                           }
-                          currentLine++;
-                        });
-                        if (targetPos > 0) {
-                          editor.commands.setTextSelection(targetPos);
+                          
+                          // Now position cursor at the clicked location
+                          setTimeout(() => {
+                            const newPos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+                            if (newPos) {
+                              editor.commands.focus();
+                              editor.commands.setTextSelection(newPos.pos);
+                            } else {
+                              editor.commands.focus('end');
+                            }
+                          }, 0);
+                        } else {
+                          editor.commands.focus('end');
                         }
                       }
                     }}
@@ -451,7 +452,9 @@ export default function IdeaPage() {
                     <RichTextEditor
                       content={content[section.key]}
                       onChange={(value) => updateSection(section.key, value)}
-                      onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
+                      onEditorReady={(editor) => { 
+                        editorRefs.current[section.key] = editor;
+                      }}
                       placeholder={section.placeholder}
                       minHeight="140px"
                     />
