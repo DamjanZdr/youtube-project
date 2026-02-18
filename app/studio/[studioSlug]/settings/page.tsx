@@ -459,9 +459,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     if (error) {
       toast.error('Failed to restart tutorial');
     } else {
-      toast.success('Tutorial will start on next page load');
-      router.push(`/studio/${studioSlug}`);
-      router.refresh();
+      toast.success('Starting tutorial...');
+      window.location.href = `/studio/${studioSlug}`;
     }
   };
 
