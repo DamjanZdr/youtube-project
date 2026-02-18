@@ -406,14 +406,12 @@ export default function IdeaPage() {
                     className={`pb-4 transition-all ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
                     onFocus={() => setFocusedSection(section.key)}
                   >
-                    <div style={{ minHeight: "120px" }}>
-                      <RichTextEditor
-                        content={content[section.key]}
-                        onChange={(value) => updateSection(section.key, value)}
-                        onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
-                        placeholder={section.placeholder}
-                      />
-                    </div>
+                    <RichTextEditor
+                      content={content[section.key]}
+                      onChange={(value) => updateSection(section.key, value)}
+                      onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
+                      placeholder={section.placeholder}
+                    />
                   </div>
                 )}
               </div>
