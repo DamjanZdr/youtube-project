@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
       slug,
       logo_url,
       owner_id,
-      created_at
+      created_at,
+      last_activity_at
     `)
     .order("created_at", { ascending: false })
     .range(page * limit, (page + 1) * limit - 1);

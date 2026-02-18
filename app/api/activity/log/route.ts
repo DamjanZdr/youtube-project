@@ -75,6 +75,12 @@ export async function POST(req: NextRequest) {
           .from("user_activity_stats")
           .update(updateData)
           .eq("user_id", user.id);
+
+        // Also update profiles.last_active_at for admin Users table
+        await adminClient
+          .from("profiles")
+          .update({ last_active_at: now })
+          .eq("id", user.id);
       } else {
         // Create new record for this user
         const insertData: Record<string, unknown> = {
@@ -97,6 +103,12 @@ export async function POST(req: NextRequest) {
         await adminClient
           .from("user_activity_stats")
           .insert(insertData);
+
+        // Also update profiles.last_active_at for admin Users table
+        await adminClient
+          .from("profiles")
+          .update({ last_active_at: now })
+          .eq("id", user.id);
       }
     } else if (event_type === "heartbeat" || event_type === "activity") {
       // Just update last_activity_at for time tracking
