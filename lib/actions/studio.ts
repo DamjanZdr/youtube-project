@@ -76,17 +76,28 @@ export async function createStudio(formData: FormData) {
   }
   
 
+  // Use admin client for storage operations that may bypass RLS
+  const adminClient = createAdminClient();
+
   // Prepare logo upload if present
   let logoUrl: string | null = null;
   const logoFile = formData.get("logo");
   if (logoFile && logoFile instanceof File && logoFile.size > 0) {
     const fileExt = logoFile.name.split('.').pop();
     const fileName = `logos/${slug}-${Date.now()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
+    // Convert File to Buffer for server-side upload
+    const arrayBuffer = await logoFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const { error: uploadError } = await adminClient.storage
       .from('studio-assets')
-      .upload(fileName, logoFile, { upsert: true });
-    if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage
+      .upload(fileName, buffer, { 
+        upsert: true,
+        contentType: logoFile.type 
+      });
+    if (uploadError) {
+      console.error("Logo upload error:", uploadError);
+    } else {
+      const { data: { publicUrl } } = adminClient.storage
         .from('studio-assets')
         .getPublicUrl(fileName);
       logoUrl = publicUrl;
@@ -115,9 +126,6 @@ export async function createStudio(formData: FormData) {
     console.error("Create studio error:", error);
     return { error: error.message };
   }
-
-  // Use admin client for operations that need to bypass RLS
-  const adminClient = createAdminClient();
 
   // Add owner as a member with owner role
   const { error: memberError } = await adminClient
