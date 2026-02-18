@@ -14,6 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -112,7 +121,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [videoType, setVideoType] = useState<string>("long");
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [organizationId, setOrganizationId] = useState<string | null>(null);
@@ -198,15 +207,14 @@ export default function PackagingPage({ params }: PackagingPageProps) {
       setTags(tagsData.map(t => t.tag));
     }
 
-    // Load playlist assignment
+    // Load playlist assignments (multiple)
     const { data: playlistData } = await supabase
       .from("project_playlists")
       .select("playlist_id")
-      .eq("project_id", projectId)
-      .single();
+      .eq("project_id", projectId);
 
-    if (playlistData) {
-      setSelectedPlaylist(playlistData.playlist_id);
+    if (playlistData && playlistData.length > 0) {
+      setSelectedPlaylists(playlistData.map(p => p.playlist_id));
     }
 
     setLoading(false);
@@ -318,21 +326,28 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     }
   };
 
-  const savePlaylist = async (playlistId: string | null) => {
-    setSelectedPlaylist(playlistId);
+  const savePlaylist = async (playlistIds: string[]) => {
+    setSelectedPlaylists(playlistIds);
 
-    // Delete existing playlist assignment
+    // Delete existing playlist assignments
     await supabase
       .from("project_playlists")
       .delete()
       .eq("project_id", projectId);
 
-    // Add new assignment if selected
-    if (playlistId) {
+    // Add new assignments if any selected
+    if (playlistIds.length > 0) {
       await supabase
         .from("project_playlists")
-        .insert({ project_id: projectId, playlist_id: playlistId });
+        .insert(playlistIds.map(id => ({ project_id: projectId, playlist_id: id })));
     }
+  };
+
+  const togglePlaylist = (playlistId: string) => {
+    const newPlaylists = selectedPlaylists.includes(playlistId)
+      ? selectedPlaylists.filter(id => id !== playlistId)
+      : [...selectedPlaylists, playlistId];
+    savePlaylist(newPlaylists);
   };
   const { data: playlists = [] } = useQuery({
     queryKey: ["playlists", studioSlug],
@@ -343,7 +358,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     mutationFn: () => createPlaylist(studioSlug, newPlaylistName),
     onSuccess: (newPlaylist) => {
       queryClient.invalidateQueries({ queryKey: ["playlists", studioSlug] });
-      savePlaylist(newPlaylist.id);
+      savePlaylist([...selectedPlaylists, newPlaylist.id]);
       setShowCreatePlaylist(false);
       setNewPlaylistName("");
     },
@@ -464,8 +479,105 @@ export default function PackagingPage({ params }: PackagingPageProps) {
 
       {/* Description, Video Type & Other Fields */}
       <div data-tutorial="metadata-section" className="space-y-4">
-        {/* Row 1: Video Type (30%) + Description (70%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[0.3fr_0.7fr] gap-4">
+        {/* Row 1: Description (full width) */}
+        <div className="glass-card p-5">
+          <h2 className="text-sm font-semibold mb-3">Description</h2>
+          <Textarea 
+            value={description}
+            onChange={(e) => saveDescription(e.target.value)}
+            placeholder="Write your video description..."
+            className="glass border-white/10 min-h-[100px]"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            {description.length} characters
+          </p>
+        </div>
+
+        {/* Row 2: Tags (full width) */}
+        <div className="glass-card p-5">
+          <h2 className="text-sm font-semibold mb-3">Tags</h2>
+          <div className="flex items-start gap-2">
+            {/* Tags container like YouTube */}
+            <div className="flex-1 flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-black/20 border border-white/10 min-h-[40px]">
+              {tags.map((tag, i) => (
+                <span 
+                  key={i}
+                  className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded bg-white/10 text-xs"
+                >
+                  {tag}
+                  <button 
+                    onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
+                    className="opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <input 
+                placeholder={tags.length === 0 ? "Enter a comma after each tag" : ""}
+                className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+                onKeyDown={(e) => {
+                  const input = e.currentTarget;
+                  const value = input.value.trim();
+                  if ((e.key === "Enter" || e.key === ",") && value) {
+                    e.preventDefault();
+                    const cleanValue = value.replace(/,+$/, '').trim();
+                    if (cleanValue && !tags.includes(cleanValue)) {
+                      saveTags([...tags, cleanValue]);
+                    }
+                    input.value = "";
+                  } else if (e.key === "Backspace" && !value && tags.length > 0) {
+                    // Delete last tag when backspace on empty input
+                    saveTags(tags.slice(0, -1));
+                  }
+                }}
+                onChange={(e) => {
+                  const value = e.currentTarget.value;
+                  if (value.includes(',')) {
+                    const parts = value.split(',').map(p => p.trim()).filter(p => p);
+                    if (parts.length > 0) {
+                      const newTags = parts.filter(p => !tags.includes(p));
+                      if (newTags.length > 0) {
+                        saveTags([...tags, ...newTags]);
+                      }
+                      e.currentTarget.value = "";
+                    }
+                  }
+                }}
+              />
+            </div>
+            {/* Action buttons */}
+            <div className="flex items-center gap-1">
+              {tags.length > 0 && (
+                <>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(tags.join(', '));
+                      toast.success('Tags copied');
+                    }}
+                    className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+                    title="Copy all tags"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => saveTags([])}
+                    className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+                    title="Clear all tags"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 text-right">
+            {tags.join(', ').length}/500
+          </p>
+        </div>
+
+        {/* Row 3: Video Type + Playlist */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Video Type */}
           <div className="glass-card p-5">
             <h2 className="text-sm font-semibold mb-3">Video Type</h2>
@@ -480,147 +592,52 @@ export default function PackagingPage({ params }: PackagingPageProps) {
             </Select>
           </div>
 
-          {/* Description */}
-          <div className="glass-card p-5">
-            <h2 className="text-sm font-semibold mb-3">Description</h2>
-            <Textarea 
-              value={description}
-              onChange={(e) => saveDescription(e.target.value)}
-              placeholder="Write your video description..."
-              className="glass border-white/10 min-h-[100px]"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              {description.length} characters
-            </p>
-          </div>
-        </div>
-
-        {/* Row 2: Playlist (50%) + Tags (50%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Playlist */}
+          {/* Playlist (multi-select) */}
           <div className="glass-card p-5">
             <div className="flex items-center gap-2 mb-3">
               <ListVideo className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold">Playlist</h2>
+              <h2 className="text-sm font-semibold">Playlists</h2>
             </div>
-            <Select 
-              value={selectedPlaylist || ""} 
-              onValueChange={(v) => {
-                if (v === "__create_new__") {
-                  setShowCreatePlaylist(true);
-                } else {
-                  savePlaylist(v || null);
-                }
-              }}
-            >
-              <SelectTrigger className="glass border-white/10">
-                <SelectValue placeholder="Select a playlist..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__create_new__" className="text-primary">
-                  <span className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Create new playlist
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center justify-between px-3 py-2 rounded-md glass border border-white/10 text-sm hover:bg-white/5 transition-colors">
+                  <span className={selectedPlaylists.length === 0 ? "text-muted-foreground" : ""}>
+                    {selectedPlaylists.length === 0 
+                      ? "Select playlists..." 
+                      : `${selectedPlaylists.length} playlist${selectedPlaylists.length > 1 ? 's' : ''} selected`}
                   </span>
-                </SelectItem>
+                  <ChevronDown className="w-4 h-4 opacity-50" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                <DropdownMenuItem 
+                  className="text-primary cursor-pointer"
+                  onClick={() => setShowCreatePlaylist(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create new playlist
+                </DropdownMenuItem>
+                {playlists.length > 0 && <DropdownMenuSeparator />}
                 {playlists.map((playlist) => (
-                  <SelectItem key={playlist.id} value={playlist.id}>
+                  <DropdownMenuCheckboxItem
+                    key={playlist.id}
+                    checked={selectedPlaylists.includes(playlist.id)}
+                    onCheckedChange={() => togglePlaylist(playlist.id)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
                     {playlist.name}
-                  </SelectItem>
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </SelectContent>
-            </Select>
-            {selectedPlaylist && (
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {selectedPlaylists.length > 0 && (
               <button 
-                onClick={() => savePlaylist(null)}
+                onClick={() => savePlaylist([])}
                 className="text-xs text-muted-foreground hover:text-white mt-2"
               >
-                Remove from playlist
+                Clear selection
               </button>
             )}
-          </div>
-
-          {/* Tags */}
-          <div className="glass-card p-5">
-            <h2 className="text-sm font-semibold mb-3">Tags</h2>
-            <div className="flex items-start gap-2">
-              {/* Tags container like YouTube */}
-              <div className="flex-1 flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-black/20 border border-white/10 min-h-[40px]">
-                {tags.map((tag, i) => (
-                  <span 
-                    key={i}
-                    className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded bg-white/10 text-xs"
-                  >
-                    {tag}
-                    <button 
-                      onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
-                      className="opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-                <input 
-                  placeholder={tags.length === 0 ? "Enter a comma after each tag" : ""}
-                  className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
-                  onKeyDown={(e) => {
-                    const input = e.currentTarget;
-                    const value = input.value.trim();
-                    if ((e.key === "Enter" || e.key === ",") && value) {
-                      e.preventDefault();
-                      const cleanValue = value.replace(/,+$/, '').trim();
-                      if (cleanValue && !tags.includes(cleanValue)) {
-                        saveTags([...tags, cleanValue]);
-                      }
-                      input.value = "";
-                    } else if (e.key === "Backspace" && !value && tags.length > 0) {
-                      // Delete last tag when backspace on empty input
-                      saveTags(tags.slice(0, -1));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.currentTarget.value;
-                    if (value.includes(',')) {
-                      const parts = value.split(',').map(p => p.trim()).filter(p => p);
-                      if (parts.length > 0) {
-                        const newTags = parts.filter(p => !tags.includes(p));
-                        if (newTags.length > 0) {
-                          saveTags([...tags, ...newTags]);
-                        }
-                        e.currentTarget.value = "";
-                      }
-                    }
-                  }}
-                />
-              </div>
-              {/* Action buttons */}
-              <div className="flex items-center gap-1">
-                {tags.length > 0 && (
-                  <>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(tags.join(', '));
-                        toast.success('Tags copied');
-                      }}
-                      className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-                      title="Copy all tags"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => saveTags([])}
-                      className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-                      title="Clear all tags"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-right">
-              {tags.join(', ').length}/500
-            </p>
           </div>
         </div>
       </div>
