@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import {
   User,
+  X,
 } from "lucide-react";
 
 interface BoardStatus {
