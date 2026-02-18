@@ -27,7 +27,10 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  X
+  X,
+  GripVertical,
+  Pencil,
+  Check
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -90,6 +93,9 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [defaultTasks, setDefaultTasks] = useState<StatusDefaultTask[]>([]);
   const [expandedStatusId, setExpandedStatusId] = useState<string | null>(null);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskName, setEditingTaskName] = useState("");
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     // Get tab from URL or default to studio
@@ -546,6 +552,86 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     } else {
       setDefaultTasks(defaultTasks.filter(t => t.id !== taskId));
     }
+  };
+
+  const updateDefaultTask = async (taskId: string, newName: string) => {
+    if (!newName.trim()) {
+      setEditingTaskId(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("status_default_tasks")
+      .update({ name: newName.trim() })
+      .eq("id", taskId);
+
+    if (error) {
+      toast.error('Failed to update task');
+    } else {
+      setDefaultTasks(defaultTasks.map(t => 
+        t.id === taskId ? { ...t, name: newName.trim() } : t
+      ));
+    }
+    setEditingTaskId(null);
+  };
+
+  const handleTaskDragStart = (e: React.DragEvent, taskId: string) => {
+    setDraggingTaskId(taskId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleTaskDragOver = (e: React.DragEvent, targetTaskId: string, statusId: string) => {
+    e.preventDefault();
+    if (!draggingTaskId || draggingTaskId === targetTaskId) return;
+
+    const statusTasks = defaultTasks
+      .filter(t => t.status_id === statusId)
+      .sort((a, b) => a.position - b.position);
+    
+    const dragIndex = statusTasks.findIndex(t => t.id === draggingTaskId);
+    const targetIndex = statusTasks.findIndex(t => t.id === targetTaskId);
+    
+    if (dragIndex === -1 || targetIndex === -1) return;
+
+    // Reorder locally
+    const newTasks = [...statusTasks];
+    const [removed] = newTasks.splice(dragIndex, 1);
+    newTasks.splice(targetIndex, 0, removed);
+
+    // Update positions
+    const updatedTasks = defaultTasks.map(t => {
+      if (t.status_id !== statusId) return t;
+      const newIndex = newTasks.findIndex(nt => nt.id === t.id);
+      return { ...t, position: newIndex };
+    });
+
+    setDefaultTasks(updatedTasks);
+  };
+
+  const handleTaskDragEnd = async () => {
+    if (!draggingTaskId) return;
+    
+    const task = defaultTasks.find(t => t.id === draggingTaskId);
+    if (!task) {
+      setDraggingTaskId(null);
+      return;
+    }
+
+    // Save all positions for this status
+    const statusTasks = defaultTasks
+      .filter(t => t.status_id === task.status_id)
+      .sort((a, b) => a.position - b.position);
+
+    for (let i = 0; i < statusTasks.length; i++) {
+      if (statusTasks[i].position !== i) {
+        await supabase
+          .from("status_default_tasks")
+          .update({ position: i })
+          .eq("id", statusTasks[i].id);
+      }
+    }
+
+    setDraggingTaskId(null);
   };
 
   const handleInitiateTransfer = async () => {
@@ -1027,18 +1113,80 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                         <div className="border-t border-border/30 p-4 space-y-3 bg-white/[0.02]">
                           {statusTasks.length > 0 ? (
                             <div className="space-y-2">
-                              {statusTasks.map((task) => (
+                              {statusTasks
+                                .sort((a, b) => a.position - b.position)
+                                .map((task) => (
                                 <div 
                                   key={task.id}
-                                  className="flex items-center justify-between p-2 rounded bg-white/5"
+                                  draggable
+                                  onDragStart={(e) => handleTaskDragStart(e, task.id)}
+                                  onDragOver={(e) => handleTaskDragOver(e, task.id, status.id)}
+                                  onDragEnd={handleTaskDragEnd}
+                                  className={`flex items-center gap-2 p-2 rounded bg-white/5 transition-all ${
+                                    draggingTaskId === task.id ? 'opacity-50 scale-95' : ''
+                                  }`}
                                 >
-                                  <span className="text-sm">{task.name}</span>
-                                  <button
-                                    onClick={() => deleteDefaultTask(task.id)}
-                                    className="p-1 hover:bg-white/10 rounded transition-colors text-muted-foreground hover:text-red-400"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
+                                  {/* Drag Handle */}
+                                  <div className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground">
+                                    <GripVertical className="w-4 h-4" />
+                                  </div>
+                                  
+                                  {/* Task Name */}
+                                  {editingTaskId === task.id ? (
+                                    <input
+                                      type="text"
+                                      value={editingTaskName}
+                                      onChange={(e) => setEditingTaskName(e.target.value)}
+                                      onBlur={() => updateDefaultTask(task.id, editingTaskName)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          updateDefaultTask(task.id, editingTaskName);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingTaskId(null);
+                                        }
+                                      }}
+                                      autoFocus
+                                      className="flex-1 text-sm bg-transparent border-b border-primary outline-none"
+                                    />
+                                  ) : (
+                                    <span 
+                                      className="flex-1 text-sm cursor-pointer hover:text-primary transition-colors"
+                                      onDoubleClick={() => {
+                                        setEditingTaskId(task.id);
+                                        setEditingTaskName(task.name);
+                                      }}
+                                    >
+                                      {task.name}
+                                    </span>
+                                  )}
+                                  
+                                  {/* Action Buttons */}
+                                  <div className="flex items-center gap-1">
+                                    {editingTaskId === task.id ? (
+                                      <button
+                                        onClick={() => updateDefaultTask(task.id, editingTaskName)}
+                                        className="p-1 hover:bg-white/10 rounded transition-colors text-primary"
+                                      >
+                                        <Check className="w-4 h-4" />
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          setEditingTaskId(task.id);
+                                          setEditingTaskName(task.name);
+                                        }}
+                                        className="p-1 hover:bg-white/10 rounded transition-colors text-muted-foreground hover:text-white"
+                                      >
+                                        <Pencil className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => deleteDefaultTask(task.id)}
+                                      className="p-1 hover:bg-white/10 rounded transition-colors text-muted-foreground hover:text-red-400"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
