@@ -1,42 +1,60 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
 
-// Helper to group and count by a field
-function groupAndCount<T extends Record<string, unknown>>(data: T[] | null, field: keyof T) {
-  if (!data) return [];
-  const counts: Record<string, number> = {};
-  for (const row of data) {
-    const key = String(row[field] ?? "(none)");
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  return Object.entries(counts).map(([value, count]) => ({ [field]: value, count }));
-}
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   const adminClient = createAdminClient();
+  const { searchParams } = new URL(req.url);
+  
+  const type = searchParams.get("type") || "waitlist"; // "waitlist" or "registrations"
+  const search = searchParams.get("search") || "";
+  const source = searchParams.get("source") || "";
+  const device = searchParams.get("device") || "";
+  const page = parseInt(searchParams.get("page") || "0");
+  const limit = 20;
 
-  // Fetch raw data
-  const [
-    { data: waitlistRaw },
-    { data: profilesRaw },
-  ] = await Promise.all([
-    adminClient.from("waitlist").select("utm_source, device_type, country"),
-    adminClient.from("profiles").select("utm_source, device_type, country"),
-  ]);
+  if (type === "waitlist") {
+    let query = adminClient
+      .from("waitlist")
+      .select("id, email, created_at, utm_source, utm_medium, utm_campaign, device_type, country, city", { count: "exact" });
 
-  // Aggregate in JS
-  const waitlistBySource = groupAndCount(waitlistRaw, "utm_source");
-  const registrationsBySource = groupAndCount(profilesRaw, "utm_source");
-  const waitlistDevices = groupAndCount(waitlistRaw, "device_type");
-  const profileDevices = groupAndCount(profilesRaw, "device_type");
-  const waitlistCountries = groupAndCount(waitlistRaw, "country");
-  const profileCountries = groupAndCount(profilesRaw, "country");
+    if (search) query = query.ilike("email", `%${search}%`);
+    if (source) query = query.eq("utm_source", source);
+    if (device) query = query.eq("device_type", device);
 
-  return Response.json({
-    waitlistBySource,
-    registrationsBySource,
-    waitlistDevices,
-    profileDevices,
-    waitlistCountries,
-    profileCountries,
-  });
+    const { data, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(page * limit, (page + 1) * limit - 1);
+
+    // Get unique sources and devices for filters
+    const { data: allWaitlist } = await adminClient
+      .from("waitlist")
+      .select("utm_source, device_type");
+    
+    const sources = [...new Set(allWaitlist?.map(w => w.utm_source).filter(Boolean))];
+    const devices = [...new Set(allWaitlist?.map(w => w.device_type).filter(Boolean))];
+
+    return Response.json({ data, count, sources, devices, error: error?.message });
+  } else {
+    let query = adminClient
+      .from("profiles")
+      .select("id, email, full_name, created_at, utm_source, utm_medium, utm_campaign, device_type, country, city", { count: "exact" });
+
+    if (search) query = query.ilike("email", `%${search}%`);
+    if (source) query = query.eq("utm_source", source);
+    if (device) query = query.eq("device_type", device);
+
+    const { data, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(page * limit, (page + 1) * limit - 1);
+
+    // Get unique sources and devices for filters
+    const { data: allProfiles } = await adminClient
+      .from("profiles")
+      .select("utm_source, device_type");
+    
+    const sources = [...new Set(allProfiles?.map(p => p.utm_source).filter(Boolean))];
+    const devices = [...new Set(allProfiles?.map(p => p.device_type).filter(Boolean))];
+
+    return Response.json({ data, count, sources, devices, error: error?.message });
+  }
 }
