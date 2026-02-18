@@ -117,7 +117,8 @@ export async function createStudio(formData: FormData) {
       slug,
       owner_id: ownerId,
       logo_url: logoUrl,
-      status: isPaidPlan ? "pending" : "active"
+      status: isPaidPlan ? "pending" : "active",
+      checkout_plan: isPaidPlan ? selectedPlan : null
     })
     .select()
     .single();

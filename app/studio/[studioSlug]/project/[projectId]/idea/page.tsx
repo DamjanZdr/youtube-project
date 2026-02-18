@@ -415,11 +415,19 @@ export default function IdeaPage() {
                         editor.commands.focus();
                         editor.commands.setTextSelection(pos.pos);
                       } else {
-                        // Clicked below content - calculate target line
+                        // Clicked outside content area
                         const editorEl = e.currentTarget.querySelector('.ProseMirror');
                         if (editorEl) {
                           const rect = editorEl.getBoundingClientRect();
                           const clickY = e.clientY - rect.top;
+                          
+                          // If clicked ABOVE the editor area, just focus at start
+                          if (clickY < 0) {
+                            editor.commands.focus('start');
+                            return;
+                          }
+                          
+                          // Clicked below content - calculate target line
                           const lineHeight = 28;
                           const targetLine = Math.floor(clickY / lineHeight);
                           

@@ -32,6 +32,7 @@ interface Studio {
   projectCount?: number;
   subscriberCount?: number;
   plan?: string;
+  checkout_plan?: string;
 }
 
 interface PendingInvite {
@@ -115,7 +116,8 @@ export default function HubPage() {
           name,
           slug,
           logo_url,
-          status
+          status,
+          checkout_plan
         )
       `)
       .eq("user_id", currentUser.id)
@@ -159,6 +161,7 @@ export default function HubPage() {
             projectCount: projectCount || 0,
             subscriberCount,
             plan: subscription?.plan || 'free',
+            checkout_plan: org.checkout_plan,
           };
         })
       );
@@ -257,8 +260,9 @@ export default function HubPage() {
   }
 
   function handleResumeCheckout(studio: Studio) {
-    // Get the plan config to find the price ID
-    const planConfig = plans.find(p => p.id === studio.plan);
+    // Get the plan config - use checkout_plan for pending studios
+    const planId = studio.checkout_plan || studio.plan;
+    const planConfig = plans.find(p => p.id === planId);
     if (!planConfig || !planConfig.stripePriceId.monthly) {
       toast.error("Could not find plan configuration");
       return;

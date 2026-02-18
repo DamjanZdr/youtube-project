@@ -99,7 +99,7 @@ export async function POST(request: Request) {
           // Activate the organization if it was pending (new studio with paid plan)
           await supabase
             .from('organizations')
-            .update({ status: 'active' })
+            .update({ status: 'active', checkout_plan: null })
             .eq('id', organizationId)
             .eq('status', 'pending');
         }
