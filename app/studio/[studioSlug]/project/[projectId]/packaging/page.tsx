@@ -26,8 +26,11 @@ import {
   Image,
   Trash2,
   Check,
-  ListVideo
+  ListVideo,
+  Copy,
+  X
 } from "lucide-react";
+import { toast } from "sonner";
 // YouTubePush hidden until YouTube connection is re-enabled
 // import { YouTubePush } from "@/components/project/youtube-push";
 
@@ -82,9 +85,8 @@ async function createPlaylist(studioSlug: string, name: string, description: str
     
   if (!org) throw new Error("Organization not found");
   
-  // Get first channel for the org
-  const channelId = (org as any).channels?.[0]?.id;
-  if (!channelId) throw new Error("No channel found");
+  // Get first channel for the org (optional - may not have one yet)
+  const channelId = (org as any).channels?.[0]?.id || null;
   
   const { data, error } = await supabase
     .from("playlists")
@@ -540,47 +542,67 @@ export default function PackagingPage({ params }: PackagingPageProps) {
 
           {/* Tags */}
           <div className="glass-card p-5">
-            <h2 className="text-sm font-semibold mb-3">Tags</h2>
-            <div className="flex flex-wrap gap-2 mb-3 min-h-[32px]">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold">Tags</h2>
+              {tags.length > 0 && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(tags.join(', '));
+                    toast.success('Tags copied to clipboard');
+                  }}
+                  className="text-xs text-muted-foreground hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  <Copy className="w-3 h-3" />
+                  Copy all
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
               {tags.map((tag, i) => (
                 <span 
                   key={i}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 text-xs"
+                  className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full bg-primary/20 text-xs group"
                 >
-                  #{tag}
+                  {tag}
                   <button 
                     onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
-                    className="opacity-50 hover:opacity-100 transition-opacity"
+                    className="opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-white/10"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
             </div>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Add a tag..."
-                className="glass border-white/10"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && e.currentTarget.value) {
-                    saveTags([...tags, e.currentTarget.value]);
+            <Input 
+              placeholder="Type a tag and press comma or enter..."
+              className="glass border-white/10 text-sm"
+              onKeyDown={(e) => {
+                const value = e.currentTarget.value.trim();
+                if ((e.key === "Enter" || e.key === ",") && value) {
+                  e.preventDefault();
+                  // Remove trailing comma if user typed it
+                  const cleanValue = value.replace(/,+$/, '').trim();
+                  if (cleanValue && !tags.includes(cleanValue)) {
+                    saveTags([...tags, cleanValue]);
+                  }
+                  e.currentTarget.value = "";
+                }
+              }}
+              onChange={(e) => {
+                // Auto-create tag when comma is typed
+                const value = e.currentTarget.value;
+                if (value.includes(',')) {
+                  const parts = value.split(',').map(p => p.trim()).filter(p => p);
+                  if (parts.length > 0) {
+                    const newTags = parts.filter(p => !tags.includes(p));
+                    if (newTags.length > 0) {
+                      saveTags([...tags, ...newTags]);
+                    }
                     e.currentTarget.value = "";
                   }
-                }}
-              />
-              <Button 
-                variant="outline"
-                onClick={(e) => {
-                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                  if (input && input.value) {
-                    saveTags([...tags, input.value]);
-                    input.value = "";
-                  }
-                }}
-              >
-                Add
-              </Button>
-            </div>
+                }
+              }}
+            />
           </div>
         </div>
       </div>
