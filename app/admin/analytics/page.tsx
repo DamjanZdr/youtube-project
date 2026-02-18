@@ -19,7 +19,7 @@ import {
   ArrowDown,
   UserPlus,
   Activity,
-  LogIn,
+  Clock,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -49,36 +49,50 @@ interface ProfileEntry {
   city: string | null;
 }
 
-interface ActivityEntry {
+interface UserActivityStats {
   id: string;
+  user_id: string;
   email: string;
-  event_type: string;
-  device_type: string | null;
-  platform: string | null;
-  created_at: string;
+  desktop_logins: number;
+  mobile_logins: number;
+  tablet_logins: number;
+  desktop_time_seconds: number;
+  mobile_time_seconds: number;
+  tablet_time_seconds: number;
+  total_logins: number;
+  total_time_seconds: number;
+  last_login_at: string | null;
+  last_activity_at: string | null;
 }
 
-type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date" | "event";
+type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date" | "totalLogins" | "totalTime" | "lastLogin";
 type SortOrder = "asc" | "desc";
 type View = "registrations" | "activity";
 type RegistrationTab = "users" | "waitlist";
 
 const ITEMS_PER_PAGE = 20;
 
+// Format seconds into human-readable duration
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+}
+
 export default function AnalyticsPage() {
   const [view, setView] = useState<View>("registrations");
   const [registrationTab, setRegistrationTab] = useState<RegistrationTab>("users");
-  const [data, setData] = useState<(WaitlistEntry | ProfileEntry | ActivityEntry)[]>([]);
+  const [data, setData] = useState<(WaitlistEntry | ProfileEntry | UserActivityStats)[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [sourceFilter, setSourceFilter] = useState("");
   const [deviceFilter, setDeviceFilter] = useState("");
-  const [eventTypeFilter, setEventTypeFilter] = useState("");
   const [availableSources, setAvailableSources] = useState<string[]>([]);
   const [availableDevices, setAvailableDevices] = useState<string[]>([]);
-  const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortColumn>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
@@ -90,7 +104,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [view, registrationTab, page, search, sourceFilter, deviceFilter, eventTypeFilter, sortBy, sortOrder]);
+  }, [view, registrationTab, page, search, sourceFilter, deviceFilter, sortBy, sortOrder]);
 
   async function fetchData() {
     setLoading(true);
@@ -102,7 +116,6 @@ export default function AnalyticsPage() {
       ...(search && { search }),
       ...(sourceFilter && { source: sourceFilter }),
       ...(deviceFilter && { device: deviceFilter }),
-      ...(eventTypeFilter && { eventType: eventTypeFilter }),
     });
 
     const res = await fetch(`/api/admin/analytics?${params}`);
@@ -115,7 +128,6 @@ export default function AnalyticsPage() {
       setTotalCount(result.count || 0);
       setAvailableSources(result.sources || []);
       setAvailableDevices(result.devices || []);
-      setAvailableEventTypes(result.eventTypes || []);
     }
     setLoading(false);
   }
@@ -137,13 +149,18 @@ export default function AnalyticsPage() {
 
   function exportCSV() {
     if (view === "activity") {
-      const headers = ["email", "event", "device", "platform", "date"];
-      const rows = (data as ActivityEntry[]).map((entry) => [
+      const headers = ["email", "desktop_logins", "mobile_logins", "tablet_logins", "total_logins", "desktop_time", "mobile_time", "tablet_time", "total_time", "last_login"];
+      const rows = (data as UserActivityStats[]).map((entry) => [
         entry.email,
-        entry.event_type,
-        entry.device_type || "",
-        entry.platform || "",
-        format(new Date(entry.created_at), "yyyy-MM-dd HH:mm"),
+        entry.desktop_logins,
+        entry.mobile_logins,
+        entry.tablet_logins,
+        entry.total_logins,
+        formatDuration(entry.desktop_time_seconds),
+        formatDuration(entry.mobile_time_seconds),
+        formatDuration(entry.tablet_time_seconds),
+        formatDuration(entry.total_time_seconds),
+        entry.last_login_at ? format(new Date(entry.last_login_at), "yyyy-MM-dd HH:mm") : "",
       ]);
       const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
       downloadCSV(csv, `analytics-activity-${format(new Date(), "yyyy-MM-dd")}.csv`);
@@ -178,7 +195,6 @@ export default function AnalyticsPage() {
   function resetFilters() {
     setSourceFilter("");
     setDeviceFilter("");
-    setEventTypeFilter("");
     setSearch("");
     setPage(0);
   }
@@ -196,11 +212,6 @@ export default function AnalyticsPage() {
     if (type === "mobile") return <Smartphone className="w-4 h-4" />;
     if (type === "tablet") return <Tablet className="w-4 h-4" />;
     return <Monitor className="w-4 h-4" />;
-  };
-
-  const EventIcon = ({ type }: { type: string }) => {
-    if (type === "login") return <LogIn className="w-4 h-4" />;
-    return <Activity className="w-4 h-4" />;
   };
 
   return (
@@ -270,40 +281,30 @@ export default function AnalyticsPage() {
           />
         </div>
         {view === "registrations" && (
-          <select
-            value={sourceFilter}
-            onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
-            className="h-10 px-3 rounded-md border border-input bg-background text-sm"
-          >
-            <option value="">All Sources</option>
-            {availableSources.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <>
+            <select
+              value={sourceFilter}
+              onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
+              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="">All Sources</option>
+              {availableSources.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              value={deviceFilter}
+              onChange={(e) => { setDeviceFilter(e.target.value); setPage(0); }}
+              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="">All Devices</option>
+              {availableDevices.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </>
         )}
-        {view === "activity" && (
-          <select
-            value={eventTypeFilter}
-            onChange={(e) => { setEventTypeFilter(e.target.value); setPage(0); }}
-            className="h-10 px-3 rounded-md border border-input bg-background text-sm"
-          >
-            <option value="">All Events</option>
-            {availableEventTypes.map((e) => (
-              <option key={e} value={e}>{e}</option>
-            ))}
-          </select>
-        )}
-        <select
-          value={deviceFilter}
-          onChange={(e) => { setDeviceFilter(e.target.value); setPage(0); }}
-          className="h-10 px-3 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="">All Devices</option>
-          {availableDevices.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-        {(sourceFilter || deviceFilter || eventTypeFilter || search) && (
+        {(sourceFilter || deviceFilter || search) && (
           <Button
             variant="ghost"
             size="sm"
@@ -318,7 +319,7 @@ export default function AnalyticsPage() {
       <div className="flex gap-4 text-sm text-muted-foreground">
         <span>
           {totalCount} total {view === "activity" 
-            ? "events" 
+            ? "users" 
             : registrationTab === "waitlist" 
               ? "signups" 
               : "users"}
@@ -326,7 +327,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Table */}
-      <div className="glass border border-white/10 rounded-xl overflow-hidden">
+      <div className="glass border border-white/10 rounded-xl overflow-hidden overflow-x-auto">
         <table className="w-full">
           {view === "activity" ? (
             <>
@@ -338,67 +339,118 @@ export default function AnalyticsPage() {
                   >
                     <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
                   </th>
-                  <th 
-                    onClick={() => handleSort("event")} 
-                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                  >
-                    <div className="flex items-center gap-1">Event <SortIcon column="event" /></div>
+                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Monitor className="w-4 h-4 mr-1" />
+                      Desktop
+                    </div>
+                  </th>
+                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Smartphone className="w-4 h-4 mr-1" />
+                      Mobile
+                    </div>
+                  </th>
+                  <th className="p-4 text-left text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Tablet className="w-4 h-4 mr-1" />
+                      Tablet
+                    </div>
                   </th>
                   <th 
-                    onClick={() => handleSort("device")} 
+                    onClick={() => handleSort("totalLogins")} 
                     className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
-                    <div className="flex items-center gap-1">Device <SortIcon column="device" /></div>
+                    <div className="flex items-center gap-1">Total Logins <SortIcon column="totalLogins" /></div>
                   </th>
                   <th 
-                    onClick={() => handleSort("date")} 
+                    onClick={() => handleSort("totalTime")} 
                     className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
-                    <div className="flex items-center gap-1">Date <SortIcon column="date" /></div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4 mr-1" />
+                      Total Time <SortIcon column="totalTime" />
+                    </div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("lastLogin")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Last Login <SortIcon column="lastLogin" /></div>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
                       No activity found
                     </td>
                   </tr>
                 ) : (
-                  (data as ActivityEntry[]).map((entry) => (
+                  (data as UserActivityStats[]).map((entry) => (
                     <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5">
                       <td className="p-4">
                         <span className="font-medium">{entry.email}</span>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <EventIcon type={entry.event_type} />
-                          <Badge variant="secondary" className="capitalize">{entry.event_type}</Badge>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <DeviceIcon type={entry.device_type} />
-                          <span className="text-sm capitalize">{entry.device_type || "—"}</span>
-                          {entry.platform && (
-                            <span className="text-xs text-muted-foreground">({entry.platform})</span>
+                        <div className="text-sm">
+                          <span className="font-medium">{entry.desktop_logins}</span>
+                          <span className="text-muted-foreground ml-1">logins</span>
+                          {entry.desktop_time_seconds > 0 && (
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({formatDuration(entry.desktop_time_seconds)})
+                            </span>
                           )}
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4" />
-                          <span title={format(new Date(entry.created_at), "PPpp")}>
-                            {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
-                          </span>
+                        <div className="text-sm">
+                          <span className="font-medium">{entry.mobile_logins}</span>
+                          <span className="text-muted-foreground ml-1">logins</span>
+                          {entry.mobile_time_seconds > 0 && (
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({formatDuration(entry.mobile_time_seconds)})
+                            </span>
+                          )}
                         </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm">
+                          <span className="font-medium">{entry.tablet_logins}</span>
+                          <span className="text-muted-foreground ml-1">logins</span>
+                          {entry.tablet_time_seconds > 0 && (
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({formatDuration(entry.tablet_time_seconds)})
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Badge variant="secondary">{entry.total_logins}</Badge>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-sm font-medium">
+                          {entry.total_time_seconds > 0 ? formatDuration(entry.total_time_seconds) : "—"}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        {entry.last_login_at ? (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="w-4 h-4" />
+                            <span title={format(new Date(entry.last_login_at), "PPpp")}>
+                              {formatDistanceToNow(new Date(entry.last_login_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                     </tr>
                   ))

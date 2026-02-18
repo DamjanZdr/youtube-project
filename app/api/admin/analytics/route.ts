@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search") || "";
   const source = searchParams.get("source") || "";
   const device = searchParams.get("device") || "";
-  const eventType = searchParams.get("eventType") || "";
   const page = parseInt(searchParams.get("page") || "0");
   const sortBy = searchParams.get("sortBy") || "created_at";
   const sortOrder = searchParams.get("sortOrder") || "desc";
@@ -24,60 +23,69 @@ export async function GET(req: NextRequest) {
     device: "device_type",
     location: "country",
     date: "created_at",
-    event: "event_type",
+    lastLogin: "last_login_at",
+    totalLogins: "total_logins",
+    totalTime: "total_time",
   };
   const dbSortColumn = sortColumnMap[sortBy] || "created_at";
   const ascending = sortOrder === "asc";
 
   if (type === "activity") {
-    // Fetch activity events with user email from profiles
+    // Fetch aggregated user activity stats with user email from profiles
     let query = adminClient
-      .from("analytics_events")
+      .from("user_activity_stats")
       .select(`
         id,
-        event_type,
-        device_type,
-        platform,
-        created_at,
         user_id,
+        desktop_logins,
+        mobile_logins,
+        tablet_logins,
+        desktop_time_seconds,
+        mobile_time_seconds,
+        tablet_time_seconds,
+        last_login_at,
+        last_activity_at,
+        created_at,
         profiles!inner(email)
       `, { count: "exact" });
 
     if (search) query = query.ilike("profiles.email", `%${search}%`);
-    if (device) query = query.eq("device_type", device);
-    if (eventType) query = query.eq("event_type", eventType);
 
     const { data, count, error } = await query
-      .order("created_at", { ascending })
+      .order("last_login_at", { ascending, nullsFirst: false })
       .range(page * limit, (page + 1) * limit - 1);
 
-    // Get unique event types and devices for filters
-    const { data: allEvents } = await adminClient
-      .from("analytics_events")
-      .select("event_type, device_type");
-    
-    const eventTypes = [...new Set(allEvents?.map(e => e.event_type).filter(Boolean))];
-    const devices = [...new Set(allEvents?.map(e => e.device_type).filter(Boolean))];
-
-    // Flatten the data to include email directly
+    // Flatten the data to include email directly and compute totals
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const flattenedData = data?.map((event: any) => {
-      const profiles = event.profiles;
+    const flattenedData = data?.map((stats: any) => {
+      const profiles = stats.profiles;
       const email = Array.isArray(profiles) 
         ? profiles[0]?.email 
         : profiles?.email;
+      
+      const totalLogins = (stats.desktop_logins || 0) + (stats.mobile_logins || 0) + (stats.tablet_logins || 0);
+      const totalTimeSeconds = (stats.desktop_time_seconds || 0) + (stats.mobile_time_seconds || 0) + (stats.tablet_time_seconds || 0);
+      
       return {
-        ...event,
+        id: stats.id,
+        user_id: stats.user_id,
         email: email || "Unknown",
-        profiles: undefined,
+        desktop_logins: stats.desktop_logins || 0,
+        mobile_logins: stats.mobile_logins || 0,
+        tablet_logins: stats.tablet_logins || 0,
+        desktop_time_seconds: stats.desktop_time_seconds || 0,
+        mobile_time_seconds: stats.mobile_time_seconds || 0,
+        tablet_time_seconds: stats.tablet_time_seconds || 0,
+        total_logins: totalLogins,
+        total_time_seconds: totalTimeSeconds,
+        last_login_at: stats.last_login_at,
+        last_activity_at: stats.last_activity_at,
       };
     });
 
     return Response.json({ 
       data: flattenedData, 
       count, 
-      eventTypes, 
-      devices, 
       error: error?.message 
     });
   } else if (type === "waitlist") {
