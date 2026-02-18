@@ -116,6 +116,9 @@ export default function AdminKeysPage() {
   const [sendToEmail, setSendToEmail] = useState("");
   const [sending, setSending] = useState(false);
 
+  // Send reminder state
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+
   // Helper to get key status
   const getKeyStatus = (key: PlanKey): KeyStatus => {
     if (key.deactivated_at) return "deactivated";
@@ -343,6 +346,30 @@ export default function AdminKeysPage() {
       toast.error("Failed to send email");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleSendReminder(keyId: string) {
+    setSendingReminder(keyId);
+    
+    try {
+      const response = await fetch("/api/admin/send-key-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyId }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        toast.error(data.error || "Failed to send reminder");
+      } else {
+        toast.success(`Reminder sent to ${data.sentTo}`);
+      }
+    } catch (err) {
+      toast.error("Failed to send reminder");
+    } finally {
+      setSendingReminder(null);
     }
   }
 
@@ -623,6 +650,20 @@ export default function AdminKeysPage() {
                             title="Send to email"
                           >
                             <Send className="w-4 h-4" />
+                          </button>
+                        )}
+                        {status === "sent" && (
+                          <button
+                            onClick={() => handleSendReminder(key.id)}
+                            disabled={sendingReminder === key.id}
+                            className="p-2 rounded-lg hover:bg-yellow-500/20 text-muted-foreground hover:text-yellow-400 transition-colors disabled:opacity-50"
+                            title="Send reminder email"
+                          >
+                            {sendingReminder === key.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
                           </button>
                         )}
                         {status !== "deactivated" && (
