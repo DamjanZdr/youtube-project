@@ -73,7 +73,7 @@ async function fetchPlaylists(studioSlug: string): Promise<Playlist[]> {
   return data || [];
 }
 
-async function createPlaylist(studioSlug: string, name: string, description: string): Promise<Playlist> {
+async function createPlaylist(studioSlug: string, name: string): Promise<Playlist> {
   const supabase = createClient();
   
   // Get organization by slug
@@ -94,7 +94,6 @@ async function createPlaylist(studioSlug: string, name: string, description: str
       organization_id: org.id,
       channel_id: channelId,
       name,
-      description: description || null,
     })
     .select("id, name, description")
     .single();
@@ -116,7 +115,6 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubeLastSynced, setYoutubeLastSynced] = useState<string | null>(null);
@@ -342,13 +340,12 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   });
 
   const createPlaylistMutation = useMutation({
-    mutationFn: () => createPlaylist(studioSlug, newPlaylistName, newPlaylistDescription),
+    mutationFn: () => createPlaylist(studioSlug, newPlaylistName),
     onSuccess: (newPlaylist) => {
       queryClient.invalidateQueries({ queryKey: ["playlists", studioSlug] });
       savePlaylist(newPlaylist.id);
       setShowCreatePlaylist(false);
       setNewPlaylistName("");
-      setNewPlaylistDescription("");
     },
   });
 
@@ -506,30 +503,33 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               <ListVideo className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold">Playlist</h2>
             </div>
-            <div className="flex gap-2">
-              <Select 
-                value={selectedPlaylist || ""} 
-                onValueChange={(v) => savePlaylist(v || null)}
-              >
-                <SelectTrigger className="glass border-white/10">
-                  <SelectValue placeholder="Select a playlist..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {playlists.map((playlist) => (
-                    <SelectItem key={playlist.id} value={playlist.id}>
-                      {playlist.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCreatePlaylist(true)}
-                className="shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <Select 
+              value={selectedPlaylist || ""} 
+              onValueChange={(v) => {
+                if (v === "__create_new__") {
+                  setShowCreatePlaylist(true);
+                } else {
+                  savePlaylist(v || null);
+                }
+              }}
+            >
+              <SelectTrigger className="glass border-white/10">
+                <SelectValue placeholder="Select a playlist..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__create_new__" className="text-primary">
+                  <span className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create new playlist
+                  </span>
+                </SelectItem>
+                {playlists.map((playlist) => (
+                  <SelectItem key={playlist.id} value={playlist.id}>
+                    {playlist.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {selectedPlaylist && (
               <button 
                 onClick={() => savePlaylist(null)}
@@ -542,78 +542,96 @@ export default function PackagingPage({ params }: PackagingPageProps) {
 
           {/* Tags */}
           <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold">Tags</h2>
-              {tags.length > 0 && (
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(tags.join(', '));
-                    toast.success('Tags copied to clipboard');
-                  }}
-                  className="text-xs text-muted-foreground hover:text-white flex items-center gap-1 transition-colors"
-                >
-                  <Copy className="w-3 h-3" />
-                  Copy all
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
-              {tags.map((tag, i) => (
-                <span 
-                  key={i}
-                  className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full bg-primary/20 text-xs group"
-                >
-                  {tag}
-                  <button 
-                    onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
-                    className="opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-white/10"
+            <h2 className="text-sm font-semibold mb-3">Tags</h2>
+            <div className="flex items-start gap-2">
+              {/* Tags container like YouTube */}
+              <div className="flex-1 flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-black/20 border border-white/10 min-h-[40px]">
+                {tags.map((tag, i) => (
+                  <span 
+                    key={i}
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded bg-white/10 text-xs"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <Input 
-              placeholder="Type a tag and press comma or enter..."
-              className="glass border-white/10 text-sm"
-              onKeyDown={(e) => {
-                const value = e.currentTarget.value.trim();
-                if ((e.key === "Enter" || e.key === ",") && value) {
-                  e.preventDefault();
-                  // Remove trailing comma if user typed it
-                  const cleanValue = value.replace(/,+$/, '').trim();
-                  if (cleanValue && !tags.includes(cleanValue)) {
-                    saveTags([...tags, cleanValue]);
-                  }
-                  e.currentTarget.value = "";
-                }
-              }}
-              onChange={(e) => {
-                // Auto-create tag when comma is typed
-                const value = e.currentTarget.value;
-                if (value.includes(',')) {
-                  const parts = value.split(',').map(p => p.trim()).filter(p => p);
-                  if (parts.length > 0) {
-                    const newTags = parts.filter(p => !tags.includes(p));
-                    if (newTags.length > 0) {
-                      saveTags([...tags, ...newTags]);
+                    {tag}
+                    <button 
+                      onClick={() => saveTags(tags.filter((_, idx) => idx !== i))}
+                      className="opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                <input 
+                  placeholder={tags.length === 0 ? "Enter a comma after each tag" : ""}
+                  className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+                  onKeyDown={(e) => {
+                    const input = e.currentTarget;
+                    const value = input.value.trim();
+                    if ((e.key === "Enter" || e.key === ",") && value) {
+                      e.preventDefault();
+                      const cleanValue = value.replace(/,+$/, '').trim();
+                      if (cleanValue && !tags.includes(cleanValue)) {
+                        saveTags([...tags, cleanValue]);
+                      }
+                      input.value = "";
+                    } else if (e.key === "Backspace" && !value && tags.length > 0) {
+                      // Delete last tag when backspace on empty input
+                      saveTags(tags.slice(0, -1));
                     }
-                    e.currentTarget.value = "";
-                  }
-                }
-              }}
-            />
+                  }}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value;
+                    if (value.includes(',')) {
+                      const parts = value.split(',').map(p => p.trim()).filter(p => p);
+                      if (parts.length > 0) {
+                        const newTags = parts.filter(p => !tags.includes(p));
+                        if (newTags.length > 0) {
+                          saveTags([...tags, ...newTags]);
+                        }
+                        e.currentTarget.value = "";
+                      }
+                    }
+                  }}
+                />
+              </div>
+              {/* Action buttons */}
+              <div className="flex items-center gap-1">
+                {tags.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(tags.join(', '));
+                        toast.success('Tags copied');
+                      }}
+                      className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+                      title="Copy all tags"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => saveTags([])}
+                      className="p-2 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+                      title="Clear all tags"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-right">
+              {tags.join(', ').length}/500
+            </p>
           </div>
         </div>
       </div>
 
       {/* Create Playlist Dialog */}
       <Dialog open={showCreatePlaylist} onOpenChange={setShowCreatePlaylist}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Create Playlist</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="py-4">
             <div className="space-y-2">
               <Label htmlFor="playlist-name">Name</Label>
               <Input
@@ -621,15 +639,6 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 placeholder="My Awesome Playlist"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="playlist-description">Description (optional)</Label>
-              <Textarea
-                id="playlist-description"
-                value={newPlaylistDescription}
-                onChange={(e) => setNewPlaylistDescription(e.target.value)}
-                placeholder="What's this playlist about?"
               />
             </div>
           </div>
