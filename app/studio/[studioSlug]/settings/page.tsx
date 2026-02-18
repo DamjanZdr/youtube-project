@@ -622,15 +622,15 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       .filter(t => t.status_id === task.status_id)
       .sort((a, b) => a.position - b.position);
 
-    for (let i = 0; i < statusTasks.length; i++) {
-      if (statusTasks[i].position !== i) {
-        await supabase
-          .from("status_default_tasks")
-          .update({ position: i })
-          .eq("id", statusTasks[i].id);
-      }
-    }
-
+    // Update all positions in database
+    const updates = statusTasks.map((t, index) => 
+      supabase
+        .from("status_default_tasks")
+        .update({ position: index })
+        .eq("id", t.id)
+    );
+    
+    await Promise.all(updates);
     setDraggingTaskId(null);
   };
 
