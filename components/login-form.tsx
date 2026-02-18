@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+import { getDeviceInfo } from "@/lib/utils/utm";
 
 export function LoginForm({
   className,
@@ -32,6 +33,21 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
+      
+      // Log login activity
+      try {
+        await fetch("/api/activity/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_type: "login",
+            device: getDeviceInfo(),
+          }),
+        });
+      } catch {
+        // Don't block login on activity logging failure
+      }
+      
       router.push("/hub");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

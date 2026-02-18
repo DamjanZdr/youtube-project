@@ -17,6 +17,9 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  UserPlus,
+  Activity,
+  LogIn,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -46,39 +49,60 @@ interface ProfileEntry {
   city: string | null;
 }
 
-type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date";
+interface ActivityEntry {
+  id: string;
+  email: string;
+  event_type: string;
+  device_type: string | null;
+  platform: string | null;
+  created_at: string;
+}
+
+type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date" | "event";
 type SortOrder = "asc" | "desc";
+type View = "registrations" | "activity";
+type RegistrationTab = "users" | "waitlist";
 
 const ITEMS_PER_PAGE = 20;
 
 export default function AnalyticsPage() {
-  const [tab, setTab] = useState<"users" | "waitlist">("users");
-  const [data, setData] = useState<(WaitlistEntry | ProfileEntry)[]>([]);
+  const [view, setView] = useState<View>("registrations");
+  const [registrationTab, setRegistrationTab] = useState<RegistrationTab>("users");
+  const [data, setData] = useState<(WaitlistEntry | ProfileEntry | ActivityEntry)[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [sourceFilter, setSourceFilter] = useState("");
   const [deviceFilter, setDeviceFilter] = useState("");
+  const [eventTypeFilter, setEventTypeFilter] = useState("");
   const [availableSources, setAvailableSources] = useState<string[]>([]);
   const [availableDevices, setAvailableDevices] = useState<string[]>([]);
+  const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortColumn>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
+  // Get the actual type to send to API
+  const getApiType = () => {
+    if (view === "activity") return "activity";
+    return registrationTab;
+  };
+
   useEffect(() => {
     fetchData();
-  }, [tab, page, search, sourceFilter, deviceFilter, sortBy, sortOrder]);
+  }, [view, registrationTab, page, search, sourceFilter, deviceFilter, eventTypeFilter, sortBy, sortOrder]);
 
   async function fetchData() {
     setLoading(true);
     const params = new URLSearchParams({
-      type: tab,
+      type: getApiType(),
       page: String(page),
       sortBy,
       sortOrder,
       ...(search && { search }),
       ...(sourceFilter && { source: sourceFilter }),
       ...(deviceFilter && { device: deviceFilter }),
+      ...(eventTypeFilter && { eventType: eventTypeFilter }),
     });
 
     const res = await fetch(`/api/admin/analytics?${params}`);
@@ -91,6 +115,7 @@ export default function AnalyticsPage() {
       setTotalCount(result.count || 0);
       setAvailableSources(result.sources || []);
       setAvailableDevices(result.devices || []);
+      setAvailableEventTypes(result.eventTypes || []);
     }
     setLoading(false);
   }
@@ -111,27 +136,58 @@ export default function AnalyticsPage() {
   }
 
   function exportCSV() {
-    const headers = ["email", "source", "medium", "campaign", "device", "country", "city", "date"];
-    const rows = data.map((entry) => [
-      entry.email,
-      entry.utm_source || "",
-      entry.utm_medium || "",
-      entry.utm_campaign || "",
-      entry.device_type || "",
-      entry.country || "",
-      entry.city || "",
-      format(new Date(entry.created_at), "yyyy-MM-dd HH:mm"),
-    ]);
+    if (view === "activity") {
+      const headers = ["email", "event", "device", "platform", "date"];
+      const rows = (data as ActivityEntry[]).map((entry) => [
+        entry.email,
+        entry.event_type,
+        entry.device_type || "",
+        entry.platform || "",
+        format(new Date(entry.created_at), "yyyy-MM-dd HH:mm"),
+      ]);
+      const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      downloadCSV(csv, `analytics-activity-${format(new Date(), "yyyy-MM-dd")}.csv`);
+    } else {
+      const headers = ["email", "source", "medium", "campaign", "device", "country", "city", "date"];
+      const rows = (data as (WaitlistEntry | ProfileEntry)[]).map((entry) => [
+        entry.email,
+        entry.utm_source || "",
+        entry.utm_medium || "",
+        entry.utm_campaign || "",
+        entry.device_type || "",
+        entry.country || "",
+        entry.city || "",
+        format(new Date(entry.created_at), "yyyy-MM-dd HH:mm"),
+      ]);
+      const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      downloadCSV(csv, `analytics-${registrationTab}-${format(new Date(), "yyyy-MM-dd")}.csv`);
+    }
+  }
 
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  function downloadCSV(csv: string, filename: string) {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `analytics-${tab}-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Exported to CSV");
+  }
+
+  function resetFilters() {
+    setSourceFilter("");
+    setDeviceFilter("");
+    setEventTypeFilter("");
+    setSearch("");
+    setPage(0);
+  }
+
+  function handleViewChange(newView: View) {
+    setView(newView);
+    resetFilters();
+    setSortBy("date");
+    setSortOrder("desc");
   }
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -142,13 +198,18 @@ export default function AnalyticsPage() {
     return <Monitor className="w-4 h-4" />;
   };
 
+  const EventIcon = ({ type }: { type: string }) => {
+    if (type === "login") return <LogIn className="w-4 h-4" />;
+    return <Activity className="w-4 h-4" />;
+  };
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Analytics</h1>
           <p className="text-muted-foreground mt-1">
-            Track where your users come from
+            Track registrations and user activity
           </p>
         </div>
         <Button onClick={exportCSV} variant="outline" className="gap-2">
@@ -157,21 +218,45 @@ export default function AnalyticsPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
+      {/* Top Level View Toggle */}
+      <div className="flex gap-2 p-1 bg-white/5 rounded-lg w-fit">
         <Button
-          variant={tab === "users" ? "default" : "outline"}
-          onClick={() => { setTab("users"); setPage(0); }}
+          variant={view === "registrations" ? "default" : "ghost"}
+          onClick={() => handleViewChange("registrations")}
+          className="gap-2"
         >
-          Users
+          <UserPlus className="w-4 h-4" />
+          Registrations
         </Button>
         <Button
-          variant={tab === "waitlist" ? "default" : "outline"}
-          onClick={() => { setTab("waitlist"); setPage(0); }}
+          variant={view === "activity" ? "default" : "ghost"}
+          onClick={() => handleViewChange("activity")}
+          className="gap-2"
         >
-          Waitlist
+          <Activity className="w-4 h-4" />
+          Activity
         </Button>
       </div>
+
+      {/* Sub-tabs for Registrations view */}
+      {view === "registrations" && (
+        <div className="flex gap-2">
+          <Button
+            variant={registrationTab === "users" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => { setRegistrationTab("users"); setPage(0); resetFilters(); }}
+          >
+            Users
+          </Button>
+          <Button
+            variant={registrationTab === "waitlist" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => { setRegistrationTab("waitlist"); setPage(0); resetFilters(); }}
+          >
+            Waitlist
+          </Button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
@@ -184,16 +269,30 @@ export default function AnalyticsPage() {
             className="pl-9"
           />
         </div>
-        <select
-          value={sourceFilter}
-          onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
-          className="h-10 px-3 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="">All Sources</option>
-          {availableSources.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+        {view === "registrations" && (
+          <select
+            value={sourceFilter}
+            onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
+            className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="">All Sources</option>
+            {availableSources.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        )}
+        {view === "activity" && (
+          <select
+            value={eventTypeFilter}
+            onChange={(e) => { setEventTypeFilter(e.target.value); setPage(0); }}
+            className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="">All Events</option>
+            {availableEventTypes.map((e) => (
+              <option key={e} value={e}>{e}</option>
+            ))}
+          </select>
+        )}
         <select
           value={deviceFilter}
           onChange={(e) => { setDeviceFilter(e.target.value); setPage(0); }}
@@ -204,11 +303,11 @@ export default function AnalyticsPage() {
             <option key={d} value={d}>{d}</option>
           ))}
         </select>
-        {(sourceFilter || deviceFilter || search) && (
+        {(sourceFilter || deviceFilter || eventTypeFilter || search) && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setSourceFilter(""); setDeviceFilter(""); setSearch(""); }}
+            onClick={resetFilters}
           >
             Clear filters
           </Button>
@@ -217,128 +316,215 @@ export default function AnalyticsPage() {
 
       {/* Stats Summary */}
       <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>{totalCount} total {tab === "waitlist" ? "signups" : "users"}</span>
+        <span>
+          {totalCount} total {view === "activity" 
+            ? "events" 
+            : registrationTab === "waitlist" 
+              ? "signups" 
+              : "users"}
+        </span>
       </div>
 
       {/* Table */}
       <div className="glass border border-white/10 rounded-xl overflow-hidden">
         <table className="w-full">
-          <thead className="bg-white/5 border-b border-white/10">
-            <tr>
-              <th 
-                onClick={() => handleSort("email")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("source")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Source <SortIcon column="source" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("medium")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Medium <SortIcon column="medium" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("campaign")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Campaign <SortIcon column="campaign" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("device")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Device <SortIcon column="device" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("location")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Location <SortIcon column="location" /></div>
-              </th>
-              <th 
-                onClick={() => handleSort("date")} 
-                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-              >
-                <div className="flex items-center gap-1">Date <SortIcon column="date" /></div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  Loading...
-                </td>
-              </tr>
-            ) : data.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No data found
-                </td>
-              </tr>
-            ) : (
-              data.map((entry) => (
-                <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="p-4">
-                    <span className="font-medium">{entry.email}</span>
-                  </td>
-                  <td className="p-4">
-                    {entry.utm_source ? (
-                      <Badge variant="secondary">{entry.utm_source}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    {entry.utm_medium ? (
-                      <Badge variant="outline">{entry.utm_medium}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    {entry.utm_campaign ? (
-                      <span className="text-sm">{entry.utm_campaign}</span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <DeviceIcon type={entry.device_type} />
-                      <span className="text-sm capitalize">{entry.device_type || "—"}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    {entry.country || entry.city ? (
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {[entry.city, entry.country].filter(Boolean).join(", ") || "—"}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span title={format(new Date(entry.created_at), "PPpp")}>
-                        {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </td>
+          {view === "activity" ? (
+            <>
+              <thead className="bg-white/5 border-b border-white/10">
+                <tr>
+                  <th 
+                    onClick={() => handleSort("email")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("event")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Event <SortIcon column="event" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("device")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Device <SortIcon column="device" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("date")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Date <SortIcon column="date" /></div>
+                  </th>
                 </tr>
-              ))
-            )}
-          </tbody>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : data.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                      No activity found
+                    </td>
+                  </tr>
+                ) : (
+                  (data as ActivityEntry[]).map((entry) => (
+                    <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="p-4">
+                        <span className="font-medium">{entry.email}</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <EventIcon type={entry.event_type} />
+                          <Badge variant="secondary" className="capitalize">{entry.event_type}</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <DeviceIcon type={entry.device_type} />
+                          <span className="text-sm capitalize">{entry.device_type || "—"}</span>
+                          {entry.platform && (
+                            <span className="text-xs text-muted-foreground">({entry.platform})</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span title={format(new Date(entry.created_at), "PPpp")}>
+                            {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </>
+          ) : (
+            <>
+              <thead className="bg-white/5 border-b border-white/10">
+                <tr>
+                  <th 
+                    onClick={() => handleSort("email")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("source")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Source <SortIcon column="source" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("medium")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Medium <SortIcon column="medium" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("campaign")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Campaign <SortIcon column="campaign" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("device")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Device <SortIcon column="device" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("location")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Location <SortIcon column="location" /></div>
+                  </th>
+                  <th 
+                    onClick={() => handleSort("date")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Date <SortIcon column="date" /></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : data.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      No data found
+                    </td>
+                  </tr>
+                ) : (
+                  (data as (WaitlistEntry | ProfileEntry)[]).map((entry) => (
+                    <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="p-4">
+                        <span className="font-medium">{entry.email}</span>
+                      </td>
+                      <td className="p-4">
+                        {entry.utm_source ? (
+                          <Badge variant="secondary">{entry.utm_source}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {entry.utm_medium ? (
+                          <Badge variant="outline">{entry.utm_medium}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {entry.utm_campaign ? (
+                          <span className="text-sm">{entry.utm_campaign}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <DeviceIcon type={entry.device_type} />
+                          <span className="text-sm capitalize">{entry.device_type || "—"}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {entry.country || entry.city ? (
+                          <div className="flex items-center gap-1">
+                            <Globe className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {[entry.city, entry.country].filter(Boolean).join(", ") || "—"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span title={format(new Date(entry.created_at), "PPpp")}>
+                            {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </>
+          )}
         </table>
       </div>
 
