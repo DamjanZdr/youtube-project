@@ -136,8 +136,6 @@ export default function BoardPage() {
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
   const [editingStatusName, setEditingStatusName] = useState("");
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
-  const [expandedStatusTasks, setExpandedStatusTasks] = useState<string | null>(null);
-  const [newTaskInput, setNewTaskInput] = useState("");
   
   // Task popup state
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -387,31 +385,6 @@ export default function BoardPage() {
     // Delete status
     await supabase.from("board_statuses").delete().eq("id", id);
     setStatuses(statuses.filter(s => s.id !== id));
-  };
-
-  const addDefaultTask = async (statusId: string) => {
-    if (!newTaskInput.trim()) return;
-
-    const statusTasks = defaultTasks.filter(t => t.status_id === statusId);
-    const { data } = await supabase
-      .from("status_default_tasks")
-      .insert({
-        status_id: statusId,
-        name: newTaskInput.trim(),
-        position: statusTasks.length,
-      })
-      .select()
-      .single();
-
-    if (data) {
-      setDefaultTasks([...defaultTasks, data]);
-      setNewTaskInput("");
-    }
-  };
-
-  const deleteDefaultTask = async (taskId: string) => {
-    await supabase.from("status_default_tasks").delete().eq("id", taskId);
-    setDefaultTasks(defaultTasks.filter(t => t.id !== taskId));
   };
 
   const createProject = async (data: { title: string; description: string; videoType: "long" | "short" }) => {
@@ -839,19 +812,6 @@ export default function BoardPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-6 w-6"
-                        onClick={() => setExpandedStatusTasks(expandedStatusTasks === status.id ? null : status.id)}
-                        title="Default tasks"
-                      >
-                        {expandedStatusTasks === status.id ? (
-                          <ChevronDown className="w-3 h-3" />
-                        ) : (
-                          <ChevronRight className="w-3 h-3" />
-                        )}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
                         onClick={() => deleteStatus(status.id)}
                         title="Delete status"
@@ -862,38 +822,6 @@ export default function BoardPage() {
                   </div>
                 )}
               </div>
-
-              {/* Default Tasks Editor (in edit mode) */}
-              {editMode && expandedStatusTasks === status.id && (
-                <div className="px-3 py-3 border-b border-white/5 bg-white/[0.02]">
-                  <p className="text-xs text-muted-foreground mb-2">Default tasks for this status:</p>
-                  <div className="space-y-1.5">
-                    {defaultTasks.filter(t => t.status_id === status.id).map((task) => (
-                      <div key={task.id} className="flex items-center gap-2 text-sm bg-white/5 rounded px-2 py-1">
-                        <span className="flex-1 truncate">{task.name}</span>
-                        <button
-                          onClick={() => deleteDefaultTask(task.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-1">
-                      <Input
-                        value={newTaskInput}
-                        onChange={(e) => setNewTaskInput(e.target.value)}
-                        placeholder="Add default task..."
-                        className="h-7 text-xs"
-                        onKeyDown={(e) => e.key === "Enter" && addDefaultTask(status.id)}
-                      />
-                      <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => addDefaultTask(status.id)}>
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto custom-scrollbar">
                 {getProjectsForStatus(status.id).map((project) => (

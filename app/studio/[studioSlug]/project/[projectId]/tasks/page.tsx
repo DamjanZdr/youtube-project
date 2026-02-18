@@ -13,8 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus,
-  X,
   User,
 } from "lucide-react";
 
@@ -66,10 +64,8 @@ export default function TasksPage() {
   const studioSlug = params.studioSlug as string;
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [statuses, setStatuses] = useState<BoardStatus[]>([]);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
-  const [newTaskText, setNewTaskText] = useState<Record<string, string>>({});
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [currentStatusId, setCurrentStatusId] = useState<string | null>(null);
   const [orgMembers, setOrgMembers] = useState<OrgMember[]>([]);
@@ -254,39 +250,6 @@ export default function TasksPage() {
         completed_at: completed ? new Date().toISOString() : null,
       })
       .eq("id", taskId);
-  };
-
-  const addTask = async (statusId: string) => {
-    const taskName = newTaskText[statusId]?.trim();
-    if (!taskName) return;
-
-    setSaving(true);
-    
-    const statusTasks = tasks.filter(t => t.status_id === statusId);
-    const position = statusTasks.length;
-
-    const { data, error } = await supabase
-      .from("project_tasks")
-      .insert({
-        project_id: projectId,
-        status_id: statusId,
-        name: taskName,
-        position,
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      setTasks([...tasks, data]);
-      setNewTaskText({ ...newTaskText, [statusId]: "" });
-    }
-
-    setSaving(false);
-  };
-
-  const removeTask = async (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
-    await supabase.from("project_tasks").delete().eq("id", taskId);
   };
 
   const getTasksForStatus = (statusId: string) => {
@@ -537,33 +500,6 @@ export default function TasksPage() {
                 </div>
               </div>
 
-              {/* Add Task Input */}
-              <div className="px-2 pt-2">
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={newTaskText[status.id] || ""}
-                    onChange={(e) => setNewTaskText({ ...newTaskText, [status.id]: e.target.value })}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        addTask(status.id);
-                      }
-                    }}
-                    placeholder="Add task..."
-                    className="flex-1 px-2 py-1.5 rounded bg-white/5 border border-white/10 focus:border-primary focus:outline-none text-xs min-w-0"
-                  />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0"
-                    onClick={() => addTask(status.id)}
-                    disabled={!newTaskText[status.id]?.trim() || saving}
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-
               {/* Tasks */}
               <div className="flex-1 p-2 space-y-1 max-h-80 overflow-y-auto custom-scrollbar">
                 {statusTasks.length === 0 ? (
@@ -574,7 +510,7 @@ export default function TasksPage() {
                   statusTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-start gap-2 p-2 rounded-lg hover:bg-white/5 group"
+                      className="flex items-start gap-2 p-2 rounded-lg hover:bg-white/5"
                     >
                       <Checkbox
                         checked={task.is_completed}
@@ -584,12 +520,6 @@ export default function TasksPage() {
                       <span className={`flex-1 text-sm leading-tight break-words ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {task.name}
                       </span>
-                      <button
-                        onClick={() => removeTask(task.id)}
-                        className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
                     </div>
                   ))
                 )}
