@@ -60,22 +60,22 @@ const IDEA_SECTIONS = [
   {
     key: "hook" as const,
     title: "1. Hook",
-    placeholder: "What will grab attention in the first 5-30 seconds?\n\nExample: \"I spent $10,000 on YouTube ads so you don't have to...\" or \"This one trick doubled my views overnight.\"",
+    placeholder: "What will grab attention in the first 5-30 seconds?\nExample: \"I spent $10,000 on YouTube ads so you don't have to...\" or \"This one trick doubled my views overnight.\"",
   },
   {
     key: "value" as const,
     title: "2. Value",
-    placeholder: "What's the core benefit viewers will get? Why should someone watch until the end?\n\nExample: \"By the end, you'll know exactly how to edit videos 3x faster.\"",
+    placeholder: "What's the core benefit viewers will get? Why should someone watch until the end?\nExample: \"By the end, you'll know exactly how to edit videos 3x faster.\"",
   },
   {
     key: "flow" as const,
     title: "3. Flow",
-    placeholder: "How will the video be structured? How do you keep momentum and avoid drop-off?\n\nExample: \"Hook → Problem → 3 Solutions → Proof → Summary\"",
+    placeholder: "How will the video be structured? How do you keep momentum and avoid drop-off?\nExample: \"Hook → Problem → 3 Solutions → Proof → Summary\"",
   },
   {
     key: "cta" as const,
     title: "4. CTA",
-    placeholder: "What specific action do you want viewers to take?\n\nExample: \"Subscribe and hit the bell\" or \"Download the free template in the description.\"",
+    placeholder: "What specific action do you want viewers to take?\nExample: \"Subscribe and hit the bell\" or \"Download the free template in the description.\"",
   },
 ];
 
@@ -403,8 +403,9 @@ export default function IdeaPage() {
                 {/* Section Content */}
                 {isExpanded && (
                   <div 
-                    className={`pb-4 transition-all ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
+                    className={`pb-4 transition-all cursor-text ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
                     onFocus={() => setFocusedSection(section.key)}
+                    onClick={() => editorRefs.current[section.key]?.commands.focus()}
                   >
                     <RichTextEditor
                       content={content[section.key]}
