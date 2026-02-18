@@ -50,42 +50,32 @@ declare global {
   }
 }
 
-// Section configuration
+// Section configuration - placeholder acts like input placeholder (disappears when typing)
 const IDEA_SECTIONS = [
   {
     key: "brainstorm" as const,
     title: "Brainstorming",
     placeholder: "Freely dump all your ideas here... topics, angles, random thoughts, inspiration...",
-    description: null,
-    example: null,
   },
   {
     key: "hook" as const,
     title: "1. Hook",
-    placeholder: "What will grab attention in the first 5-30 seconds?",
-    description: "The opening moment that stops viewers from scrolling. Create curiosity, shock, or intrigue.",
-    example: "Example: \"I spent $10,000 on YouTube ads so you don't have to...\" or \"This one trick doubled my views overnight.\"",
+    placeholder: "What will grab attention in the first 5-30 seconds?\n\nExample: \"I spent $10,000 on YouTube ads so you don't have to...\" or \"This one trick doubled my views overnight.\"",
   },
   {
     key: "value" as const,
     title: "2. Value",
-    placeholder: "What's the core benefit viewers will get?",
-    description: "The main takeaway or transformation. Why should someone watch until the end?",
-    example: "Example: \"By the end, you'll know exactly how to edit videos 3x faster\" or \"Learn the algorithm secret most creators miss.\"",
+    placeholder: "What's the core benefit viewers will get? Why should someone watch until the end?\n\nExample: \"By the end, you'll know exactly how to edit videos 3x faster.\"",
   },
   {
     key: "flow" as const,
     title: "3. Flow",
-    placeholder: "How will the video be structured?",
-    description: "The logical progression of your content. How do you keep momentum and avoid drop-off?",
-    example: "Example: \"Hook → Problem → 3 Solutions → Proof → Summary\" or \"Story opener → Lesson 1 → Lesson 2 → Lesson 3 → CTA\"",
+    placeholder: "How will the video be structured? How do you keep momentum and avoid drop-off?\n\nExample: \"Hook → Problem → 3 Solutions → Proof → Summary\"",
   },
   {
     key: "cta" as const,
     title: "4. CTA",
-    placeholder: "What action do you want viewers to take?",
-    description: "The specific call to action. Be clear about what you want them to do next.",
-    example: "Example: \"Subscribe and hit the bell\" or \"Download the free template in the description\" or \"Comment your biggest struggle below.\"",
+    placeholder: "What specific action do you want viewers to take?\n\nExample: \"Subscribe and hit the bell\" or \"Download the free template in the description.\"",
   },
 ];
 
@@ -114,11 +104,13 @@ export default function IdeaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<SectionKey>>(new Set(["brainstorm"]));
+  const [expandedSections, setExpandedSections] = useState<Set<SectionKey>>(
+    new Set(["brainstorm", "hook", "value", "flow", "cta"])
+  );
+  const [focusedSection, setFocusedSection] = useState<SectionKey>("brainstorm");
   
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
-  const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const editorRefs = useRef<Record<SectionKey, any>>({} as Record<SectionKey, any>);
@@ -130,7 +122,7 @@ export default function IdeaPage() {
   }, []);
 
   // Initialize speech recognition
-  const initSpeechRecognition = useCallback((sectionKey: SectionKey) => {
+  const initSpeechRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
 
@@ -152,7 +144,8 @@ export default function IdeaPage() {
         }
       }
 
-      const editor = editorRefs.current[sectionKey];
+      // Insert into the focused section's editor
+      const editor = editorRefs.current[focusedSection];
       if (editor) {
         const { state } = editor;
         let interimPos: { from: number; to: number } | null = null;
@@ -193,11 +186,10 @@ export default function IdeaPage() {
         toast.error("Speech recognition error. Please try again.");
       }
       setIsListening(false);
-      setActiveSection(null);
     };
 
     recognition.onend = () => {
-      if (isListening && recognitionRef.current && activeSection === sectionKey) {
+      if (isListening && recognitionRef.current) {
         try {
           recognitionRef.current.start();
         } catch (e) {
@@ -205,29 +197,28 @@ export default function IdeaPage() {
         }
       } else {
         setIsListening(false);
-        setActiveSection(null);
       }
     };
 
     return recognition;
-  }, [isListening, activeSection]);
+  }, [isListening, focusedSection]);
 
-  const toggleListening = useCallback((sectionKey: SectionKey) => {
+  const toggleListening = useCallback(() => {
     if (!speechSupported) {
       toast.error("Speech recognition is not supported in your browser. Try Chrome or Edge.");
       return;
     }
 
-    if (isListening && activeSection === sectionKey) {
+    if (isListening) {
       // Stop listening
       if (recognitionRef.current) {
         recognitionRef.current.abort();
         recognitionRef.current = null;
       }
       setIsListening(false);
-      setActiveSection(null);
       
-      const editor = editorRefs.current[sectionKey];
+      // Clean up interim text in focused section
+      const editor = editorRefs.current[focusedSection];
       if (editor) {
         const { state } = editor;
         let interimPos: { from: number; to: number } | null = null;
@@ -248,29 +239,26 @@ export default function IdeaPage() {
             .insertContent(interimText + " ")
             .run();
         }
+        
+        editor.commands.insertContent('<p></p>');
       }
     } else {
-      // Stop any existing recognition
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
+      // Expand focused section if collapsed
+      setExpandedSections(prev => new Set([...prev, focusedSection]));
       
-      // Start listening for this section
-      const recognition = initSpeechRecognition(sectionKey);
+      // Start listening
+      const recognition = initSpeechRecognition();
       if (recognition) {
         recognitionRef.current = recognition;
         try {
           recognition.start();
           setIsListening(true);
-          setActiveSection(sectionKey);
-          // Expand the section if collapsed
-          setExpandedSections(prev => new Set([...prev, sectionKey]));
         } catch (e) {
           toast.error("Failed to start voice input");
         }
       }
     }
-  }, [isListening, activeSection, speechSupported, initSpeechRecognition]);
+  }, [isListening, speechSupported, initSpeechRecognition, focusedSection]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -312,14 +300,6 @@ export default function IdeaPage() {
         flow: data.idea_flow || "",
         cta: data.idea_cta || "",
       });
-      
-      // Expand sections that have content
-      const expanded = new Set<SectionKey>(["brainstorm"]);
-      if (data.idea_hook) expanded.add("hook");
-      if (data.idea_value) expanded.add("value");
-      if (data.idea_flow) expanded.add("flow");
-      if (data.idea_cta) expanded.add("cta");
-      setExpandedSections(expanded);
     }
     setLoading(false);
   };
@@ -393,79 +373,47 @@ export default function IdeaPage() {
 
       {/* Sections */}
       <div data-tutorial="idea-editor" className="flex-1 overflow-auto p-4 md:p-6 pb-32">
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-2">
           {IDEA_SECTIONS.map((section) => {
             const isExpanded = expandedSections.has(section.key);
             const hasContent = content[section.key]?.trim().length > 0;
-            const isRecording = isListening && activeSection === section.key;
+            const isFocused = focusedSection === section.key;
             
             return (
               <div 
                 key={section.key}
-                className={`border rounded-lg transition-all ${
-                  isExpanded 
-                    ? "border-border/50 bg-card/30" 
-                    : "border-border/30 hover:border-border/50"
-                }`}
+                className="border-b border-border/30 last:border-b-0"
               >
                 {/* Section Header */}
                 <button
                   onClick={() => toggleSection(section.key)}
-                  className="w-full flex items-center justify-between p-4 text-left"
+                  className="w-full flex items-center gap-2 py-3 text-left hover:text-foreground transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">{section.title}</span>
-                    {hasContent && !isExpanded && (
-                      <span className="text-xs text-green-500">●</span>
-                    )}
-                  </div>
-                  {speechSupported && isExpanded && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleListening(section.key);
-                      }}
-                      className={`p-2 rounded-lg transition-all ${
-                        isRecording
-                          ? "bg-red-500/20 text-red-400"
-                          : "hover:bg-white/10 text-muted-foreground hover:text-foreground"
-                      }`}
-                      title={isRecording ? "Stop recording" : "Start voice input"}
-                    >
-                      {isRecording ? (
-                        <MicOff className="h-4 w-4" />
-                      ) : (
-                        <Mic className="h-4 w-4" />
-                      )}
-                    </button>
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                  <span className="font-medium text-sm">{section.title}</span>
+                  {hasContent && !isExpanded && (
+                    <span className="text-xs text-green-500">●</span>
                   )}
                 </button>
                 
                 {/* Section Content */}
                 {isExpanded && (
-                  <div className="px-4 pb-4">
-                    {/* Description and Example */}
-                    {section.description && (
-                      <div className="mb-3 text-sm">
-                        <p className="text-muted-foreground">{section.description}</p>
-                        {section.example && (
-                          <p className="text-muted-foreground/70 italic mt-1">{section.example}</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Editor */}
-                    <RichTextEditor
-                      content={content[section.key]}
-                      onChange={(value) => updateSection(section.key, value)}
-                      onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
-                      placeholder={section.placeholder}
-                    />
+                  <div 
+                    className={`pb-4 transition-all ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
+                    onFocus={() => setFocusedSection(section.key)}
+                  >
+                    <div style={{ minHeight: "120px" }}>
+                      <RichTextEditor
+                        content={content[section.key]}
+                        onChange={(value) => updateSection(section.key, value)}
+                        onEditorReady={(editor) => { editorRefs.current[section.key] = editor; }}
+                        placeholder={section.placeholder}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -473,6 +421,100 @@ export default function IdeaPage() {
           })}
         </div>
       </div>
+
+      {/* Floating Voice Input Button */}
+      {speechSupported && (
+        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <button
+            data-tutorial="voice-button"
+            onClick={toggleListening}
+            className={`
+              group relative overflow-hidden
+              px-6 py-3 rounded-full
+              backdrop-blur-xl border
+              transition-all duration-500 ease-out
+              ${isListening 
+                ? "bg-red-500/20 border-red-400/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]" 
+                : "bg-white/10 border-white/20 hover:bg-white/15 hover:border-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+              }
+            `}
+            style={{
+              boxShadow: isListening 
+                ? "0 8px 32px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 60px rgba(239, 68, 68, 0.2)"
+                : "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+            }}
+          >
+            {/* Animated background gradient */}
+            <div 
+              className={`
+                absolute inset-0 opacity-0 transition-opacity duration-500
+                ${isListening ? "opacity-100" : "group-hover:opacity-50"}
+              `}
+              style={{
+                background: isListening
+                  ? "radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.3) 0%, transparent 70%)"
+                  : "radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)"
+              }}
+            />
+            
+            {/* Ripple rings when listening */}
+            {isListening && (
+              <>
+                <span className="absolute inset-0 rounded-full border border-red-400/30 animate-ping" />
+                <span className="absolute inset-[-4px] rounded-full border border-red-400/20 animate-ping [animation-delay:150ms]" />
+                <span className="absolute inset-[-8px] rounded-full border border-red-400/10 animate-ping [animation-delay:300ms]" />
+              </>
+            )}
+            
+            {/* Content */}
+            <div className="relative flex items-center gap-3">
+              <div className={`
+                relative transition-transform duration-300
+                ${isListening ? "scale-110" : "group-hover:scale-110"}
+              `}>
+                {isListening ? (
+                  <MicOff className="h-5 w-5 text-red-400" />
+                ) : (
+                  <Mic className="h-5 w-5 text-white/80 group-hover:text-white" />
+                )}
+              </div>
+              
+              <span className={`
+                font-medium transition-colors duration-300
+                ${isListening ? "text-red-300" : "text-white/80 group-hover:text-white"}
+              `}>
+                {isListening ? `Recording → ${IDEA_SECTIONS.find(s => s.key === focusedSection)?.title}` : "Voice"}
+              </span>
+              
+              {/* Live indicator dot */}
+              {isListening && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                </span>
+              )}
+            </div>
+
+            {/* Shine effect on hover */}
+            <div 
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background: "linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 60%)",
+                backgroundSize: "200% 100%",
+                animation: "shine 1.5s ease-in-out infinite"
+              }}
+            />
+          </button>
+        </div>
+      )}
+
+      {/* Keyframes for shine animation */}
+      <style jsx>{`
+        @keyframes shine {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </div>
   );
 }
