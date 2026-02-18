@@ -405,7 +405,48 @@ export default function IdeaPage() {
                   <div 
                     className={`pb-4 transition-all cursor-text ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
                     onFocus={() => setFocusedSection(section.key)}
-                    onClick={() => editorRefs.current[section.key]?.commands.focus()}
+                    onClick={(e) => {
+                      const editor = editorRefs.current[section.key];
+                      if (!editor) return;
+                      
+                      // Get click position relative to the editor container
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickY = e.clientY - rect.top;
+                      const lineHeight = 28; // approximate line height
+                      const targetLine = Math.floor(clickY / lineHeight);
+                      
+                      // Count existing paragraphs
+                      let existingParagraphs = 0;
+                      editor.state.doc.forEach((node: any) => {
+                        if (node.type.name === 'paragraph') existingParagraphs++;
+                      });
+                      
+                      // Focus first
+                      editor.commands.focus();
+                      
+                      // Add paragraphs to reach the target line
+                      const paragraphsNeeded = targetLine - existingParagraphs + 1;
+                      if (paragraphsNeeded > 0) {
+                        editor.commands.focus('end');
+                        for (let i = 0; i < paragraphsNeeded; i++) {
+                          editor.commands.enter();
+                        }
+                      } else {
+                        // Navigate to the clicked line
+                        let currentLine = 0;
+                        let targetPos = 0;
+                        editor.state.doc.forEach((node: any, offset: number) => {
+                          if (currentLine === targetLine) {
+                            targetPos = offset + node.nodeSize - 1;
+                            return false; // stop iterating
+                          }
+                          currentLine++;
+                        });
+                        if (targetPos > 0) {
+                          editor.commands.setTextSelection(targetPos);
+                        }
+                      }
+                    }}
                   >
                     <RichTextEditor
                       content={content[section.key]}
