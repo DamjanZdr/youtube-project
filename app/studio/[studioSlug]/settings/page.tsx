@@ -22,13 +22,32 @@ import {
   UserPlus,
   Crown,
   Youtube,
-  Sparkles
+  Sparkles,
+  ListTodo,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  X
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { BillingTab } from "@/components/billing/billing-tab";
 import { YouTubeTab } from "@/components/settings/youtube-tab";
+
+interface BoardStatus {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+}
+
+interface StatusDefaultTask {
+  id: string;
+  status_id: string;
+  name: string;
+  position: number;
+}
 
 interface SettingsPageProps {
   params: Promise<{ studioSlug: string }>;
@@ -65,6 +84,12 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [transferring, setTransferring] = useState(false);
   const [pendingTransfer, setPendingTransfer] = useState<any>(null);
   const [cancellingTransfer, setCancellingTransfer] = useState(false);
+  
+  // Board settings state
+  const [statuses, setStatuses] = useState<BoardStatus[]>([]);
+  const [defaultTasks, setDefaultTasks] = useState<StatusDefaultTask[]>([]);
+  const [expandedStatusId, setExpandedStatusId] = useState<string | null>(null);
+  const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Get tab from URL or default to studio
@@ -157,6 +182,28 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         .maybeSingle();
 
       setPendingTransfer(transferData);
+
+      // Fetch board statuses
+      const { data: statusesData } = await supabase
+        .from("board_statuses")
+        .select("*")
+        .eq("organization_id", studioData.id)
+        .order("position");
+
+      if (statusesData) {
+        setStatuses(statusesData);
+
+        // Fetch default tasks for all statuses
+        if (statusesData.length > 0) {
+          const { data: tasksData } = await supabase
+            .from("status_default_tasks")
+            .select("*")
+            .in("status_id", statusesData.map(s => s.id))
+            .order("position");
+
+          setDefaultTasks(tasksData || []);
+        }
+      }
     }
     
     setLoading(false);
@@ -464,6 +511,43 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     }
   };
 
+  const addDefaultTask = async (statusId: string) => {
+    const taskName = newTaskInputs[statusId]?.trim();
+    if (!taskName) return;
+
+    const statusTasks = defaultTasks.filter(t => t.status_id === statusId);
+    const { data, error } = await supabase
+      .from("status_default_tasks")
+      .insert({
+        status_id: statusId,
+        name: taskName,
+        position: statusTasks.length,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Failed to add task');
+    } else if (data) {
+      setDefaultTasks([...defaultTasks, data]);
+      setNewTaskInputs(prev => ({ ...prev, [statusId]: '' }));
+      toast.success('Task added');
+    }
+  };
+
+  const deleteDefaultTask = async (taskId: string) => {
+    const { error } = await supabase
+      .from("status_default_tasks")
+      .delete()
+      .eq("id", taskId);
+
+    if (error) {
+      toast.error('Failed to delete task');
+    } else {
+      setDefaultTasks(defaultTasks.filter(t => t.id !== taskId));
+    }
+  };
+
   const handleInitiateTransfer = async () => {
     if (!transferEmail || !studio || !user) return;
     
@@ -603,6 +687,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
           <TabsTrigger value="members" data-tutorial="settings-members" className="gap-2 text-sm px-5 py-2.5">
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Members</span>
+          </TabsTrigger>
+          <TabsTrigger value="board" className="gap-2 text-sm px-5 py-2.5">
+            <ListTodo className="w-4 h-4" />
+            <span className="hidden sm:inline">Board</span>
           </TabsTrigger>
           {/* YouTube Tab - IN DEVELOPMENT: Requires Google OAuth app verification */}
           {/* <TabsTrigger value="youtube" className="gap-2 text-sm px-5 py-2.5">
@@ -884,6 +972,114 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 <p className="text-sm text-muted-foreground/70">
                   Invite collaborators to work together
                 </p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Board Tab - Default Tasks */}
+        <TabsContent value="board" className="space-y-6">
+          <div className="glass-card p-4 md:p-6">
+            <div className="mb-6">
+              <h3 className="text-base md:text-lg font-semibold mb-1">Default Tasks</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure default tasks for each board status. When a project enters a status, these tasks are automatically added.
+              </p>
+            </div>
+
+            {statuses.length === 0 ? (
+              <div className="text-center py-8">
+                <ListTodo className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-muted-foreground">No board statuses yet</p>
+                <p className="text-sm text-muted-foreground/70">
+                  Visit the Board page to set up your workflow statuses first
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {statuses.map((status) => {
+                  const statusTasks = defaultTasks.filter(t => t.status_id === status.id);
+                  const isExpanded = expandedStatusId === status.id;
+                  
+                  return (
+                    <div key={status.id} className="border border-border/30 rounded-lg overflow-hidden">
+                      {/* Status Header */}
+                      <button
+                        onClick={() => setExpandedStatusId(isExpanded ? null : status.id)}
+                        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${status.color}`} />
+                          <span className="font-medium">{status.name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            ({statusTasks.length} {statusTasks.length === 1 ? 'task' : 'tasks'})
+                          </span>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      
+                      {/* Tasks List */}
+                      {isExpanded && (
+                        <div className="border-t border-border/30 p-4 space-y-3 bg-white/[0.02]">
+                          {statusTasks.length > 0 ? (
+                            <div className="space-y-2">
+                              {statusTasks.map((task) => (
+                                <div 
+                                  key={task.id}
+                                  className="flex items-center justify-between p-2 rounded bg-white/5"
+                                >
+                                  <span className="text-sm">{task.name}</span>
+                                  <button
+                                    onClick={() => deleteDefaultTask(task.id)}
+                                    className="p-1 hover:bg-white/10 rounded transition-colors text-muted-foreground hover:text-red-400"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-2">
+                              No default tasks for this status
+                            </p>
+                          )}
+                          
+                          {/* Add new task */}
+                          <div className="flex gap-2 pt-2">
+                            <Input
+                              placeholder="Add a task..."
+                              value={newTaskInputs[status.id] || ''}
+                              onChange={(e) => setNewTaskInputs(prev => ({ 
+                                ...prev, 
+                                [status.id]: e.target.value 
+                              }))}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  addDefaultTask(status.id);
+                                }
+                              }}
+                              className="glass flex-1"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => addDefaultTask(status.id)}
+                              disabled={!newTaskInputs[status.id]?.trim()}
+                              className="gap-1"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
