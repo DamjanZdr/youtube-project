@@ -31,6 +31,11 @@ create table user_activity_stats (
 -- Index for fast lookups
 create index idx_user_activity_stats_user_id on user_activity_stats(user_id);
 
--- Drop the analytics_events table if you want to clean up
--- (keeping it commented in case you want to keep raw event logs)
--- drop table if exists analytics_events;
+-- Enable RLS - only service role (admin API) can access
+alter table user_activity_stats enable row level security;
+
+-- No policies = only service role can read/write (which is what we want for admin-only data)
+-- The admin API uses createAdminClient() which bypasses RLS
+
+-- Drop analytics_events table since we use aggregated stats now
+drop table if exists analytics_events;
