@@ -254,7 +254,9 @@ export default function TasksPage() {
   };
 
   const getTasksForStatus = (statusId: string) => {
-    return tasks.filter(t => t.status_id === statusId);
+    return tasks
+      .filter(t => t.status_id === statusId)
+      .sort((a, b) => a.position - b.position);
   };
 
   const getCompletionStats = (statusId: string) => {

@@ -479,7 +479,9 @@ export default function BoardPage() {
   };
 
   const getTasksForProject = (projectId: string) => {
-    return allTasks.filter(t => t.project_id === projectId);
+    return allTasks
+      .filter(t => t.project_id === projectId)
+      .sort((a, b) => a.position - b.position);
   };
 
   const getTaskCompletionForProject = (projectId: string) => {
@@ -489,7 +491,9 @@ export default function BoardPage() {
   };
 
   const getTaskCompletionForStatus = (projectId: string, statusId: string) => {
-    const tasks = allTasks.filter(t => t.project_id === projectId && t.status_id === statusId);
+    const tasks = allTasks
+      .filter(t => t.project_id === projectId && t.status_id === statusId)
+      .sort((a, b) => a.position - b.position);
     const completed = tasks.filter(t => t.is_completed).length;
     return { completed, total: tasks.length };
   };
@@ -621,11 +625,15 @@ export default function BoardPage() {
     const grouped: Record<string, ProjectTask[]> = {};
     
     statuses.forEach(s => {
-      grouped[s.id] = projectTasks.filter(t => t.status_id === s.id);
+      grouped[s.id] = projectTasks
+        .filter(t => t.status_id === s.id)
+        .sort((a, b) => a.position - b.position);
     });
     
     // Also include tasks without a status
-    grouped["uncategorized"] = projectTasks.filter(t => !t.status_id);
+    grouped["uncategorized"] = projectTasks
+      .filter(t => !t.status_id)
+      .sort((a, b) => a.position - b.position);
     
     return grouped;
   };
