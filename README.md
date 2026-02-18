@@ -4,6 +4,8 @@
 
 Built with Next.js 15, Supabase, Tailwind CSS, and Stripe.
 
+<!-- Arbitrary change for credential manager login -->
+
 ## Features
 
 - **Channel Branding Preview** - See your logo, banner, thumbnails in real YouTube layouts
