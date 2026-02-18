@@ -51,22 +51,27 @@ export function PreviewControls({
 
       {/* Center: Set Picker (absolutely positioned on desktop, inline on mobile) */}
       {sets.length > 1 && (
-        <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-1.5 p-1 rounded-lg bg-muted">
+        <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-2 p-1.5 rounded-lg bg-muted">
           {sets.map((set, index) => (
             <button
               key={set.id}
               onClick={() => onSetChange(index)}
-              className={`relative rounded-md overflow-hidden transition-all ${
+              className={`relative rounded-lg overflow-hidden transition-all flex flex-col items-center ${
                 index === currentSetIndex 
-                  ? "ring-2 ring-primary ring-offset-1 ring-offset-background" 
+                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background" 
                   : "opacity-50 hover:opacity-100"
               }`}
             >
-              <div className="w-10 sm:w-12 aspect-video bg-zinc-800">
-                {set.thumbnail_url && (
+              <div className="w-16 sm:w-20 aspect-video bg-zinc-800 rounded-md overflow-hidden">
+                {set.thumbnail_url ? (
                   <img src={set.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                    No thumb
+                  </div>
                 )}
               </div>
+              <span className="text-[10px] mt-1 font-medium">Set {index + 1}</span>
             </button>
           ))}
         </div>

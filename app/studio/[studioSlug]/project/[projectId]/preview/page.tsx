@@ -93,6 +93,16 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     refetchOnMount: true, // Refetch when component mounts
   });
 
+  // Set initial index to the active set once loaded
+  useEffect(() => {
+    if (sets.length > 0) {
+      const activeIndex = sets.findIndex(s => s.is_selected);
+      if (activeIndex !== -1 && activeIndex !== state.currentSetIndex) {
+        state.setCurrentSetIndex(activeIndex);
+      }
+    }
+  }, [sets]);
+
   const { data: channel } = useQuery({
     queryKey: ["channel", projectId],
     queryFn: () => fetchChannel(projectId),
