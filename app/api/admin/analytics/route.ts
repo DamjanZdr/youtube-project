@@ -5,12 +5,27 @@ export async function GET(req: NextRequest) {
   const adminClient = createAdminClient();
   const { searchParams } = new URL(req.url);
   
-  const type = searchParams.get("type") || "waitlist"; // "waitlist" or "registrations"
+  const type = searchParams.get("type") || "users"; // "users" or "waitlist"
   const search = searchParams.get("search") || "";
   const source = searchParams.get("source") || "";
   const device = searchParams.get("device") || "";
   const page = parseInt(searchParams.get("page") || "0");
+  const sortBy = searchParams.get("sortBy") || "created_at";
+  const sortOrder = searchParams.get("sortOrder") || "desc";
   const limit = 20;
+
+  // Map frontend column names to database columns
+  const sortColumnMap: Record<string, string> = {
+    email: "email",
+    source: "utm_source",
+    medium: "utm_medium",
+    campaign: "utm_campaign",
+    device: "device_type",
+    location: "country",
+    date: "created_at",
+  };
+  const dbSortColumn = sortColumnMap[sortBy] || "created_at";
+  const ascending = sortOrder === "asc";
 
   if (type === "waitlist") {
     let query = adminClient
@@ -22,7 +37,7 @@ export async function GET(req: NextRequest) {
     if (device) query = query.eq("device_type", device);
 
     const { data, count, error } = await query
-      .order("created_at", { ascending: false })
+      .order(dbSortColumn, { ascending })
       .range(page * limit, (page + 1) * limit - 1);
 
     // Get unique sources and devices for filters
@@ -44,7 +59,7 @@ export async function GET(req: NextRequest) {
     if (device) query = query.eq("device_type", device);
 
     const { data, count, error } = await query
-      .order("created_at", { ascending: false })
+      .order(dbSortColumn, { ascending })
       .range(page * limit, (page + 1) * limit - 1);
 
     // Get unique sources and devices for filters

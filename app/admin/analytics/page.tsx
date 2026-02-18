@@ -14,6 +14,9 @@ import {
   Tablet,
   Globe,
   Calendar,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -43,10 +46,13 @@ interface ProfileEntry {
   city: string | null;
 }
 
+type SortColumn = "email" | "source" | "medium" | "campaign" | "device" | "location" | "date";
+type SortOrder = "asc" | "desc";
+
 const ITEMS_PER_PAGE = 20;
 
 export default function AnalyticsPage() {
-  const [tab, setTab] = useState<"waitlist" | "registrations">("waitlist");
+  const [tab, setTab] = useState<"users" | "waitlist">("users");
   const [data, setData] = useState<(WaitlistEntry | ProfileEntry)[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -56,16 +62,20 @@ export default function AnalyticsPage() {
   const [deviceFilter, setDeviceFilter] = useState("");
   const [availableSources, setAvailableSources] = useState<string[]>([]);
   const [availableDevices, setAvailableDevices] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortColumn>("date");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   useEffect(() => {
     fetchData();
-  }, [tab, page, search, sourceFilter, deviceFilter]);
+  }, [tab, page, search, sourceFilter, deviceFilter, sortBy, sortOrder]);
 
   async function fetchData() {
     setLoading(true);
     const params = new URLSearchParams({
       type: tab,
       page: String(page),
+      sortBy,
+      sortOrder,
       ...(search && { search }),
       ...(sourceFilter && { source: sourceFilter }),
       ...(deviceFilter && { device: deviceFilter }),
@@ -83,6 +93,21 @@ export default function AnalyticsPage() {
       setAvailableDevices(result.devices || []);
     }
     setLoading(false);
+  }
+
+  function handleSort(column: SortColumn) {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("desc");
+    }
+    setPage(0);
+  }
+
+  function SortIcon({ column }: { column: SortColumn }) {
+    if (sortBy !== column) return <ArrowUpDown className="w-4 h-4 opacity-50" />;
+    return sortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   }
 
   function exportCSV() {
@@ -135,16 +160,16 @@ export default function AnalyticsPage() {
       {/* Tabs */}
       <div className="flex gap-2">
         <Button
+          variant={tab === "users" ? "default" : "outline"}
+          onClick={() => { setTab("users"); setPage(0); }}
+        >
+          Users
+        </Button>
+        <Button
           variant={tab === "waitlist" ? "default" : "outline"}
           onClick={() => { setTab("waitlist"); setPage(0); }}
         >
           Waitlist
-        </Button>
-        <Button
-          variant={tab === "registrations" ? "default" : "outline"}
-          onClick={() => { setTab("registrations"); setPage(0); }}
-        >
-          Registrations
         </Button>
       </div>
 
@@ -192,7 +217,7 @@ export default function AnalyticsPage() {
 
       {/* Stats Summary */}
       <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>{totalCount} total {tab === "waitlist" ? "signups" : "registrations"}</span>
+        <span>{totalCount} total {tab === "waitlist" ? "signups" : "users"}</span>
       </div>
 
       {/* Table */}
@@ -200,13 +225,48 @@ export default function AnalyticsPage() {
         <table className="w-full">
           <thead className="bg-white/5 border-b border-white/10">
             <tr>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Email</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Source</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Medium</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Campaign</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Device</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Location</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">Date</th>
+              <th 
+                onClick={() => handleSort("email")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("source")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Source <SortIcon column="source" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("medium")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Medium <SortIcon column="medium" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("campaign")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Campaign <SortIcon column="campaign" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("device")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Device <SortIcon column="device" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("location")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Location <SortIcon column="location" /></div>
+              </th>
+              <th 
+                onClick={() => handleSort("date")} 
+                className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-1">Date <SortIcon column="date" /></div>
+              </th>
             </tr>
           </thead>
           <tbody>
