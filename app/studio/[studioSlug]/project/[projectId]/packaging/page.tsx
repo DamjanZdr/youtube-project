@@ -358,7 +358,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       {/* Sets Section */}
       <div data-tutorial="sets-section" className="mb-8">
         <div className="flex items-center justify-between mb-4">
