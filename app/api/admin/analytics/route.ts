@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         last_login_at,
         last_activity_at,
         created_at,
-        profiles!inner(email)
+        profiles!inner(email, country, city)
       `, { count: "exact" });
 
     if (search) query = query.ilike("profiles.email", `%${search}%`);
@@ -73,6 +73,12 @@ export async function GET(req: NextRequest) {
       const email = Array.isArray(profiles) 
         ? profiles[0]?.email 
         : profiles?.email;
+      const country = Array.isArray(profiles) 
+        ? profiles[0]?.country 
+        : profiles?.country;
+      const city = Array.isArray(profiles) 
+        ? profiles[0]?.city 
+        : profiles?.city;
       
       const totalLogins = (stats.desktop_logins || 0) + (stats.mobile_logins || 0) + (stats.tablet_logins || 0);
       const totalTimeSeconds = (stats.desktop_time_seconds || 0) + (stats.mobile_time_seconds || 0) + (stats.tablet_time_seconds || 0);
@@ -81,6 +87,8 @@ export async function GET(req: NextRequest) {
         id: stats.id,
         user_id: stats.user_id,
         email: email || "Unknown",
+        country: country || null,
+        city: city || null,
         desktop_logins: stats.desktop_logins || 0,
         mobile_logins: stats.mobile_logins || 0,
         tablet_logins: stats.tablet_logins || 0,

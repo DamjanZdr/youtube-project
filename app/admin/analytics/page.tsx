@@ -53,6 +53,8 @@ interface UserActivityStats {
   id: string;
   user_id: string;
   email: string;
+  country: string | null;
+  city: string | null;
   desktop_logins: number;
   mobile_logins: number;
   tablet_logins: number;
@@ -149,9 +151,11 @@ export default function AnalyticsPage() {
 
   function exportCSV() {
     if (view === "activity") {
-      const headers = ["email", "desktop_logins", "mobile_logins", "tablet_logins", "total_logins", "desktop_time", "mobile_time", "tablet_time", "total_time", "last_login"];
+      const headers = ["email", "country", "city", "desktop_logins", "mobile_logins", "tablet_logins", "total_logins", "desktop_time", "mobile_time", "tablet_time", "total_time", "last_login"];
       const rows = (data as UserActivityStats[]).map((entry) => [
         entry.email,
+        entry.country || "",
+        entry.city || "",
         entry.desktop_logins,
         entry.mobile_logins,
         entry.tablet_logins,
@@ -340,6 +344,12 @@ export default function AnalyticsPage() {
                     <div className="flex items-center gap-1">Email <SortIcon column="email" /></div>
                   </th>
                   <th 
+                    onClick={() => handleSort("location")} 
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-1">Location <SortIcon column="location" /></div>
+                  </th>
+                  <th 
                     onClick={() => handleSort("totalLogins")} 
                     className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
@@ -347,7 +357,7 @@ export default function AnalyticsPage() {
                   </th>
                   <th 
                     onClick={() => handleSort("desktopLogins")} 
-                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors""
                   >
                     <div className="flex items-center gap-1"><Monitor className="w-4 h-4" /> <SortIcon column="desktopLogins" /></div>
                   </th>
@@ -398,13 +408,13 @@ export default function AnalyticsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="p-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="p-8 text-center text-muted-foreground">
                       No activity found
                     </td>
                   </tr>
@@ -413,6 +423,18 @@ export default function AnalyticsPage() {
                     <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5">
                       <td className="p-4">
                         <span className="font-medium">{entry.email}</span>
+                      </td>
+                      <td className="p-4">
+                        {entry.country || entry.city ? (
+                          <div className="flex items-center gap-1">
+                            <Globe className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {[entry.city, entry.country].filter(Boolean).join(", ") || "—"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <Badge variant="secondary">{entry.total_logins}</Badge>

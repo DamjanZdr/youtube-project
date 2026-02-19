@@ -585,7 +585,7 @@ export default function AdminTicketsPage() {
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}
+                              {format(new Date(ticket.updated_at), "MMM d, yyyy HH:mm")}
                             </span>
                           </div>
                           {ticket.last_message && (
