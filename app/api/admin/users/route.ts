@@ -44,7 +44,9 @@ export async function GET(req: NextRequest) {
       full_name,
       avatar_url,
       created_at,
-      last_active_at
+      last_active_at,
+      country,
+      city
     `)
     .order("created_at", { ascending: false })
     .range(page * limit, (page + 1) * limit - 1);

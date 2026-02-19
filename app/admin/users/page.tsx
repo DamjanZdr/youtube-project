@@ -43,7 +43,8 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   XCircle,
-  CheckCircle
+  CheckCircle,
+  Globe
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -55,6 +56,8 @@ interface User {
   avatar_url: string | null;
   created_at: string;
   last_active_at: string | null;
+  country: string | null;
+  city: string | null;
   organizations: { id: string; name: string; slug: string }[];
 }
 
@@ -311,6 +314,7 @@ export default function AdminUsersPage() {
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">User</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Studios</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Location</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Joined</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Last Active</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
@@ -319,13 +323,13 @@ export default function AdminUsersPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center">
+                <td colSpan={7} className="p-8 text-center">
                   <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto" />
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <td colSpan={7} className="p-8 text-center text-muted-foreground">
                   No users found
                 </td>
               </tr>
@@ -375,6 +379,16 @@ export default function AdminUsersPage() {
                         <span className="text-muted-foreground text-sm">None</span>
                       )}
                     </div>
+                  </td>
+                  <td className="p-4">
+                    {user.country || user.city ? (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <span>{[user.city, user.country].filter(Boolean).join(", ")}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -461,6 +475,12 @@ export default function AdminUsersPage() {
                   <Building2 className="w-3 h-3" />
                   {user.organizations.length} studios
                 </span>
+                {(user.country || user.city) && (
+                  <span className="flex items-center gap-1">
+                    <Globe className="w-3 h-3" />
+                    {[user.city, user.country].filter(Boolean).join(", ")}
+                  </span>
+                )}
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {format(new Date(user.created_at), "MMM d, yyyy")}
@@ -681,6 +701,15 @@ export default function AdminUsersPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Joined</span>
                       <span>{detailsUser?.created_at ? format(new Date(detailsUser.created_at), "PPP") : "-"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Location</span>
+                      <span>
+                        {detailsUser?.country || detailsUser?.city 
+                          ? [detailsUser.city, detailsUser.country].filter(Boolean).join(", ")
+                          : "—"
+                        }
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Member of</span>
