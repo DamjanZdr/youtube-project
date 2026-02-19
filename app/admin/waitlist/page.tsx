@@ -401,14 +401,14 @@ export default function AdminWaitlistPage() {
                   <td className="p-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                      {format(new Date(entry.created_at), "MMM d, yyyy HH:mm")}
                     </div>
                   </td>
                   <td className="p-4">
                     {entry.key_sent_at ? (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400">
                         <Key className="w-3 h-3" />
-                        {formatDistanceToNow(new Date(entry.key_sent_at), { addSuffix: true })}
+                        {format(new Date(entry.key_sent_at), "MMM d, yyyy")}
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-xs">—</span>

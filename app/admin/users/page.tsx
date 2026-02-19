@@ -379,14 +379,14 @@ export default function AdminUsersPage() {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-muted-foreground text-sm">
                       <Calendar className="w-4 h-4" />
-                      <span>{formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}</span>
+                      <span>{format(new Date(user.created_at), "MMM d, yyyy HH:mm")}</span>
                     </div>
                   </td>
                   <td className="p-4">
                     {user.last_active_at ? (
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="w-4 h-4 text-green-500" />
-                        <span>{formatDistanceToNow(new Date(user.last_active_at), { addSuffix: true })}</span>
+                        <span>{format(new Date(user.last_active_at), "MMM d, yyyy HH:mm")}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">Never</span>
@@ -463,7 +463,7 @@ export default function AdminUsersPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
+                  {format(new Date(user.created_at), "MMM d, yyyy")}
                 </span>
               </div>
             </div>
@@ -663,7 +663,7 @@ export default function AdminUsersPage() {
                     </div>
                     <p className="text-lg font-bold">
                       {detailsUser?.last_active_at 
-                        ? formatDistanceToNow(new Date(detailsUser.last_active_at), { addSuffix: true })
+                        ? format(new Date(detailsUser.last_active_at), "MMM d, yyyy HH:mm")
                         : "Never"
                       }
                     </p>

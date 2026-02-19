@@ -6,17 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import { storeUTMParams, getStoredUTMParams, getDeviceInfo } from "@/lib/utils/utm";
+import { storeUTMParams, getStoredUTMParams, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
 
 export function WaitlistForm() {
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [location, setLocation] = useState<{ country: string | null; city: string | null }>({ country: null, city: null });
 
-  // Capture UTM params on mount
+  // Capture UTM params and location on mount
   React.useEffect(() => {
     storeUTMParams();
+    getLocationInfo().then(setLocation);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -31,13 +33,13 @@ export function WaitlistForm() {
 
     try {
 
-      // Attach UTM and device info
+      // Attach UTM, device, and location info
       const utm = getStoredUTMParams();
       const device = getDeviceInfo();
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, utm, device }),
+        body: JSON.stringify({ email, utm, device, location }),
       });
 
       const data = await res.json();

@@ -435,7 +435,7 @@ export default function AdminStudiosPage() {
                       {studio.last_activity_at ? (
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="w-4 h-4 text-green-500" />
-                          <span>{formatDistanceToNow(new Date(studio.last_activity_at), { addSuffix: true })}</span>
+                          <span>{format(new Date(studio.last_activity_at), "MMM d, yyyy HH:mm")}</span>
                         </div>
                       ) : (
                         <span className="text-muted-foreground text-sm">Never</span>
@@ -663,7 +663,7 @@ export default function AdminStudiosPage() {
                     </div>
                     <p className="text-lg font-bold">
                       {detailsStudio?.last_activity_at 
-                        ? formatDistanceToNow(new Date(detailsStudio.last_activity_at), { addSuffix: true })
+                        ? format(new Date(detailsStudio.last_activity_at), "MMM d, yyyy HH:mm")
                         : "Never"
                       }
                     </p>

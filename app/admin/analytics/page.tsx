@@ -438,8 +438,8 @@ export default function AnalyticsPage() {
                         {entry.last_login_at ? (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="w-4 h-4" />
-                            <span title={format(new Date(entry.last_login_at), "PPpp")}>
-                              {formatDistanceToNow(new Date(entry.last_login_at), { addSuffix: true })}
+                            <span>
+                              {format(new Date(entry.last_login_at), "MMM d, yyyy HH:mm")}
                             </span>
                           </div>
                         ) : (
@@ -560,8 +560,8 @@ export default function AnalyticsPage() {
                       <td className="p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="w-4 h-4" />
-                          <span title={format(new Date(entry.created_at), "PPpp")}>
-                            {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                          <span>
+                            {format(new Date(entry.created_at), "MMM d, yyyy HH:mm")}
                           </span>
                         </div>
                       </td>

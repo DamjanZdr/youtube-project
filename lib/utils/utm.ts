@@ -42,3 +42,16 @@ export function getDeviceInfo() {
     language: navigator.language,
   };
 }
+
+// Get user's location from IP (calls server API)
+export async function getLocationInfo(): Promise<{ country: string | null; city: string | null }> {
+  if (typeof window === 'undefined') return { country: null, city: null };
+  try {
+    const response = await fetch('/api/geolocation');
+    if (!response.ok) return { country: null, city: null };
+    const data = await response.json();
+    return { country: data.country || null, city: data.city || null };
+  } catch {
+    return { country: null, city: null };
+  }
+}

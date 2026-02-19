@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const adminClient = createAdminClient();
 
-  const { email, utm, device } = await req.json();
+  const { email, utm, device, location } = await req.json();
 
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "You're already on the waitlist!" }, { status: 400 });
   }
 
-  // Insert into waitlist with UTM and device info
+  // Insert into waitlist with UTM, device, and location info
   const { error: insertError } = await adminClient
     .from("waitlist")
     .insert({
@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
       user_agent: device?.userAgent || null,
       platform: device?.platform || null,
       language: device?.language || null,
+      country: location?.country || null,
+      city: location?.city || null,
     });
 
   if (insertError) {

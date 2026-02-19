@@ -230,11 +230,8 @@ export default function AdminSubscriptionsPage() {
                       <div className="text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="w-4 h-4" />
-                          <span>Ends {format(new Date(sub.current_period_end), "MMM d, yyyy")}</span>
+                          <span>{format(new Date(sub.current_period_end), "MMM d, yyyy HH:mm")}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(sub.current_period_end), { addSuffix: true })}
-                        </p>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>

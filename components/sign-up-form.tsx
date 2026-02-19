@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-import { storeUTMParams, getStoredUTMParams, getDeviceInfo } from "@/lib/utils/utm";
+import { storeUTMParams, getStoredUTMParams, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
 
 export function SignUpForm({
   className,
@@ -22,11 +22,13 @@ export function SignUpForm({
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState<{ country: string | null; city: string | null }>({ country: null, city: null });
   const router = useRouter();
 
-  // Capture UTM params on mount
+  // Capture UTM params and location on mount
   React.useEffect(() => {
     storeUTMParams();
+    getLocationInfo().then(setLocation);
   }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -48,7 +50,7 @@ export function SignUpForm({
     }
 
     try {
-      // Attach UTM and device info to user_metadata
+      // Attach UTM, device, and location info to user_metadata
       const utm = getStoredUTMParams();
       const device = getDeviceInfo();
       const { error } = await supabase.auth.signUp({
@@ -60,6 +62,7 @@ export function SignUpForm({
             full_name: displayName.trim(),
             utm,
             device,
+            location,
           },
         },
       });

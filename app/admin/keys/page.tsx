@@ -613,7 +613,7 @@ export default function AdminKeysPage() {
                             )}
                             {key.sent_at && (
                               <p className="text-xs text-muted-foreground">
-                                Sent {formatDistanceToNow(new Date(key.sent_at), { addSuffix: true })}
+                                Sent {format(new Date(key.sent_at), "MMM d, yyyy HH:mm")}
                               </p>
                             )}
                           </div>
@@ -625,14 +625,14 @@ export default function AdminKeysPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Calendar className="w-4 h-4" />
-                        <span>{formatDistanceToNow(new Date(key.created_at), { addSuffix: true })}</span>
+                        <span>{format(new Date(key.created_at), "MMM d, yyyy HH:mm")}</span>
                       </div>
                     </td>
                     <td className="p-4">
                       {key.redeemed_at ? (
                         <div className="flex items-center gap-2 text-sm">
                           <Check className="w-4 h-4 text-green-400" />
-                          <span>{formatDistanceToNow(new Date(key.redeemed_at), { addSuffix: true })}</span>
+                          <span>{format(new Date(key.redeemed_at), "MMM d, yyyy HH:mm")}</span>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
