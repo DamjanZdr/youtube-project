@@ -357,7 +357,7 @@ export default function AnalyticsPage() {
                   </th>
                   <th 
                     onClick={() => handleSort("desktopLogins")} 
-                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors""
+                    className="p-4 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
                     <div className="flex items-center gap-1"><Monitor className="w-4 h-4" /> <SortIcon column="desktopLogins" /></div>
                   </th>
