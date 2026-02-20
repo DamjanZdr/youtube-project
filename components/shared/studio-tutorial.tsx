@@ -249,10 +249,12 @@ export function StudioTutorial({
       }
 
       // Click highlight (blue pulsing) - can be single or from clickSelectors
+      let clickRectValue: DOMRect | null = null;
       if (step?.clickSelector) {
         const element = queryVisibleElement(step.clickSelector);
         if (element) {
-          setClickRect(element.getBoundingClientRect());
+          clickRectValue = element.getBoundingClientRect();
+          setClickRect(clickRectValue);
         } else {
           setClickRect(null);
         }
@@ -261,12 +263,32 @@ export function StudioTutorial({
         for (const selector of step.clickSelectors) {
           const element = queryVisibleElement(selector);
           if (element) {
-            setClickRect(element.getBoundingClientRect());
+            clickRectValue = element.getBoundingClientRect();
+            setClickRect(clickRectValue);
             break;
           }
         }
       } else {
         setClickRect(null);
+      }
+
+      // Check off-screen for click highlights if no info highlights
+      const hasInfoHighlights = step?.highlights && step.highlights.length > 0;
+      if (!hasInfoHighlights && clickRectValue) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        if (clickRectValue.bottom < 0) {
+          setOffScreenDirection('top');
+        } else if (clickRectValue.top > viewportHeight) {
+          setOffScreenDirection('bottom');
+        } else if (clickRectValue.right < 0) {
+          setOffScreenDirection('left');
+        } else if (clickRectValue.left > viewportWidth) {
+          setOffScreenDirection('right');
+        } else {
+          setOffScreenDirection(null);
+        }
       }
     };
 
