@@ -170,13 +170,13 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                 </div>
               ) : (
                 /* Free plan - show value */
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-4 border border-white/10 hover:border-white/20 transition-all">
-                  <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 p-4 border border-amber-500/20 hover:border-amber-500/40 transition-all">
+                  <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-amber-500/20 to-rose-500/20 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
                   
                   <div className="relative">
                     <div className="flex items-center gap-2 mb-2">
-                      <Crown className="w-4 h-4 text-violet-400" />
-                      <span className="text-xs font-medium text-violet-400">Free plan</span>
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-medium text-amber-400">Free plan</span>
                     </div>
                     <p className="text-base font-semibold text-white mb-1">Upgrade to Pro</p>
                     <p className="text-xs text-white/50 mb-3">Unlock all features</p>
@@ -198,13 +198,13 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                   className={`flex items-center justify-center w-full h-12 rounded-xl border transition-all group ${
                     isGiftedPlan 
                       ? 'bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 border-amber-500/20 hover:border-amber-500/40'
-                      : 'bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border-white/10 hover:border-white/20'
+                      : 'bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 border-amber-500/20 hover:border-amber-500/40'
                   }`}
                 >
                   {isGiftedPlan ? (
                     <Clock className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
                   ) : (
-                    <Crown className="w-5 h-5 text-violet-400 group-hover:text-violet-300 transition-colors" />
+                    <Crown className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
                   )}
                 </Link>
               </TooltipTrigger>

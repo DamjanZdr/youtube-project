@@ -106,8 +106,8 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
       <DropdownMenuContent 
         align={isMobile ? "end" : collapsed ? "center" : "start"} 
         side={isMobile ? "top" : "top"} 
-        className={isMobile ? "w-56 mb-2 z-[100]" : "w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"}
-        sideOffset={isMobile ? 16 : 8}
+        className={isMobile ? "w-56 mb-2 z-[100]" : collapsed ? "w-56 mb-2 z-[100]" : "w-[calc(var(--radix-dropdown-menu-trigger-width))] mb-2 z-[100]"}
+        sideOffset={isMobile ? 16 : collapsed ? 8 : 8}
       >
         {/* Back to Hub - at top */}
         <DropdownMenuItem asChild>

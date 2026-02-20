@@ -42,14 +42,56 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "10";
   const videoDuration = searchParams.get("videoDuration"); // 'short' for <60s, 'long' for >4min, 'medium' for 4-20min
-
-  if (!query) {
-    return NextResponse.json({ error: "Query parameter 'q' is required" }, { status: 400 });
-  }
+  const trending = searchParams.get("trending"); // If 'true', return trending/popular videos
 
   if (!YOUTUBE_API_KEY) {
     console.error("YouTube API key is not configured!");
     return NextResponse.json({ error: "YouTube API key not configured" }, { status: 500 });
+  }
+
+  // If trending, fetch popular videos
+  if (trending === "true") {
+    const cacheKey = `trending_${videoDuration || 'any'}_${maxResults}`;
+    const cachedResult = getCachedResult(cacheKey);
+    if (cachedResult) {
+      return NextResponse.json(cachedResult);
+    }
+
+    try {
+      let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`;
+      
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("YouTube API error response:", JSON.stringify(error, null, 2));
+        return NextResponse.json({ error: error.error?.message || "YouTube API error" }, { status: response.status });
+      }
+
+      const data = await response.json();
+
+      // Transform and filter by duration if needed
+      let videos = data.items.map((item: any) => ({
+        id: item.id,
+        title: item.snippet.title,
+        channelTitle: item.snippet.channelTitle,
+        channelThumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+        publishedAt: item.snippet.publishedAt,
+      }));
+
+      const result = { videos };
+      setCachedResult(cacheKey, result);
+
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error("YouTube trending error:", error);
+      return NextResponse.json({ error: "Failed to fetch trending videos" }, { status: 500 });
+    }
+  }
+
+  if (!query) {
+    return NextResponse.json({ error: "Query parameter 'q' is required" }, { status: 400 });
   }
 
   // Check cache first

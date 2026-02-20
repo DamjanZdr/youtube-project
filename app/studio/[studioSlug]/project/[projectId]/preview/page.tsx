@@ -56,7 +56,13 @@ async function fetchVideoType(projectId: string): Promise<string> {
 }
 
 async function searchYouTubeVideos(query: string, videoDuration?: 'short' | 'medium' | 'long'): Promise<YouTubeVideo[]> {
-  if (!query) return [];
+  // If no query, fetch trending videos instead
+  if (!query) {
+    const response = await fetch(`/api/youtube-search?trending=true&maxResults=10`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.videos || [];
+  }
   
   let url = `/api/youtube-search?q=${encodeURIComponent(query)}&maxResults=10`;
   if (videoDuration) {
@@ -111,31 +117,34 @@ export default function PreviewPage({ params }: PreviewPageProps) {
   // Load/fetch compare videos when compare mode is on or set changes
   useEffect(() => {
     const loadCompareVideos = async () => {
-      if (!state.compareMode || !currentSet?.title) {
+      if (!state.compareMode) {
         // Compare mode off - clear display but keep cache
         state.setCompareVideos([]);
         state.setCompareShorts([]);
         return;
       }
 
-      // Check cache first
-      const cached = state.getCachedResults(currentSet.title);
+      const title = currentSet?.title || '';
+      
+      // Check cache first (use empty string key for trending)
+      const cacheKey = title || '__trending__';
+      const cached = state.getCachedResults(cacheKey);
       if (cached) {
         state.setCompareVideos(cached.videos);
         state.setCompareShorts(cached.shorts);
         return;
       }
 
-      // No cache - fetch from API
+      // Fetch videos - if no title, this will fetch trending
       const [longVideos, shortVideos] = await Promise.all([
-        searchYouTubeVideos(currentSet.title, 'medium'),
-        searchYouTubeVideos(currentSet.title, 'short')
+        searchYouTubeVideos(title, 'medium'),
+        searchYouTubeVideos(title, 'short')
       ]);
       
       // Update state and cache
       state.setCompareVideos(longVideos);
       state.setCompareShorts(shortVideos);
-      state.setCachedResults(currentSet.title, longVideos, shortVideos);
+      state.setCachedResults(cacheKey, longVideos, shortVideos);
     };
     
     loadCompareVideos();

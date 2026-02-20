@@ -64,6 +64,7 @@ interface TutorialStep {
   clickSelector?: string;
   clickSelectors?: string[];
   autoAdvanceOnClick?: string;
+  autoAdvanceOnInput?: string;
 }
 
 // Convert JSON data to TutorialStep objects
@@ -77,7 +78,8 @@ const TUTORIAL_STEPS: TutorialStep[] = tutorialStepsData.steps.map((step) => {
     expectedPath: step.expectedPath ? new RegExp(step.expectedPath) : undefined,
     highlights: step.highlights,
     clickSelector: step.clickSelector,
-    clickSelectors: step.clickSelectors,
+    clickSelectors: (step as any).clickSelectors,
+    autoAdvanceOnInput: (step as any).autoAdvanceOnInput,
     autoAdvanceOnClick: step.autoAdvanceOnClick,
   };
 });
@@ -152,14 +154,31 @@ export function StudioTutorial({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
-  const [currentStep, setCurrentStep] = useState<number | null>(initialStep);
+  // Use localStorage as fallback for step persistence (handles refresh/tab close)
+  const getStoredStep = () => {
+    if (typeof window === 'undefined') return initialStep;
+    const key = `tutorial-step-${organizationId}-${userId}`;
+    const stored = localStorage.getItem(key);
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10);
+      // Use stored value if it's higher than server value (more recent progress)
+      if (!isNaN(parsed) && (initialStep === null || parsed > initialStep)) {
+        return parsed;
+      }
+    }
+    return initialStep;
+  };
+  
+  const [currentStep, setCurrentStep] = useState<number | null>(getStoredStep);
   // Only show welcome if: never started (initialStep null), never completed (tutorialCompletedAt null), and not mobile
-  const [showWelcome, setShowWelcome] = useState(initialStep === null && tutorialCompletedAt === null);
-  const [isVisible, setIsVisible] = useState(
-    initialStep !== null && initialStep >= 0 && initialStep < TUTORIAL_STEPS.length
-  );
+  const [showWelcome, setShowWelcome] = useState(initialStep === null && tutorialCompletedAt === null && getStoredStep() === null);
+  const [isVisible, setIsVisible] = useState(() => {
+    const step = getStoredStep();
+    return step !== null && step >= 0 && step < TUTORIAL_STEPS.length;
+  });
   const [highlightPositions, setHighlightPositions] = useState<HighlightPosition[]>([]);
   const [clickRect, setClickRect] = useState<DOMRect | null>(null);
+  const [offScreenDirection, setOffScreenDirection] = useState<'top' | 'bottom' | 'left' | 'right' | null>(null);
   
   // Track previous pathname to only auto-advance on actual navigation
   const prevPathnameRef = useRef<string>(pathname);
@@ -203,8 +222,30 @@ export function StudioTutorial({
           }
         }
         setHighlightPositions(positions);
+        
+        // Check if any highlight is off-screen and determine direction
+        if (positions.length > 0) {
+          const firstPos = positions[0].rect;
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          if (firstPos.bottom < 0) {
+            setOffScreenDirection('top');
+          } else if (firstPos.top > viewportHeight) {
+            setOffScreenDirection('bottom');
+          } else if (firstPos.right < 0) {
+            setOffScreenDirection('left');
+          } else if (firstPos.left > viewportWidth) {
+            setOffScreenDirection('right');
+          } else {
+            setOffScreenDirection(null);
+          }
+        } else {
+          setOffScreenDirection(null);
+        }
       } else {
         setHighlightPositions([]);
+        setOffScreenDirection(null);
       }
 
       // Click highlight (blue pulsing) - can be single or from clickSelectors
@@ -315,6 +356,29 @@ export function StudioTutorial({
     }
   }, [currentStep, isVisible]);
 
+  // Input detection for auto-advancing on text input
+  useEffect(() => {
+    if (!isVisible || currentStep === null) return;
+    
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step?.autoAdvanceOnInput) return;
+    
+    const handleInput = (e: Event) => {
+      const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+      const inputElement = target.closest(step.autoAdvanceOnInput!);
+      if (inputElement && target.value.length > 0) {
+        hasAutoAdvancedRef.current = true;
+        setTimeout(() => {
+          handleNext();
+          hasAutoAdvancedRef.current = false;
+        }, 500); // Give them time to type a bit
+      }
+    };
+    
+    document.addEventListener("input", handleInput, true);
+    return () => document.removeEventListener("input", handleInput, true);
+  }, [currentStep, isVisible]);
+
   // Auto-advance when user navigates to expected path (only on actual navigation)
   useEffect(() => {
     if (!isVisible || currentStep === null || hasAutoAdvancedRef.current) return;
@@ -339,6 +403,14 @@ export function StudioTutorial({
 
   const saveProgress = useCallback(async (step: number | null) => {
     const isCompleted = step === null || step >= TUTORIAL_STEPS.length;
+    
+    // Save to localStorage for immediate persistence across refresh
+    const key = `tutorial-step-${organizationId}-${userId}`;
+    if (isCompleted) {
+      localStorage.setItem(key, TUTORIAL_STEPS.length.toString());
+    } else if (step !== null) {
+      localStorage.setItem(key, step.toString());
+    }
     
     await supabase
       .from("organization_members")
@@ -448,6 +520,36 @@ export function StudioTutorial({
           )}
         </div>
       ))}
+
+      {/* Off-screen indicator arrow */}
+      {offScreenDirection && (
+        <div
+          className="fixed z-[100] pointer-events-none animate-bounce"
+          style={{
+            ...(offScreenDirection === 'top' && { top: 16, left: '50%', transform: 'translateX(-50%)' }),
+            ...(offScreenDirection === 'bottom' && { bottom: 16, left: '50%', transform: 'translateX(-50%)' }),
+            ...(offScreenDirection === 'left' && { left: 16, top: '50%', transform: 'translateY(-50%)' }),
+            ...(offScreenDirection === 'right' && { right: 16, top: '50%', transform: 'translateY(-50%)' }),
+          }}
+        >
+          <div className="bg-blue-500 text-white p-2 rounded-full shadow-lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              style={{
+                transform: offScreenDirection === 'top' ? 'rotate(-90deg)' :
+                           offScreenDirection === 'bottom' ? 'rotate(90deg)' :
+                           offScreenDirection === 'left' ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      )}
 
       {/* Click highlight - blue pulsing ring with slow thicken/slim effect */}
       {clickRect && (

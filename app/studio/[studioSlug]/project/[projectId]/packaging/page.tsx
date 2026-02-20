@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useEffect } from "react";
+import { useState, use, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,10 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  
+  // Thumbnail upload ref and state
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingSetId, setUploadingSetId] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubeLastSynced, setYoutubeLastSynced] = useState<string | null>(null);
@@ -327,6 +331,73 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     }
   };
 
+  const handleThumbnailClick = (setId: string) => {
+    setUploadingSetId(setId);
+    thumbnailInputRef.current?.click();
+  };
+
+  const uploadThumbnail = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingSetId) {
+      setUploadingSetId(null);
+      return;
+    }
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      setUploadingSetId(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      setUploadingSetId(null);
+      return;
+    }
+
+    const setId = uploadingSetId;
+    
+    try {
+      // Upload to Supabase storage
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `thumbnails/${projectId}/${setId}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('thumbnails')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) {
+        toast.error('Failed to upload thumbnail');
+        console.error('Upload error:', uploadError);
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('thumbnails')
+        .getPublicUrl(fileName);
+
+      // Update DB
+      await supabase
+        .from('packaging_sets')
+        .update({ thumbnail_url: publicUrl })
+        .eq('id', setId);
+
+      // Update local state
+      setSets(sets.map(s => s.id === setId ? { ...s, thumbnail: publicUrl } : s));
+      toast.success('Thumbnail uploaded');
+    } catch (err) {
+      console.error('Thumbnail upload error:', err);
+      toast.error('Failed to upload thumbnail');
+    } finally {
+      setUploadingSetId(null);
+      // Clear the input so the same file can be selected again
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = '';
+      }
+    }
+  };
+
   const saveTags = async (newTags: string[]) => {
     setTags(newTags);
 
@@ -459,8 +530,20 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               </div>
 
               {/* Thumbnail */}
-              <div data-tutorial={index === 0 ? "thumbnail-upload" : undefined} className={`${videoType === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-white/20 transition-colors mb-2`}>
-                {set.thumbnail ? (
+              <div 
+                data-tutorial={index === 0 ? "thumbnail-upload" : undefined} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleThumbnailClick(set.id);
+                }}
+                className={`${videoType === 'short' ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-white/20 transition-colors mb-2 relative overflow-hidden`}
+              >
+                {uploadingSetId === set.id ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[10px] text-muted-foreground">Uploading...</span>
+                  </div>
+                ) : set.thumbnail ? (
                   <img src={set.thumbnail} alt="" className="w-full h-full object-cover rounded-lg" />
                 ) : (
                   <>
@@ -499,6 +582,15 @@ export default function PackagingPage({ params }: PackagingPageProps) {
             </button>
           )}
         </div>
+        
+        {/* Hidden file input for thumbnail uploads */}
+        <input
+          ref={thumbnailInputRef}
+          type="file"
+          accept="image/*"
+          onChange={uploadThumbnail}
+          className="hidden"
+        />
       </div>
 
       {/* Description, Video Type & Other Fields */}

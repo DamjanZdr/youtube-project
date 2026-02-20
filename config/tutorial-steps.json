@@ -83,8 +83,8 @@
     },
     {
       "id": 10,
-      "title": "Packaging Sections",
-      "content": "The packaging tab has two main areas: (1) the Sets section where you create title and thumbnail combinations, and (2) the Metadata section for video description and tags.",
+      "title": "Packaging Overview",
+      "content": "Welcome to the Packaging tab. Here you have two main areas: (1) the Sets section for title and thumbnail combinations, and (2) the Metadata section for description and tags.",
       "icon": "Package",
       "expectedPath": "^\\/studio\\/[^/]+\\/project\\/[^/]+(\\/packaging)?$",
       "highlights": [
@@ -94,21 +94,21 @@
     },
     {
       "id": 11,
-      "title": "Multiple Sets",
-      "content": "You can make up to 6 different sets of titles and thumbnails. When making a video, you want to test it as much as possible to ensure it is something people will want to watch.",
+      "title": "Try Creating a Set",
+      "content": "You can create up to 6 different title and thumbnail combinations to test. Go ahead, try giving a title to the first set.",
       "icon": "Package",
       "highlights": [
-        { "selector": "[data-tutorial='sets-section']" }
-      ]
+        { "selector": "[data-tutorial='title-input']" }
+      ],
+      "autoAdvanceOnInput": "[data-tutorial='title-input']"
     },
     {
       "id": 12,
-      "title": "Create a Set",
-      "content": "For now, create a simple title, and add any image as a thumbnail. It is for testing purposes only, you can change it later.",
+      "title": "Add a Thumbnail",
+      "content": "Great! Now click on the thumbnail area to upload an image. Don't worry, you can always change it later.",
       "icon": "Package",
       "highlights": [
-        { "selector": "[data-tutorial='title-input']", "label": "1" },
-        { "selector": "[data-tutorial='thumbnail-upload']", "label": "2" }
+        { "selector": "[data-tutorial='thumbnail-upload']" }
       ]
     },
     {
@@ -191,14 +191,13 @@
     {
       "id": 23,
       "title": "Managing Scenes",
-      "content": "You can (1) add more scenes, (2) reorder them with the arrows, or (3) delete them. Click any of these buttons to continue.",
+      "content": "You can (1) add more scenes, (2) reorder them with the arrows, or (3) delete them.",
       "icon": "Layout",
       "highlights": [
         { "selector": "[data-tutorial='add-scene']", "label": "1" },
         { "selector": "[data-tutorial='scene-reorder']", "label": "2", "isGroup": true },
         { "selector": "[data-tutorial='scene-delete']", "label": "3" }
-      ],
-      "clickSelectors": ["[data-tutorial='add-scene']", "[data-tutorial='scene-up']", "[data-tutorial='scene-down']", "[data-tutorial='scene-delete']"]
+      ]
     },
     {
       "id": 24,
@@ -263,7 +262,7 @@
     {
       "id": 32,
       "title": "Settings Tabs",
-      "content": "Here we have three settings sections: Studio, Members, and Billing.",
+      "content": "Here we have four settings sections: Studio, Members, Board, and Billing.",
       "icon": "Settings",
       "expectedPath": "^\\/studio\\/[^/]+\\/settings",
       "highlights": [
