@@ -518,6 +518,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     if (error) {
       toast.error('Failed to restart tutorial');
     } else {
+      // Clear localStorage backup so it doesn't override the reset
+      localStorage.removeItem(`tutorial-step-${studio.id}-${user.id}`);
       toast.success('Starting tutorial...');
       window.location.href = `/studio/${studioSlug}`;
     }

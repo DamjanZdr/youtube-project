@@ -680,6 +680,9 @@ export function StartTutorialButton({
       .eq("organization_id", organizationId)
       .eq("user_id", userId);
     
+    // Clear localStorage backup so it doesn't override the reset
+    localStorage.removeItem(`tutorial-step-${organizationId}-${userId}`);
+    
     window.location.href = `/studio/${studioSlug}`;
   };
 
