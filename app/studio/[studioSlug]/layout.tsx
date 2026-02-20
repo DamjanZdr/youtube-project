@@ -58,6 +58,13 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     }
   }
 
+  // Fetch subscription data for sidebar promo
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan, source, current_period_end, status")
+    .eq("organization_id", studio.id)
+    .maybeSingle();
+
   // If studio is pending (awaiting payment), show minimal layout
   // Only checkout routes will render meaningfully
   if (studio.status === 'pending') {
@@ -103,6 +110,11 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
             accept_invites: profile?.accept_invites ?? true
           }}
           studioSlug={studioSlug}
+          subscription={subscription ? {
+            plan: subscription.plan,
+            source: subscription.source as 'stripe' | 'key' | undefined,
+            currentPeriodEnd: subscription.current_period_end,
+          } : null}
         />
 
         {/* Main Content - pb-[72px] for mobile bottom nav (h-18) */}

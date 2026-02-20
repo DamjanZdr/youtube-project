@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Sparkles, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -26,9 +26,14 @@ interface StudioSidebarProps {
     accept_invites?: boolean;
   };
   studioSlug: string;
+  subscription?: {
+    plan: string;
+    source?: 'stripe' | 'key';
+    currentPeriodEnd?: string | null;
+  } | null;
 }
 
-export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) {
+export function StudioSidebar({ studio, user, studioSlug, subscription }: StudioSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -37,6 +42,15 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
   const logoPadding = collapsed ? "w-10 h-10 mx-auto" : "w-10 h-10";
   const navPadding = collapsed ? "p-2" : "p-3";
   const footerPadding = collapsed ? "p-2" : "p-4";
+
+  // Subscription state
+  const isFreePlan = !subscription || subscription.plan === "free";
+  const isGiftedPlan = subscription?.source === "key" && !isFreePlan;
+  const expiresAt = subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
+  const daysUntilExpiry = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  
+  // Show promo for: free users OR gifted users with expiring plans
+  const showUpgradePromo = isFreePlan || (isGiftedPlan && expiresAt);
 
   // Mobile bottom nav items - all pages in scrollable nav
   const mobileNavItems = [
@@ -128,6 +142,70 @@ export function StudioSidebar({ studio, user, studioSlug }: StudioSidebarProps) 
 
         {/* Sidebar Footer */}
         <div className={`border-t border-white/5 ${footerPadding}`}>
+          {/* Upgrade Promo */}
+          {showUpgradePromo && !collapsed && (
+            <Link 
+              href={`/studio/${studioSlug}/settings?tab=billing`}
+              className={`block mb-3 p-3 rounded-lg transition-all ${
+                isGiftedPlan 
+                  ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40" 
+                  : "bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 hover:border-primary/40"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                {isGiftedPlan ? (
+                  <Gift className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                ) : (
+                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  {isGiftedPlan ? (
+                    <>
+                      <p className="text-xs font-medium text-amber-200">Gifted Plan</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {daysUntilExpiry !== null && daysUntilExpiry > 0 
+                          ? `Expires in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}` 
+                          : 'Expires soon'}
+                        . Upgrade to keep features.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-medium">Upgrade to Pro</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Unlock all features
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )}
+          {showUpgradePromo && collapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link 
+                  href={`/studio/${studioSlug}/settings?tab=billing`}
+                  className={`flex items-center justify-center w-full h-10 rounded-lg mb-2 transition-all ${
+                    isGiftedPlan 
+                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40" 
+                      : "bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 hover:border-primary/40"
+                  }`}
+                >
+                  {isGiftedPlan ? (
+                    <Gift className="w-4 h-4 text-amber-400" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {isGiftedPlan 
+                  ? `Gifted plan expires ${daysUntilExpiry !== null && daysUntilExpiry > 0 ? `in ${daysUntilExpiry} days` : 'soon'}` 
+                  : "Upgrade to Pro"}
+              </TooltipContent>
+            </Tooltip>
+          )}
           <SidebarUserDropup 
             user={{
               id: user.id,
