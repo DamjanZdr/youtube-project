@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Zap } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Crown, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -147,29 +147,48 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
               href={`/studio/${studioSlug}/settings?tab=billing`}
               className="block group"
             >
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-4 border border-white/10 hover:border-white/20 transition-all">
-                {/* Decorative glow */}
-                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
-                
-                <div className="relative flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-                      <Zap className="w-5 h-5 text-white" />
+              {isGiftedPlan ? (
+                /* Gifted plan expiring - show urgency */
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 p-4 border border-amber-500/20 hover:border-amber-500/40 transition-all">
+                  <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-amber-500/20 to-rose-500/20 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+                  
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-medium text-amber-400">Gifted plan</span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">Go Pro</p>
-                      <p className="text-xs text-white/60">
-                        {isGiftedPlan && daysUntilExpiry !== null 
-                          ? `${daysUntilExpiry}d left` 
-                          : 'Unlock all'}
-                      </p>
+                    <p className="text-base font-semibold text-white mb-1">
+                      {daysUntilExpiry !== null && daysUntilExpiry > 0 
+                        ? `${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''} remaining`
+                        : 'Expires soon'}
+                    </p>
+                    <p className="text-xs text-white/50 mb-3">Upgrade to keep your features</p>
+                    <div className="w-full py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 text-center group-hover:bg-white/90 transition-colors">
+                      Upgrade Now
                     </div>
-                  </div>
-                  <div className="px-4 py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
-                    Upgrade
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Free plan - show value */
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-4 border border-white/10 hover:border-white/20 transition-all">
+                  <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+                  
+                  <div className="relative flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+                        <Crown className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">Upgrade to Pro</p>
+                        <p className="text-xs text-white/60">Unlock all features</p>
+                      </div>
+                    </div>
+                    <div className="px-4 py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
+                      Upgrade
+                    </div>
+                  </div>
+                </div>
+              )}
             </Link>
           </div>
         )}
@@ -179,14 +198,22 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
               <TooltipTrigger asChild>
                 <Link 
                   href={`/studio/${studioSlug}/settings?tab=billing`}
-                  className="flex items-center justify-center w-full h-12 rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border border-white/10 hover:border-white/20 transition-all group"
+                  className={`flex items-center justify-center w-full h-12 rounded-xl border transition-all group ${
+                    isGiftedPlan 
+                      ? 'bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 border-amber-500/20 hover:border-amber-500/40'
+                      : 'bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border-white/10 hover:border-white/20'
+                  }`}
                 >
-                  <Zap className="w-5 h-5 text-violet-400 group-hover:text-violet-300 transition-colors" />
+                  {isGiftedPlan ? (
+                    <Clock className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
+                  ) : (
+                    <Crown className="w-5 h-5 text-violet-400 group-hover:text-violet-300 transition-colors" />
+                  )}
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">
                 {isGiftedPlan && daysUntilExpiry !== null
-                  ? `${daysUntilExpiry} days left • Upgrade` 
+                  ? `Gifted plan expires in ${daysUntilExpiry} days`
                   : "Upgrade to Pro"}
               </TooltipContent>
             </Tooltip>
