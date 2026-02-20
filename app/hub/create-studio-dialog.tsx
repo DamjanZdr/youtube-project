@@ -50,6 +50,11 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (max 4MB)
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error('Image must be under 4MB');
+        return;
+      }
       setLogo(file);
       setLogoPreview(URL.createObjectURL(file));
     } else {
@@ -264,7 +269,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 className="hidden"
                 onChange={handleLogoChange}
               />
-              <p className="text-xs text-muted-foreground mt-3">PNG or JPG, 256×256px</p>
+              <p className="text-xs text-muted-foreground mt-3">PNG or JPG, 256×256px (max 4MB)</p>
             </div>
 
             {/* Studio Name */}

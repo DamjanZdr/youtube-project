@@ -138,6 +138,12 @@ export default function AccountSettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file size (max 4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error('Image must be under 4MB');
+      return;
+    }
+
     setUploadingAvatar(true);
     
     const fileExt = file.name.split(".").pop();
@@ -264,7 +270,7 @@ export default function AccountSettingsPage() {
                 className="hidden"
               />
               <p className="text-sm text-muted-foreground">
-                Recommended: 256x256px, PNG or JPG
+                Recommended: 256x256px, PNG or JPG (max 4MB)
               </p>
             </div>
           </div>

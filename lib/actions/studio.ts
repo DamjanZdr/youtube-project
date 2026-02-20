@@ -84,9 +84,9 @@ export async function createStudio(formData: FormData) {
     let logoUrl: string | null = null;
     const logoFile = formData.get("logo");
     if (logoFile && logoFile instanceof File && logoFile.size > 0) {
-      // Validate file size (max 2MB)
-      if (logoFile.size > 2 * 1024 * 1024) {
-        return { error: "Logo file is too large. Maximum size is 2MB." };
+      // Validate file size (max 4MB)
+      if (logoFile.size > 4 * 1024 * 1024) {
+        return { error: "Logo file is too large. Maximum size is 4MB." };
       }
       
       const fileExt = logoFile.name.split('.').pop()?.toLowerCase() || 'png';

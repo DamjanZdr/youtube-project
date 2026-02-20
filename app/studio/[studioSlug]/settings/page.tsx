@@ -363,6 +363,12 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     const file = e.target.files?.[0];
     if (!file || !studio) return;
 
+    // Validate file size (max 4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error('Image must be under 4MB');
+      return;
+    }
+
     setUploading(true);
     
     const fileExt = file.name.split('.').pop();
@@ -651,6 +657,13 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
+    // Check if user accepts invites (applies to both regular invites and transfers)
+    if (!existingUser.accept_invites) {
+      toast.error('Cannot send transfer. This user has invitations turned off.');
+      setTransferring(false);
+      return;
+    }
+
     // Check if trying to transfer to self
     if (existingUser.id === user.id) {
       toast.error('You cannot transfer ownership to yourself.');
@@ -823,7 +836,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                       className="hidden"
                     />
                     <p className="text-xs md:text-sm text-muted-foreground">
-                      Recommended: 256x256px, PNG or JPG
+                      Recommended: 256x256px, PNG or JPG (max 4MB)
                     </p>
                   </div>
                 </div>
