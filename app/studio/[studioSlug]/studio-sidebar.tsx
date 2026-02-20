@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Sparkles, Gift } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -146,37 +146,29 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
           {showUpgradePromo && !collapsed && (
             <Link 
               href={`/studio/${studioSlug}/settings?tab=billing`}
-              className={`block mb-3 p-3 rounded-lg transition-all ${
-                isGiftedPlan 
-                  ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40" 
-                  : "bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 hover:border-primary/40"
-              }`}
+              className="block mb-3 group"
             >
-              <div className="flex items-start gap-2">
-                {isGiftedPlan ? (
-                  <Gift className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                ) : (
-                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                )}
-                <div className="min-w-0">
-                  {isGiftedPlan ? (
-                    <>
-                      <p className="text-xs font-medium text-amber-200">Gifted Plan</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {daysUntilExpiry !== null && daysUntilExpiry > 0 
-                          ? `Expires in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}` 
-                          : 'Expires soon'}
-                        . Upgrade to keep features.
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-3 border border-white/10 hover:border-white/20 transition-all">
+                {/* Decorative glow */}
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+                
+                <div className="relative flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">Go Pro</p>
+                      <p className="text-[10px] text-white/60">
+                        {isGiftedPlan && daysUntilExpiry !== null 
+                          ? `${daysUntilExpiry}d left` 
+                          : 'Unlock all'}
                       </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs font-medium">Upgrade to Pro</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Unlock all features
-                      </p>
-                    </>
-                  )}
+                    </div>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
+                    Upgrade
+                  </div>
                 </div>
               </div>
             </Link>
@@ -186,22 +178,14 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
               <TooltipTrigger asChild>
                 <Link 
                   href={`/studio/${studioSlug}/settings?tab=billing`}
-                  className={`flex items-center justify-center w-full h-10 rounded-lg mb-2 transition-all ${
-                    isGiftedPlan 
-                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40" 
-                      : "bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 hover:border-primary/40"
-                  }`}
+                  className="flex items-center justify-center w-full h-10 rounded-xl mb-2 bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border border-white/10 hover:border-white/20 transition-all group"
                 >
-                  {isGiftedPlan ? (
-                    <Gift className="w-4 h-4 text-amber-400" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-primary" />
-                  )}
+                  <Sparkles className="w-4 h-4 text-violet-400 group-hover:text-violet-300 transition-colors" />
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">
-                {isGiftedPlan 
-                  ? `Gifted plan expires ${daysUntilExpiry !== null && daysUntilExpiry > 0 ? `in ${daysUntilExpiry} days` : 'soon'}` 
+                {isGiftedPlan && daysUntilExpiry !== null
+                  ? `${daysUntilExpiry} days left • Upgrade` 
                   : "Upgrade to Pro"}
               </TooltipContent>
             </Tooltip>
