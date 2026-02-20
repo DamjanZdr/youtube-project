@@ -477,7 +477,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   }
 
   return (
-    <div className="p-8 w-[60%] mx-auto">
+    <div className="p-4 md:p-8 w-full max-w-5xl mx-auto">
       {/* Sets Section */}
       <div data-tutorial="sets-section" className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -487,7 +487,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
           </div>
         </div>
 
-        <div className={`grid gap-4 ${videoType === 'short' ? 'grid-cols-3 sm:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3'}`}>
+        <div className={`grid gap-3 md:gap-4 ${videoType === 'short' ? 'grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6' : 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
           {sets.map((set, index) => (
             <div 
               key={set.id}
@@ -540,15 +540,15 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               >
                 {uploadingSetId === set.id ? (
                   <div className="flex flex-col items-center gap-1">
-                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[10px] text-muted-foreground">Uploading...</span>
+                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[8px] md:text-[10px] text-muted-foreground">Uploading...</span>
                   </div>
                 ) : set.thumbnail ? (
                   <img src={set.thumbnail} alt="" className="w-full h-full object-cover rounded-lg" />
                 ) : (
                   <>
-                    <Image className="w-6 h-6 text-muted-foreground/50" />
-                    <span className="text-[10px] text-muted-foreground">Click to upload</span>
+                    <Image className="w-4 h-4 md:w-6 md:h-6 text-muted-foreground/50" />
+                    <span className="text-[8px] md:text-[10px] text-muted-foreground">Click to upload</span>
                   </>
                 )}
               </div>

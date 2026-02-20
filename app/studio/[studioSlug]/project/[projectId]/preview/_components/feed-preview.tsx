@@ -117,7 +117,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: "none" }}>
             {/* Long Form Videos Section */}
-            <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 mb-8">
               {[0,1,2].map(i => (
                 <VideoCard
                   key={`long-${i}`}
@@ -133,7 +133,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             {/* Shorts Section */}
             <div className="mb-4">
               <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
-              <div className="grid grid-cols-5 gap-x-4">
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-4">
                 {[0,1,2,3,4].map(i => (
                   <ShortCard
                     key={`short-${i}`}
