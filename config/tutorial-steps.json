@@ -235,71 +235,33 @@
     },
     {
       "id": 28,
-      "title": "Moving Projects",
-      "content": "You can see your active project here. By dragging and dropping, you can change the current stage that your project is in. Go ahead, move it to the \"Package\" stage.",
+      "title": "Board Cards",
+      "content": "Drag and drop projects to change their stage. Clicking a card opens it where you can check tasks as complete, assign team members, and set due dates.",
       "icon": "Columns3"
     },
     {
       "id": 29,
-      "title": "Project Tasks",
-      "content": "If you click on the project it opens the stages with the tasks for each stage that you can check as completed as you go. These are the default suggested tasks, but you can change them to fit your exact process.",
-      "icon": "CheckSquare"
-    },
-    {
-      "id": 30,
-      "title": "Assignees",
-      "content": "If you work in a team you can assign people to the project, or the individual stages.",
-      "icon": "Users",
-      "highlights": [
-        { "selector": "[data-tutorial='project-assignee']" }
-      ]
-    },
-    {
-      "id": 31,
-      "title": "Deadlines",
-      "content": "You can also set a deadline for the entire project, and for individual stages.",
-      "icon": "Users",
-      "highlights": [
-        { "selector": "[data-tutorial='project-deadline']" }
-      ]
-    },
-    {
-      "id": 32,
       "title": "Go to Wiki",
-      "content": "You can now close the project tasks, and open up the Wiki page.",
+      "content": "Next, open up the Wiki page.",
       "icon": "BookOpen",
       "clickSelector": "[data-tutorial='nav-wiki']"
     },
     {
-      "id": 33,
-      "title": "Wiki Overview",
-      "content": "The Wiki is a simple concept but it is crucial to ensuring not only easy access to all of your important resources, but also to maintaining your branding so that your viewers get used to your style and always recognize your videos.",
+      "id": 30,
+      "title": "Wiki",
+      "content": "Here you can create folders and documents to keep track of important info like links to sound effects, fonts, brand guidelines, or editing templates.",
       "icon": "BookOpen",
       "expectedPath": "^\\/studio\\/[^/]+\\/wiki"
     },
     {
-      "id": 34,
-      "title": "Create a Document",
-      "content": "Here you can create a document, or a folder and create documents in it. Go ahead and try it out. Click \"Create Document\" and name it something like \"Brand Fonts\".",
-      "icon": "BookOpen",
-      "clickSelector": "[data-tutorial='wiki-new-doc']"
-    },
-    {
-      "id": 35,
-      "title": "Document Editor",
-      "content": "This is the document editor. Here you can keep things like the font you use on your thumbnails, text captions, links to sound effects, or background songs you want to use in your videos.",
-      "icon": "BookOpen",
-      "expectedPath": "^\\/studio\\/[^/]+\\/wiki\\/doc\\/"
-    },
-    {
-      "id": 36,
+      "id": 31,
       "title": "Go to Settings",
       "content": "Then we have the settings tab. Please open it.",
       "icon": "Settings",
       "clickSelector": "[data-tutorial='nav-settings']"
     },
     {
-      "id": 37,
+      "id": 32,
       "title": "Settings Tabs",
       "content": "Here we have three settings sections: Studio, Members, and Billing.",
       "icon": "Settings",
@@ -309,7 +271,7 @@
       ]
     },
     {
-      "id": 38,
+      "id": 33,
       "title": "Studio Profile",
       "content": "In the Studio Profile section you can update your studio icon, name and url slug.",
       "icon": "Settings",
@@ -318,7 +280,7 @@
       ]
     },
     {
-      "id": 39,
+      "id": 34,
       "title": "Transfer Ownership",
       "content": "You can transfer the studio to another user if needed.",
       "icon": "Settings",
@@ -327,7 +289,7 @@
       ]
     },
     {
-      "id": 40,
+      "id": 35,
       "title": "Tutorial & Help",
       "content": "You can rerun this very tutorial anytime from here.",
       "icon": "Settings",
@@ -336,7 +298,7 @@
       ]
     },
     {
-      "id": 41,
+      "id": 36,
       "title": "Danger Zone",
       "content": "And you can delete the entire studio. Be careful with this - it's permanent!",
       "icon": "Settings",
@@ -345,7 +307,7 @@
       ]
     },
     {
-      "id": 42,
+      "id": 37,
       "title": "Go to Members",
       "content": "Move on to the members settings.",
       "icon": "Users",
@@ -353,13 +315,13 @@
       "autoAdvanceOnClick": "[data-tutorial='settings-members']"
     },
     {
-      "id": 43,
+      "id": 38,
       "title": "Members Settings",
       "content": "Here you can see the members, their roles and you can invite, remove members or edit their roles, if you have the permission for it.",
       "icon": "Users"
     },
     {
-      "id": 44,
+      "id": 39,
       "title": "Go to Board",
       "content": "Next, let's check out the Board settings.",
       "icon": "ListTodo",
@@ -367,13 +329,13 @@
       "autoAdvanceOnClick": "[data-tutorial='settings-board']"
     },
     {
-      "id": 45,
+      "id": 40,
       "title": "Board Settings",
       "content": "This is where you customize your workflow. You can add, edit, rename, or reorder the default tasks that appear in every new project. Drag tasks to change their order, or double-click to rename them.",
       "icon": "ListTodo"
     },
     {
-      "id": 46,
+      "id": 41,
       "title": "Go to Billing",
       "content": "And last is the billing settings. Open it up.",
       "icon": "CreditCard",
@@ -381,7 +343,7 @@
       "autoAdvanceOnClick": "[data-tutorial='settings-billing']"
     },
     {
-      "id": 47,
+      "id": 42,
       "title": "Billing Overview",
       "content": "Here you can see your billing overview, such as your current billing cycle, and the upcoming one (if there is one).",
       "icon": "CreditCard",
@@ -390,7 +352,7 @@
       ]
     },
     {
-      "id": 48,
+      "id": 43,
       "title": "Plans",
       "content": "You can see the plan options and what they include as well as the prices. Keep in mind, yearly subscriptions are 17% cheaper.",
       "icon": "CreditCard",
@@ -399,7 +361,7 @@
       ]
     },
     {
-      "id": 49,
+      "id": 44,
       "title": "Redeem Code",
       "content": "Here you can use a key if you have one to obtain a gifted subscription.",
       "icon": "CreditCard",
@@ -408,14 +370,14 @@
       ]
     },
     {
-      "id": 50,
+      "id": 45,
       "title": "Your Profile",
       "content": "Finally, there is your profile. Click on it now. From here you can go back to the hub where you have the list of your studios, open your account settings, access the help center, enable or disable invites, and sign out.",
       "icon": "User",
       "clickSelector": "[data-tutorial='user-menu']"
     },
     {
-      "id": 51,
+      "id": 46,
       "title": "That's All!",
       "content": "That's all for now. Go ahead and get started on your first project.",
       "icon": "Play"

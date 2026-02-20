@@ -855,8 +855,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
             </div>
 
-            <div className="flex justify-center">
-              <Button onClick={handleSave} disabled={saving} className="glow-sm w-full sm:w-auto">
+            <div className="flex">
+              <Button onClick={handleSave} disabled={saving} className="glow-sm">
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
@@ -926,10 +926,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                   <p className="text-sm text-muted-foreground">
                     Enter the email address of the user you want to transfer ownership to. They must have an account.
                   </p>
-                  <div className="flex justify-center">
+                  <div className="flex">
                     <Button 
                       variant="outline" 
-                      className="gap-2 border-amber-500/30 hover:bg-amber-500/10 w-full sm:w-auto"
+                      className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
                       onClick={() => setShowTransferDialog(true)}
                     >
                       <Crown className="w-4 h-4" />
@@ -954,10 +954,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 </p>
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex">
               <Button 
                 variant="outline" 
-                className="gap-2 w-full sm:w-auto"
+                className="gap-2"
                 onClick={handleRestartTutorial}
               >
                 <Sparkles className="w-4 h-4" />
@@ -973,8 +973,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               Deleting your studio is permanent and cannot be undone. All projects,
               documents, and data will be lost.
             </p>
-            <div className="flex justify-center">
-              <Button variant="destructive" className="gap-2 w-full sm:w-auto" onClick={() => setShowDeleteDialog(true)}>
+            <div className="flex">
+              <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteDialog(true)}>
                 <Trash2 className="w-4 h-4" />
                 Delete Studio
               </Button>

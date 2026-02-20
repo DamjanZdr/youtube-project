@@ -98,6 +98,19 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     fetchProject();
   }, [projectId]);
 
+  // Listen for packaging set changes to update project title
+  useEffect(() => {
+    const handleSetChanged = (e: CustomEvent) => {
+      if (e.detail?.projectId === projectId) {
+        fetchProject();
+      }
+    };
+    window.addEventListener("packaging-set-changed", handleSetChanged as EventListener);
+    return () => {
+      window.removeEventListener("packaging-set-changed", handleSetChanged as EventListener);
+    };
+  }, [projectId]);
+
   const fetchProject = async () => {
     const supabase = createClient();
     

@@ -14,10 +14,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { 
-  Settings,
-  Trash2
-} from "lucide-react";
+import { Settings, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface ProjectSettingsPageProps {
   params: Promise<{ studioSlug: string; projectId: string }>;
@@ -54,10 +52,16 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
 
   const saveNotes = async () => {
     setSaving(true);
-    await supabase
+    const { error } = await supabase
       .from("projects")
       .update({ notes })
       .eq("id", projectId);
+    
+    if (error) {
+      toast.error("Failed to save notes");
+    } else {
+      toast.success("Notes saved");
+    }
     setSaving(false);
   };
 

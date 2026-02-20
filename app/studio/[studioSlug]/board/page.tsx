@@ -54,6 +54,7 @@ interface Project {
   thumbnail_url: string | null;
   due_date: string | null;
   video_type: "long" | "short";
+  position: number;
   active_set_title?: string | null;
   active_set_thumbnail?: string | null;
 }
@@ -142,6 +143,8 @@ export default function BoardPage() {
   const [showTaskPopup, setShowTaskPopup] = useState(false);
   const [collapsedStatuses, setCollapsedStatuses] = useState<Set<string>>(new Set());
   const [dragOverStatusId, setDragOverStatusId] = useState<string | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{ statusId: string; position: number } | null>(null);
+  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   
   // Create project dialog state
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -185,13 +188,15 @@ export default function BoardPage() {
           thumbnail_url,
           due_date,
           video_type,
+          position,
           packaging_sets (
             title,
             thumbnail_url,
             is_selected
           )
         `)
-        .eq("organization_id", org.id),
+        .eq("organization_id", org.id)
+        .order("position"),
     ]);
 
     const statusList = statusesRes.data || [];
@@ -211,7 +216,7 @@ export default function BoardPage() {
     // Map projects with active set data
     if (projectsRes.data) {
       const firstStatusId = statusList[0]?.id || null;
-      const mappedProjects = projectsRes.data.map((p: any) => {
+      const mappedProjects = projectsRes.data.map((p: any, index: number) => {
         const activeSet = p.packaging_sets?.find((s: any) => s.is_selected);
         return {
           id: p.id,
@@ -221,6 +226,7 @@ export default function BoardPage() {
           thumbnail_url: p.thumbnail_url,
           due_date: p.due_date,
           video_type: p.video_type,
+          position: p.position ?? index,
           active_set_title: activeSet?.title || null,
           active_set_thumbnail: activeSet?.thumbnail_url || null,
         };
@@ -435,47 +441,82 @@ export default function BoardPage() {
     }
   };
 
-  const moveProject = async (projectId: string, newStatusId: string) => {
-    // Optimistic update
-    setProjects(projects.map(p => 
-      p.id === projectId ? { ...p, board_status_id: newStatusId } : p
-    ));
+  const moveProject = async (projectId: string, newStatusId: string, newPosition?: number) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
 
+    const isStatusChange = project.board_status_id !== newStatusId;
+    const targetStatusProjects = projects
+      .filter(p => p.board_status_id === newStatusId && p.id !== projectId)
+      .sort((a, b) => a.position - b.position);
+
+    // Calculate position if not provided (append to end)
+    const finalPosition = newPosition ?? targetStatusProjects.length;
+
+    // Build updated projects array with new positions
+    const updatedProjects = projects.map(p => {
+      if (p.id === projectId) {
+        return { ...p, board_status_id: newStatusId, position: finalPosition };
+      }
+      // Shift positions in target status for projects at or after the insertion point
+      if (p.board_status_id === newStatusId && p.position >= finalPosition) {
+        return { ...p, position: p.position + 1 };
+      }
+      return p;
+    });
+
+    // Optimistic update
+    setProjects(updatedProjects);
+
+    // Update the moved project
     await supabase
       .from("projects")
-      .update({ board_status_id: newStatusId })
+      .update({ board_status_id: newStatusId, position: finalPosition })
       .eq("id", projectId);
 
-    // Add default tasks for the new status if project doesn't have them
-    const statusDefaultTasks = defaultTasks.filter(t => t.status_id === newStatusId);
-    if (statusDefaultTasks.length > 0) {
-      const existingTasks = allTasks.filter(t => t.project_id === projectId);
-      const existingNames = new Set(existingTasks.map(t => t.name.toLowerCase()));
+    // Update positions for shifted projects
+    const projectsToShift = targetStatusProjects.filter(p => p.position >= finalPosition);
+    for (const p of projectsToShift) {
+      await supabase
+        .from("projects")
+        .update({ position: p.position + 1 })
+        .eq("id", p.id);
+    }
 
-      const tasksToAdd = statusDefaultTasks
-        .filter(dt => !existingNames.has(dt.name.toLowerCase()))
-        .map((dt, i) => ({
-          project_id: projectId,
-          status_id: newStatusId,
-          name: dt.name,
-          position: existingTasks.length + i,
-        }));
+    // Add default tasks for the new status if project doesn't have them (only on status change)
+    if (isStatusChange) {
+      const statusDefaultTasks = defaultTasks.filter(t => t.status_id === newStatusId);
+      if (statusDefaultTasks.length > 0) {
+        const existingTasks = allTasks.filter(t => t.project_id === projectId);
+        const existingNames = new Set(existingTasks.map(t => t.name.toLowerCase()));
 
-      if (tasksToAdd.length > 0) {
-        const { data: newTasks } = await supabase
-          .from("project_tasks")
-          .insert(tasksToAdd)
-          .select();
+        const tasksToAdd = statusDefaultTasks
+          .filter(dt => !existingNames.has(dt.name.toLowerCase()))
+          .map((dt, i) => ({
+            project_id: projectId,
+            status_id: newStatusId,
+            name: dt.name,
+            position: existingTasks.length + i,
+          }));
 
-        if (newTasks) {
-          setAllTasks([...allTasks, ...newTasks]);
+        if (tasksToAdd.length > 0) {
+          const { data: newTasks } = await supabase
+            .from("project_tasks")
+            .insert(tasksToAdd)
+            .select();
+
+          if (newTasks) {
+            setAllTasks([...allTasks, ...newTasks]);
+          }
         }
       }
     }
   };
 
   const getProjectsForStatus = (statusId: string) => {
-    return projects.filter(p => p.board_status_id === statusId);
+    return projects
+      .filter(p => p.board_status_id === statusId)
+      .sort((a, b) => a.position - b.position);
   };
 
   const getTasksForProject = (projectId: string) => {
@@ -734,15 +775,18 @@ export default function BoardPage() {
                 // Only clear if leaving the column entirely
                 if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                   setDragOverStatusId(null);
+                  setDropIndicator(null);
                 }
               }}
               onDrop={(e) => {
                 e.preventDefault();
                 const projectId = e.dataTransfer.getData("projectId");
                 if (projectId) {
-                  moveProject(projectId, status.id);
+                  const position = dropIndicator?.statusId === status.id ? dropIndicator.position : undefined;
+                  moveProject(projectId, status.id, position);
                 }
                 setDragOverStatusId(null);
+                setDropIndicator(null);
               }}
             >
               {/* Column Header */}
@@ -846,24 +890,65 @@ export default function BoardPage() {
                 )}
               </div>
 
-              <div className="flex-1 p-2 space-y-2 overflow-y-auto custom-scrollbar">
-                {getProjectsForStatus(status.id).map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    statuses={statuses}
-                    currentStatusId={status.id}
-                    onMoveToStatus={moveProject}
-                    onOpenTasks={() => openTaskPopup(project)}
-                    taskCompletion={getTaskCompletionForStatus(project.id, status.id)}
-                  />
-                ))}
+              <div className="flex-1 p-2 overflow-y-auto custom-scrollbar">
+                {(() => {
+                  const statusProjects = getProjectsForStatus(status.id);
+                  return (
+                    <div className="space-y-0">
+                      {/* Top drop zone */}
+                      <div
+                        className={`h-1 -mt-1 mb-1 rounded transition-all ${
+                          dropIndicator?.statusId === status.id && dropIndicator?.position === 0
+                            ? 'bg-primary h-1 my-1'
+                            : ''
+                        }`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDropIndicator({ statusId: status.id, position: 0 });
+                        }}
+                      />
+                      
+                      {statusProjects.map((project, index) => (
+                        <div key={project.id}>
+                          <ProjectCard
+                            project={project}
+                            statuses={statuses}
+                            currentStatusId={status.id}
+                            onMoveToStatus={moveProject}
+                            onOpenTasks={() => openTaskPopup(project)}
+                            taskCompletion={getTaskCompletionForStatus(project.id, status.id)}
+                            onDragStart={() => setDraggingProjectId(project.id)}
+                            onDragEnd={() => {
+                              setDraggingProjectId(null);
+                              setDropIndicator(null);
+                            }}
+                            isDragging={draggingProjectId === project.id}
+                          />
+                          {/* Drop zone after each card */}
+                          <div
+                            className={`h-1 my-1 rounded transition-all ${
+                              dropIndicator?.statusId === status.id && dropIndicator?.position === index + 1
+                                ? 'bg-primary h-1'
+                                : ''
+                            }`}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDropIndicator({ statusId: status.id, position: index + 1 });
+                            }}
+                          />
+                        </div>
+                      ))}
 
-                {getProjectsForStatus(status.id).length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <p className="text-sm text-muted-foreground/50">No items</p>
-                  </div>
-                )}
+                      {statusProjects.length === 0 && !draggingProjectId && (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <p className="text-sm text-muted-foreground/50">No items</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ))}
@@ -1340,13 +1425,19 @@ function ProjectCard({
   onMoveToStatus,
   onOpenTasks,
   taskCompletion,
+  onDragStart,
+  onDragEnd,
+  isDragging,
 }: {
   project: Project;
   statuses: BoardStatus[];
   currentStatusId: string;
-  onMoveToStatus: (projectId: string, statusId: string) => void;
+  onMoveToStatus: (projectId: string, statusId: string, newPosition?: number) => void;
   onOpenTasks: () => void;
   taskCompletion: { completed: number; total: number };
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  isDragging?: boolean;
 }) {
   const displayTitle = project.active_set_title || project.title;
   const displayThumbnail = project.active_set_thumbnail || project.thumbnail_url;
@@ -1354,6 +1445,7 @@ function ProjectCard({
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("projectId", project.id);
     e.dataTransfer.effectAllowed = "move";
+    onDragStart?.();
     // Add a slight delay to show dragging state
     setTimeout(() => {
       (e.target as HTMLElement).style.opacity = "0.5";
@@ -1362,11 +1454,12 @@ function ProjectCard({
 
   const handleDragEnd = (e: React.DragEvent) => {
     (e.target as HTMLElement).style.opacity = "1";
+    onDragEnd?.();
   };
 
   return (
     <div
-      className="glass-card p-3 cursor-grab hover:border-white/20 transition-colors group relative active:cursor-grabbing"
+      className={`glass-card p-3 cursor-grab hover:border-white/20 transition-colors group relative active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
       onClick={onOpenTasks}
       draggable
       onDragStart={handleDragStart}

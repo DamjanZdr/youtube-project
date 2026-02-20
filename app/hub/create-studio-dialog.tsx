@@ -340,7 +340,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                     <Card
                       key={plan.id}
                       onClick={() => !isDisabled && setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col p-[1.2vw] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl ${
+                      className={`relative flex flex-col p-[1.2vw] min-h-[280px] cursor-pointer transition-all duration-300 backdrop-blur-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.06] rounded-xl ${
                         plan.popular && !keyInfo ? "ring-2 ring-primary/50 bg-primary/5" : ""
                       } ${isSelected ? "ring-2 ring-blue-500 bg-blue-500/10 md:scale-[1.02]" : ""} ${
                         isDisabled ? "opacity-40 cursor-not-allowed" : ""
@@ -393,20 +393,7 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
             </div>
 
             {/* Footer - always visible */}
-            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm px-4 md:px-5 py-3 shrink-0 rounded-b-2xl space-y-2 min-h-[100px]">
-              {/* Key applied badge */}
-              {keyInfo && (
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <Key className="w-4 h-4 text-green-400" />
-                  <span className="text-sm font-medium text-green-400">Key Applied:</span>
-                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-xs">{keyInfo.plan}</Badge>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">{formatDuration(keyInfo.duration)}</Badge>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
-
+            <div className="border-t border-white/10 bg-zinc-900/95 backdrop-blur-sm px-4 md:px-5 py-3 shrink-0 rounded-b-2xl space-y-2 min-h-[100px] flex flex-col justify-center">
               {/* General error message */}
               {error && (
                 <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/25">
@@ -415,15 +402,43 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                 </div>
               )}
 
-              {/* Three column layout: spacer | key centered | buttons */}
-              <div className="flex items-start">
-                {/* Left spacer - matches right column width */}
-                <div className="flex-1" />
+              {keyInfo ? (
+                /* When key is applied: single centered row with key info and buttons */
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-medium text-green-400">Key Applied:</span>
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-xs">{keyInfo.plan}</Badge>
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">{formatDuration(keyInfo.duration)}</Badge>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-white/10" onClick={clearKey}>
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Button variant="ghost" onClick={() => setStep(1)} className="px-3 sm:px-5 h-10">
+                      Back
+                    </Button>
+                    <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 sm:px-8 h-11 font-medium">
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create Studio"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* When no key: three column layout */
+                <div className="flex items-center">
+                  {/* Left spacer - matches right column width */}
+                  <div className="flex-1" />
 
-                {/* Center: Key section */}
-                <div className="flex-1 flex flex-col items-center gap-2">
-                  {!keyInfo && (
-                    !showKeyInput ? (
+                  {/* Center: Key section */}
+                  <div className="flex-1 flex flex-col items-center gap-2">
+                    {!showKeyInput ? (
                       <Button variant="outline" onClick={() => setShowKeyInput(true)} className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-sm h-10">
                         <Key className="w-4 h-4" />
                         Have a plan key?
@@ -454,29 +469,29 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                           </div>
                         )}
                       </>
-                    )
-                  )}
-                </div>
-
-                {/* Right: Back and Create buttons */}
-                <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)} className="px-3 sm:px-5 h-10">
-                    Back
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 sm:px-8 h-11 font-medium">
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : selectedPlan === "free" || keyInfo ? (
-                      "Create Studio"
-                    ) : (
-                      "Continue to Checkout"
                     )}
-                  </Button>
+                  </div>
+
+                  {/* Right: Back and Create buttons */}
+                  <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
+                    <Button variant="ghost" onClick={() => setStep(1)} className="px-3 sm:px-5 h-10">
+                      Back
+                    </Button>
+                    <Button onClick={handleSubmit} disabled={loading || !name.trim()} className="px-4 sm:px-8 h-11 font-medium">
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : selectedPlan === "free" ? (
+                        "Create Studio"
+                      ) : (
+                        "Continue to Checkout"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}

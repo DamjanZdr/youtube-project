@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
+import { use, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { PreviewControls, PreviewArea } from "./_sections";
@@ -27,29 +27,18 @@ async function fetchChannel(projectId: string): Promise<Channel | null> {
   const supabase = createClient();
   const { data: project } = await supabase
     .from("projects")
-    .select("channel_id, organization_id")
+    .select("channel_id, organization_id, organizations(name, logo_url)")
     .eq("id", projectId)
     .single();
 
-  // First try project's linked channel
-  if (project?.channel_id) {
-    const { data: channels } = await supabase
-      .from("channels")
-      .select("*")
-      .eq("id", project.channel_id)
-      .limit(1);
-    if (channels?.[0]) return channels[0];
-  }
-
-  // Fallback: get first channel from organization
-  if (project?.organization_id) {
-    const { data: channels } = await supabase
-      .from("channels")
-      .select("*")
-      .eq("organization_id", project.organization_id)
-      .order("created_at", { ascending: true })
-      .limit(1);
-    if (channels?.[0]) return channels[0];
+  // Use organization/studio info as the channel display
+  const org = (project as any)?.organizations;
+  if (org) {
+    return {
+      name: org.name || "Your Studio",
+      avatar_url: org.logo_url || null,
+      handle: null,
+    };
   }
 
   return null;
@@ -84,7 +73,6 @@ async function searchYouTubeVideos(query: string, videoDuration?: 'short' | 'med
 export default function PreviewPage({ params }: PreviewPageProps) {
   const { projectId } = use(params);
   const state = usePreviewState();
-  const lastFetchedRef = useRef<string | null>(null);
 
   const { data: sets = [] } = useQuery({
     queryKey: ["packaging-sets", projectId],
@@ -120,35 +108,38 @@ export default function PreviewPage({ params }: PreviewPageProps) {
 
   const currentSet = sets[state.currentSetIndex];
 
-  // Fetch compare videos only when compare mode is turned ON (not when already on)
+  // Load/fetch compare videos when compare mode is on or set changes
   useEffect(() => {
-    const fetchCompareVideos = async () => {
-      // Only fetch if compare mode is on AND we haven't fetched yet (or it was turned off and on again)
-      if (state.compareMode && currentSet?.title && lastFetchedRef.current !== currentSet.title) {
-        // Fetch both long-form and shorts separately
-        const [longVideos, shortVideos] = await Promise.all([
-          searchYouTubeVideos(currentSet.title, 'medium'), // medium = 4-20 minutes (long-form)
-          searchYouTubeVideos(currentSet.title, 'short')   // short = < 60 seconds
-        ]);
-        state.setCompareVideos(longVideos);
-        state.setCompareShorts(shortVideos);
-        lastFetchedRef.current = currentSet.title;
-      } else if (!state.compareMode) {
-        // Reset the ref when compare is turned off, so next turn-on will fetch fresh
-        lastFetchedRef.current = null;
-        // Keep videos until turned off - don't clear them
+    const loadCompareVideos = async () => {
+      if (!state.compareMode || !currentSet?.title) {
+        // Compare mode off - clear display but keep cache
+        state.setCompareVideos([]);
+        state.setCompareShorts([]);
+        return;
       }
-    };
-    fetchCompareVideos();
-  }, [state.compareMode, currentSet?.title, state.setCompareVideos, state.setCompareShorts]);
 
-  // Clear compare videos when compare mode is turned off
-  useEffect(() => {
-    if (!state.compareMode) {
-      state.setCompareVideos([]);
-      state.setCompareShorts([]);
-    }
-  }, [state.compareMode, state.setCompareVideos, state.setCompareShorts]);
+      // Check cache first
+      const cached = state.getCachedResults(currentSet.title);
+      if (cached) {
+        state.setCompareVideos(cached.videos);
+        state.setCompareShorts(cached.shorts);
+        return;
+      }
+
+      // No cache - fetch from API
+      const [longVideos, shortVideos] = await Promise.all([
+        searchYouTubeVideos(currentSet.title, 'medium'),
+        searchYouTubeVideos(currentSet.title, 'short')
+      ]);
+      
+      // Update state and cache
+      state.setCompareVideos(longVideos);
+      state.setCompareShorts(shortVideos);
+      state.setCachedResults(currentSet.title, longVideos, shortVideos);
+    };
+    
+    loadCompareVideos();
+  }, [state.compareMode, currentSet?.title, state.getCachedResults, state.setCachedResults, state.setCompareVideos, state.setCompareShorts]);
 
   if (!sets.length) {
     return (
@@ -174,7 +165,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
       <div className="flex-1 min-h-0">
         <PreviewArea
           set={currentSet}
-          channel={channel || { name: "Your Channel", avatar_url: null } as any}
+          channel={channel || { name: "Your Studio", avatar_url: null } as any}
           orientation={state.orientation}
           previewMode={state.previewMode}
           compareMode={state.compareMode}

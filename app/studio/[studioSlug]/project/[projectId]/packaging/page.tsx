@@ -111,6 +111,15 @@ async function createPlaylist(studioSlug: string, name: string): Promise<Playlis
   return data;
 }
 
+async function deletePlaylist(playlistId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("playlists")
+    .delete()
+    .eq("id", playlistId);
+  if (error) throw error;
+}
+
 export default function PackagingPage({ params }: PackagingPageProps) {
   const { studioSlug, projectId } = use(params);
   const queryClient = useQueryClient();
@@ -251,6 +260,9 @@ export default function PackagingPage({ params }: PackagingPageProps) {
       .from("packaging_sets")
       .update({ is_selected: true })
       .eq("id", id);
+
+    // Notify layout to update the project title
+    window.dispatchEvent(new CustomEvent("packaging-set-changed", { detail: { projectId } }));
   };
 
   const addSet = async () => {
@@ -307,6 +319,12 @@ export default function PackagingPage({ params }: PackagingPageProps) {
       .from("packaging_sets")
       .update({ title })
       .eq("id", id);
+
+    // If this is the selected set, notify layout
+    const set = sets.find(s => s.id === id);
+    if (set?.selected) {
+      window.dispatchEvent(new CustomEvent("packaging-set-changed", { detail: { projectId } }));
+    }
   };
 
   const saveTags = async (newTags: string[]) => {
@@ -364,6 +382,21 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     },
   });
 
+  const deletePlaylistMutation = useMutation({
+    mutationFn: (playlistId: string) => deletePlaylist(playlistId),
+    onSuccess: (_, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["playlists", studioSlug] });
+      // Remove from selection if it was selected
+      if (selectedPlaylists.includes(deletedId)) {
+        savePlaylist(selectedPlaylists.filter(id => id !== deletedId));
+      }
+      toast.success("Playlist deleted");
+    },
+    onError: () => {
+      toast.error("Failed to delete playlist");
+    },
+  });
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -373,7 +406,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-8 w-full">
       {/* Sets Section */}
       <div data-tutorial="sets-section" className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -381,15 +414,6 @@ export default function PackagingPage({ params }: PackagingPageProps) {
             <h2 className="text-lg font-semibold">Title & Thumbnail Sets</h2>
             <p className="text-sm text-muted-foreground">Create up to 6 variations to compare ({sets.length}/6)</p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={addSet}
-            disabled={sets.length >= 6}
-            className="gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Set
-          </Button>
         </div>
 
         <div className={`grid gap-4 ${videoType === 'short' ? 'grid-cols-3 sm:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3'}`}>
@@ -463,18 +487,18 @@ export default function PackagingPage({ params }: PackagingPageProps) {
               </p>
             </div>
           ))}
-        </div>
 
-        {/* Add Set Button (alternate) */}
-        {sets.length < 6 && (
-          <button 
-            onClick={addSet}
-            className="w-full mt-4 p-4 rounded-xl border-2 border-dashed border-white/10 text-muted-foreground hover:border-white/20 hover:bg-white/[0.02] transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Add Another Set
-          </button>
-        )}
+          {/* Ghost Add Set Card */}
+          {sets.length < 6 && (
+            <button 
+              onClick={addSet}
+              className="p-3 rounded-xl border-2 border-dashed border-white/10 text-muted-foreground hover:border-white/20 hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center gap-2 min-h-[180px]"
+            >
+              <Plus className="w-8 h-8 text-muted-foreground/50" />
+              <span className="text-xs text-muted-foreground/70">Add Set {sets.length + 1}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Description, Video Type & Other Fields */}
@@ -610,6 +634,28 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                {playlists.map((playlist) => (
+                  <div key={playlist.id} className="flex items-center group">
+                    <DropdownMenuCheckboxItem
+                      checked={selectedPlaylists.includes(playlist.id)}
+                      onCheckedChange={() => togglePlaylist(playlist.id)}
+                      onSelect={(e) => e.preventDefault()}
+                      className="flex-1"
+                    >
+                      {playlist.name}
+                    </DropdownMenuCheckboxItem>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deletePlaylistMutation.mutate(playlist.id);
+                      }}
+                      className="px-2 py-1.5 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {playlists.length > 0 && <DropdownMenuSeparator />}
                 <DropdownMenuItem 
                   className="text-primary cursor-pointer"
                   onClick={() => setShowCreatePlaylist(true)}
@@ -617,17 +663,6 @@ export default function PackagingPage({ params }: PackagingPageProps) {
                   <Plus className="w-4 h-4 mr-2" />
                   Create new playlist
                 </DropdownMenuItem>
-                {playlists.length > 0 && <DropdownMenuSeparator />}
-                {playlists.map((playlist) => (
-                  <DropdownMenuCheckboxItem
-                    key={playlist.id}
-                    checked={selectedPlaylists.includes(playlist.id)}
-                    onCheckedChange={() => togglePlaylist(playlist.id)}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {playlist.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
               </DropdownMenuContent>
             </DropdownMenu>
             {selectedPlaylists.length > 0 && (

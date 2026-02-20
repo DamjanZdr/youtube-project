@@ -38,10 +38,10 @@ interface Script {
   estimated_duration: number;
 }
 
-// Calculate duration from word count (~195 words per minute - people read faster)
+// Calculate duration from character count (~900 characters per minute for speech)
 const calcAutoDuration = (text: string): number => {
-  const words = text.split(/\s+/).filter(Boolean).length;
-  return Math.ceil((words / 195) * 60); // seconds
+  const chars = text.length;
+  return Math.ceil((chars / 900) * 60); // seconds
 };
 
 // Format seconds to mm:ss
