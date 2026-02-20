@@ -1446,14 +1446,9 @@ function ProjectCard({
     e.dataTransfer.setData("projectId", project.id);
     e.dataTransfer.effectAllowed = "move";
     onDragStart?.();
-    // Add a slight delay to show dragging state
-    setTimeout(() => {
-      (e.target as HTMLElement).style.opacity = "0.5";
-    }, 0);
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
-    (e.target as HTMLElement).style.opacity = "1";
+  const handleDragEnd = () => {
     onDragEnd?.();
   };
 
