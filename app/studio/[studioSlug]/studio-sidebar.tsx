@@ -173,18 +173,15 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-4 border border-white/10 hover:border-white/20 transition-all">
                   <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
                   
-                  <div className="relative flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-                        <Crown className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white">Upgrade to Pro</p>
-                        <p className="text-xs text-white/60">Unlock all features</p>
-                      </div>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown className="w-4 h-4 text-violet-400" />
+                      <span className="text-xs font-medium text-violet-400">Free plan</span>
                     </div>
-                    <div className="px-4 py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
-                      Upgrade
+                    <p className="text-base font-semibold text-white mb-1">Upgrade to Pro</p>
+                    <p className="text-xs text-white/50 mb-3">Unlock all features</p>
+                    <div className="w-full py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 text-center group-hover:bg-white/90 transition-colors">
+                      Upgrade Now
                     </div>
                   </div>
                 </div>
