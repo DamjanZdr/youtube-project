@@ -123,34 +123,39 @@ export async function POST(req: NextRequest) {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
-          <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+          <body style="margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #18181b;">
               <tr>
                 <td align="center" style="padding: 40px 20px;">
-                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  <!-- Logo -->
+                  <div style="margin-bottom: 24px;">
+                    <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Blueprint</span>
+                  </div>
+                  
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #27272a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.3);">
                     <tr>
                       <td style="padding: 40px 32px;">
                         <div style="text-align: center; margin-bottom: 32px;">
-                          <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0; color: #18181b;">🔔 Don't Forget Your Key!</h1>
-                          <p style="color: #52525b; margin: 0; font-size: 15px;">
-                            ${greeting} You have an unused <strong style="color: #18181b;">${planText}</strong> plan key ${studioContext} waiting to be redeemed.
+                          <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 12px 0; color: #ffffff;">Don't Forget Your Key!</h1>
+                          <p style="color: #a1a1aa; margin: 0; font-size: 15px; line-height: 1.5;">
+                            ${greeting.replace('Hi', 'Hey')} You have an unused <strong style="color: #ffffff;">${planText}</strong> plan key ${studioContext} waiting to be redeemed.
                           </p>
                         </div>
 
-                        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                          <p style="color: #6366f1; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
-                          <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #18181b; margin: 0; font-weight: 700;">
+                        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                          <p style="color: #a78bfa; font-size: 11px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Key</p>
+                          <p style="font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace; font-size: 22px; letter-spacing: 3px; color: #ffffff; margin: 0; font-weight: 700;">
                             ${keyData.key}
                           </p>
                         </div>
 
-                        <div style="background-color: #f4f4f5; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
+                        <div style="background-color: #3f3f46; border-radius: 10px; padding: 16px 20px; margin-bottom: 28px;">
                           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                             <tr>
-                              <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Plan:</strong> ${planText}</td>
+                              <td style="color: #a1a1aa; font-size: 14px; padding: 4px 0;"><strong style="color: #ffffff;">Plan:</strong> ${planText}</td>
                             </tr>
                             <tr>
-                              <td style="color: #52525b; font-size: 14px; padding: 4px 0;"><strong style="color: #18181b;">Duration:</strong> ${durationText}</td>
+                              <td style="color: #a1a1aa; font-size: 14px; padding: 4px 0;"><strong style="color: #ffffff;">Duration:</strong> ${durationText}</td>
                             </tr>
                           </table>
                         </div>
@@ -161,18 +166,19 @@ export async function POST(req: NextRequest) {
                           </a>
                         </div>
                         
-                        <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                        <p style="color: #71717a; font-size: 13px; text-align: center; margin: 0; line-height: 1.5;">
                           Or go to your Studio Settings → Billing and enter the key manually.
                         </p>
-
-                        <div style="border-top: 1px solid #e4e4e7; padding-top: 24px; text-align: center;">
-                          <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                            © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
-                          </p>
-                        </div>
                       </td>
                     </tr>
                   </table>
+                  
+                  <!-- Footer -->
+                  <div style="margin-top: 24px; text-align: center;">
+                    <p style="color: #52525b; font-size: 12px; margin: 0;">
+                      © Blueprint Studio • If you didn't expect this email, you can safely ignore it.
+                    </p>
+                  </div>
                 </td>
               </tr>
             </table>

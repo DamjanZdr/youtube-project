@@ -15,94 +15,106 @@ function generateSlug(name: string): string {
 
 // Create a new studio (organization)
 export async function createStudio(formData: FormData) {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  const name = formData.get("name") as string;
-  
-  if (!name || name.trim().length === 0) {
-    return { error: "Studio name is required" };
-  }
-  
-  // Generate slug and ensure uniqueness with sequential numbering
-  const baseSlug = generateSlug(name);
-  let slug = baseSlug;
-  let suffix = 2;
-  
-  while (true) {
-    const { data: existing } = await supabase
-      .from("organizations")
+  try {
+    const supabase = await createClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const name = formData.get("name") as string;
+    
+    if (!name || name.trim().length === 0) {
+      return { error: "Studio name is required" };
+    }
+    
+    // Generate slug and ensure uniqueness with sequential numbering
+    const baseSlug = generateSlug(name);
+    let slug = baseSlug;
+    let suffix = 2;
+    
+    while (true) {
+      const { data: existing } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("slug", slug)
+        .single();
+      
+      if (!existing) break;
+      
+      slug = `${baseSlug}-${suffix}`;
+      suffix++;
+      
+      if (suffix > 100) break; // safety limit
+    }
+    
+    // Must have a real authenticated user to create studios
+    // The profiles table requires a valid auth.users reference
+    if (!user) {
+      return { error: "You must be logged in to create a studio. Please sign up or log in first." };
+    }
+    
+    const ownerId = user.id;
+    
+    // Ensure profile exists for this user
+    const { data: existingProfile } = await supabase
+      .from("profiles")
       .select("id")
-      .eq("slug", slug)
+      .eq("id", ownerId)
       .single();
     
-    if (!existing) break;
-    
-    slug = `${baseSlug}-${suffix}`;
-    suffix++;
-    
-    if (suffix > 100) break; // safety limit
-  }
-  
-  // Must have a real authenticated user to create studios
-  // The profiles table requires a valid auth.users reference
-  if (!user) {
-    return { error: "You must be logged in to create a studio. Please sign up or log in first." };
-  }
-  
-  const ownerId = user.id;
-  
-  // Ensure profile exists for this user
-  const { data: existingProfile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", ownerId)
-    .single();
-  
-  if (!existingProfile) {
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: ownerId,
-        email: user.email || "",
-        full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User"
-      });
-    
-    if (profileError) {
-      console.error("Profile creation error:", profileError);
-      return { error: "Failed to create user profile: " + profileError.message };
+    if (!existingProfile) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: ownerId,
+          email: user.email || "",
+          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User"
+        });
+      
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        return { error: "Failed to create user profile: " + profileError.message };
+      }
     }
-  }
-  
+    
 
-  // Use admin client for storage operations that may bypass RLS
-  const adminClient = createAdminClient();
+    // Use admin client for storage operations that may bypass RLS
+    const adminClient = createAdminClient();
 
-  // Prepare logo upload if present
-  let logoUrl: string | null = null;
-  const logoFile = formData.get("logo");
-  if (logoFile && logoFile instanceof File && logoFile.size > 0) {
-    const fileExt = logoFile.name.split('.').pop();
-    const fileName = `logos/${slug}-${Date.now()}.${fileExt}`;
-    // Convert File to Buffer for server-side upload
-    const arrayBuffer = await logoFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const { error: uploadError } = await adminClient.storage
-      .from('studio-assets')
-      .upload(fileName, buffer, { 
-        upsert: true,
-        contentType: logoFile.type 
-      });
-    if (uploadError) {
-      console.error("Logo upload error:", uploadError);
-    } else {
-      const { data: { publicUrl } } = adminClient.storage
+    // Prepare logo upload if present
+    let logoUrl: string | null = null;
+    const logoFile = formData.get("logo");
+    if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+      // Validate file size (max 2MB)
+      if (logoFile.size > 2 * 1024 * 1024) {
+        return { error: "Logo file is too large. Maximum size is 2MB." };
+      }
+      
+      const fileExt = logoFile.name.split('.').pop()?.toLowerCase() || 'png';
+      const validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      if (!validExtensions.includes(fileExt)) {
+        return { error: "Invalid image format. Please use JPG, PNG, or WebP." };
+      }
+      
+      const fileName = `logos/${slug}-${Date.now()}.${fileExt}`;
+      // Convert File to Buffer for server-side upload
+      const arrayBuffer = await logoFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const { error: uploadError } = await adminClient.storage
         .from('studio-assets')
-        .getPublicUrl(fileName);
-      logoUrl = publicUrl;
+        .upload(fileName, buffer, { 
+          upsert: true,
+          contentType: logoFile.type 
+        });
+      if (uploadError) {
+        console.error("Logo upload error:", uploadError);
+        // Don't fail studio creation, just skip the logo
+      } else {
+        const { data: { publicUrl } } = adminClient.storage
+          .from('studio-assets')
+          .getPublicUrl(fileName);
+        logoUrl = publicUrl;
+      }
     }
-  }
 
   // Check if user selected a paid plan
   const selectedPlan = formData.get("selectedPlan") as string || "free";
@@ -173,6 +185,10 @@ export async function createStudio(formData: FormData) {
   revalidatePath("/hub");
   
   return { success: true, slug: studio.slug, id: studio.id, isPending: isPaidPlan };
+  } catch (err) {
+    console.error("Create studio error:", err);
+    return { error: "An unexpected error occurred. Please try again." };
+  }
 }
 
 // Get all studios for the current user
