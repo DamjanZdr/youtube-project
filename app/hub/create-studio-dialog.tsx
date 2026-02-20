@@ -403,9 +403,13 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
               )}
 
               {keyInfo ? (
-                /* When key is applied: single centered row with key info and buttons */
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
+                /* When key is applied: three column layout with key info centered, buttons right */
+                <div className="flex items-center">
+                  {/* Left spacer */}
+                  <div className="flex-1" />
+
+                  {/* Center: Key info */}
+                  <div className="flex-1 flex items-center justify-center gap-2">
                     <Key className="w-4 h-4 text-green-400" />
                     <span className="text-sm font-medium text-green-400">Key Applied:</span>
                     <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 capitalize text-xs">{keyInfo.plan}</Badge>
@@ -414,7 +418,9 @@ export function CreateStudioDialog({ trigger }: CreateStudioDialogProps) {
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3">
+
+                  {/* Right: Back and Create buttons */}
+                  <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
                     <Button variant="ghost" onClick={() => setStep(1)} className="px-3 sm:px-5 h-10">
                       Back
                     </Button>
