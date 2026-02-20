@@ -92,6 +92,7 @@ export interface Project {
   channel_id: string | null;          // Optional - only used for channel preview
   title: string;                      // Default/working title
   description: string | null;
+  notes: string | null;               // Internal notes (not public)
   status: ProjectStatus;
   video_type: VideoType;              // Long-form vs YouTube Shorts
   due_date: string | null;            // Project deadline
