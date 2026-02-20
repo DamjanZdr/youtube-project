@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Crown, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,7 @@ interface StudioSidebarProps {
 export function StudioSidebar({ studio, user, studioSlug, subscription }: StudioSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const sidebarWidth = collapsed ? "w-16" : "w-64";
   const headerPadding = collapsed ? "px-2" : "";
@@ -51,6 +52,15 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
   
   // Show promo for: free users OR gifted users with expiring plans
   const showUpgradePromo = isFreePlan || (isGiftedPlan && expiresAt);
+
+  const billingPath = `/studio/${studioSlug}/settings?tab=billing`;
+  const handleUpgradeClick = () => {
+    if (pathname === `/studio/${studioSlug}/settings` && typeof window !== 'undefined' && window.location.search.includes('tab=billing')) {
+      router.refresh();
+    } else {
+      router.push(billingPath);
+    }
+  };
 
   // Mobile bottom nav items - all pages in scrollable nav
   const mobileNavItems = [
@@ -143,9 +153,9 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
         {/* Upgrade Promo - Above the footer divider */}
         {showUpgradePromo && !collapsed && (
           <div className="px-3 pb-3">
-            <Link 
-              href={`/studio/${studioSlug}/settings?tab=billing`}
-              className="block group"
+            <div 
+              onClick={handleUpgradeClick}
+              className="block group cursor-pointer"
             >
               {isGiftedPlan ? (
                 /* Gifted plan expiring - show urgency */
@@ -186,15 +196,15 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                   </div>
                 </div>
               )}
-            </Link>
+            </div>
           </div>
         )}
         {showUpgradePromo && collapsed && (
           <div className="px-2 pb-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link 
-                  href={`/studio/${studioSlug}/settings?tab=billing`}
+                <button 
+                  onClick={handleUpgradeClick}
                   className={`flex items-center justify-center w-full h-12 rounded-xl border transition-all group ${
                     isGiftedPlan 
                       ? 'bg-gradient-to-br from-amber-600/15 via-orange-600/15 to-rose-600/15 border-amber-500/20 hover:border-amber-500/40'
@@ -206,7 +216,7 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                   ) : (
                     <Crown className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
                   )}
-                </Link>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="right">
                 {isGiftedPlan && daysUntilExpiry !== null

@@ -526,13 +526,13 @@ export function StudioTutorial({
         <div
           className="fixed z-[100] pointer-events-none animate-bounce"
           style={{
-            ...(offScreenDirection === 'top' && { top: 16, left: '50%', transform: 'translateX(-50%)' }),
-            ...(offScreenDirection === 'bottom' && { bottom: 16, left: '50%', transform: 'translateX(-50%)' }),
-            ...(offScreenDirection === 'left' && { left: 16, top: '50%', transform: 'translateY(-50%)' }),
+            ...(offScreenDirection === 'top' && { top: 72, left: '50%', transform: 'translateX(-50%)' }),
+            ...(offScreenDirection === 'bottom' && { bottom: 88, left: '50%', transform: 'translateX(-50%)' }),
+            ...(offScreenDirection === 'left' && { left: 72, top: '50%', transform: 'translateY(-50%)' }),
             ...(offScreenDirection === 'right' && { right: 16, top: '50%', transform: 'translateY(-50%)' }),
           }}
         >
-          <div className="bg-blue-500 text-white p-2 rounded-full shadow-lg">
+          <div className="bg-blue-500 text-white p-3 rounded-full shadow-lg ring-4 ring-blue-500/30">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
