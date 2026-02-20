@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Sparkles } from "lucide-react";
+import { PanelLeftClose, Home, Tv, FolderKanban, Layout, BookOpen, Settings, ChevronLeft, ChevronRight, User, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -140,47 +140,48 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
           <NavLinks studioSlug={studioSlug} collapsed={collapsed} />
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className={`border-t border-white/5 ${footerPadding}`}>
-          {/* Upgrade Promo */}
-          {showUpgradePromo && !collapsed && (
+        {/* Upgrade Promo - Above the footer divider */}
+        {showUpgradePromo && !collapsed && (
+          <div className="px-3 pb-3">
             <Link 
               href={`/studio/${studioSlug}/settings?tab=billing`}
-              className="block mb-3 group"
+              className="block group"
             >
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-3 border border-white/10 hover:border-white/20 transition-all">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-4 border border-white/10 hover:border-white/20 transition-all">
                 {/* Decorative glow */}
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
                 
-                <div className="relative flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
+                <div className="relative flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">Go Pro</p>
-                      <p className="text-[10px] text-white/60">
+                      <p className="text-xs text-white/60">
                         {isGiftedPlan && daysUntilExpiry !== null 
                           ? `${daysUntilExpiry}d left` 
                           : 'Unlock all'}
                       </p>
                     </div>
                   </div>
-                  <div className="px-3 py-1.5 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
+                  <div className="px-4 py-2 rounded-lg bg-white text-xs font-semibold text-gray-900 group-hover:bg-white/90 transition-colors shrink-0">
                     Upgrade
                   </div>
                 </div>
               </div>
             </Link>
-          )}
-          {showUpgradePromo && collapsed && (
+          </div>
+        )}
+        {showUpgradePromo && collapsed && (
+          <div className="px-2 pb-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link 
                   href={`/studio/${studioSlug}/settings?tab=billing`}
-                  className="flex items-center justify-center w-full h-10 rounded-xl mb-2 bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border border-white/10 hover:border-white/20 transition-all group"
+                  className="flex items-center justify-center w-full h-12 rounded-xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 border border-white/10 hover:border-white/20 transition-all group"
                 >
-                  <Sparkles className="w-4 h-4 text-violet-400 group-hover:text-violet-300 transition-colors" />
+                  <Zap className="w-5 h-5 text-violet-400 group-hover:text-violet-300 transition-colors" />
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -189,7 +190,11 @@ export function StudioSidebar({ studio, user, studioSlug, subscription }: Studio
                   : "Upgrade to Pro"}
               </TooltipContent>
             </Tooltip>
-          )}
+          </div>
+        )}
+
+        {/* Sidebar Footer */}
+        <div className={`border-t border-white/5 ${footerPadding}`}>
           <SidebarUserDropup 
             user={{
               id: user.id,
