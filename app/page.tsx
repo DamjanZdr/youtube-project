@@ -4,8 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Lightbulb } from "lucide-react";
-import { WaitlistForm } from "@/components/waitlist-form";
-import { WaitlistModal } from "@/components/waitlist-modal";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -68,7 +66,18 @@ export default async function Home() {
                 </Suspense>
               </>
             ) : (
-              <WaitlistModal />
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm" className="px-3 md:px-4">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm" className="glow-primary px-3 md:px-4">
+                    Register
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -98,19 +107,28 @@ export default async function Home() {
       {/* CTA Section */}
       <section className="px-4 md:px-6 pb-12 md:pb-16 relative z-10">
         <div className="max-w-2xl mx-auto">
-          {user ? (
-            <div className="flex justify-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            {user ? (
               <Link href="/hub">
                 <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8">
                   Go to Hub
                 </Button>
               </Link>
-            </div>
-          ) : (
-            <div className="glass-card p-6 md:p-8">
-              <WaitlistForm />
-            </div>
-          )}
+            ) : (
+              <>
+                <Link href="/auth/sign-up">
+                  <Button size="lg" className="glow-primary text-sm md:text-base px-6 md:px-8">
+                    Get Started Free
+                  </Button>
+                </Link>
+                <Link href="/auth/login">
+                  <Button variant="outline" size="lg" className="text-sm md:text-base px-6 md:px-8">
+                    Login
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </section>
 
