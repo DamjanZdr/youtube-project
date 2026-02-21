@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://myblueprint.studio/opengraph-image",
+        url: "https://myblueprint.studio/opengraph-image?v=3",
         width: 1200,
         height: 630,
         alt: "Blueprint - The only tool a YouTuber will ever need",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Blueprint - Stop Creating Videos Without a Plan",
     description: "Brainstorm ideas, test thumbnails and titles, write scripts, and keep editing notes. Blueprint - a step by step YouTuber Workflow.",
-    images: ["https://myblueprint.studio/opengraph-image"],
+    images: ["https://myblueprint.studio/twitter-image?v=3"],
   },
 };
 
