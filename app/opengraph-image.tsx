@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-// Force cache invalidation v2
+// Force cache invalidation v3 - 2026-02-21
 export const runtime = 'edge';
 
 export const alt = 'Blueprint - The all-in-one creator OS';
