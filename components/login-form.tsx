@@ -34,7 +34,7 @@ export function LoginForm({
       });
       if (error) throw error;
       
-      // Log login activity
+      // Log login activity and mark session as logged
       try {
         await fetch("/api/activity/log", {
           method: "POST",
@@ -44,6 +44,7 @@ export function LoginForm({
             device: getDeviceInfo(),
           }),
         });
+        sessionStorage.setItem("bp_session_logged", "true");
       } catch {
         // Don't block login on activity logging failure
       }
