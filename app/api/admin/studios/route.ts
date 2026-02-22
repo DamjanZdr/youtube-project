@@ -72,17 +72,25 @@ export async function GET(req: NextRequest) {
   const [
     { data: subscriptions },
     { data: memberCounts },
-    { data: owners }
+    { data: owners },
+    { data: projectCounts }
   ] = await Promise.all([
     adminClient.from("subscriptions").select("organization_id, plan, source, status").in("organization_id", studioIds),
     adminClient.from("organization_members").select("organization_id").in("organization_id", studioIds),
     adminClient.from("profiles").select("id, email, full_name").in("id", ownerIds),
+    adminClient.from("projects").select("organization_id").in("organization_id", studioIds),
   ]);
 
   // Count members per org
   const memberCountMap = new Map<string, number>();
   memberCounts?.forEach(m => {
     memberCountMap.set(m.organization_id, (memberCountMap.get(m.organization_id) || 0) + 1);
+  });
+
+  // Count projects per org
+  const projectCountMap = new Map<string, number>();
+  projectCounts?.forEach(p => {
+    projectCountMap.set(p.organization_id, (projectCountMap.get(p.organization_id) || 0) + 1);
   });
 
   // Map subscription info
@@ -101,6 +109,7 @@ export async function GET(req: NextRequest) {
     ...studio,
     subscription: subMap.get(studio.id) || { plan: "free", source: null, status: "active" },
     member_count: memberCountMap.get(studio.id) || 1,
+    project_count: projectCountMap.get(studio.id) || 0,
     owner: ownerMap.get(studio.owner_id) || null,
   }));
 

@@ -147,7 +147,7 @@ export default function AdminStudiosPage() {
           ...s,
           subscription: s.subscription || null,
           member_count: s.member_count || 0,
-          project_count: 0, // Can be added to API if needed
+          project_count: s.project_count || 0,
         }));
         
         setStudios(studiosWithData);
