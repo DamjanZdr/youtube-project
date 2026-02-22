@@ -20,7 +20,8 @@ import {
   Send,
   AlertTriangle,
   Loader2,
-  Trash2
+  Trash2,
+  UserPlus
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
@@ -95,6 +96,7 @@ export default function AdminKeysPage() {
   const [genPlan, setGenPlan] = useState("creator");
   const [genDuration, setGenDuration] = useState("month");
   const [genCount, setGenCount] = useState(1);
+  const [genEmail, setGenEmail] = useState(""); // Optional email for internal tracking
   const [generating, setGenerating] = useState(false);
   const [generatedKeys, setGeneratedKeys] = useState<string[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -118,6 +120,12 @@ export default function AdminKeysPage() {
 
   // Send reminder state
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+
+  // Assign email dialog (internal tracking only, no email sent)
+  const [showAssignEmail, setShowAssignEmail] = useState(false);
+  const [assignEmailKey, setAssignEmailKey] = useState<PlanKey | null>(null);
+  const [assignEmail, setAssignEmail] = useState("");
+  const [assigning, setAssigning] = useState(false);
 
   // Helper to get key status
   const getKeyStatus = (key: PlanKey): KeyStatus => {
@@ -187,12 +195,14 @@ export default function AdminKeysPage() {
       newKeys.push(generateKey());
     }
 
-    // Insert keys
+    // Insert keys (with optional email for internal tracking)
     const { error } = await supabase.from("plan_keys").insert(
       newKeys.map(key => ({
         key,
         plan: genPlan,
         duration: genDuration,
+        // Only set sent_to_email if generating 1 key and email is provided
+        ...(genCount === 1 && genEmail.trim() ? { sent_to_email: genEmail.trim() } : {}),
       }))
     );
 
@@ -201,6 +211,7 @@ export default function AdminKeysPage() {
       toast.error("Failed to generate keys");
     } else {
       setGeneratedKeys(newKeys);
+      setGenEmail(""); // Clear email after successful generation
       toast.success(`Generated ${newKeys.length} key(s)`);
       loadKeys();
     }
@@ -371,6 +382,30 @@ export default function AdminKeysPage() {
     } finally {
       setSendingReminder(null);
     }
+  }
+
+  async function handleAssignEmail() {
+    if (!assignEmailKey || !assignEmail.trim()) return;
+    
+    setAssigning(true);
+    const supabase = createClient();
+    
+    const { error } = await supabase
+      .from("plan_keys")
+      .update({ sent_to_email: assignEmail.trim() })
+      .eq("id", assignEmailKey.id);
+    
+    if (error) {
+      toast.error("Failed to assign email");
+    } else {
+      toast.success("Email assigned to key");
+      loadKeys();
+    }
+    
+    setAssigning(false);
+    setShowAssignEmail(false);
+    setAssignEmailKey(null);
+    setAssignEmail("");
   }
 
   function toggleSelectKey(keyId: string) {
@@ -641,16 +676,28 @@ export default function AdminKeysPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-1">
                         {status === "available" && (
-                          <button
-                            onClick={() => {
-                              setSendEmailKey(key);
-                              setShowSendEmail(true);
-                            }}
-                            className="p-2 rounded-lg hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-colors"
-                            title="Send to email"
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => {
+                                setAssignEmailKey(key);
+                                setShowAssignEmail(true);
+                              }}
+                              className="p-2 rounded-lg hover:bg-green-500/20 text-muted-foreground hover:text-green-400 transition-colors"
+                              title="Assign email (internal tracking)"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSendEmailKey(key);
+                                setShowSendEmail(true);
+                              }}
+                              className="p-2 rounded-lg hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-colors"
+                              title="Send to email"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         {status === "sent" && (
                           <button
@@ -723,7 +770,14 @@ export default function AdminKeysPage() {
       )}
 
       {/* Generate Dialog */}
-      <Dialog open={showGenerate} onOpenChange={setShowGenerate}>
+      <Dialog open={showGenerate} onOpenChange={(open) => {
+        setShowGenerate(open);
+        if (!open) {
+          // Reset form when closing
+          setGeneratedKeys([]);
+          setGenEmail("");
+        }
+      }}>
         <DialogContent className="max-w-md">
           <DialogTitle>Generate Keys</DialogTitle>
           <DialogDescription>
@@ -824,12 +878,35 @@ export default function AdminKeysPage() {
                 <Input
                   type="number"
                   value={genCount}
-                  onChange={(e) => setGenCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                  onChange={(e) => {
+                    const newCount = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
+                    setGenCount(newCount);
+                    // Clear email if generating multiple keys
+                    if (newCount > 1) setGenEmail("");
+                  }}
                   min={1}
                   max={100}
                 />
                 <p className="text-xs text-muted-foreground mt-1">Max 100 keys at once</p>
               </div>
+
+              {/* Optional Email (only for single key) */}
+              {genCount === 1 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Assign to Email <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <Input
+                    type="email"
+                    value={genEmail}
+                    onChange={(e) => setGenEmail(e.target.value)}
+                    placeholder="user@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    For internal tracking only. No email will be sent.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-2 pt-2">
                 <Button variant="outline" onClick={() => setShowGenerate(false)} className="flex-1">
@@ -1015,6 +1092,86 @@ export default function AdminKeysPage() {
                     <>
                       <Send className="w-4 h-4" />
                       Send Email
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Email Dialog (Internal Tracking Only) */}
+      <Dialog open={showAssignEmail} onOpenChange={(open) => {
+        setShowAssignEmail(open);
+        if (!open) {
+          setAssignEmailKey(null);
+          setAssignEmail("");
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-green-400" />
+            Assign Email to Key
+          </DialogTitle>
+          <DialogDescription>
+            Mark this key as intended for a specific person. No email will be sent — this is for internal tracking only.
+          </DialogDescription>
+
+          {assignEmailKey && (
+            <div className="mt-4 space-y-4">
+              <div className="bg-white/5 rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Key</span>
+                  <code className="font-mono text-sm">{assignEmailKey.key}</code>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Plan</span>
+                  <span className="capitalize">{assignEmailKey.plan}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Duration</span>
+                  <span className="capitalize">{assignEmailKey.duration}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Email Address</label>
+                <Input
+                  type="email"
+                  value={assignEmail}
+                  onChange={(e) => setAssignEmail(e.target.value)}
+                  placeholder="user@example.com"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAssignEmail(false);
+                    setAssignEmailKey(null);
+                    setAssignEmail("");
+                  }} 
+                  className="flex-1"
+                  disabled={assigning}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAssignEmail} 
+                  className="flex-1 gap-2"
+                  disabled={assigning || !assignEmail.trim()}
+                >
+                  {assigning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Assigning...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Assign
                     </>
                   )}
                 </Button>
