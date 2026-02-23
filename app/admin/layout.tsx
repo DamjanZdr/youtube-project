@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Mail,
   BarChart,
+  Handshake,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/admin/studios", label: "Studios", icon: Building2 },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/admin/keys", label: "Keys", icon: Key },
+  { href: "/admin/partners", label: "Partners", icon: Handshake },
   { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon },
   { href: "/admin/waitlist", label: "Waitlist", icon: Mail },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart },

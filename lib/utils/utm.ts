@@ -1,5 +1,5 @@
 // utils/utm.ts
-// Utility for capturing and retrieving UTM parameters and basic device/session info
+// Utility for capturing and retrieving UTM parameters, partner ref codes, and basic device/session info
 
 export function getUTMParams() {
   if (typeof window === 'undefined') return {};
@@ -12,12 +12,33 @@ export function getUTMParams() {
   return utm;
 }
 
+export function getRefCode() {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('ref') || null;
+}
+
 export function storeUTMParams() {
   if (typeof window === 'undefined') return;
   const utm = getUTMParams();
   if (Object.keys(utm).length > 0) {
     localStorage.setItem('utm_params', JSON.stringify(utm));
   }
+  // Also store ref code if present
+  const ref = getRefCode();
+  if (ref) {
+    localStorage.setItem('partner_ref', ref);
+  }
+}
+
+export function getStoredRefCode() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('partner_ref');
+}
+
+export function storeRefCode(code: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('partner_ref', code);
 }
 
 export function getStoredUTMParams() {

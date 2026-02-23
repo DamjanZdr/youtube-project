@@ -18,6 +18,9 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  is_admin?: boolean;
+  is_partner?: boolean;
+  referred_by_partner_id?: string | null;
 }
 
 export interface Organization {
@@ -300,4 +303,60 @@ export interface ProjectStatusDetail {
   due_date: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ============================================================================
+// Partner/Affiliate Types
+// ============================================================================
+
+export interface Partner {
+  id: string;
+  user_id: string;
+  code: string;
+  name: string;
+  commission_percent: number;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  user?: Profile;
+}
+
+export interface PartnerVisit {
+  id: string;
+  partner_id: string;
+  visitor_id: string | null;
+  page_url: string | null;
+  referrer_url: string | null;
+  user_agent: string | null;
+  ip_country: string | null;
+  ip_city: string | null;
+  created_at: string;
+}
+
+export interface PartnerPayout {
+  id: string;
+  partner_id: string;
+  amount_cents: number;
+  currency: string;
+  period_start: string;
+  period_end: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  paid_at: string | null;
+  payment_method: string | null;
+  payment_reference: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PartnerStats {
+  total_visits: number;
+  unique_visitors: number;
+  total_signups: number;
+  total_studios: number;
+  conversion_rate: number;
+  studios_by_plan: Record<string, number>;
+  total_earnings_cents: number;
+  pending_payout_cents: number;
 }

@@ -68,6 +68,7 @@ export default function HubPage() {
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPartner, setIsPartner] = useState(false);
   const [cancelStudioId, setCancelStudioId] = useState<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
@@ -90,14 +91,15 @@ export default function HubPage() {
     // Get user profile with invite preference and display info
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, email, full_name, avatar_url, accept_invites, role")
+      .select("id, email, full_name, avatar_url, accept_invites, role, is_admin, is_partner")
       .eq("id", currentUser.id)
       .single();
 
     if (profile) {
       setUser(profile);
       setAcceptInvites(profile.accept_invites ?? true);
-      setIsAdmin(profile.role === "admin");
+      setIsAdmin(profile.is_admin === true || profile.role === "admin");
+      setIsPartner(profile.is_partner === true);
     } else {
       // Fallback to auth user if profile not found
       setUser({
@@ -314,9 +316,18 @@ export default function HubPage() {
                     </Button>
                   </Link>
                 )}
+                {isPartner && (
+                  <Link href="/partner">
+                    <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 px-3 md:px-3 h-10 md:h-9">
+                      <span className="hidden md:inline">Partner</span>
+                    </Button>
+                  </Link>
+                )}
                 <UserProfileDropdown 
                   user={user} 
-                  initialAcceptInvites={acceptInvites} 
+                  initialAcceptInvites={acceptInvites}
+                  isAdmin={isAdmin}
+                  isPartner={isPartner}
                 />
               </>
             ) : (

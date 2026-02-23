@@ -5,9 +5,10 @@
 
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { QueryProvider } from './query-provider';
 import { useActivityTracking } from '@/lib/hooks/use-activity-tracking';
+import { PartnerTracker } from './partner-tracker';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -22,6 +23,9 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryProvider>
       <ActivityTracker />
+      <Suspense fallback={null}>
+        <PartnerTracker />
+      </Suspense>
       {children}
     </QueryProvider>
   );

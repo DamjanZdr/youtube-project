@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, ChevronDown, HelpCircle } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, HelpCircle, Shield, Handshake } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -23,9 +23,11 @@ interface UserProfileDropdownProps {
     avatar_url?: string | null;
   };
   initialAcceptInvites?: boolean;
+  isAdmin?: boolean;
+  isPartner?: boolean;
 }
 
-export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserProfileDropdownProps) {
+export function UserProfileDropdown({ user, initialAcceptInvites = true, isAdmin, isPartner }: UserProfileDropdownProps) {
   const supabase = createClient();
   const [acceptInvites, setAcceptInvites] = useState(initialAcceptInvites);
   const [open, setOpen] = useState(false);
@@ -63,6 +65,32 @@ export function UserProfileDropdown({ user, initialAcceptInvites = true }: UserP
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+        {/* Admin Link */}
+        {isAdmin && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href="/admin" className="flex items-center gap-2 cursor-pointer text-orange-400">
+                <Shield className="w-4 h-4" />
+                Admin Panel
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Partner Link */}
+        {isPartner && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href="/partner" className="flex items-center gap-2 cursor-pointer text-blue-400">
+                <Handshake className="w-4 h-4" />
+                Partner Dashboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         {/* Account Settings */}
         <DropdownMenuItem asChild>
           <Link href="/account" className="flex items-center gap-2 cursor-pointer">

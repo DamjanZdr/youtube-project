@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-import { storeUTMParams, getStoredUTMParams, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
+import { storeUTMParams, getStoredUTMParams, getStoredRefCode, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
 
 export function SignUpForm({
   className,
@@ -50,9 +50,10 @@ export function SignUpForm({
     }
 
     try {
-      // Attach UTM, device, and location info to user_metadata
+      // Attach UTM, device, location, and ref info to user_metadata
       const utm = getStoredUTMParams();
       const device = getDeviceInfo();
+      const refCode = getStoredRefCode();
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,6 +64,7 @@ export function SignUpForm({
             utm,
             device,
             location,
+            ref_code: refCode,
           },
         },
       });
