@@ -23,12 +23,14 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     redirect("/auth/login");
   }
 
-  // Fetch user profile
+  // Fetch user profile (including admin status for silent view)
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url, accept_invites")
+    .select("full_name, avatar_url, accept_invites, is_admin")
     .eq("id", user.id)
     .single();
+
+  const isAdmin = profile?.is_admin === true;
 
   // Fetch studio data including status
   const { data: studio, error } = await supabase
@@ -42,10 +44,10 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     notFound();
   }
 
-  // Verify user has access (is owner or member)
+  // Verify user has access (is owner, member, or admin for silent view)
   const isOwner = studio.owner_id === user.id;
   
-  if (!isOwner) {
+  if (!isOwner && !isAdmin) {
     const { data: membership } = await supabase
       .from("organization_members")
       .select("id")
@@ -92,9 +94,11 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
   const tutorialStep = memberData?.tutorial_step ?? null;
   const tutorialCompletedAt = memberData?.tutorial_completed_at ?? null;
 
-  // Track activity (non-blocking)
-  updateUserActivity().catch(() => {});
-  updateOrgActivity(studio.id).catch(() => {});
+  // Track activity (non-blocking) - skip for admin silent view
+  if (!isAdmin) {
+    updateUserActivity().catch(() => {});
+    updateOrgActivity(studio.id).catch(() => {});
+  }
 
   return (
     <TooltipProvider>

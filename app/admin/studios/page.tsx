@@ -32,6 +32,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Eye,
   Key,
   Mail,
   Loader2,
@@ -461,9 +462,9 @@ export default function AdminStudiosPage() {
                             e.stopPropagation();
                             window.open(`/studio/${studio.slug}`, "_blank");
                           }}
-                          title="Open Studio"
+                          title="View Studio (silent)"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
