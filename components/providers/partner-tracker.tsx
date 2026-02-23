@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { storeRefCode, getStoredRefCode } from "@/lib/utils/utm";
 
 export function PartnerTracker() {
   const searchParams = useSearchParams();
-  const hasTracked = useRef(false);
 
   useEffect(() => {
     // Get ref from URL or stored value
@@ -19,9 +18,13 @@ export function PartnerTracker() {
       storeRefCode(refFromUrl);
     }
 
-    // Only track once per page load, and only if we have a ref
-    if (!refCode || hasTracked.current) return;
-    hasTracked.current = true;
+    // Only track if we have a ref code
+    if (!refCode) return;
+
+    // Check if we've already tracked this session (prevents double-tracking from React StrictMode)
+    const trackingKey = `partner_tracked_${refCode}`;
+    if (sessionStorage.getItem(trackingKey)) return;
+    sessionStorage.setItem(trackingKey, "true");
 
     // Track the visit
     const trackVisit = async () => {
