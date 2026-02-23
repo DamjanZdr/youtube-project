@@ -3,23 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   Copy,
   MousePointer,
   UserPlus,
   Building2,
   DollarSign,
-  TrendingUp,
   Loader2,
   ExternalLink,
   ArrowLeft,
   Globe,
   Calendar,
-  Percent,
   FolderKanban,
+  Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -72,16 +68,24 @@ interface PartnerData {
 }
 
 const planColors: Record<string, string> = {
-  free: "bg-zinc-500/20 text-zinc-300",
-  creator: "bg-blue-500/20 text-blue-300",
-  studio: "bg-purple-500/20 text-purple-300",
-  enterprise: "bg-orange-500/20 text-orange-300",
+  free: "text-zinc-400",
+  creator: "text-blue-400",
+  studio: "text-purple-400",
+  enterprise: "text-orange-400",
+};
+
+const planBgColors: Record<string, string> = {
+  free: "from-zinc-500 to-zinc-600",
+  creator: "from-blue-500 to-cyan-500",
+  studio: "from-purple-500 to-pink-500",
+  enterprise: "from-orange-500 to-yellow-500",
 };
 
 export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PartnerData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -120,13 +124,15 @@ export default function PartnerDashboardPage() {
     if (!data) return;
     const url = `${window.location.origin}?ref=${data.partner.code}`;
     navigator.clipboard.writeText(url);
-    toast.success("Referral link copied to clipboard!");
+    setCopied(true);
+    toast.success("Referral link copied!");
+    setTimeout(() => setCopied(false), 2000);
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -134,17 +140,13 @@ export default function PartnerDashboardPage() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center space-y-4">
-            <p className="text-muted-foreground">{error || "Unable to load partner data"}</p>
-            <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="glass-card p-6 max-w-md text-center space-y-4">
+          <p className="text-muted-foreground">{error || "Unable to load partner data"}</p>
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </div>
       </div>
     );
   }
@@ -155,6 +157,13 @@ export default function PartnerDashboardPage() {
   const topCountries = Object.entries(charts.visits_by_country)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
+
+  const statCards = [
+    { label: "Total Clicks", value: stats.total_visits, subtext: `${stats.unique_visitors} unique`, icon: MousePointer, color: "from-blue-500 to-cyan-500" },
+    { label: "Sign Ups", value: stats.total_signups, subtext: `${stats.conversion_rate}% conversion`, icon: UserPlus, color: "from-green-500 to-emerald-500" },
+    { label: "Studios", value: stats.total_studios, subtext: "created by referrals", icon: Building2, color: "from-purple-500 to-pink-500" },
+    { label: "Projects", value: stats.total_projects, subtext: "across all studios", icon: FolderKanban, color: "from-orange-500 to-yellow-500" },
+  ];
 
   return (
     <div className="min-h-screen bg-black">
@@ -170,341 +179,260 @@ export default function PartnerDashboardPage() {
               <p className="text-sm text-muted-foreground">{partner.name}</p>
             </div>
           </div>
-          <Badge variant={partner.is_active ? "default" : "secondary"}>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${partner.is_active ? 'bg-green-500/20 text-green-400' : 'bg-zinc-500/20 text-zinc-400'}`}>
             {partner.is_active ? "Active" : "Inactive"}
-          </Badge>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-        {/* Referral Link Card */}
-        <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ExternalLink className="w-5 h-5" />
-              Your Referral Link
-            </CardTitle>
-            <CardDescription>
-              Share this link to earn {partner.commission_percent}% commission on paid subscriptions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 bg-black/50 px-4 py-3 rounded-lg text-sm break-all">
-                {typeof window !== 'undefined' ? `${window.location.origin}?ref=${partner.code}` : `https://useblueprint.dev?ref=${partner.code}`}
-              </code>
-              <Button onClick={copyReferralLink} className="shrink-0">
-                <Copy className="w-4 h-4 mr-2" />
-                Copy
-              </Button>
+      <main className="max-w-6xl mx-auto px-4 py-6 md:py-8 space-y-6">
+        {/* Referral Link */}
+        <div className="glass-card p-4 md:p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <ExternalLink className="w-5 h-5 text-white" />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <MousePointer className="w-4 h-4" />
-                Total Clicks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.total_visits.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.unique_visitors.toLocaleString()} unique visitors
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                Sign Ups
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.total_signups.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.conversion_rate}% conversion rate
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Studios
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.total_studios.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                created by referrals
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <FolderKanban className="w-4 h-4" />
-                Projects
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.total_projects.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                across all studios
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Percent className="w-4 h-4" />
-                Commission
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{partner.commission_percent}%</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                of first payment
-              </p>
-            </CardContent>
-          </Card>
+            <div>
+              <h3 className="font-semibold">Your Referral Link</h3>
+              <p className="text-xs text-muted-foreground">Share to earn {partner.commission_percent}% commission</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-white/5 px-4 py-3 rounded-lg text-sm break-all text-muted-foreground">
+              {typeof window !== 'undefined' ? `${window.location.origin}?ref=${partner.code}` : `https://myblueprint.studio?ref=${partner.code}`}
+            </code>
+            <button 
+              onClick={copyReferralLink} 
+              className="px-4 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
         </div>
 
-        {/* Plans Breakdown */}
-        {Object.keys(stats.studios_by_plan).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Studios by Plan
-              </CardTitle>
-              <CardDescription>
-                Distribution of referred studios across subscription plans
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {statCards.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.label} className="glass-card p-3 md:p-5">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xl md:text-3xl font-bold">{stat.value.toLocaleString()}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Plans Breakdown & Earnings Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          {/* Studios by Plan */}
+          <div className="glass-card p-4 md:p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold">Studios by Plan</h3>
+            </div>
+            {Object.keys(stats.studios_by_plan).length > 0 ? (
+              <div className="space-y-3">
                 {Object.entries(stats.studios_by_plan).map(([plan, count]) => (
-                  <div key={plan} className={`p-4 rounded-lg ${planColors[plan] || 'bg-zinc-500/20 text-zinc-300'}`}>
-                    <p className="text-2xl font-bold">{count}</p>
-                    <p className="text-sm capitalize">{plan}</p>
+                  <div key={plan} className="flex items-center justify-between">
+                    <span className={`capitalize ${planColors[plan] || 'text-zinc-400'}`}>{plan}</span>
+                    <span className="font-medium">{count}</span>
+                  </div>
+                ))}
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
+                  {Object.entries(stats.studios_by_plan).map(([plan, count]) => (
+                    <div 
+                      key={plan}
+                      className={`h-full bg-gradient-to-r ${planBgColors[plan] || 'from-zinc-500 to-zinc-600'}`}
+                      style={{ width: `${stats.total_studios ? (count / stats.total_studios * 100) : 0}%` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No studios yet</p>
+            )}
+          </div>
+
+          {/* Earnings */}
+          <div className="glass-card p-4 md:p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <DollarSign className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold">Earnings</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Total Earned</span>
+                <span className="font-medium text-green-400">${(stats.total_earnings_cents / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Paid Out</span>
+                <span className="font-medium">${(stats.paid_out_cents / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Pending</span>
+                <span className="font-medium text-yellow-400">${(stats.pending_payout_cents / 100).toFixed(2)}</span>
+              </div>
+              <div className="pt-2 border-t border-white/10">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Commission Rate</span>
+                  <span className="font-medium">{partner.commission_percent}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Countries & Payouts Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          {/* Top Countries */}
+          <div className="glass-card p-4 md:p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold">Top Countries</h3>
+            </div>
+            {topCountries.length > 0 ? (
+              <div className="space-y-3">
+                {topCountries.map(([country, count], index) => (
+                  <div key={country} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground w-4 text-sm">{index + 1}.</span>
+                      <span>{country}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 rounded-full"
+                          style={{ width: `${(count / stats.total_visits) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-muted-foreground w-8 text-right">{count}</span>
+                    </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-muted-foreground text-sm">No data yet</p>
+            )}
+          </div>
 
-        {/* Earnings Section */}
-        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-400" />
-              Earnings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-green-400">
-                  ${(stats.total_earnings_cents / 100).toFixed(2)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">Total Earned</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">
-                  ${(stats.paid_out_cents / 100).toFixed(2)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">Paid Out</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-yellow-400">
-                  ${(stats.pending_payout_cents / 100).toFixed(2)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">Pending Payout</p>
-              </div>
+          {/* Payout History */}
+          <div className="glass-card p-4 md:p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold">Payout History</h3>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Two Column Layout */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Top Countries */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Top Countries
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {topCountries.length > 0 ? (
-                <div className="space-y-3">
-                  {topCountries.map(([country, count], index) => (
-                    <div key={country} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground w-4">{index + 1}.</span>
-                        <span>{country}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-blue-500 rounded-full"
-                            style={{ width: `${(count / stats.total_visits) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-12 text-right">
-                          {count}
-                        </span>
-                      </div>
+            {payouts.length > 0 ? (
+              <div className="space-y-3">
+                {payouts.slice(0, 5).map((payout) => (
+                  <div key={payout.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">${(payout.amount_cents / 100).toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(payout.period_start), "MMM yyyy")}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-4">No data yet</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Recent Payouts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Payout History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {payouts.length > 0 ? (
-                <div className="space-y-3">
-                  {payouts.slice(0, 5).map((payout) => (
-                    <div key={payout.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                      <div>
-                        <p className="font-medium">${(payout.amount_cents / 100).toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(payout.period_start), "MMM yyyy")}
-                        </p>
-                      </div>
-                      <Badge variant={
-                        payout.status === 'paid' ? 'default' : 
-                        payout.status === 'pending' ? 'secondary' : 'destructive'
-                      }>
-                        {payout.status}
-                      </Badge>
+                    <div className={`px-2 py-1 rounded text-xs font-medium ${
+                      payout.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                      payout.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {payout.status}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-4">No payouts yet</p>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No payouts yet</p>
+            )}
+          </div>
         </div>
 
         {/* Referred Studios Table */}
         {referred_studios.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Referred Studios
-              </CardTitle>
-              <CardDescription>
-                Studios created by users who signed up through your referral link
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Studio #</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Plan</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Projects</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {referred_studios.map((studio, index) => (
-                      <tr key={studio.id} className="border-b border-white/5 hover:bg-white/5">
-                        <td className="py-3 px-4 text-sm">{index + 1}</td>
-                        <td className="py-3 px-4">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${planColors[studio.plan] || 'bg-zinc-500/20 text-zinc-300'}`}
-                          >
-                            {studio.plan}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          <span className="flex items-center gap-1">
-                            <FolderKanban className="w-3 h-3 text-muted-foreground" />
-                            {studio.project_count}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {format(new Date(studio.created_at), "MMM d, yyyy")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="glass-card p-4 md:p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <h3 className="font-semibold">Referred Studios</h3>
+                <p className="text-xs text-muted-foreground">Studios created by your referrals</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground">#</th>
+                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground">Plan</th>
+                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground">Projects</th>
+                    <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {referred_studios.map((studio, index) => (
+                    <tr key={studio.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-3 px-2 text-sm text-muted-foreground">{index + 1}</td>
+                      <td className="py-3 px-2">
+                        <span className={`text-sm capitalize ${planColors[studio.plan] || 'text-zinc-400'}`}>
+                          {studio.plan}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-sm">
+                        <span className="flex items-center gap-1">
+                          <FolderKanban className="w-3 h-3 text-muted-foreground" />
+                          {studio.project_count}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-sm text-muted-foreground">
+                        {format(new Date(studio.created_at), "MMM d, yyyy")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
-        {/* Partner Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Partner Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Partner Code</p>
-                <p className="font-medium">{partner.code}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Commission Rate</p>
-                <p className="font-medium">{partner.commission_percent}%</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Partner Since</p>
-                <p className="font-medium">{format(new Date(partner.created_at), "MMMM d, yyyy")}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Status</p>
-                <Badge variant={partner.is_active ? "default" : "secondary"}>
-                  {partner.is_active ? "Active" : "Inactive"}
-                </Badge>
-              </div>
+        {/* Partner Details */}
+        <div className="glass-card p-4 md:p-5">
+          <h3 className="font-semibold mb-4">Partner Details</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground text-xs mb-1">Partner Code</p>
+              <p className="font-medium">{partner.code}</p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Help Section */}
-        <Card className="bg-white/5">
-          <CardContent className="py-6">
-            <div className="text-center space-y-2">
-              <p className="text-muted-foreground">
-                Questions about the partner program?
+            <div>
+              <p className="text-muted-foreground text-xs mb-1">Commission Rate</p>
+              <p className="font-medium">{partner.commission_percent}%</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs mb-1">Partner Since</p>
+              <p className="font-medium">{format(new Date(partner.created_at), "MMM d, yyyy")}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs mb-1">Status</p>
+              <p className={`font-medium ${partner.is_active ? 'text-green-400' : 'text-zinc-400'}`}>
+                {partner.is_active ? "Active" : "Inactive"}
               </p>
-              <a href="mailto:partners@myblueprint.run" className="text-blue-400 hover:underline">
-                Contact us at partners@myblueprint.run
-              </a>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Help */}
+        <div className="text-center py-4 text-sm text-muted-foreground">
+          <p>Questions about the partner program?</p>
+          <a href="mailto:partners@myblueprint.run" className="text-blue-400 hover:underline">
+            Contact us at partners@myblueprint.run
+          </a>
+        </div>
       </main>
     </div>
   );
