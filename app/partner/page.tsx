@@ -404,11 +404,7 @@ export default function PartnerDashboardPage() {
         {/* Partner Details */}
         <div className="glass-card p-4 md:p-5">
           <h3 className="font-semibold mb-4">Partner Details</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">Partner Code</p>
-              <p className="font-medium">{partner.code}</p>
-            </div>
+          <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground text-xs mb-1">Commission Rate</p>
               <p className="font-medium">{partner.commission_percent}%</p>
@@ -429,9 +425,9 @@ export default function PartnerDashboardPage() {
         {/* Help */}
         <div className="text-center py-4 text-sm text-muted-foreground">
           <p>Questions about the partner program?</p>
-          <a href="mailto:partners@myblueprint.run" className="text-blue-400 hover:underline">
-            Contact us at partners@myblueprint.run
-          </a>
+          <Link href="/help/tickets/new?category=partnership" className="text-blue-400 hover:underline">
+            Contact us
+          </Link>
         </div>
       </main>
     </div>

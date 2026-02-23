@@ -67,6 +67,7 @@ interface Partner {
   code: string;
   name: string;
   commission_percent: number;
+  attribution_days: number | null;
   is_active: boolean;
   notes: string | null;
   created_at: string;
@@ -105,6 +106,7 @@ export default function AdminPartnersPage() {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [commissionPercent, setCommissionPercent] = useState(20);
+  const [attributionDays, setAttributionDays] = useState<string>("unlimited");
   const [isActive, setIsActive] = useState(true);
   const [notes, setNotes] = useState("");
   const [searching, setSearching] = useState(false);
@@ -161,6 +163,7 @@ export default function AdminPartnersPage() {
     setCode("");
     setName("");
     setCommissionPercent(20);
+    setAttributionDays("unlimited");
     setIsActive(true);
     setNotes("");
     setDialogOpen(true);
@@ -172,6 +175,7 @@ export default function AdminPartnersPage() {
     setCode(partner.code);
     setName(partner.name);
     setCommissionPercent(partner.commission_percent);
+    setAttributionDays(partner.attribution_days ? partner.attribution_days.toString() : "unlimited");
     setIsActive(partner.is_active);
     setNotes(partner.notes || "");
     setDialogOpen(true);
@@ -193,6 +197,8 @@ export default function AdminPartnersPage() {
 
     setSaving(true);
     try {
+      const attributionDaysValue = attributionDays === "unlimited" ? null : parseInt(attributionDays);
+      
       if (editingPartner) {
         // Update
         const response = await fetch("/api/admin/partners", {
@@ -203,6 +209,7 @@ export default function AdminPartnersPage() {
             code: code.trim(),
             name: name.trim(),
             commissionPercent,
+            attributionDays: attributionDaysValue,
             isActive,
             notes: notes.trim() || null,
           }),
@@ -222,6 +229,7 @@ export default function AdminPartnersPage() {
             code: code.trim(),
             name: name.trim(),
             commissionPercent,
+            attributionDays: attributionDaysValue,
             notes: notes.trim() || null,
           }),
         });
@@ -578,6 +586,29 @@ export default function AdminPartnersPage() {
                   <SelectItem value="50">50%</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Attribution Window */}
+            <div className="space-y-2">
+              <Label htmlFor="attribution">Attribution Window</Label>
+              <Select
+                value={attributionDays}
+                onValueChange={setAttributionDays}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unlimited">Unlimited</SelectItem>
+                  <SelectItem value="1">1 day</SelectItem>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="30">30 days</SelectItem>
+                  <SelectItem value="90">90 days</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                How long after clicking the referral link a signup counts as a referral
+              </p>
             </div>
 
             {/* Active Toggle (only for editing) */}

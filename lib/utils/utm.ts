@@ -36,9 +36,22 @@ export function getStoredRefCode() {
   return localStorage.getItem('partner_ref');
 }
 
+export function getStoredRefTimestamp() {
+  if (typeof window === 'undefined') return null;
+  const ts = localStorage.getItem('partner_ref_timestamp');
+  return ts ? parseInt(ts, 10) : null;
+}
+
 export function storeRefCode(code: string) {
   if (typeof window === 'undefined') return;
   localStorage.setItem('partner_ref', code);
+  localStorage.setItem('partner_ref_timestamp', Date.now().toString());
+}
+
+export function clearRefCode() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('partner_ref');
+  localStorage.removeItem('partner_ref_timestamp');
 }
 
 export function getStoredUTMParams() {

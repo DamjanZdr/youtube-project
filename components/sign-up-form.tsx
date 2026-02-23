@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-import { storeUTMParams, getStoredUTMParams, getStoredRefCode, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
+import { storeUTMParams, getStoredUTMParams, getStoredRefCode, getStoredRefTimestamp, clearRefCode, getDeviceInfo, getLocationInfo } from "@/lib/utils/utm";
 
 export function SignUpForm({
   className,
@@ -53,7 +53,25 @@ export function SignUpForm({
       // Attach UTM, device, location, and ref info to user_metadata
       const utm = getStoredUTMParams();
       const device = getDeviceInfo();
-      const refCode = getStoredRefCode();
+      let refCode = getStoredRefCode();
+      const refTimestamp = getStoredRefTimestamp();
+
+      // Validate ref code against attribution window
+      if (refCode && refTimestamp) {
+        try {
+          const lookupRes = await fetch(`/api/partners/lookup?code=${refCode}&clickTimestamp=${refTimestamp}`);
+          const lookupData = await lookupRes.json();
+          if (!lookupData.partner || lookupData.expired) {
+            // Ref code expired or invalid, clear it
+            refCode = null;
+            clearRefCode();
+          }
+        } catch {
+          // If lookup fails, still allow signup but without ref
+          refCode = null;
+        }
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,

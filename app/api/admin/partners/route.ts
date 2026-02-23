@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
       code,
       name,
       commission_percent,
+      attribution_days,
       is_active,
       notes,
       created_at,
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { userId, code, name, commissionPercent, notes } = body;
+    const { userId, code, name, commissionPercent, attributionDays, notes } = body;
 
     if (!userId || !code || !name) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -211,6 +212,7 @@ export async function POST(req: NextRequest) {
         code: code.toLowerCase(),
         name,
         commission_percent: commissionPercent || 20,
+        attribution_days: attributionDays !== undefined ? attributionDays : null,
         notes: notes || null,
       })
       .select()
@@ -243,7 +245,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, code, name, commissionPercent, isActive, notes } = body;
+    const { id, code, name, commissionPercent, attributionDays, isActive, notes } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing partner id" }, { status: 400 });
@@ -255,6 +257,7 @@ export async function PATCH(req: NextRequest) {
     if (code !== undefined) updates.code = code.toLowerCase();
     if (name !== undefined) updates.name = name;
     if (commissionPercent !== undefined) updates.commission_percent = commissionPercent;
+    if (attributionDays !== undefined) updates.attribution_days = attributionDays;
     if (isActive !== undefined) updates.is_active = isActive;
     if (notes !== undefined) updates.notes = notes;
 

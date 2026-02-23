@@ -96,6 +96,7 @@ const categoryLabels: Record<string, string> = {
   account_help: "Account",
   technical_support: "Tech",
   general_question: "Question",
+  partnership: "Partner",
   other: "Other",
 };
 

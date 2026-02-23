@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { ChevronLeft, Send, Loader2, AlertCircle } from "lucide-react";
 // All categories - some restricted by plan
 const allCategories = [
   { value: "general_question", label: "General Question", description: "Pre-purchase questions or general inquiries", freeAllowed: true },
+  { value: "partnership", label: "Partnership", description: "Partner program questions or inquiries", freeAllowed: true },
   { value: "bug_report", label: "Bug Report", description: "Something isn't working correctly", freeAllowed: false },
   { value: "feature_request", label: "Feature Request", description: "Suggest a new feature or improvement", freeAllowed: false },
   { value: "billing_issue", label: "Billing Issue", description: "Questions about payments or subscriptions", freeAllowed: false },
@@ -35,7 +36,22 @@ interface Studio {
 }
 
 export default function NewTicketPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <NewTicketPageContent />
+    </Suspense>
+  );
+}
+
+function NewTicketPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const presetCategory = searchParams.get("category");
+  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<{ id: string } | null>(null);
@@ -43,7 +59,7 @@ export default function NewTicketPage() {
 
   // Form state
   const [subject, setSubject] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(presetCategory || "");
   const [message, setMessage] = useState("");
   const [relatedStudioId, setRelatedStudioId] = useState<string>("");
 
