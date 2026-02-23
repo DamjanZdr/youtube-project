@@ -19,6 +19,7 @@ import {
   Globe,
   Calendar,
   Percent,
+  FolderKanban,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -29,11 +30,19 @@ interface PartnerStats {
   unique_visitors: number;
   total_signups: number;
   total_studios: number;
+  total_projects: number;
   conversion_rate: number;
   studios_by_plan: Record<string, number>;
   total_earnings_cents: number;
   paid_out_cents: number;
   pending_payout_cents: number;
+}
+
+interface ReferredStudio {
+  id: string;
+  created_at: string;
+  plan: string;
+  project_count: number;
 }
 
 interface PartnerData {
@@ -51,6 +60,7 @@ interface PartnerData {
     visits_by_day: Record<string, number>;
     signups_by_day: Record<string, number>;
   };
+  referred_studios: ReferredStudio[];
   payouts: Array<{
     id: string;
     amount_cents: number;
@@ -139,7 +149,7 @@ export default function PartnerDashboardPage() {
     );
   }
 
-  const { partner, stats, charts, payouts } = data;
+  const { partner, stats, charts, referred_studios, payouts } = data;
 
   // Get top countries
   const topCountries = Object.entries(charts.visits_by_country)
@@ -192,7 +202,7 @@ export default function PartnerDashboardPage() {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -227,18 +237,29 @@ export default function PartnerDashboardPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Studios Created
+                Studios
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{stats.total_studios.toLocaleString()}</p>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {Object.entries(stats.studios_by_plan).map(([plan, count]) => (
-                  <Badge key={plan} variant="outline" className={`text-xs ${planColors[plan]}`}>
-                    {plan}: {count}
-                  </Badge>
-                ))}
-              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                created by referrals
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <FolderKanban className="w-4 h-4" />
+                Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.total_projects.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                across all studios
+              </p>
             </CardContent>
           </Card>
 
@@ -246,7 +267,7 @@ export default function PartnerDashboardPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Percent className="w-4 h-4" />
-                Commission Rate
+                Commission
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -257,6 +278,31 @@ export default function PartnerDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Plans Breakdown */}
+        {Object.keys(stats.studios_by_plan).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Studios by Plan
+              </CardTitle>
+              <CardDescription>
+                Distribution of referred studios across subscription plans
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(stats.studios_by_plan).map(([plan, count]) => (
+                  <div key={plan} className={`p-4 rounded-lg ${planColors[plan] || 'bg-zinc-500/20 text-zinc-300'}`}>
+                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="text-sm capitalize">{plan}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Earnings Section */}
         <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
@@ -363,6 +409,59 @@ export default function PartnerDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Referred Studios Table */}
+        {referred_studios.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Referred Studios
+              </CardTitle>
+              <CardDescription>
+                Studios created by users who signed up through your referral link
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Studio #</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Plan</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Projects</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referred_studios.map((studio, index) => (
+                      <tr key={studio.id} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-3 px-4 text-sm">{index + 1}</td>
+                        <td className="py-3 px-4">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${planColors[studio.plan] || 'bg-zinc-500/20 text-zinc-300'}`}
+                          >
+                            {studio.plan}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          <span className="flex items-center gap-1">
+                            <FolderKanban className="w-3 h-3 text-muted-foreground" />
+                            {studio.project_count}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">
+                          {format(new Date(studio.created_at), "MMM d, yyyy")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Partner Info */}
         <Card>

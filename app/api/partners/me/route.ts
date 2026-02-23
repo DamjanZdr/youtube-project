@@ -44,15 +44,28 @@ export async function GET(req: NextRequest) {
         .in("owner_id", referredUserIds)
     : { data: [] };
 
-  // Get subscriptions
+  // Get subscriptions for these orgs
   const orgIds = orgs?.map(o => o.id) || [];
   const { data: subs } = orgIds.length > 0
     ? await adminClient
         .from("subscriptions")
         .select("organization_id, plan, status")
         .in("organization_id", orgIds)
-        .eq("status", "active")
     : { data: [] };
+
+  // Get project counts for studios
+  const { data: projectCounts } = orgIds.length > 0
+    ? await adminClient
+        .from("projects")
+        .select("organization_id")
+        .in("organization_id", orgIds)
+    : { data: [] };
+
+  // Count projects per org
+  const projectsByOrg: Record<string, number> = {};
+  projectCounts?.forEach(p => {
+    projectsByOrg[p.organization_id] = (projectsByOrg[p.organization_id] || 0) + 1;
+  });
 
   // Get billing events for earnings
   const { data: billingEvents } = referredUserIds.length > 0
@@ -73,11 +86,22 @@ export async function GET(req: NextRequest) {
   // Calculate stats
   const uniqueVisitors = new Set(visits?.map(v => v.visitor_id).filter(Boolean)).size;
   
-  // Studios by plan
+  // Studios by plan (active subscriptions)
   const studiosByPlan: Record<string, number> = {};
-  subs?.forEach(s => {
+  const activeSubs = subs?.filter(s => s.status === 'active') || [];
+  activeSubs.forEach(s => {
     studiosByPlan[s.plan] = (studiosByPlan[s.plan] || 0) + 1;
   });
+
+  // Count studios without active subscription (free/trial)
+  const orgsWithActiveSub = new Set(activeSubs.map(s => s.organization_id));
+  const freeStudios = orgIds.filter(id => !orgsWithActiveSub.has(id)).length;
+  if (freeStudios > 0) {
+    studiosByPlan['free'] = freeStudios;
+  }
+
+  // Total projects across all referred studios
+  const totalProjects = Object.values(projectsByOrg).reduce((sum, count) => sum + count, 0);
 
   // Calculate earnings
   const totalRevenue = billingEvents?.reduce((sum, b) => sum + (b.amount_cents || 0), 0) || 0;
@@ -117,6 +141,17 @@ export async function GET(req: NextRequest) {
     signupsByDay[day] = (signupsByDay[day] || 0) + 1;
   });
 
+  // Build anonymous referred studios list (no names, just aggregated info)
+  const referredStudios = orgs?.map(org => {
+    const sub = subs?.find(s => s.organization_id === org.id && s.status === 'active');
+    return {
+      id: org.id,
+      created_at: org.created_at,
+      plan: sub?.plan || 'free',
+      project_count: projectsByOrg[org.id] || 0,
+    };
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+
   return NextResponse.json({
     partner: {
       id: partner.id,
@@ -131,6 +166,7 @@ export async function GET(req: NextRequest) {
       unique_visitors: uniqueVisitors || visits?.length || 0,
       total_signups: referredUsers?.length || 0,
       total_studios: orgs?.length || 0,
+      total_projects: totalProjects,
       conversion_rate: visits && visits.length > 0 
         ? Math.round(((referredUsers?.length || 0) / visits.length) * 100 * 10) / 10 
         : 0,
@@ -144,6 +180,7 @@ export async function GET(req: NextRequest) {
       visits_by_day: visitsByDay,
       signups_by_day: signupsByDay,
     },
+    referred_studios: referredStudios,
     payouts: payouts || [],
   });
 }
