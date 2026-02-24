@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Lightbulb } from "lucide-react";
+import { Eye, FolderKanban, FileText, Users, LayoutGrid, Shield, Image, PenTool, Lightbulb, Handshake } from "lucide-react";
 
 // Force dynamic rendering to check auth state
 export const dynamic = 'force-dynamic';
@@ -13,13 +13,22 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   
   let isAdmin = false;
+  let isPartner = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("is_admin")
       .eq("id", user.id)
       .single();
-    isAdmin = profile?.role === "admin";
+    isAdmin = profile?.is_admin === true;
+
+    const { data: partner } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle();
+    isPartner = !!partner;
   }
 
   return (
@@ -58,6 +67,14 @@ export default async function Home() {
                     <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-2 md:px-3">
                       <Shield className="w-4 h-4 md:mr-2" />
                       <span className="hidden md:inline">Admin</span>
+                    </Button>
+                  </Link>
+                )}
+                {isPartner && (
+                  <Link href="/partner">
+                    <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 px-2 md:px-3">
+                      <Handshake className="w-4 h-4 md:mr-2" />
+                      <span className="hidden md:inline">Partner</span>
                     </Button>
                   </Link>
                 )}
