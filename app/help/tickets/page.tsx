@@ -20,6 +20,7 @@ import {
   MessagesSquare,
   LayoutGrid,
   Shield,
+  Handshake,
 } from "lucide-react";
 import { UserProfileDropdown } from "@/components/shared/user-profile-dropdown";
 import { formatDistanceToNow } from "date-fns";
@@ -59,6 +60,7 @@ export default function TicketsPage() {
   const [user, setUser] = useState<{ id: string; email: string; full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [acceptInvites, setAcceptInvites] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPartner, setIsPartner] = useState(false);
 
   // Scroll indicators state
   const tabsNavRef = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ export default function TicketsPage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, avatar_url, accept_invites, role")
+      .select("full_name, avatar_url, accept_invites, is_admin")
       .eq("id", authUser.id)
       .single();
 
@@ -113,7 +115,16 @@ export default function TicketsPage() {
       avatar_url: profile?.avatar_url,
     });
     setAcceptInvites(profile?.accept_invites ?? true);
-    setIsAdmin(profile?.role === "admin");
+    setIsAdmin(profile?.is_admin === true);
+
+    // Check partner status
+    const { data: partner } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("user_id", authUser.id)
+      .eq("is_active", true)
+      .maybeSingle();
+    setIsPartner(!!partner);
 
     const { data: ticketData } = await supabase
       .from("support_tickets")
@@ -170,6 +181,14 @@ export default function TicketsPage() {
                     <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-3 md:px-3 h-10 md:h-9">
                       <Shield className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
                       <span className="hidden md:inline">Admin</span>
+                    </Button>
+                  </Link>
+                )}
+                {isPartner && (
+                  <Link href="/partner">
+                    <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 px-3 md:px-3 h-10 md:h-9">
+                      <Handshake className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
+                      <span className="hidden md:inline">Partner</span>
                     </Button>
                   </Link>
                 )}
