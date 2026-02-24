@@ -28,6 +28,7 @@ const categoryLabels: Record<string, string> = {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -90,15 +91,22 @@ export async function POST(req: NextRequest) {
       studioName = org?.name;
     }
 
-    // Send email notification to admin
-    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
-    if (adminEmail) {
+    // Get all admin emails from database
+    const { data: admins } = await adminClient
+      .from("profiles")
+      .select("email")
+      .eq("is_admin", true);
+
+    const adminEmails = admins?.map(a => a.email).filter(Boolean) || [];
+
+    // Send email notification to all admins
+    if (adminEmails.length > 0) {
       const resend = getResend();
       if (resend) {
         try {
           await resend.emails.send({
             from: "Blueprint <noreply@myblueprint.run>",
-            to: adminEmail,
+            to: adminEmails,
             subject: `[Support] New ticket: ${subject.trim()}`,
             html: `
               <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
