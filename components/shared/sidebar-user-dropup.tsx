@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, ChevronUp, Home, HelpCircle, Shield } from "lucide-react";
+import { Settings, LogOut, ChevronUp, Home, HelpCircle, Shield, Handshake } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -32,18 +32,30 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
   const [acceptInvites, setAcceptInvites] = useState(initialAcceptInvites);
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPartner, setIsPartner] = useState(false);
 
   useEffect(() => {
-    async function checkAdmin() {
+    async function checkRoles() {
+      // Check admin status
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("is_admin")
         .eq("id", user.id)
         .single();
       
-      setIsAdmin(profile?.role === "admin");
+      setIsAdmin(profile?.is_admin === true);
+
+      // Check partner status
+      const { data: partner } = await supabase
+        .from("partners")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      setIsPartner(!!partner);
     }
-    checkAdmin();
+    checkRoles();
   }, [user.id]);
 
   async function toggleAcceptInvites(enabled: boolean) {
@@ -123,6 +135,16 @@ export function SidebarUserDropup({ user, initialAcceptInvites = true, collapsed
             <Link href="/admin" className="flex items-center gap-2 cursor-pointer text-orange-400">
               <Shield className="w-4 h-4" />
               Admin Panel
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {/* Partner Dashboard */}
+        {isPartner && (
+          <DropdownMenuItem asChild>
+            <Link href="/partner" className="flex items-center gap-2 cursor-pointer text-blue-400">
+              <Handshake className="w-4 h-4" />
+              Partner Dashboard
             </Link>
           </DropdownMenuItem>
         )}

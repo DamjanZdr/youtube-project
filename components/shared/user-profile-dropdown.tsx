@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -27,10 +27,37 @@ interface UserProfileDropdownProps {
   isPartner?: boolean;
 }
 
-export function UserProfileDropdown({ user, initialAcceptInvites = true, isAdmin, isPartner }: UserProfileDropdownProps) {
+export function UserProfileDropdown({ user, initialAcceptInvites = true, isAdmin: isAdminProp, isPartner: isPartnerProp }: UserProfileDropdownProps) {
   const supabase = createClient();
   const [acceptInvites, setAcceptInvites] = useState(initialAcceptInvites);
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(isAdminProp ?? false);
+  const [isPartner, setIsPartner] = useState(isPartnerProp ?? false);
+
+  // Fetch admin/partner status if not provided as props
+  useEffect(() => {
+    async function checkRoles() {
+      if (isAdminProp === undefined) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+        setIsAdmin(profile?.is_admin === true);
+      }
+
+      if (isPartnerProp === undefined) {
+        const { data: partner } = await supabase
+          .from("partners")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        setIsPartner(!!partner);
+      }
+    }
+    checkRoles();
+  }, [user.id, isAdminProp, isPartnerProp]);
 
   async function toggleAcceptInvites(enabled: boolean) {
     const { error } = await supabase
