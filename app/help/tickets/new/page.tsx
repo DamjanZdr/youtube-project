@@ -138,43 +138,31 @@ function NewTicketPageContent() {
 
     setSubmitting(true);
 
-    // Create the ticket
-    const { data: ticket, error: ticketError } = await supabase
-      .from("support_tickets")
-      .insert({
-        user_id: user.id,
-        subject: subject.trim(),
-        category,
-        related_studio_id: relatedStudioId && relatedStudioId !== "none" ? relatedStudioId : null,
-      })
-      .select()
-      .single();
-
-    if (ticketError || !ticket) {
-      toast.error("Failed to create ticket");
-      console.error(ticketError);
-      setSubmitting(false);
-      return;
-    }
-
-    // Add the initial message
-    const { error: messageError } = await supabase
-      .from("support_ticket_messages")
-      .insert({
-        ticket_id: ticket.id,
-        sender_id: user.id,
-        content: message.trim(),
-        is_admin: false,
+    try {
+      const response = await fetch("/api/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: subject.trim(),
+          category,
+          message: message.trim(),
+          relatedStudioId: relatedStudioId && relatedStudioId !== "none" ? relatedStudioId : null,
+        }),
       });
 
-    if (messageError) {
-      toast.error("Ticket created but failed to add message");
-      console.error(messageError);
-    } else {
-      toast.success("Ticket submitted successfully");
-    }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create ticket");
+      }
 
-    router.push(`/help/tickets/${ticket.id}`);
+      const { ticket } = await response.json();
+      toast.success("Ticket submitted successfully");
+      router.push(`/help/tickets/${ticket.id}`);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create ticket");
+      console.error(error);
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
