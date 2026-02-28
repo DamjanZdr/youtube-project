@@ -71,70 +71,80 @@ export function PreviewControls({
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
         <div 
-          className="relative h-14 bg-muted rounded-lg cursor-pointer px-1.5 flex items-center"
+          className="relative h-12 bg-muted rounded-lg cursor-pointer px-2 flex items-center gap-0"
           style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
         >
-          {/* Off button - raised when compareMode is true */}
-          <div className="relative flex items-center">
-            <div 
-              className={`h-9 px-3 flex items-center justify-center transition-all duration-150 rounded-l-md ${
-                compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
-              }`}
-              style={compareMode ? { 
-                transform: 'scaleY(1.15)',
-                transformOrigin: 'right center'
-              } : {}}
+          {/* Off button */}
+          <div 
+            className={`relative h-8 w-10 flex items-center justify-center transition-all duration-150 ${
+              compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
+            }`}
+            style={compareMode ? {
+              clipPath: 'polygon(0 10%, 100% 0, 100% 100%, 0 90%)',
+              borderRadius: '4px 0 0 4px'
+            } : {
+              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+              borderRadius: '4px 0 0 4px'
+            }}
+          >
+            <span 
+              className={`text-sm ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
+              style={compareMode ? { transform: 'skewY(5deg)' } : {}}
             >
-              <span 
-                className={`text-sm ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-                style={compareMode ? { transform: 'scaleY(0.87)' } : {}}
-              >
-                Off
-              </span>
-            </div>
-            {/* Left edge visible when Off is raised */}
-            {compareMode && (
-              <div 
-                className="absolute left-0 top-1/2 w-[3px] bg-zinc-400 rounded-l-sm"
-                style={{ 
-                  height: 'calc(100% * 1.15)',
-                  transform: 'translateX(-100%) translateY(-50%)',
-                  boxShadow: '-1px 1px 2px rgba(0,0,0,0.5)'
-                }}
-              />
-            )}
+              Off
+            </span>
           </div>
+          {/* Left depth edge when Off is raised */}
+          {compareMode && (
+            <div 
+              className="absolute bg-zinc-400"
+              style={{
+                left: '6px',
+                top: '50%',
+                width: '3px',
+                height: '80%',
+                transform: 'translateY(-50%) skewY(-5deg)',
+                borderRadius: '2px 0 0 2px',
+                boxShadow: '-1px 0 2px rgba(0,0,0,0.4)'
+              }}
+            />
+          )}
           
-          {/* On button - raised when compareMode is false */}
-          <div className="relative flex items-center">
-            {/* Right edge visible when On is raised */}
-            {!compareMode && (
-              <div 
-                className="absolute right-0 top-1/2 w-[3px] bg-zinc-400 rounded-r-sm"
-                style={{ 
-                  height: 'calc(100% * 1.15)',
-                  transform: 'translateX(100%) translateY(-50%)',
-                  boxShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-                }}
-              />
-            )}
-            <div 
-              className={`h-9 px-3 flex items-center justify-center transition-all duration-150 rounded-r-md ${
-                !compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
-              }`}
-              style={!compareMode ? { 
-                transform: 'scaleY(1.15)',
-                transformOrigin: 'left center'
-              } : {}}
+          {/* On button */}
+          <div 
+            className={`relative h-8 w-10 flex items-center justify-center transition-all duration-150 ${
+              !compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
+            }`}
+            style={!compareMode ? {
+              clipPath: 'polygon(0 0, 100% 10%, 100% 90%, 0 100%)',
+              borderRadius: '0 4px 4px 0'
+            } : {
+              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+              borderRadius: '0 4px 4px 0'
+            }}
+          >
+            <span 
+              className={`text-sm ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
+              style={!compareMode ? { transform: 'skewY(-5deg)' } : {}}
             >
-              <span 
-                className={`text-sm ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-                style={!compareMode ? { transform: 'scaleY(0.87)' } : {}}
-              >
-                On
-              </span>
-            </div>
+              On
+            </span>
           </div>
+          {/* Right depth edge when On is raised */}
+          {!compareMode && (
+            <div 
+              className="absolute bg-zinc-400"
+              style={{
+                right: '6px',
+                top: '50%',
+                width: '3px',
+                height: '80%',
+                transform: 'translateY(-50%) skewY(5deg)',
+                borderRadius: '0 2px 2px 0',
+                boxShadow: '1px 0 2px rgba(0,0,0,0.4)'
+              }}
+            />
+          )}
         </div>
         <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
       </div>
