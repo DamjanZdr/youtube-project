@@ -72,44 +72,39 @@ export function PreviewControls({
       >
         <div 
           className="relative flex items-center h-11 bg-muted rounded-lg cursor-pointer p-1"
-          style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.3)' }}
+          style={{ 
+            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)',
+            perspective: '200px'
+          }}
         >
-          {/* Off side */}
+          {/* Off side - raised when compareMode is true (On is pressed) */}
           <div 
             className={`
               relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
-              ${!compareMode 
-                ? 'bg-background text-foreground' 
-                : 'text-muted-foreground'
-              }
+              ${!compareMode ? 'text-muted-foreground' : 'bg-zinc-600 text-foreground'}
             `}
-            style={!compareMode ? {
-              boxShadow: '0 3px 6px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)',
-              transform: 'translateY(-2px)',
-              background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)'
+            style={compareMode ? {
+              transform: 'rotateY(-15deg)',
+              transformOrigin: 'left center',
+              boxShadow: '3px 0 4px rgba(0,0,0,0.3)'
             } : {
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
-              transform: 'translateY(1px)'
+              transform: 'rotateY(0deg)'
             }}
           >
             <span className="text-sm">Off</span>
           </div>
-          {/* On side */}
+          {/* On side - raised when compareMode is false (Off is pressed) */}
           <div 
             className={`
               relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
-              ${compareMode 
-                ? 'bg-background text-foreground' 
-                : 'text-muted-foreground'
-              }
+              ${compareMode ? 'text-muted-foreground' : 'bg-zinc-600 text-foreground'}
             `}
-            style={compareMode ? {
-              boxShadow: '0 3px 6px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)',
-              transform: 'translateY(-2px)',
-              background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)'
+            style={!compareMode ? {
+              transform: 'rotateY(15deg)',
+              transformOrigin: 'right center',
+              boxShadow: '-3px 0 4px rgba(0,0,0,0.3)'
             } : {
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
-              transform: 'translateY(1px)'
+              transform: 'rotateY(0deg)'
             }}
           >
             <span className="text-sm">On</span>
