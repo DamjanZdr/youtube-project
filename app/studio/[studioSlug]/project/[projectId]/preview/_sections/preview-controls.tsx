@@ -71,43 +71,25 @@ export function PreviewControls({
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
         <div 
-          className="relative flex items-center h-11 bg-muted rounded-lg cursor-pointer p-1"
+          className="relative h-11 bg-muted rounded-lg cursor-pointer p-1"
           style={{ 
             boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)',
             perspective: '200px'
           }}
         >
-          {/* Off side - raised when compareMode is true (On is pressed) */}
+          {/* Single rocker button that tilts */}
           <div 
-            className={`
-              relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
-              ${!compareMode ? 'text-muted-foreground' : 'bg-zinc-600 text-foreground'}
-            `}
-            style={compareMode ? {
-              transform: 'rotateY(-15deg)',
-              transformOrigin: 'left center',
-              boxShadow: '3px 0 4px rgba(0,0,0,0.3)'
-            } : {
-              transform: 'rotateY(0deg)'
+            className="h-9 px-1 bg-zinc-600 rounded-md flex items-center transition-transform duration-150"
+            style={{
+              transform: compareMode ? 'rotateY(-8deg)' : 'rotateY(8deg)',
+              transformOrigin: 'center center',
+              boxShadow: compareMode 
+                ? '3px 0 4px rgba(0,0,0,0.3)' 
+                : '-3px 0 4px rgba(0,0,0,0.3)'
             }}
           >
-            <span className="text-sm">Off</span>
-          </div>
-          {/* On side - raised when compareMode is false (Off is pressed) */}
-          <div 
-            className={`
-              relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
-              ${compareMode ? 'text-muted-foreground' : 'bg-zinc-600 text-foreground'}
-            `}
-            style={!compareMode ? {
-              transform: 'rotateY(15deg)',
-              transformOrigin: 'right center',
-              boxShadow: '-3px 0 4px rgba(0,0,0,0.3)'
-            } : {
-              transform: 'rotateY(0deg)'
-            }}
-          >
-            <span className="text-sm">On</span>
+            <span className={`px-2 text-sm transition-opacity ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>Off</span>
+            <span className={`px-2 text-sm transition-opacity ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>On</span>
           </div>
         </div>
         <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
