@@ -65,53 +65,57 @@ export function PreviewControls({
       </div>
 
       {/* Center: Compare Toggle (absolutely positioned on desktop) */}
-      <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex flex-col items-center gap-1">
+      <div 
+        data-tutorial="compare-toggle"
+        onClick={() => onCompareModeChange(!compareMode)}
+        className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
+      >
         <div 
-          data-tutorial="compare-toggle"
-          onClick={() => onCompareModeChange(!compareMode)}
-          className="relative flex items-center h-11 bg-muted rounded-full cursor-pointer p-1 overflow-hidden"
-          style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.15)' }}
+          className="relative flex items-center h-11 bg-muted rounded-lg cursor-pointer p-1"
+          style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.3)' }}
         >
           {/* Off side */}
           <div 
             className={`
-              relative h-9 px-4 rounded-full flex items-center justify-center transition-all duration-200
+              relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
               ${!compareMode 
                 ? 'bg-background text-foreground' 
                 : 'text-muted-foreground'
               }
             `}
             style={!compareMode ? {
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              transform: 'translateY(-1px)'
+              boxShadow: '0 3px 6px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)',
+              transform: 'translateY(-2px)',
+              background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)'
             } : {
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
               transform: 'translateY(1px)'
             }}
           >
-            <span className="text-sm font-medium">Off</span>
+            <span className="text-sm">Off</span>
           </div>
           {/* On side */}
           <div 
             className={`
-              relative h-9 px-4 rounded-full flex items-center justify-center transition-all duration-200
+              relative h-9 px-3 rounded-md flex items-center justify-center transition-all duration-150
               ${compareMode 
                 ? 'bg-background text-foreground' 
                 : 'text-muted-foreground'
               }
             `}
             style={compareMode ? {
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              transform: 'translateY(-1px)'
+              boxShadow: '0 3px 6px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)',
+              transform: 'translateY(-2px)',
+              background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)'
             } : {
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
               transform: 'translateY(1px)'
             }}
           >
-            <span className="text-sm font-medium">On</span>
+            <span className="text-sm">On</span>
           </div>
         </div>
-        <span className="text-[10px] text-muted-foreground">Compare</span>
+        <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
       </div>
 
       {/* Right: Set Picker */}
