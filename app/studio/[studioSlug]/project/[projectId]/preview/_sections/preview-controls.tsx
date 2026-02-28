@@ -1,6 +1,6 @@
 "use client";
 
-import { Smartphone, Monitor, GitCompareArrows } from "lucide-react";
+import { Smartphone, Monitor } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { PackagingSet, Orientation, PreviewMode } from "../_components";
 
@@ -93,39 +93,30 @@ export function PreviewControls({
       )}
 
       {/* Right: Compare Toggle */}
-      <button
-        data-tutorial="compare-toggle"
-        onClick={() => onCompareModeChange(!compareMode)}
-        className={`
-          relative flex items-center gap-2 h-11 rounded-lg px-3 pr-14 transition-colors cursor-pointer
-          ${compareMode 
-            ? 'bg-primary text-primary-foreground' 
-            : 'bg-muted text-muted-foreground hover:text-foreground'
-          }
-        `}
-      >
-        <GitCompareArrows className="w-4 h-4" />
-        <span className="text-sm font-medium">Compare</span>
-        
-        {/* Custom large toggle track */}
+      <div className="flex flex-col items-center gap-1">
         <div 
-          className={`
-            absolute right-2 w-11 h-7 rounded-full transition-colors
-            ${compareMode ? 'bg-primary-foreground/20' : 'bg-background/50'}
-          `}
+          data-tutorial="compare-toggle"
+          onClick={() => onCompareModeChange(!compareMode)}
+          className="relative flex items-center h-9 bg-muted rounded-full cursor-pointer p-1"
         >
-          {/* Toggle thumb */}
+          {/* Sliding pill background */}
           <div 
             className={`
-              absolute top-1 w-5 h-5 rounded-full transition-all shadow-sm
-              ${compareMode 
-                ? 'left-[calc(100%-1.5rem)] bg-white' 
-                : 'left-1 bg-muted-foreground/60'
-              }
+              absolute top-1 h-7 w-[calc(50%-2px)] bg-background rounded-full shadow-sm transition-all duration-200
+              ${compareMode ? 'left-[calc(50%+1px)]' : 'left-1'}
             `}
           />
+          {/* Off label */}
+          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
+            Off
+          </span>
+          {/* On label */}
+          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
+            On
+          </span>
         </div>
-      </button>
+        <span className="text-[10px] text-muted-foreground">Compare</span>
+      </div>
     </div>
   );
 }
