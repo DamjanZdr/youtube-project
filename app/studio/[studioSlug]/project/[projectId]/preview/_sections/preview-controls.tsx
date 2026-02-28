@@ -70,7 +70,7 @@ export function PreviewControls({
         onClick={() => onCompareModeChange(!compareMode)}
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
-        <div className="flex items-center h-11 bg-muted rounded-lg p-1 cursor-pointer">
+        <div className="relative flex items-center h-11 bg-muted rounded-lg p-1 cursor-pointer">
           <div className={`h-9 px-3 rounded-md flex items-center justify-center text-sm transition-colors ${
             !compareMode ? 'bg-background text-foreground' : 'text-muted-foreground'
           }`}>
@@ -81,8 +81,8 @@ export function PreviewControls({
           }`}>
             On
           </div>
+          <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground">Compare</span>
         </div>
-        <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
       </div>
 
       {/* Right: Set Picker */}
