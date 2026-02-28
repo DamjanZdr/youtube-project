@@ -162,7 +162,7 @@ export default function PackagingPage({ params }: PackagingPageProps) {
     // Load project data
     const { data: project } = await supabase
       .from("projects")
-      .select("description, video_type, youtube_video_id, youtube_last_synced_at")
+      .select("title, description, video_type, youtube_video_id, youtube_last_synced_at")
       .eq("id", projectId)
       .single();
 
@@ -188,12 +188,12 @@ export default function PackagingPage({ params }: PackagingPageProps) {
         selected: s.is_selected,
       })));
     } else {
-      // Create first set if none exist
+      // Create first set if none exist - use project title as default
       const { data: newSet } = await supabase
         .from("packaging_sets")
         .insert({
           project_id: projectId,
-          title: "",
+          title: project?.title || "",
           is_selected: true,
           position: 0,
         })
