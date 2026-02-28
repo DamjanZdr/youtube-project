@@ -1,8 +1,6 @@
 "use client";
 
 import { Smartphone, Monitor, GitCompareArrows } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { PackagingSet, Orientation, PreviewMode } from "../_components";
 
@@ -95,18 +93,39 @@ export function PreviewControls({
       )}
 
       {/* Right: Compare Toggle */}
-      <div className="flex items-center gap-2 h-11 bg-muted rounded-lg px-3">
-        <GitCompareArrows className="w-4 h-4 text-muted-foreground" />
-        <Label htmlFor="compare-mode" className="text-sm cursor-pointer select-none">
-          Compare
-        </Label>
-        <Switch
-          data-tutorial="compare-toggle"
-          id="compare-mode"
-          checked={compareMode}
-          onCheckedChange={onCompareModeChange}
-        />
-      </div>
+      <button
+        data-tutorial="compare-toggle"
+        onClick={() => onCompareModeChange(!compareMode)}
+        className={`
+          relative flex items-center gap-2 h-11 rounded-lg px-3 pr-14 transition-colors cursor-pointer
+          ${compareMode 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-muted text-muted-foreground hover:text-foreground'
+          }
+        `}
+      >
+        <GitCompareArrows className="w-4 h-4" />
+        <span className="text-sm font-medium">Compare</span>
+        
+        {/* Custom large toggle track */}
+        <div 
+          className={`
+            absolute right-2 w-11 h-7 rounded-full transition-colors
+            ${compareMode ? 'bg-primary-foreground/20' : 'bg-background/50'}
+          `}
+        >
+          {/* Toggle thumb */}
+          <div 
+            className={`
+              absolute top-1 w-5 h-5 rounded-full transition-all shadow-sm
+              ${compareMode 
+                ? 'left-[calc(100%-1.5rem)] bg-white' 
+                : 'left-1 bg-muted-foreground/60'
+              }
+            `}
+          />
+        </div>
+      </button>
     </div>
   );
 }
