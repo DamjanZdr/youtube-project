@@ -28,16 +28,16 @@ export function usePreviewState(): UsePreviewStateReturn {
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
   const [orientation, setOrientation] = useState<Orientation>("landscape");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("feed");
-  const [compareMode, setCompareModeState] = useState(false);
+  const [compareMode, setCompareModeState] = useState(true);
   const [compareVideos, setCompareVideos] = useState<YouTubeVideo[]>([]);
   const [compareShorts, setCompareShorts] = useState<YouTubeVideo[]>([]);
 
-  // Load compare mode from localStorage on mount
+  // Load compare mode from localStorage on mount (default to true if not set)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(COMPARE_MODE_KEY);
-      if (saved === "true") {
-        setCompareModeState(true);
+      if (saved === "false") {
+        setCompareModeState(false);
       }
     } catch {}
   }, []);

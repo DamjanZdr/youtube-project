@@ -31,23 +31,40 @@ export function PreviewControls({
 }: PreviewControlsProps) {
   return (
     <div className="relative flex flex-wrap items-center justify-between gap-3 px-3 md:px-4 py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
-      {/* Left: Orientation Toggle */}
-      <ToggleGroup 
-        data-tutorial="device-toggle"
-        type="single" 
-        value={orientation} 
-        onValueChange={(v) => v && onOrientationChange(v as Orientation)}
-        className="bg-muted rounded-lg p-1"
-      >
-        <ToggleGroupItem data-tutorial="device-desktop" value="landscape" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
-          <Monitor className="w-4 h-4" />
-          <span className="hidden sm:inline">Desktop</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem data-tutorial="device-mobile" value="portrait" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
-          <Smartphone className="w-4 h-4" />
-          <span className="hidden sm:inline">Mobile</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
+      {/* Left: Orientation + Mode Toggles */}
+      <div className="flex items-center gap-2">
+        <ToggleGroup 
+          data-tutorial="device-toggle"
+          type="single" 
+          value={orientation} 
+          onValueChange={(v) => v && onOrientationChange(v as Orientation)}
+          className="bg-muted rounded-lg p-1"
+        >
+          <ToggleGroupItem data-tutorial="device-desktop" value="landscape" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+            <Monitor className="w-4 h-4" />
+            <span className="hidden sm:inline">Desktop</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem data-tutorial="device-mobile" value="portrait" className="h-9 px-3 gap-2 data-[state=on]:bg-background text-sm">
+            <Smartphone className="w-4 h-4" />
+            <span className="hidden sm:inline">Mobile</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        <ToggleGroup 
+          data-tutorial="view-toggle"
+          type="single" 
+          value={previewMode} 
+          onValueChange={(v) => v && onPreviewModeChange(v as PreviewMode)}
+          className="bg-muted rounded-lg p-1"
+        >
+          <ToggleGroupItem data-tutorial="view-feed" value="feed" className="h-9 px-3 text-sm data-[state=on]:bg-background">
+            Feed
+          </ToggleGroupItem>
+          <ToggleGroupItem data-tutorial="view-suggested" value="suggested" className="h-9 px-3 text-sm data-[state=on]:bg-background">
+            Suggested
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
       {/* Center: Set Picker (absolutely positioned on desktop, inline on mobile) */}
       {sets.length > 1 && (
@@ -77,35 +94,18 @@ export function PreviewControls({
         </div>
       )}
 
-      {/* Right: Mode Toggle + Compare */}
-      <div className="flex items-center gap-3">
-        <ToggleGroup 
-          data-tutorial="view-toggle"
-          type="single" 
-          value={previewMode} 
-          onValueChange={(v) => v && onPreviewModeChange(v as PreviewMode)}
-          className="bg-muted rounded-lg p-1"
-        >
-          <ToggleGroupItem data-tutorial="view-feed" value="feed" className="h-9 px-3 text-sm data-[state=on]:bg-background">
-            Feed
-          </ToggleGroupItem>
-          <ToggleGroupItem data-tutorial="view-suggested" value="suggested" className="h-9 px-3 text-sm data-[state=on]:bg-background">
-            Suggested
-          </ToggleGroupItem>
-        </ToggleGroup>
-
-        <div className="flex items-center gap-2 pl-3 border-l">
-          <GitCompareArrows className="w-4 h-4 text-muted-foreground hidden sm:block" />
-          <Switch
-            data-tutorial="compare-toggle"
-            id="compare-mode"
-            checked={compareMode}
-            onCheckedChange={onCompareModeChange}
-          />
-          <Label htmlFor="compare-mode" className="text-sm">
-            Compare
-          </Label>
-        </div>
+      {/* Right: Compare Toggle */}
+      <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+        <GitCompareArrows className="w-4 h-4 text-primary" />
+        <Label htmlFor="compare-mode" className="text-sm font-medium text-primary cursor-pointer">
+          Compare
+        </Label>
+        <Switch
+          data-tutorial="compare-toggle"
+          id="compare-mode"
+          checked={compareMode}
+          onCheckedChange={onCompareModeChange}
+        />
       </div>
     </div>
   );
