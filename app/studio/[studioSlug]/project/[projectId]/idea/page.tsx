@@ -4,8 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
-import { Loader2, Check, Mic, MicOff, ChevronDown, ChevronRight } from "lucide-react";
+import { 
+  Loader2, Check, Mic, MicOff, ChevronDown, ChevronRight, 
+  Plus, Trash2, GripVertical 
+} from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 // Speech Recognition types
 interface SpeechRecognitionEvent extends Event {
@@ -50,43 +55,116 @@ declare global {
   }
 }
 
-// Section configuration - placeholder acts like input placeholder (disappears when typing)
-const IDEA_SECTIONS = [
+// Section type - each section has a level (1, 2, or 3), title, and content
+interface Section {
+  id: string;
+  level: 1 | 2 | 3;
+  title: string;
+  content: string;
+}
+
+// Default sections for new projects
+const DEFAULT_SECTIONS: Section[] = [
   {
-    key: "brainstorm" as const,
+    id: "brainstorm",
+    level: 1,
     title: "Brainstorming",
-    placeholder: "Freely dump all your ideas here... topics, angles, random thoughts, inspiration...",
+    content: "",
   },
   {
-    key: "hook" as const,
+    id: "hook",
+    level: 1,
     title: "1. Hook",
-    placeholder: "What will grab attention in the first 5-30 seconds?\nExample: \"I spent $10,000 on YouTube ads so you don't have to...\" or \"This one trick doubled my views overnight.\"",
+    content: "",
   },
   {
-    key: "value" as const,
+    id: "value",
+    level: 1,
     title: "2. Value",
-    placeholder: "What's the core benefit viewers will get? Why should someone watch until the end?\nExample: \"By the end, you'll know exactly how to edit videos 3x faster.\"",
+    content: "",
   },
   {
-    key: "flow" as const,
+    id: "flow",
+    level: 1,
     title: "3. Flow",
-    placeholder: "How will the video be structured? How do you keep momentum and avoid drop-off?\nExample: \"Hook → Problem → 3 Solutions → Proof → Summary\"",
+    content: "",
   },
   {
-    key: "cta" as const,
+    id: "cta",
+    level: 1,
     title: "4. CTA",
-    placeholder: "What specific action do you want viewers to take?\nExample: \"Subscribe and hit the bell\" or \"Download the free template in the description.\"",
+    content: "",
   },
 ];
 
-type SectionKey = "brainstorm" | "hook" | "value" | "flow" | "cta";
+// Placeholder hints for default sections
+const SECTION_PLACEHOLDERS: Record<string, string> = {
+  "Brainstorming": "Freely dump all your ideas here... topics, angles, random thoughts, inspiration...",
+  "1. Hook": "What will grab attention in the first 5-30 seconds?",
+  "2. Value": "What's the core benefit viewers will get? Why should someone watch until the end?",
+  "3. Flow": "How will the video be structured? How do you keep momentum and avoid drop-off?",
+  "4. CTA": "What specific action do you want viewers to take?",
+};
 
-interface SectionContent {
-  brainstorm: string;
-  hook: string;
-  value: string;
-  flow: string;
-  cta: string;
+// Parse markdown into sections
+function parseMarkdownToSections(markdown: string): Section[] {
+  if (!markdown || !markdown.trim()) {
+    return DEFAULT_SECTIONS.map(s => ({ ...s, id: crypto.randomUUID() }));
+  }
+
+  const sections: Section[] = [];
+  const lines = markdown.split('\n');
+  let currentSection: Section | null = null;
+  let contentLines: string[] = [];
+
+  for (const line of lines) {
+    const h1Match = line.match(/^# (.+)$/);
+    const h2Match = line.match(/^## (.+)$/);
+    const h3Match = line.match(/^### (.+)$/);
+
+    if (h1Match || h2Match || h3Match) {
+      // Save previous section
+      if (currentSection) {
+        currentSection.content = contentLines.join('\n').trim();
+        sections.push(currentSection);
+      }
+
+      // Start new section
+      const level = h3Match ? 3 : h2Match ? 2 : 1;
+      const title = (h3Match?.[1] || h2Match?.[1] || h1Match?.[1]) ?? '';
+      currentSection = {
+        id: crypto.randomUUID(),
+        level: level as 1 | 2 | 3,
+        title,
+        content: "",
+      };
+      contentLines = [];
+    } else {
+      contentLines.push(line);
+    }
+  }
+
+  // Don't forget the last section
+  if (currentSection) {
+    currentSection.content = contentLines.join('\n').trim();
+    sections.push(currentSection);
+  }
+
+  // If no sections found, create default
+  if (sections.length === 0) {
+    return DEFAULT_SECTIONS.map(s => ({ ...s, id: crypto.randomUUID() }));
+  }
+
+  return sections;
+}
+
+// Convert sections back to markdown
+function sectionsToMarkdown(sections: Section[]): string {
+  return sections.map(section => {
+    const prefix = '#'.repeat(section.level);
+    const content = section.content.trim();
+    return `${prefix} ${section.title}\n${content}`;
+  }).join('\n\n');
 }
 
 // Grammar cleanup for voice-to-text transcription
@@ -94,7 +172,6 @@ function cleanupTranscript(text: string): string {
   let result = text.trim();
   if (!result) return result;
   
-  // Replace spoken punctuation commands
   result = result
     .replace(/\b(period|full stop)\b/gi, '.')
     .replace(/\bcomma\b/gi, ',')
@@ -105,17 +182,13 @@ function cleanupTranscript(text: string): string {
     .replace(/\b(new line|newline|next line)\b/gi, '\n')
     .replace(/\b(new paragraph)\b/gi, '\n\n');
   
-  // Fix spacing around punctuation
   result = result
-    .replace(/\s+([.,!?;:])/g, '$1')  // Remove space before punctuation
-    .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')  // Add space after punctuation if missing
-    .replace(/\s+/g, ' ');  // Collapse multiple spaces
+    .replace(/\s+([.,!?;:])/g, '$1')
+    .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')
+    .replace(/\s+/g, ' ');
   
-  // Capitalize first letter and after sentence-ending punctuation
   result = result.charAt(0).toUpperCase() + result.slice(1);
   result = result.replace(/([.!?]\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
-  
-  // Capitalize common proper nouns and "I"
   result = result.replace(/\bi\b/g, 'I');
   result = result.replace(/\byoutube\b/gi, 'YouTube');
   
@@ -127,26 +200,19 @@ export default function IdeaPage() {
   const projectId = params.projectId as string;
   const supabase = createClient();
 
-  const [content, setContent] = useState<SectionContent>({
-    brainstorm: "",
-    hook: "",
-    value: "",
-    flow: "",
-    cta: "",
-  });
+  const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<SectionKey>>(
-    new Set(["brainstorm", "hook", "value", "flow", "cta"])
-  );
-  const [focusedSection, setFocusedSection] = useState<SectionKey>("brainstorm");
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const editorRefs = useRef<Record<SectionKey, any>>({} as Record<SectionKey, any>);
+  const editorRefs = useRef<Record<string, any>>({});
 
   // Check for speech recognition support
   useEffect(() => {
@@ -177,8 +243,8 @@ export default function IdeaPage() {
         }
       }
 
-      // Insert into the focused section's editor
-      const editor = editorRefs.current[focusedSection];
+      if (!focusedSectionId) return;
+      const editor = editorRefs.current[focusedSectionId];
       if (editor) {
         const { state } = editor;
         let interimPos: { from: number; to: number } | null = null;
@@ -195,7 +261,6 @@ export default function IdeaPage() {
         }
         
         if (finalTranscript) {
-          // Apply grammar cleanup to final transcript
           const cleanedText = cleanupTranscript(finalTranscript);
           editor.commands.insertContent(cleanedText + " ");
         }
@@ -236,7 +301,7 @@ export default function IdeaPage() {
     };
 
     return recognition;
-  }, [isListening, focusedSection]);
+  }, [isListening, focusedSectionId]);
 
   const toggleListening = useCallback(() => {
     if (!speechSupported) {
@@ -245,43 +310,43 @@ export default function IdeaPage() {
     }
 
     if (isListening) {
-      // Stop listening
       if (recognitionRef.current) {
         recognitionRef.current.abort();
         recognitionRef.current = null;
       }
       setIsListening(false);
       
-      // Clean up interim text in focused section
-      const editor = editorRefs.current[focusedSection];
-      if (editor) {
-        const { state } = editor;
-        let interimPos: { from: number; to: number } | null = null;
-        let interimText = "";
-        
-        state.doc.descendants((node: any, pos: number) => {
-          if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
-            interimPos = { from: pos, to: pos + node.nodeSize };
-            interimText = node.text || "";
-            return false;
+      if (focusedSectionId) {
+        const editor = editorRefs.current[focusedSectionId];
+        if (editor) {
+          const { state } = editor;
+          let interimPos: { from: number; to: number } | null = null;
+          let interimText = "";
+          
+          state.doc.descendants((node: any, pos: number) => {
+            if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
+              interimPos = { from: pos, to: pos + node.nodeSize };
+              interimText = node.text || "";
+              return false;
+            }
+          });
+          
+          if (interimPos && interimText) {
+            editor.chain()
+              .focus()
+              .deleteRange(interimPos)
+              .insertContent(interimText + " ")
+              .run();
           }
-        });
-        
-        if (interimPos && interimText) {
-          editor.chain()
-            .focus()
-            .deleteRange(interimPos)
-            .insertContent(interimText + " ")
-            .run();
+          
+          editor.commands.insertContent('<p></p>');
         }
-        
-        editor.commands.insertContent('<p></p>');
       }
     } else {
-      // Expand focused section if collapsed
-      setExpandedSections(prev => new Set([...prev, focusedSection]));
+      if (focusedSectionId) {
+        setExpandedSections(prev => new Set([...prev, focusedSectionId]));
+      }
       
-      // Start listening
       const recognition = initSpeechRecognition();
       if (recognition) {
         recognitionRef.current = recognition;
@@ -293,7 +358,7 @@ export default function IdeaPage() {
         }
       }
     }
-  }, [isListening, speechSupported, initSpeechRecognition, focusedSection]);
+  }, [isListening, speechSupported, initSpeechRecognition, focusedSectionId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -310,66 +375,148 @@ export default function IdeaPage() {
 
   // Auto-save with debounce
   useEffect(() => {
-    if (loading) return;
+    if (loading || sections.length === 0) return;
     
     const timer = setTimeout(() => {
       saveIdea();
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [content]);
+  }, [sections]);
 
   const loadIdea = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("projects")
-      .select("idea_brainstorm, idea_hook, idea_value, idea_flow, idea_cta")
+      .select("idea_markdown, idea_brainstorm, idea_hook, idea_value, idea_flow, idea_cta")
       .eq("id", projectId)
       .single();
 
     if (data) {
-      setContent({
-        brainstorm: data.idea_brainstorm || "",
-        hook: data.idea_hook || "",
-        value: data.idea_value || "",
-        flow: data.idea_flow || "",
-        cta: data.idea_cta || "",
-      });
+      // If we have markdown, use it; otherwise try to build from old columns
+      if (data.idea_markdown) {
+        const parsed = parseMarkdownToSections(data.idea_markdown);
+        setSections(parsed);
+        setExpandedSections(new Set(parsed.map(s => s.id)));
+      } else if (data.idea_brainstorm || data.idea_hook || data.idea_value || data.idea_flow || data.idea_cta) {
+        // Migrate from old format
+        const migrated: Section[] = [];
+        if (data.idea_brainstorm) migrated.push({ id: crypto.randomUUID(), level: 1, title: "Brainstorming", content: data.idea_brainstorm });
+        if (data.idea_hook) migrated.push({ id: crypto.randomUUID(), level: 1, title: "1. Hook", content: data.idea_hook });
+        if (data.idea_value) migrated.push({ id: crypto.randomUUID(), level: 1, title: "2. Value", content: data.idea_value });
+        if (data.idea_flow) migrated.push({ id: crypto.randomUUID(), level: 1, title: "3. Flow", content: data.idea_flow });
+        if (data.idea_cta) migrated.push({ id: crypto.randomUUID(), level: 1, title: "4. CTA", content: data.idea_cta });
+        
+        if (migrated.length > 0) {
+          setSections(migrated);
+          setExpandedSections(new Set(migrated.map(s => s.id)));
+        } else {
+          const defaults = DEFAULT_SECTIONS.map(s => ({ ...s, id: crypto.randomUUID() }));
+          setSections(defaults);
+          setExpandedSections(new Set(defaults.map(s => s.id)));
+        }
+      } else {
+        // No content - use defaults
+        const defaults = DEFAULT_SECTIONS.map(s => ({ ...s, id: crypto.randomUUID() }));
+        setSections(defaults);
+        setExpandedSections(new Set(defaults.map(s => s.id)));
+      }
+    } else {
+      const defaults = DEFAULT_SECTIONS.map(s => ({ ...s, id: crypto.randomUUID() }));
+      setSections(defaults);
+      setExpandedSections(new Set(defaults.map(s => s.id)));
     }
     setLoading(false);
   };
 
   const saveIdea = async () => {
     setSaving(true);
+    const markdown = sectionsToMarkdown(sections);
     await supabase
       .from("projects")
-      .update({ 
-        idea_brainstorm: content.brainstorm,
-        idea_hook: content.hook,
-        idea_value: content.value,
-        idea_flow: content.flow,
-        idea_cta: content.cta,
-      })
+      .update({ idea_markdown: markdown })
       .eq("id", projectId);
     
     setLastSaved(new Date());
     setSaving(false);
   };
 
-  const updateSection = (key: SectionKey, value: string) => {
-    setContent(prev => ({ ...prev, [key]: value }));
+  const updateSectionContent = (id: string, content: string) => {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, content } : s));
   };
 
-  const toggleSection = (key: SectionKey) => {
+  const updateSectionTitle = (id: string, title: string) => {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, title } : s));
+  };
+
+  const updateSectionLevel = (id: string, level: 1 | 2 | 3) => {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, level } : s));
+  };
+
+  const toggleSection = (id: string) => {
     setExpandedSections(prev => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        next.add(key);
+        next.add(id);
       }
       return next;
     });
+  };
+
+  const addSection = (afterId?: string) => {
+    const newSection: Section = {
+      id: crypto.randomUUID(),
+      level: 1,
+      title: "New Section",
+      content: "",
+    };
+    
+    setSections(prev => {
+      if (afterId) {
+        const index = prev.findIndex(s => s.id === afterId);
+        return [...prev.slice(0, index + 1), newSection, ...prev.slice(index + 1)];
+      }
+      return [...prev, newSection];
+    });
+    
+    setExpandedSections(prev => new Set([...prev, newSection.id]));
+    setEditingTitleId(newSection.id);
+  };
+
+  const deleteSection = (id: string) => {
+    if (sections.length <= 1) {
+      toast.error("You must have at least one section");
+      return;
+    }
+    setSections(prev => prev.filter(s => s.id !== id));
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const moveSection = (id: string, direction: 'up' | 'down') => {
+    setSections(prev => {
+      const index = prev.findIndex(s => s.id === id);
+      if (direction === 'up' && index > 0) {
+        const newSections = [...prev];
+        [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+        return newSections;
+      }
+      if (direction === 'down' && index < prev.length - 1) {
+        const newSections = [...prev];
+        [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+        return newSections;
+      }
+      return prev;
+    });
+  };
+
+  const getPlaceholder = (title: string) => {
+    return SECTION_PLACEHOLDERS[title] || "Write your content here...";
   };
 
   if (loading) {
@@ -387,82 +534,151 @@ export default function IdeaPage() {
         <div>
           <h2 className="text-base md:text-lg font-semibold">Idea</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Structure your video concept from hook to CTA
+            Structure your video concept with freeform sections
           </p>
         </div>
-        {/* Save Status */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {saving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : lastSaved ? (
-            <>
-              <Check className="h-4 w-4 text-green-500" />
-              <span>Saved</span>
-            </>
-          ) : null}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => addSection()}
+            className="h-8 text-xs"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Add Section
+          </Button>
+          {/* Save Status */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <Check className="h-4 w-4 text-green-500" />
+                <span>Saved</span>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {/* Sections */}
       <div data-tutorial="idea-editor" className="flex-1 overflow-auto p-4 md:p-6 pb-32">
-        <div className="max-w-4xl mx-auto space-y-2">
-          {IDEA_SECTIONS.map((section) => {
-            const isExpanded = expandedSections.has(section.key);
-            const isFocused = focusedSection === section.key;
+        <div className="max-w-4xl mx-auto space-y-1">
+          {sections.map((section, index) => {
+            const isExpanded = expandedSections.has(section.id);
+            const isFocused = focusedSectionId === section.id;
+            const isEditingTitle = editingTitleId === section.id;
+            const indentClass = section.level === 2 ? "ml-4" : section.level === 3 ? "ml-8" : "";
             
             return (
               <div 
-                key={section.key}
-                className="border-b border-border/30 last:border-b-0"
+                key={section.id}
+                className={`border-b border-border/30 last:border-b-0 ${indentClass}`}
               >
                 {/* Section Header */}
-                <button
-                  onClick={() => toggleSection(section.key)}
-                  className="w-full flex items-center gap-2 py-3 text-left hover:text-foreground transition-colors"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex items-center gap-1 py-2 group">
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="p-1 hover:bg-muted/50 rounded transition-colors"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  {/* Level indicator */}
+                  <button
+                    onClick={() => updateSectionLevel(section.id, section.level === 3 ? 1 : (section.level + 1) as 1 | 2 | 3)}
+                    className="px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground bg-muted/50 rounded transition-colors"
+                    title="Click to change heading level"
+                  >
+                    H{section.level}
+                  </button>
+                  
+                  {/* Title */}
+                  {isEditingTitle ? (
+                    <Input
+                      autoFocus
+                      value={section.title}
+                      onChange={(e) => updateSectionTitle(section.id, e.target.value)}
+                      onBlur={() => setEditingTitleId(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') setEditingTitleId(null);
+                        if (e.key === 'Escape') setEditingTitleId(null);
+                      }}
+                      className="h-7 flex-1 text-sm font-medium bg-transparent border-none focus-visible:ring-1"
+                    />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <button
+                      onClick={() => setEditingTitleId(section.id)}
+                      className={`flex-1 text-left font-medium text-sm hover:text-foreground transition-colors ${
+                        section.level === 1 ? "text-foreground" : 
+                        section.level === 2 ? "text-foreground/90" : 
+                        "text-foreground/80"
+                      }`}
+                    >
+                      {section.title || "Untitled Section"}
+                    </button>
                   )}
-                  <span className="font-medium text-sm">{section.title}</span>
-                </button>
+                  
+                  {/* Actions - visible on hover */}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => addSection(section.id)}
+                      className="p-1.5 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground"
+                      title="Add section below"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveSection(section.id, 'up')}
+                      disabled={index === 0}
+                      className="p-1.5 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      title="Move up"
+                    >
+                      <GripVertical className="h-3.5 w-3.5 rotate-180" />
+                    </button>
+                    <button
+                      onClick={() => deleteSection(section.id)}
+                      className="p-1.5 hover:bg-destructive/10 rounded transition-colors text-muted-foreground hover:text-destructive"
+                      title="Delete section"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
                 
                 {/* Section Content */}
                 {isExpanded && (
                   <div 
                     className={`pb-4 transition-all cursor-text ${isFocused && isListening ? "ring-1 ring-red-400/50 rounded-lg" : ""}`}
-                    onFocus={() => setFocusedSection(section.key)}
+                    onFocus={() => setFocusedSectionId(section.id)}
                     onClick={(e) => {
-                      const editor = editorRefs.current[section.key];
+                      const editor = editorRefs.current[section.id];
                       if (!editor) return;
                       
-                      // Use TipTap's posAtCoords to get document position from click
                       const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
                       if (pos) {
                         editor.commands.focus();
                         editor.commands.setTextSelection(pos.pos);
                       } else {
-                        // Clicked outside content area
                         const editorEl = e.currentTarget.querySelector('.ProseMirror');
                         if (editorEl) {
                           const rect = editorEl.getBoundingClientRect();
                           const clickY = e.clientY - rect.top;
                           
-                          // If clicked ABOVE the editor area, just focus at start
                           if (clickY < 0) {
                             editor.commands.focus('start');
                             return;
                           }
                           
-                          // Clicked below content - calculate target line
                           const lineHeight = 28;
                           const targetLine = Math.floor(clickY / lineHeight);
-                          
-                          // Get current HTML and add paragraphs atomically
                           const currentHtml = editor.getHTML();
                           const currentParagraphs = (currentHtml.match(/<p>/g) || []).length;
                           const paragraphsNeeded = Math.max(0, targetLine - currentParagraphs + 1);
@@ -472,7 +688,6 @@ export default function IdeaPage() {
                             editor.commands.setContent(newHtml);
                           }
                           
-                          // Now position cursor at the clicked location
                           setTimeout(() => {
                             const newPos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
                             if (newPos) {
@@ -489,13 +704,13 @@ export default function IdeaPage() {
                     }}
                   >
                     <RichTextEditor
-                      content={content[section.key]}
-                      onChange={(value) => updateSection(section.key, value)}
+                      content={section.content}
+                      onChange={(value) => updateSectionContent(section.id, value)}
                       onEditorReady={(editor) => { 
-                        editorRefs.current[section.key] = editor;
+                        editorRefs.current[section.id] = editor;
                       }}
-                      placeholder={section.placeholder}
-                      minHeight="140px"
+                      placeholder={getPlaceholder(section.title)}
+                      minHeight="100px"
                     />
                   </div>
                 )}
