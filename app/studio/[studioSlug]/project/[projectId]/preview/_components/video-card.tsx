@@ -32,22 +32,22 @@ export function VideoCard({
   const viewInfo = isYours ? "1 day ago" : (compareVideo ? `${formatViewCount()} • ${formatRelativeTime(compareVideo.publishedAt)}` : "500K views • 2 days ago");
 
   const sizeClasses = {
-    sm: { avatar: "w-8 h-8", title: "text-sm", meta: "text-xs", duration: "text-[10px]", thumb: "w-40", gap: "gap-2" },
-    md: { avatar: "w-9 h-9", title: "text-sm font-medium", meta: "text-xs", duration: "text-xs", thumb: "w-44", gap: "gap-3" },
-    lg: { avatar: "w-10 h-10", title: "text-base", meta: "text-sm", duration: "text-xs", thumb: "w-56", gap: "gap-3" },
+    sm: { avatar: "w-5 h-5", title: "text-[9px]", meta: "text-[7px]", duration: "text-[6px]", thumb: "w-24", gap: "gap-1" },
+    md: { avatar: "w-5 h-5", title: "text-[10px] font-medium", meta: "text-[8px]", duration: "text-[7px]", thumb: "w-28", gap: "gap-1.5" },
+    lg: { avatar: "w-6 h-6", title: "text-xs", meta: "text-[9px]", duration: "text-[8px]", thumb: "w-36", gap: "gap-2" },
   };
   const s = sizeClasses[size];
 
   if (layout === "horizontal") {
     return (
-      <div className={`flex gap-2 ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
-        <div className="w-[50%] aspect-video rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative">
+      <div className={`flex gap-1.5 ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
+        <div className="w-[50%] aspect-video rounded-md bg-zinc-800 shrink-0 overflow-hidden relative">
           {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
-          <span className={`absolute bottom-1 right-1 ${s.duration} bg-black/80 px-1 rounded`}>12:34</span>
+          <span className={`absolute bottom-0.5 right-0.5 ${s.duration} bg-black/80 px-0.5 rounded`}>12:34</span>
         </div>
         <div className="flex-1 min-w-0">
           <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
-          <p className={`${s.meta} text-zinc-400 mt-1`}>{channelName}</p>
+          <p className={`${s.meta} text-zinc-400 mt-0.5`}>{channelName}</p>
           <p className={`${s.meta} text-zinc-400`}>{viewInfo}</p>
         </div>
       </div>
@@ -56,9 +56,9 @@ export function VideoCard({
 
   return (
     <div className={!isYours && !compareVideo ? "opacity-40" : ""}>
-      <div className="aspect-video rounded-xl bg-zinc-800 mb-3 overflow-hidden relative">
+      <div className="aspect-video rounded-lg bg-zinc-800 mb-1.5 overflow-hidden relative">
         {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
-        <span className={`absolute bottom-2 right-2 ${s.duration} bg-black/80 px-1.5 py-0.5 rounded font-medium`}>12:34</span>
+        <span className={`absolute bottom-1 right-1 ${s.duration} bg-black/80 px-1 py-0.5 rounded font-medium`}>12:34</span>
       </div>
       <div className={`flex ${s.gap}`}>
         <div className={`${s.avatar} rounded-full bg-zinc-700 shrink-0 mt-0.5 overflow-hidden`}>
@@ -66,7 +66,7 @@ export function VideoCard({
         </div>
         <div className="flex-1 min-w-0">
           <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>
-          <p className={`${s.meta} text-zinc-400 mt-1`}>{channelName}</p>
+          <p className={`${s.meta} text-zinc-400 mt-0.5`}>{channelName}</p>
           <p className={`${s.meta} text-zinc-400`}>{viewInfo}</p>
         </div>
       </div>
@@ -79,14 +79,14 @@ export function ShortCard({ isYours, set, compareVideo, size = "md" }: ShortCard
   const viewInfo = isYours ? "1.2M views" : (compareVideo ? "500K views" : "500K views");
 
   const sizeClasses = {
-    sm: { width: "flex-1 min-w-0", title: "text-[10px]", views: "text-[9px]" },
-    md: { width: "w-full", title: "text-xs", views: "text-[10px]" },
+    sm: { width: "flex-1 min-w-0", title: "text-[7px]", views: "text-[6px]" },
+    md: { width: "w-full", title: "text-[8px]", views: "text-[7px]" },
   };
   const s = sizeClasses[size];
 
   return (
     <div className={`${s.width} ${!isYours && !compareVideo ? "opacity-40" : ""}`}>
-      <div className="aspect-[9/16] rounded-xl bg-zinc-800 overflow-hidden relative mb-2">
+      <div className="aspect-[9/16] rounded-lg bg-zinc-800 overflow-hidden relative mb-1">
         {thumbnail && <img src={thumbnail} className="w-full h-full object-cover" alt="" />}
       </div>
       <h4 className={`${s.title} font-medium line-clamp-2 text-white leading-tight`}>{title}</h4>

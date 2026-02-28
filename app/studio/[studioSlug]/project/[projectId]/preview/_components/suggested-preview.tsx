@@ -89,47 +89,47 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
       className="w-full bg-[#0f0f0f] flex flex-col rounded-xl overflow-hidden"
     >
       {/* Header */}
-      <div className="h-11 border-b border-white/5 flex items-center px-4 gap-4 shrink-0">
-        <Menu className="w-5 h-5 text-white" />
-        <YouTubeLogo />
-        <div className="flex-1 max-w-md mx-auto flex">
-          <div className="flex-1 h-7 bg-zinc-900 border border-zinc-700 rounded-l-full px-3 flex items-center">
-            <span className="text-[10px] text-zinc-500">Search</span>
+      <div className="h-7 border-b border-white/5 flex items-center px-2 gap-2 shrink-0">
+        <Menu className="w-3 h-3 text-white" />
+        <YouTubeLogo size="xs" />
+        <div className="flex-1 max-w-[200px] mx-auto flex">
+          <div className="flex-1 h-4 bg-zinc-900 border border-zinc-700 rounded-l-full px-2 flex items-center">
+            <span className="text-[6px] text-zinc-500">Search</span>
           </div>
-          <div className="h-7 w-10 bg-zinc-800 border border-zinc-700 border-l-0 rounded-r-full flex items-center justify-center">
-            <Search className="w-3.5 h-3.5 text-white" />
+          <div className="h-4 w-6 bg-zinc-800 border border-zinc-700 border-l-0 rounded-r-full flex items-center justify-center">
+            <Search className="w-2 h-2 text-white" />
           </div>
         </div>
-        <Video className="w-4 h-4 text-white" />
-        <Bell className="w-4 h-4 text-white" />
-        <div className="w-6 h-6 rounded-full bg-purple-600" />
+        <Video className="w-2.5 h-2.5 text-white" />
+        <Bell className="w-2.5 h-2.5 text-white" />
+        <div className="w-4 h-4 rounded-full bg-purple-600" />
       </div>
 
       {/* Watch Page Content */}
-      <div className="flex gap-4 p-4">
+      <div className="flex gap-2 p-2">
         {/* Main Video - 70% width */}
         <div className="flex flex-col min-w-0" style={{ flex: '0 0 70%' }}>
           <div 
-            className="w-full bg-black rounded-xl flex items-center justify-center shrink-0"
+            className="w-full bg-black rounded-lg flex items-center justify-center shrink-0"
             style={{ aspectRatio: '16/9' }}
           >
-            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
-              <div className="w-0 h-0 border-l-[16px] border-y-[10px] border-l-white border-y-transparent ml-1" />
+            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+              <div className="w-0 h-0 border-l-[10px] border-y-[6px] border-l-white border-y-transparent ml-0.5" />
             </div>
           </div>
           {/* Video info placeholder */}
-          <div className="mt-3 space-y-2">
-            <div className="h-5 bg-white/10 rounded w-3/4" />
-            <div className="h-4 bg-white/5 rounded w-1/2" />
+          <div className="mt-2 space-y-1">
+            <div className="h-3 bg-white/10 rounded w-3/4" />
+            <div className="h-2 bg-white/5 rounded w-1/2" />
           </div>
         </div>
 
         {/* Suggested Sidebar - 30% width */}
-        <div className="space-y-3" style={{ flex: '0 0 calc(30% - 16px)' }}>
+        <div className="space-y-1.5" style={{ flex: '0 0 calc(30% - 8px)' }}>
           {/* Shorts Section (3 shorts) */}
-          <div className="mb-3">
-            <h4 className="text-white text-xs font-semibold mb-2">Shorts</h4>
-            <div className="flex gap-2">
+          <div className="mb-1">
+            <h4 className="text-white text-[7px] font-semibold mb-0.5">Shorts</h4>
+            <div className="flex gap-1">
               {[0,1,2].map(i => (
                 <ShortCard
                   key={`short-${i}`}
@@ -143,7 +143,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
           </div>
 
           {/* Long Form Videos */}
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             {[0,1,2,3,4].map(i => (
               <VideoCard
                 key={`long-${i}`}

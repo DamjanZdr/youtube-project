@@ -80,43 +80,43 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
       className="w-full bg-[#0f0f0f] flex flex-col rounded-xl overflow-hidden"
     >
       {/* Header */}
-      <div className="h-11 border-b border-white/5 flex items-center px-4 gap-4 shrink-0">
-        <Menu className="w-5 h-5 text-white" />
-        <YouTubeLogo />
-        <div className="flex-1 max-w-md mx-auto flex">
-          <div className="flex-1 h-7 bg-zinc-900 border border-zinc-700 rounded-l-full px-3 flex items-center">
-            <span className="text-[10px] text-zinc-500">Search</span>
+      <div className="h-7 border-b border-white/5 flex items-center px-2 gap-2 shrink-0">
+        <Menu className="w-3 h-3 text-white" />
+        <YouTubeLogo size="xs" />
+        <div className="flex-1 max-w-[200px] mx-auto flex">
+          <div className="flex-1 h-4 bg-zinc-900 border border-zinc-700 rounded-l-full px-2 flex items-center">
+            <span className="text-[6px] text-zinc-500">Search</span>
           </div>
-          <div className="h-7 w-10 bg-zinc-800 border border-zinc-700 border-l-0 rounded-r-full flex items-center justify-center">
-            <Search className="w-3.5 h-3.5 text-white" />
+          <div className="h-4 w-6 bg-zinc-800 border border-zinc-700 border-l-0 rounded-r-full flex items-center justify-center">
+            <Search className="w-2 h-2 text-white" />
           </div>
         </div>
-        <Video className="w-4 h-4 text-white" />
-        <Bell className="w-4 h-4 text-white" />
-        <div className="w-6 h-6 rounded-full bg-purple-600" />
+        <Video className="w-2.5 h-2.5 text-white" />
+        <Bell className="w-2.5 h-2.5 text-white" />
+        <div className="w-4 h-4 rounded-full bg-purple-600" />
       </div>
 
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-14 border-r border-white/5 py-2 flex flex-col items-center gap-3 shrink-0">
-          <div className="flex flex-col items-center gap-0.5 text-white">
-            <Home className="w-4 h-4" /><span className="text-[8px]">Home</span>
+        <div className="w-9 border-r border-white/5 py-1 flex flex-col items-center gap-2 shrink-0">
+          <div className="flex flex-col items-center gap-0 text-white">
+            <Home className="w-2.5 h-2.5" /><span className="text-[5px]">Home</span>
           </div>
-          <div className="flex flex-col items-center gap-0.5 text-zinc-500">
-            <PlaySquare className="w-4 h-4" /><span className="text-[8px]">Shorts</span>
+          <div className="flex flex-col items-center gap-0 text-zinc-500">
+            <PlaySquare className="w-2.5 h-2.5" /><span className="text-[5px]">Shorts</span>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <div className="flex gap-2 px-4 py-2 shrink-0">
+          <div className="flex gap-1 px-2 py-1 shrink-0">
             {["All","Gaming","Music","Live"].map((c,i) => (
-              <span key={c} className={`px-3 py-1.5 rounded-lg text-xs ${i===0?"bg-white text-black":"bg-zinc-800 text-white"}`}>{c}</span>
+              <span key={c} className={`px-1.5 py-0.5 rounded text-[7px] ${i===0?"bg-white text-black":"bg-zinc-800 text-white"}`}>{c}</span>
             ))}
           </div>
-          <div className="px-4 pb-4">
+          <div className="px-2 pb-2">
             {/* Long Form Videos Section */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3 mb-4">
               {[0,1,2].map(i => (
                 <VideoCard
                   key={`long-${i}`}
@@ -130,9 +130,9 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
             </div>
 
             {/* Shorts Section */}
-            <div className="mb-4">
-              <h3 className="text-white text-lg font-semibold mb-3">Shorts</h3>
-              <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-4">
+            <div className="mb-2">
+              <h3 className="text-white text-[9px] font-semibold mb-1">Shorts</h3>
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-2">
                 {[0,1,2,3,4].map(i => (
                   <ShortCard
                     key={`short-${i}`}
