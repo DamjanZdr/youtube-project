@@ -95,8 +95,8 @@ export function PreviewControls({
       )}
 
       {/* Right: Compare Toggle */}
-      <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-        <GitCompareArrows className="w-4 h-4 text-muted-foreground ml-2" />
+      <div className="flex items-center gap-2 h-11 bg-muted rounded-lg px-3">
+        <GitCompareArrows className="w-4 h-4 text-muted-foreground" />
         <Label htmlFor="compare-mode" className="text-sm cursor-pointer select-none">
           Compare
         </Label>
@@ -105,7 +105,6 @@ export function PreviewControls({
           id="compare-mode"
           checked={compareMode}
           onCheckedChange={onCompareModeChange}
-          className="mr-1"
         />
       </div>
     </div>
