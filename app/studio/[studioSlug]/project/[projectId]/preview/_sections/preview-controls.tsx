@@ -71,25 +71,28 @@ export function PreviewControls({
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
         <div 
-          className="relative h-12 bg-muted rounded-lg cursor-pointer px-2 flex items-center gap-0"
+          className="relative h-14 bg-muted rounded-lg cursor-pointer px-2 flex items-center gap-0 overflow-visible"
           style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
         >
           {/* Off button */}
           <div 
-            className={`relative h-8 w-10 flex items-center justify-center transition-all duration-150 ${
+            className={`relative w-10 flex items-center justify-center transition-all duration-150 ${
               compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
             }`}
             style={compareMode ? {
-              clipPath: 'polygon(0 10%, 100% 0, 100% 100%, 0 90%)',
-              borderRadius: '4px 0 0 4px'
+              height: '40px',
+              clipPath: 'polygon(0 -15%, 100% 0, 100% 100%, 0 115%)',
+              borderRadius: '4px 0 0 4px',
+              marginTop: '-4px'
             } : {
+              height: '32px',
               clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
               borderRadius: '4px 0 0 4px'
             }}
           >
             <span 
               className={`text-sm ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-              style={compareMode ? { transform: 'skewY(5deg)' } : {}}
+              style={compareMode ? { transform: 'skewY(-5deg)' } : {}}
             >
               Off
             </span>
@@ -99,11 +102,11 @@ export function PreviewControls({
             <div 
               className="absolute bg-zinc-400"
               style={{
-                left: '6px',
+                left: '4px',
                 top: '50%',
-                width: '3px',
-                height: '80%',
-                transform: 'translateY(-50%) skewY(-5deg)',
+                width: '4px',
+                height: '44px',
+                transform: 'translateX(-100%) translateY(-50%) skewY(5deg)',
                 borderRadius: '2px 0 0 2px',
                 boxShadow: '-1px 0 2px rgba(0,0,0,0.4)'
               }}
@@ -112,20 +115,23 @@ export function PreviewControls({
           
           {/* On button */}
           <div 
-            className={`relative h-8 w-10 flex items-center justify-center transition-all duration-150 ${
+            className={`relative w-10 flex items-center justify-center transition-all duration-150 ${
               !compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
             }`}
             style={!compareMode ? {
-              clipPath: 'polygon(0 0, 100% 10%, 100% 90%, 0 100%)',
-              borderRadius: '0 4px 4px 0'
+              height: '40px',
+              clipPath: 'polygon(0 0, 100% -15%, 100% 115%, 0 100%)',
+              borderRadius: '0 4px 4px 0',
+              marginTop: '-4px'
             } : {
+              height: '32px',
               clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
               borderRadius: '0 4px 4px 0'
             }}
           >
             <span 
               className={`text-sm ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-              style={!compareMode ? { transform: 'skewY(-5deg)' } : {}}
+              style={!compareMode ? { transform: 'skewY(5deg)' } : {}}
             >
               On
             </span>
@@ -135,11 +141,11 @@ export function PreviewControls({
             <div 
               className="absolute bg-zinc-400"
               style={{
-                right: '6px',
+                right: '4px',
                 top: '50%',
-                width: '3px',
-                height: '80%',
-                transform: 'translateY(-50%) skewY(5deg)',
+                width: '4px',
+                height: '44px',
+                transform: 'translateX(100%) translateY(-50%) skewY(-5deg)',
                 borderRadius: '0 2px 2px 0',
                 boxShadow: '1px 0 2px rgba(0,0,0,0.4)'
               }}
