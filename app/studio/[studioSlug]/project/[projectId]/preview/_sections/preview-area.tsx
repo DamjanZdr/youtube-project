@@ -74,11 +74,11 @@ export function PreviewArea({
 
   // Desktop landscape: scale entire preview as a unit
   return (
-    <div ref={containerRef} className="h-full overflow-hidden flex items-center justify-center">
+    <div ref={containerRef} className="h-full overflow-hidden flex justify-center pt-4">
       <div 
         style={{ 
           transform: `scale(${scale})`,
-          transformOrigin: 'center center',
+          transformOrigin: 'top center',
           width: '1100px',
           maxWidth: '1100px',
           flexShrink: 0,
