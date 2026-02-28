@@ -87,7 +87,6 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
   return (
     <div 
       className="w-full bg-[#0f0f0f] flex flex-col rounded-xl overflow-hidden"
-      style={{ height: 'calc(100vh - 260px)', minHeight: '400px' }}
     >
       {/* Header */}
       <div className="h-11 border-b border-white/5 flex items-center px-4 gap-4 shrink-0">
@@ -107,7 +106,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
       </div>
 
       {/* Watch Page Content */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
+      <div className="flex gap-4 p-4">
         {/* Main Video - 70% width */}
         <div className="flex flex-col min-w-0" style={{ flex: '0 0 70%' }}>
           <div 
@@ -126,7 +125,7 @@ export function SuggestedPreview({ set, channel, orientation, compareMode, compa
         </div>
 
         {/* Suggested Sidebar - 30% width */}
-        <div className="overflow-y-auto space-y-3" style={{ flex: '0 0 calc(30% - 16px)', scrollbarWidth: "none" }}>
+        <div className="space-y-3" style={{ flex: '0 0 calc(30% - 16px)' }}>
           {/* Shorts Section (3 shorts) */}
           <div className="mb-3">
             <h4 className="text-white text-xs font-semibold mb-2">Shorts</h4>

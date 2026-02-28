@@ -26,8 +26,9 @@ export function PreviewArea({
   videoType,
 }: PreviewAreaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [windowHeight, setWindowHeight] = useState(800);
+  const [contentHeight, setContentHeight] = useState(0);
   
   // Calculate scale to fit container for desktop landscape view
   useEffect(() => {
@@ -42,13 +43,25 @@ export function PreviewArea({
       const designWidth = 1100; // Design width for desktop preview
       const newScale = (containerWidth - 32) / designWidth; // Scale to fill width
       setScale(Math.max(0.5, newScale)); // Don't scale below 50%
-      setWindowHeight(window.innerHeight);
     };
     
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, [orientation]);
+
+  // Measure content height after render
+  useEffect(() => {
+    if (contentRef.current && orientation !== 'portrait') {
+      const observer = new ResizeObserver(() => {
+        if (contentRef.current) {
+          setContentHeight(contentRef.current.scrollHeight);
+        }
+      });
+      observer.observe(contentRef.current);
+      return () => observer.disconnect();
+    }
+  }, [orientation, previewMode]);
 
   const previewProps = {
     set,
@@ -75,19 +88,17 @@ export function PreviewArea({
   }
 
   // Desktop landscape: scale entire preview as a unit
-  // Wrap in a container with scaled height for proper scrolling
-  const designHeight = windowHeight - 270;
-  
   return (
     <div ref={containerRef} className="h-full overflow-y-auto overflow-x-hidden flex justify-center pt-4" style={{ scrollbarWidth: "none" }}>
       <div 
         style={{ 
           width: `${1100 * scale}px`,
-          height: `${designHeight * scale}px`,
+          minHeight: contentHeight > 0 ? `${contentHeight * scale}px` : 'auto',
           flexShrink: 0,
         }}
       >
         <div
+          ref={contentRef}
           style={{ 
             transform: `scale(${scale})`,
             transformOrigin: 'top left',

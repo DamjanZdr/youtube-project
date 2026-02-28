@@ -78,7 +78,6 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
   return (
     <div 
       className="w-full bg-[#0f0f0f] flex flex-col rounded-xl overflow-hidden"
-      style={{ height: 'calc(100vh - 270px)' }}
     >
       {/* Header */}
       <div className="h-11 border-b border-white/5 flex items-center px-4 gap-4 shrink-0">
@@ -97,7 +96,7 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
         <div className="w-6 h-6 rounded-full bg-purple-600" />
       </div>
 
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="flex">
         {/* Sidebar */}
         <div className="w-14 border-r border-white/5 py-2 flex flex-col items-center gap-3 shrink-0">
           <div className="flex flex-col items-center gap-0.5 text-white">
@@ -109,13 +108,13 @@ export function FeedPreview({ set, channel, orientation, compareMode, compareVid
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col">
           <div className="flex gap-2 px-4 py-2 shrink-0">
             {["All","Gaming","Music","Live"].map((c,i) => (
               <span key={c} className={`px-3 py-1.5 rounded-lg text-xs ${i===0?"bg-white text-black":"bg-zinc-800 text-white"}`}>{c}</span>
             ))}
           </div>
-          <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: "none" }}>
+          <div className="px-4 pb-4">
             {/* Long Form Videos Section */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 mb-8">
               {[0,1,2].map(i => (
