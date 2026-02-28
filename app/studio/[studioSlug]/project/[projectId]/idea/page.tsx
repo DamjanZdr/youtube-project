@@ -10,9 +10,8 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import { 
-  Loader2, Check, Mic, MicOff,
-  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
-  Heading1, Heading2, Heading3
+  Loader2, Check, Mic, MicOff, Plus,
+  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -108,7 +107,7 @@ export default function IdeaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [collapsedHeadings, setCollapsedHeadings] = useState<Set<string>>(new Set());
+  const [collapsedHeadings, setCollapsedHeadings] = useState<Set<number>>(new Set());
   const [updateTrigger, setUpdateTrigger] = useState(0);
   
   // Speech-to-text state
@@ -127,12 +126,12 @@ export default function IdeaPage() {
       TextStyle,
       Color,
       Placeholder.configure({
-        placeholder: "Start writing your video idea... Use H1/H2/H3 buttons to create collapsible sections.",
+        placeholder: "Start writing your video idea...",
       }),
     ],
     editorProps: {
       attributes: {
-        class: "prose prose-invert max-w-none focus:outline-none min-h-[500px]",
+        class: "prose prose-invert max-w-none focus:outline-none min-h-[300px]",
       },
     },
     onUpdate: () => {
@@ -162,42 +161,40 @@ export default function IdeaPage() {
     return () => clearTimeout(timer);
   }, [editor?.getHTML()]);
 
-  // Inject collapse toggles into headings
+  // Inject collapse toggles and + buttons
   useEffect(() => {
     if (!editorContainerRef.current || !editor) return;
 
-    const injectToggles = () => {
+    const injectControls = () => {
       const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
       if (!proseMirror) return;
+
+      // Remove existing injected elements
+      proseMirror.querySelectorAll('.collapse-toggle, .add-section-btn').forEach(el => el.remove());
 
       const headings = proseMirror.querySelectorAll('h1, h2, h3');
       
       headings.forEach((heading, index) => {
-        const headingId = `h-${index}-${heading.textContent?.slice(0, 20).replace(/\s/g, '-')}`;
-        heading.setAttribute('data-heading-id', headingId);
-        
-        // Check if toggle already exists
-        if (heading.querySelector('.collapse-toggle')) return;
-        
-        // Create toggle button
+        // Add collapse toggle
         const toggle = document.createElement('span');
         toggle.className = 'collapse-toggle';
         toggle.setAttribute('contenteditable', 'false');
-        toggle.innerHTML = collapsedHeadings.has(headingId) 
-          ? '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>'
-          : '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
+        toggle.innerHTML = collapsedHeadings.has(index) 
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
         
         toggle.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          toggleCollapse(headingId);
+          toggleCollapse(index);
         };
         
         heading.insertBefore(toggle, heading.firstChild);
         
-        // Apply collapse state
+        // Find content elements and apply collapse
         const headingLevel = parseInt(heading.tagName[1]);
         let sibling = heading.nextElementSibling;
+        let lastContentElement: Element | null = null;
         
         while (sibling) {
           const isHeading = /^H[123]$/.test(sibling.tagName);
@@ -206,19 +203,62 @@ export default function IdeaPage() {
             if (siblingLevel <= headingLevel) break;
           }
           
-          if (collapsedHeadings.has(headingId)) {
+          if (collapsedHeadings.has(index)) {
             sibling.classList.add('collapsed-content');
           } else {
             sibling.classList.remove('collapsed-content');
           }
           
+          if (!sibling.classList.contains('add-section-btn')) {
+            lastContentElement = sibling;
+          }
+          
           sibling = sibling.nextElementSibling;
         }
+        
+        // Add + button after this section's content (only if not collapsed)
+        if (!collapsedHeadings.has(index)) {
+          const addBtn = document.createElement('div');
+          addBtn.className = 'add-section-btn';
+          addBtn.setAttribute('contenteditable', 'false');
+          addBtn.innerHTML = '<button class="add-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>';
+          
+          addBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addSectionAfter(heading as HTMLElement, headingLevel);
+          };
+          
+          // Insert after the last content element of this section
+          if (lastContentElement && lastContentElement.nextSibling) {
+            lastContentElement.parentNode?.insertBefore(addBtn, lastContentElement.nextSibling);
+          } else if (lastContentElement) {
+            lastContentElement.parentNode?.appendChild(addBtn);
+          } else {
+            heading.parentNode?.insertBefore(addBtn, heading.nextSibling);
+          }
+        }
       });
+
+      // Add main + button at the very end
+      const existingMainBtn = proseMirror.querySelector('.add-main-section-btn');
+      if (existingMainBtn) existingMainBtn.remove();
+      
+      const mainAddBtn = document.createElement('div');
+      mainAddBtn.className = 'add-main-section-btn';
+      mainAddBtn.setAttribute('contenteditable', 'false');
+      mainAddBtn.innerHTML = '<button class="add-main-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>Add Section</span></button>';
+      
+      mainAddBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addMainSection();
+      };
+      
+      proseMirror.appendChild(mainAddBtn);
     };
 
-    // Run after a brief delay to ensure DOM is ready
-    const timer = setTimeout(injectToggles, 50);
+    const timer = setTimeout(injectControls, 50);
     return () => clearTimeout(timer);
   }, [updateTrigger, collapsedHeadings, editor]);
 
@@ -243,10 +283,10 @@ export default function IdeaPage() {
     if (!editor) return;
     setSaving(true);
     
-    // Clone content and remove toggle elements before saving
+    // Clone and clean before saving
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = editor.getHTML();
-    tempDiv.querySelectorAll('.collapse-toggle').forEach(el => el.remove());
+    tempDiv.querySelectorAll('.collapse-toggle, .add-section-btn, .add-main-section-btn').forEach(el => el.remove());
     
     await supabase
       .from("projects")
@@ -257,16 +297,58 @@ export default function IdeaPage() {
     setSaving(false);
   };
 
-  const toggleCollapse = (headingId: string) => {
+  const toggleCollapse = (index: number) => {
     setCollapsedHeadings(prev => {
       const next = new Set(prev);
-      if (next.has(headingId)) {
-        next.delete(headingId);
+      if (next.has(index)) {
+        next.delete(index);
       } else {
-        next.add(headingId);
+        next.add(index);
       }
       return next;
     });
+  };
+
+  const addSectionAfter = (afterHeading: HTMLElement, level: number) => {
+    if (!editor) return;
+    
+    // Find position after this heading's section
+    const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
+    if (!proseMirror) return;
+    
+    // Find the last element of this section
+    let sibling = afterHeading.nextElementSibling;
+    let lastElement: Element = afterHeading;
+    
+    while (sibling) {
+      if (/^H[123]$/.test(sibling.tagName)) {
+        const sibLevel = parseInt(sibling.tagName[1]);
+        if (sibLevel <= level) break;
+      }
+      if (!sibling.classList.contains('add-section-btn') && !sibling.classList.contains('add-main-section-btn')) {
+        lastElement = sibling;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+    
+    // Get editor position for this element
+    const view = editor.view;
+    const pos = view.posAtDOM(lastElement, lastElement.childNodes.length);
+    
+    // Insert new heading after
+    editor.chain()
+      .focus()
+      .setTextSelection(pos)
+      .insertContent(`<h${level}>New Section</h${level}><p></p>`)
+      .run();
+  };
+
+  const addMainSection = () => {
+    if (!editor) return;
+    editor.chain()
+      .focus('end')
+      .insertContent('<h1>New Section</h1><p></p>')
+      .run();
   };
 
   // Initialize speech recognition
@@ -399,7 +481,7 @@ export default function IdeaPage() {
         <div>
           <h2 className="text-base md:text-lg font-semibold">Idea</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Write freely - click chevrons to collapse sections
+            Click chevrons to collapse, + to add sections
           </p>
         </div>
         {/* Save Status */}
@@ -420,36 +502,6 @@ export default function IdeaPage() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-4 md:px-6 py-2 border-b border-border/30 bg-card/20 flex-wrap">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
-          title="Heading 1 (collapsible section)"
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
-          title="Heading 2 (collapsible subsection)"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : ''}`}
-          title="Heading 3"
-        >
-          <Heading3 className="h-4 w-4" />
-        </Button>
-        
-        <div className="w-px h-5 bg-border mx-1" />
-        
         <Button
           variant="ghost"
           size="sm"
@@ -620,12 +672,62 @@ export default function IdeaPage() {
           background: rgba(255,255,255,0.1);
         }
         
-        .collapse-toggle .chevron {
-          color: currentColor;
-        }
-        
         .collapsed-content {
           display: none !important;
+        }
+        
+        .add-section-btn {
+          display: flex;
+          justify-content: center;
+          padding: 0.25rem 0;
+          margin: 0.25rem 0;
+        }
+        
+        .add-section-btn .add-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: transparent;
+          border: 1px dashed rgba(255,255,255,0.2);
+          color: rgba(255,255,255,0.4);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .add-section-btn .add-btn:hover {
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.4);
+          color: rgba(255,255,255,0.8);
+        }
+        
+        .add-main-section-btn {
+          display: flex;
+          justify-content: center;
+          padding: 1rem 0;
+          margin-top: 1rem;
+        }
+        
+        .add-main-section-btn .add-main-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          background: transparent;
+          border: 1px dashed rgba(255,255,255,0.2);
+          color: rgba(255,255,255,0.5);
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 0.875rem;
+        }
+        
+        .add-main-section-btn .add-main-btn:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: rgba(255,255,255,0.4);
+          color: rgba(255,255,255,0.8);
         }
         
         @keyframes shine {
