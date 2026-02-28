@@ -64,9 +64,35 @@ export function PreviewControls({
         </ToggleGroup>
       </div>
 
-      {/* Center: Set Picker (absolutely positioned on desktop, inline on mobile) */}
+      {/* Center: Compare Toggle (absolutely positioned on desktop) */}
+      <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex flex-col items-center gap-1">
+        <div 
+          data-tutorial="compare-toggle"
+          onClick={() => onCompareModeChange(!compareMode)}
+          className="relative flex items-center h-9 bg-muted rounded-full cursor-pointer p-1"
+        >
+          {/* Sliding pill background */}
+          <div 
+            className={`
+              absolute top-1 h-7 w-[calc(50%-2px)] bg-background rounded-full shadow-sm transition-all duration-200
+              ${compareMode ? 'left-[calc(50%+1px)]' : 'left-1'}
+            `}
+          />
+          {/* Off label */}
+          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
+            Off
+          </span>
+          {/* On label */}
+          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
+            On
+          </span>
+        </div>
+        <span className="text-[10px] text-muted-foreground">Compare</span>
+      </div>
+
+      {/* Right: Set Picker */}
       {sets.length > 1 && (
-        <div className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-1.5 p-1 rounded-lg bg-muted overflow-x-auto max-w-[90vw] sm:max-w-[40vw]">
+        <div className="flex items-center justify-center gap-1.5 p-1 rounded-lg bg-muted overflow-x-auto max-w-[40vw]">
           {sets.map((set, index) => (
             <button
               key={set.id}
@@ -91,32 +117,6 @@ export function PreviewControls({
           ))}
         </div>
       )}
-
-      {/* Right: Compare Toggle */}
-      <div className="flex flex-col items-center gap-1">
-        <div 
-          data-tutorial="compare-toggle"
-          onClick={() => onCompareModeChange(!compareMode)}
-          className="relative flex items-center h-9 bg-muted rounded-full cursor-pointer p-1"
-        >
-          {/* Sliding pill background */}
-          <div 
-            className={`
-              absolute top-1 h-7 w-[calc(50%-2px)] bg-background rounded-full shadow-sm transition-all duration-200
-              ${compareMode ? 'left-[calc(50%+1px)]' : 'left-1'}
-            `}
-          />
-          {/* Off label */}
-          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-            Off
-          </span>
-          {/* On label */}
-          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-            On
-          </span>
-        </div>
-        <span className="text-[10px] text-muted-foreground">Compare</span>
-      </div>
     </div>
   );
 }
