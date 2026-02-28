@@ -71,50 +71,68 @@ export function PreviewControls({
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
         <div 
-          className="relative h-11 bg-muted rounded-lg cursor-pointer px-1.5 flex items-center"
+          className="relative h-14 bg-muted rounded-lg cursor-pointer px-1.5 flex items-center"
           style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
         >
-          {/* Off button */}
-          <div className="relative h-9 flex items-center">
+          {/* Off button - raised when compareMode is true */}
+          <div className="relative flex items-center">
             <div 
-              className={`h-9 px-3 rounded-l-md flex items-center justify-center transition-all duration-150 ${
-                !compareMode ? 'bg-zinc-700 text-muted-foreground' : 'bg-zinc-500 text-foreground'
+              className={`h-9 px-3 flex items-center justify-center transition-all duration-150 rounded-l-md ${
+                compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
               }`}
-              style={compareMode ? { transform: 'translateY(-2px)' } : {}}
+              style={compareMode ? { 
+                transform: 'scaleY(1.15)',
+                transformOrigin: 'right center'
+              } : {}}
             >
-              <span className="text-sm">Off</span>
+              <span 
+                className={`text-sm ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
+                style={compareMode ? { transform: 'scaleY(0.87)' } : {}}
+              >
+                Off
+              </span>
             </div>
-            {/* Right edge visible when Off is raised */}
+            {/* Left edge visible when Off is raised */}
             {compareMode && (
               <div 
-                className="absolute right-0 top-0 w-1 h-9 bg-zinc-700 rounded-r-sm"
+                className="absolute left-0 top-1/2 w-[3px] bg-zinc-400 rounded-l-sm"
                 style={{ 
-                  transform: 'translateX(100%) translateY(-2px)',
-                  boxShadow: '2px 2px 3px rgba(0,0,0,0.4)'
+                  height: 'calc(100% * 1.15)',
+                  transform: 'translateX(-100%) translateY(-50%)',
+                  boxShadow: '-1px 1px 2px rgba(0,0,0,0.5)'
                 }}
               />
             )}
           </div>
           
-          {/* On button */}
-          <div className="relative h-9 flex items-center">
-            {/* Left edge visible when On is raised */}
+          {/* On button - raised when compareMode is false */}
+          <div className="relative flex items-center">
+            {/* Right edge visible when On is raised */}
             {!compareMode && (
               <div 
-                className="absolute left-0 top-0 w-1 h-9 bg-zinc-700 rounded-l-sm"
+                className="absolute right-0 top-1/2 w-[3px] bg-zinc-400 rounded-r-sm"
                 style={{ 
-                  transform: 'translateX(-100%) translateY(-2px)',
-                  boxShadow: '-2px 2px 3px rgba(0,0,0,0.4)'
+                  height: 'calc(100% * 1.15)',
+                  transform: 'translateX(100%) translateY(-50%)',
+                  boxShadow: '1px 1px 2px rgba(0,0,0,0.5)'
                 }}
               />
             )}
             <div 
-              className={`h-9 px-3 rounded-r-md flex items-center justify-center transition-all duration-150 ${
-                compareMode ? 'bg-zinc-700 text-muted-foreground' : 'bg-zinc-500 text-foreground'
+              className={`h-9 px-3 flex items-center justify-center transition-all duration-150 rounded-r-md ${
+                !compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
               }`}
-              style={!compareMode ? { transform: 'translateY(-2px)' } : {}}
+              style={!compareMode ? { 
+                transform: 'scaleY(1.15)',
+                transformOrigin: 'left center'
+              } : {}}
             >
-              <span className="text-sm">On</span>
+              <span 
+                className={`text-sm ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
+                style={!compareMode ? { transform: 'scaleY(0.87)' } : {}}
+              >
+                On
+              </span>
             </div>
           </div>
         </div>
