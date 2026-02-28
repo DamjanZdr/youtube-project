@@ -71,25 +71,51 @@ export function PreviewControls({
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
         <div 
-          className="relative h-11 bg-muted rounded-lg cursor-pointer p-1"
-          style={{ 
-            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)',
-            perspective: '200px'
-          }}
+          className="relative h-11 bg-muted rounded-lg cursor-pointer px-1.5 flex items-center"
+          style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
         >
-          {/* Single rocker button that tilts */}
-          <div 
-            className="h-9 px-1 bg-zinc-600 rounded-md flex items-center transition-transform duration-150"
-            style={{
-              transform: compareMode ? 'rotateY(-8deg)' : 'rotateY(8deg)',
-              transformOrigin: 'center center',
-              boxShadow: compareMode 
-                ? '3px 0 4px rgba(0,0,0,0.3)' 
-                : '-3px 0 4px rgba(0,0,0,0.3)'
-            }}
-          >
-            <span className={`px-2 text-sm transition-opacity ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>Off</span>
-            <span className={`px-2 text-sm transition-opacity ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>On</span>
+          {/* Off button */}
+          <div className="relative h-9 flex items-center">
+            <div 
+              className={`h-9 px-3 rounded-l-md flex items-center justify-center transition-all duration-150 ${
+                !compareMode ? 'bg-zinc-700 text-muted-foreground' : 'bg-zinc-500 text-foreground'
+              }`}
+              style={compareMode ? { transform: 'translateY(-2px)' } : {}}
+            >
+              <span className="text-sm">Off</span>
+            </div>
+            {/* Right edge visible when Off is raised */}
+            {compareMode && (
+              <div 
+                className="absolute right-0 top-0 w-1 h-9 bg-zinc-700 rounded-r-sm"
+                style={{ 
+                  transform: 'translateX(100%) translateY(-2px)',
+                  boxShadow: '2px 2px 3px rgba(0,0,0,0.4)'
+                }}
+              />
+            )}
+          </div>
+          
+          {/* On button */}
+          <div className="relative h-9 flex items-center">
+            {/* Left edge visible when On is raised */}
+            {!compareMode && (
+              <div 
+                className="absolute left-0 top-0 w-1 h-9 bg-zinc-700 rounded-l-sm"
+                style={{ 
+                  transform: 'translateX(-100%) translateY(-2px)',
+                  boxShadow: '-2px 2px 3px rgba(0,0,0,0.4)'
+                }}
+              />
+            )}
+            <div 
+              className={`h-9 px-3 rounded-r-md flex items-center justify-center transition-all duration-150 ${
+                compareMode ? 'bg-zinc-700 text-muted-foreground' : 'bg-zinc-500 text-foreground'
+              }`}
+              style={!compareMode ? { transform: 'translateY(-2px)' } : {}}
+            >
+              <span className="text-sm">On</span>
+            </div>
           </div>
         </div>
         <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
