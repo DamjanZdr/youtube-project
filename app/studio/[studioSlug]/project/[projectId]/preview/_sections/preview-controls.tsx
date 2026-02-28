@@ -69,23 +69,47 @@ export function PreviewControls({
         <div 
           data-tutorial="compare-toggle"
           onClick={() => onCompareModeChange(!compareMode)}
-          className="relative flex items-center h-9 bg-muted rounded-full cursor-pointer p-1"
+          className="relative flex items-center h-11 bg-muted rounded-full cursor-pointer p-1 overflow-hidden"
+          style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.15)' }}
         >
-          {/* Sliding pill background */}
+          {/* Off side */}
           <div 
             className={`
-              absolute top-1 h-7 w-[calc(50%-2px)] bg-background rounded-full shadow-sm transition-all duration-200
-              ${compareMode ? 'left-[calc(50%+1px)]' : 'left-1'}
+              relative h-9 px-4 rounded-full flex items-center justify-center transition-all duration-200
+              ${!compareMode 
+                ? 'bg-background text-foreground' 
+                : 'text-muted-foreground'
+              }
             `}
-          />
-          {/* Off label */}
-          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-            Off
-          </span>
-          {/* On label */}
-          <span className={`relative z-10 px-3 text-sm font-medium transition-colors ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}>
-            On
-          </span>
+            style={!compareMode ? {
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+              transform: 'translateY(-1px)'
+            } : {
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+              transform: 'translateY(1px)'
+            }}
+          >
+            <span className="text-sm font-medium">Off</span>
+          </div>
+          {/* On side */}
+          <div 
+            className={`
+              relative h-9 px-4 rounded-full flex items-center justify-center transition-all duration-200
+              ${compareMode 
+                ? 'bg-background text-foreground' 
+                : 'text-muted-foreground'
+              }
+            `}
+            style={compareMode ? {
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+              transform: 'translateY(-1px)'
+            } : {
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+              transform: 'translateY(1px)'
+            }}
+          >
+            <span className="text-sm font-medium">On</span>
+          </div>
         </div>
         <span className="text-[10px] text-muted-foreground">Compare</span>
       </div>
