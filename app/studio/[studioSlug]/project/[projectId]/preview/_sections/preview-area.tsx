@@ -27,6 +27,7 @@ export function PreviewArea({
 }: PreviewAreaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [windowHeight, setWindowHeight] = useState(800);
   
   // Calculate scale to fit container for desktop landscape view
   useEffect(() => {
@@ -39,8 +40,9 @@ export function PreviewArea({
       if (!containerRef.current) return;
       const containerWidth = containerRef.current.clientWidth;
       const designWidth = 1100; // Design width for desktop preview
-      const newScale = (containerWidth - 32) / designWidth; // Scale to fill width (32px for padding)
+      const newScale = (containerWidth - 32) / designWidth; // Scale to fill width
       setScale(Math.max(0.5, newScale)); // Don't scale below 50%
+      setWindowHeight(window.innerHeight);
     };
     
     updateScale();
@@ -73,22 +75,31 @@ export function PreviewArea({
   }
 
   // Desktop landscape: scale entire preview as a unit
+  // Wrap in a container with scaled height for proper scrolling
+  const designHeight = windowHeight - 270;
+  
   return (
-    <div ref={containerRef} className="h-full overflow-hidden flex justify-center pt-4">
+    <div ref={containerRef} className="h-full overflow-y-auto overflow-x-hidden flex justify-center pt-4" style={{ scrollbarWidth: "none" }}>
       <div 
         style={{ 
-          transform: `scale(${scale})`,
-          transformOrigin: 'top center',
-          width: '1100px',
-          maxWidth: '1100px',
+          width: `${1100 * scale}px`,
+          height: `${designHeight * scale}px`,
           flexShrink: 0,
         }}
       >
-        {previewMode === "feed" ? (
-          <FeedPreview {...previewProps} />
-        ) : (
-          <SuggestedPreview {...previewProps} />
-        )}
+        <div
+          style={{ 
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: '1100px',
+          }}
+        >
+          {previewMode === "feed" ? (
+            <FeedPreview {...previewProps} />
+          ) : (
+            <SuggestedPreview {...previewProps} />
+          )}
+        </div>
       </div>
     </div>
   );
