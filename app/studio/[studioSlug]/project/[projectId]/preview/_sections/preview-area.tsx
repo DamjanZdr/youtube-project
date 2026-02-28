@@ -39,7 +39,7 @@ export function PreviewArea({
       if (!containerRef.current) return;
       const containerWidth = containerRef.current.clientWidth;
       const designWidth = 1100; // Design width for desktop preview
-      const newScale = Math.min(1, (containerWidth - 32) / designWidth); // 32px for padding
+      const newScale = (containerWidth - 32) / designWidth; // Scale to fill width (32px for padding)
       setScale(Math.max(0.5, newScale)); // Don't scale below 50%
     };
     
