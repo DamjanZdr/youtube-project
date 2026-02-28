@@ -70,85 +70,17 @@ export function PreviewControls({
         onClick={() => onCompareModeChange(!compareMode)}
         className="order-last w-full sm:order-none sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center sm:justify-start"
       >
-        <div 
-          className="relative h-14 bg-muted rounded-lg cursor-pointer px-2 flex items-center gap-0 overflow-visible"
-          style={{ boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
-        >
-          {/* Off button - when raised (compareMode=true), LEFT edge is taller, right edge stays normal */}
-          <div 
-            className={`relative w-10 flex items-center justify-center transition-all duration-150 ${
-              compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
-            }`}
-            style={compareMode ? {
-              height: '36px',
-              clipPath: 'polygon(0 -20%, 100% 10%, 100% 90%, 0 120%)',
-              borderRadius: '4px 0 0 4px'
-            } : {
-              height: '32px',
-              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
-              borderRadius: '4px 0 0 4px'
-            }}
-          >
-            <span 
-              className={`text-sm ${compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-              style={compareMode ? { transform: 'skewY(-8deg)' } : {}}
-            >
-              Off
-            </span>
+        <div className="flex items-center h-11 bg-muted rounded-lg p-1 cursor-pointer">
+          <div className={`h-9 px-3 rounded-md flex items-center justify-center text-sm transition-colors ${
+            !compareMode ? 'bg-background text-foreground' : 'text-muted-foreground'
+          }`}>
+            Off
           </div>
-          {/* Left depth edge when Off is raised */}
-          {compareMode && (
-            <div 
-              className="absolute bg-zinc-400"
-              style={{
-                left: '8px',
-                top: '50%',
-                width: '4px',
-                height: '46px',
-                transform: 'translateX(-100%) translateY(-50%)',
-                borderRadius: '2px 0 0 2px',
-                boxShadow: '-1px 0 2px rgba(0,0,0,0.4)'
-              }}
-            />
-          )}
-          
-          {/* On button - when raised (compareMode=false), RIGHT edge is taller, left edge stays normal */}
-          <div 
-            className={`relative w-10 flex items-center justify-center transition-all duration-150 ${
-              !compareMode ? 'bg-zinc-500' : 'bg-zinc-600'
-            }`}
-            style={!compareMode ? {
-              height: '36px',
-              clipPath: 'polygon(0 10%, 100% -20%, 100% 120%, 0 90%)',
-              borderRadius: '0 4px 4px 0'
-            } : {
-              height: '32px',
-              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
-              borderRadius: '0 4px 4px 0'
-            }}
-          >
-            <span 
-              className={`text-sm ${!compareMode ? 'text-foreground' : 'text-muted-foreground'}`}
-              style={!compareMode ? { transform: 'skewY(8deg)' } : {}}
-            >
-              On
-            </span>
+          <div className={`h-9 px-3 rounded-md flex items-center justify-center text-sm transition-colors ${
+            compareMode ? 'bg-background text-foreground' : 'text-muted-foreground'
+          }`}>
+            On
           </div>
-          {/* Right depth edge when On is raised */}
-          {!compareMode && (
-            <div 
-              className="absolute bg-zinc-400"
-              style={{
-                right: '8px',
-                top: '50%',
-                width: '4px',
-                height: '46px',
-                transform: 'translateX(100%) translateY(-50%)',
-                borderRadius: '0 2px 2px 0',
-                boxShadow: '1px 0 2px rgba(0,0,0,0.4)'
-              }}
-            />
-          )}
         </div>
         <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">Compare</span>
       </div>
