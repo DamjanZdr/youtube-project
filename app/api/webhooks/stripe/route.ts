@@ -11,7 +11,12 @@ import { createClient } from '@/lib/supabase/server';
 import type Stripe from 'stripe';
 import type { SubscriptionPlan } from '@/types';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// Log webhook config status on cold start (will show in Vercel logs)
+if (!webhookSecret) {
+  console.error('[STRIPE WEBHOOK] STRIPE_WEBHOOK_SECRET is not set!');
+}
 
 // Map Stripe price IDs to plan names
 const PRICE_TO_PLAN_MAP: Record<string, SubscriptionPlan> = {
@@ -26,11 +31,21 @@ const PRICE_TO_PLAN_MAP: Record<string, SubscriptionPlan> = {
 };
 
 export async function POST(request: Request) {
+  // Check webhook secret is configured
+  if (!webhookSecret) {
+    console.error('[STRIPE WEBHOOK] Missing STRIPE_WEBHOOK_SECRET env var');
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 500 }
+    );
+  }
+
   const body = await request.text();
   const headersList = await headers();
   const signature = headersList.get('stripe-signature');
 
   if (!signature) {
+    console.error('[STRIPE WEBHOOK] Missing stripe-signature header');
     return NextResponse.json(
       { error: 'Missing stripe-signature header' },
       { status: 400 }
@@ -42,12 +57,14 @@ export async function POST(request: Request) {
   try {
     event = constructWebhookEvent(body, signature, webhookSecret);
   } catch (error) {
-    console.error('Webhook signature verification failed:', error);
+    console.error('[STRIPE WEBHOOK] Signature verification failed:', error);
     return NextResponse.json(
       { error: 'Invalid signature' },
       { status: 400 }
     );
   }
+
+  console.log(`[STRIPE WEBHOOK] Received event: ${event.type} (${event.id})`);
 
   const supabase = await createClient();
 
@@ -361,13 +378,15 @@ export async function POST(request: Request) {
       }
 
       default:
-        // Unhandled event type
+        // Unhandled event type - still return 200 to acknowledge receipt
+        console.log(`[STRIPE WEBHOOK] Unhandled event type: ${event.type}`);
         break;
     }
 
+    console.log(`[STRIPE WEBHOOK] Successfully processed: ${event.type}`);
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error(`[STRIPE WEBHOOK] Error processing ${event.type}:`, error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }

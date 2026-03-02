@@ -10,7 +10,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import { 
-  Loader2, Check, Mic, MicOff, Plus,
+  Loader2, Check, Mic, MicOff, Plus, ChevronDown, ChevronRight,
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered
 } from "lucide-react";
 import { toast } from "sonner";
@@ -99,6 +99,14 @@ function cleanupTranscript(text: string): string {
   return result;
 }
 
+interface HeadingInfo {
+  index: number;
+  level: number;
+  top: number;
+  bottom: number;
+  text: string;
+}
+
 export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -108,13 +116,15 @@ export default function IdeaPage() {
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [collapsedHeadings, setCollapsedHeadings] = useState<Set<number>>(new Set());
-  const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [headings, setHeadings] = useState<HeadingInfo[]>([]);
+  const [contentHeight, setContentHeight] = useState(0);
   
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -135,7 +145,7 @@ export default function IdeaPage() {
       },
     },
     onUpdate: () => {
-      setUpdateTrigger(prev => prev + 1);
+      updateHeadingPositions();
     },
   });
 
@@ -161,106 +171,99 @@ export default function IdeaPage() {
     return () => clearTimeout(timer);
   }, [editor?.getHTML()]);
 
-  // Inject collapse toggles and + buttons
+  // Update heading positions when content changes
+  const updateHeadingPositions = useCallback(() => {
+    if (!editorContainerRef.current || !editor) return;
+
+    const proseMirror = editorContainerRef.current.querySelector('.ProseMirror');
+    if (!proseMirror) return;
+
+    const containerRect = editorContainerRef.current.getBoundingClientRect();
+    const headingElements = proseMirror.querySelectorAll('h1, h2, h3');
+    
+    const newHeadings: HeadingInfo[] = [];
+    
+    headingElements.forEach((heading, index) => {
+      const rect = heading.getBoundingClientRect();
+      const level = parseInt(heading.tagName[1]);
+      
+      // Find end position (next heading of same or higher level, or end of content)
+      let bottomPos = proseMirror.getBoundingClientRect().bottom - containerRect.top;
+      let sibling = heading.nextElementSibling;
+      
+      while (sibling) {
+        if (/^H[123]$/.test(sibling.tagName)) {
+          const sibLevel = parseInt(sibling.tagName[1]);
+          if (sibLevel <= level) {
+            bottomPos = sibling.getBoundingClientRect().top - containerRect.top;
+            break;
+          }
+        }
+        sibling = sibling.nextElementSibling;
+      }
+      
+      newHeadings.push({
+        index,
+        level,
+        top: rect.top - containerRect.top,
+        bottom: bottomPos,
+        text: heading.textContent || '',
+      });
+    });
+    
+    setHeadings(newHeadings);
+    setContentHeight(proseMirror.getBoundingClientRect().height);
+  }, [editor]);
+
+  // Update positions on scroll and resize
+  useEffect(() => {
+    const timer = setTimeout(updateHeadingPositions, 100);
+    
+    const handleScroll = () => updateHeadingPositions();
+    const scrollContainer = scrollContainerRef.current;
+    scrollContainer?.addEventListener('scroll', handleScroll);
+    
+    window.addEventListener('resize', updateHeadingPositions);
+    
+    return () => {
+      clearTimeout(timer);
+      scrollContainer?.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateHeadingPositions);
+    };
+  }, [updateHeadingPositions, editor?.getHTML()]);
+
+  // Apply collapse styles
   useEffect(() => {
     if (!editorContainerRef.current || !editor) return;
 
-    const injectControls = () => {
-      const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
-      if (!proseMirror) return;
+    const proseMirror = editorContainerRef.current.querySelector('.ProseMirror');
+    if (!proseMirror) return;
 
-      // Remove existing injected elements
-      proseMirror.querySelectorAll('.collapse-toggle, .add-section-btn').forEach(el => el.remove());
-
-      const headings = proseMirror.querySelectorAll('h1, h2, h3');
+    const headingElements = proseMirror.querySelectorAll('h1, h2, h3');
+    
+    headingElements.forEach((heading, index) => {
+      const level = parseInt(heading.tagName[1]);
+      let sibling = heading.nextElementSibling;
       
-      headings.forEach((heading, index) => {
-        // Add collapse toggle
-        const toggle = document.createElement('span');
-        toggle.className = 'collapse-toggle';
-        toggle.setAttribute('contenteditable', 'false');
-        toggle.innerHTML = collapsedHeadings.has(index) 
-          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>'
-          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
-        
-        toggle.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleCollapse(index);
-        };
-        
-        heading.insertBefore(toggle, heading.firstChild);
-        
-        // Find content elements and apply collapse
-        const headingLevel = parseInt(heading.tagName[1]);
-        let sibling = heading.nextElementSibling;
-        let lastContentElement: Element | null = null;
-        
-        while (sibling) {
-          const isHeading = /^H[123]$/.test(sibling.tagName);
-          if (isHeading) {
-            const siblingLevel = parseInt(sibling.tagName[1]);
-            if (siblingLevel <= headingLevel) break;
-          }
-          
-          if (collapsedHeadings.has(index)) {
-            sibling.classList.add('collapsed-content');
-          } else {
-            sibling.classList.remove('collapsed-content');
-          }
-          
-          if (!sibling.classList.contains('add-section-btn')) {
-            lastContentElement = sibling;
-          }
-          
-          sibling = sibling.nextElementSibling;
+      while (sibling) {
+        if (/^H[123]$/.test(sibling.tagName)) {
+          const sibLevel = parseInt(sibling.tagName[1]);
+          if (sibLevel <= level) break;
         }
         
-        // Add + button after this section's content (only if not collapsed)
-        if (!collapsedHeadings.has(index)) {
-          const addBtn = document.createElement('div');
-          addBtn.className = 'add-section-btn';
-          addBtn.setAttribute('contenteditable', 'false');
-          addBtn.innerHTML = '<button class="add-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>';
-          
-          addBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            addSectionAfter(heading as HTMLElement, headingLevel);
-          };
-          
-          // Insert after the last content element of this section
-          if (lastContentElement && lastContentElement.nextSibling) {
-            lastContentElement.parentNode?.insertBefore(addBtn, lastContentElement.nextSibling);
-          } else if (lastContentElement) {
-            lastContentElement.parentNode?.appendChild(addBtn);
-          } else {
-            heading.parentNode?.insertBefore(addBtn, heading.nextSibling);
-          }
+        if (collapsedHeadings.has(index)) {
+          (sibling as HTMLElement).style.display = 'none';
+        } else {
+          (sibling as HTMLElement).style.display = '';
         }
-      });
-
-      // Add main + button at the very end
-      const existingMainBtn = proseMirror.querySelector('.add-main-section-btn');
-      if (existingMainBtn) existingMainBtn.remove();
-      
-      const mainAddBtn = document.createElement('div');
-      mainAddBtn.className = 'add-main-section-btn';
-      mainAddBtn.setAttribute('contenteditable', 'false');
-      mainAddBtn.innerHTML = '<button class="add-main-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>Add Section</span></button>';
-      
-      mainAddBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        addMainSection();
-      };
-      
-      proseMirror.appendChild(mainAddBtn);
-    };
-
-    const timer = setTimeout(injectControls, 50);
-    return () => clearTimeout(timer);
-  }, [updateTrigger, collapsedHeadings, editor]);
+        
+        sibling = sibling.nextElementSibling;
+      }
+    });
+    
+    // Re-calculate positions after collapse change
+    setTimeout(updateHeadingPositions, 10);
+  }, [collapsedHeadings, editor]);
 
   const loadIdea = async () => {
     if (!editor) return;
@@ -277,20 +280,16 @@ export default function IdeaPage() {
       editor.commands.setContent(DEFAULT_CONTENT);
     }
     setLoading(false);
+    setTimeout(updateHeadingPositions, 100);
   };
 
   const saveIdea = async () => {
     if (!editor) return;
     setSaving(true);
     
-    // Clone and clean before saving
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = editor.getHTML();
-    tempDiv.querySelectorAll('.collapse-toggle, .add-section-btn, .add-main-section-btn').forEach(el => el.remove());
-    
     await supabase
       .from("projects")
-      .update({ idea_markdown: tempDiv.innerHTML })
+      .update({ idea_markdown: editor.getHTML() })
       .eq("id", projectId);
     
     setLastSaved(new Date());
@@ -309,33 +308,33 @@ export default function IdeaPage() {
     });
   };
 
-  const addSectionAfter = (afterHeading: HTMLElement, level: number) => {
-    if (!editor) return;
+  const addSectionAfter = (headingIndex: number, level: number) => {
+    if (!editor || !editorContainerRef.current) return;
     
-    // Find position after this heading's section
-    const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
+    const proseMirror = editorContainerRef.current.querySelector('.ProseMirror');
     if (!proseMirror) return;
     
+    const headingElements = proseMirror.querySelectorAll('h1, h2, h3');
+    const heading = headingElements[headingIndex];
+    if (!heading) return;
+    
     // Find the last element of this section
-    let sibling = afterHeading.nextElementSibling;
-    let lastElement: Element = afterHeading;
+    let lastElement: Element = heading;
+    let sibling = heading.nextElementSibling;
     
     while (sibling) {
       if (/^H[123]$/.test(sibling.tagName)) {
         const sibLevel = parseInt(sibling.tagName[1]);
         if (sibLevel <= level) break;
       }
-      if (!sibling.classList.contains('add-section-btn') && !sibling.classList.contains('add-main-section-btn')) {
-        lastElement = sibling;
-      }
+      lastElement = sibling;
       sibling = sibling.nextElementSibling;
     }
     
-    // Get editor position for this element
+    // Get position at end of last element
     const view = editor.view;
     const pos = view.posAtDOM(lastElement, lastElement.childNodes.length);
     
-    // Insert new heading after
     editor.chain()
       .focus()
       .setTextSelection(pos)
@@ -548,10 +547,52 @@ export default function IdeaPage() {
       </div>
 
       {/* Editor */}
-      <div data-tutorial="idea-editor" className="flex-1 overflow-auto pb-32">
+      <div ref={scrollContainerRef} data-tutorial="idea-editor" className="flex-1 overflow-auto pb-32">
         <div className="max-w-4xl mx-auto py-4 md:py-6 px-4 md:px-6">
-          <div ref={editorContainerRef}>
+          <div ref={editorContainerRef} className="relative">
+            {/* Collapse toggles overlay */}
+            {headings.map((h, i) => (
+              <button
+                key={`toggle-${i}`}
+                onClick={() => toggleCollapse(h.index)}
+                className="absolute -left-6 w-5 h-5 flex items-center justify-center opacity-50 hover:opacity-100 hover:bg-muted/50 rounded transition-all z-10"
+                style={{ top: h.top + 2 }}
+                title={collapsedHeadings.has(h.index) ? "Expand section" : "Collapse section"}
+              >
+                {collapsedHeadings.has(h.index) ? (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+            ))}
+            
+            {/* Add section buttons overlay */}
+            {headings.map((h, i) => !collapsedHeadings.has(h.index) && (
+              <button
+                key={`add-${i}`}
+                onClick={() => addSectionAfter(h.index, h.level)}
+                className="absolute left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center opacity-0 hover:opacity-100 border border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 rounded-full transition-all z-10 group"
+                style={{ top: h.bottom - 14 }}
+                title="Add section"
+              >
+                <Plus className="h-3 w-3 text-white/40 group-hover:text-white/80" />
+              </button>
+            ))}
+            
+            {/* Editor content */}
             <EditorContent editor={editor} />
+            
+            {/* Add main section button */}
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={addMainSection}
+                className="flex items-center gap-2 px-4 py-2 border border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 rounded-lg text-white/50 hover:text-white/80 transition-all text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Section</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -640,9 +681,6 @@ export default function IdeaPage() {
       <style jsx global>{`
         .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 {
           position: relative;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
         }
         
         .ProseMirror h1 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
@@ -652,83 +690,6 @@ export default function IdeaPage() {
         .ProseMirror p { margin: 0.25rem 0; }
         .ProseMirror ul { list-style: disc; margin-left: 1rem; }
         .ProseMirror ol { list-style: decimal; margin-left: 1rem; }
-        
-        .collapse-toggle {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          cursor: pointer;
-          opacity: 0.5;
-          transition: opacity 0.2s;
-          flex-shrink: 0;
-          user-select: none;
-          border-radius: 3px;
-        }
-        
-        .collapse-toggle:hover {
-          opacity: 1;
-          background: rgba(255,255,255,0.1);
-        }
-        
-        .collapsed-content {
-          display: none !important;
-        }
-        
-        .add-section-btn {
-          display: flex;
-          justify-content: center;
-          padding: 0.25rem 0;
-          margin: 0.25rem 0;
-        }
-        
-        .add-section-btn .add-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: transparent;
-          border: 1px dashed rgba(255,255,255,0.2);
-          color: rgba(255,255,255,0.4);
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        .add-section-btn .add-btn:hover {
-          background: rgba(255,255,255,0.1);
-          border-color: rgba(255,255,255,0.4);
-          color: rgba(255,255,255,0.8);
-        }
-        
-        .add-main-section-btn {
-          display: flex;
-          justify-content: center;
-          padding: 1rem 0;
-          margin-top: 1rem;
-        }
-        
-        .add-main-section-btn .add-main-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          background: transparent;
-          border: 1px dashed rgba(255,255,255,0.2);
-          color: rgba(255,255,255,0.5);
-          cursor: pointer;
-          transition: all 0.2s;
-          font-size: 0.875rem;
-        }
-        
-        .add-main-section-btn .add-main-btn:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: rgba(255,255,255,0.4);
-          color: rgba(255,255,255,0.8);
-        }
         
         @keyframes shine {
           0% { background-position: 200% 0; }
