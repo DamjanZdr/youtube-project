@@ -10,18 +10,12 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import { 
-  Loader2, Check, Mic, MicOff, ChevronDown, ChevronRight,
+  Loader2, Check, Mic, MicOff,
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
-  Heading1, Heading2, Heading3, Plus
+  Heading1, Heading2, Heading3
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // Speech Recognition types
 interface SpeechRecognitionEvent extends Event {
@@ -138,7 +132,7 @@ export default function IdeaPage() {
       TextStyle,
       Color,
       Placeholder.configure({
-        placeholder: "Start writing... Use the + button or type /1 /2 /3 for sections",
+        placeholder: "Start writing your idea...",
         showOnlyWhenEditable: true,
         showOnlyCurrent: true,
       }),
@@ -148,36 +142,7 @@ export default function IdeaPage() {
         class: "prose prose-invert max-w-none focus:outline-none min-h-[300px]",
       },
     },
-    onUpdate: ({ editor }) => {
-      // Check for slash commands
-      const { selection } = editor.state;
-      const { $from } = selection;
-      const textBefore = $from.parent.textContent.slice(0, $from.parentOffset);
-      
-      // Quick slash commands: /1, /2, /3 for headings
-      if (textBefore.endsWith('/1')) {
-        editor.chain()
-          .deleteRange({ from: $from.pos - 2, to: $from.pos })
-          .setHeading({ level: 1 })
-          .run();
-      } else if (textBefore.endsWith('/2')) {
-        editor.chain()
-          .deleteRange({ from: $from.pos - 2, to: $from.pos })
-          .setHeading({ level: 2 })
-          .run();
-      } else if (textBefore.endsWith('/3')) {
-        editor.chain()
-          .deleteRange({ from: $from.pos - 2, to: $from.pos })
-          .setHeading({ level: 3 })
-          .run();
-      } else if (textBefore.endsWith('/p') || textBefore.endsWith('/text')) {
-        const len = textBefore.endsWith('/p') ? 2 : 5;
-        editor.chain()
-          .deleteRange({ from: $from.pos - len, to: $from.pos })
-          .setParagraph()
-          .run();
-      }
-      
+    onUpdate: () => {
       updateCollapseStyles();
     },
   });
@@ -438,7 +403,7 @@ export default function IdeaPage() {
         <div>
           <h2 className="text-base md:text-lg font-semibold">Idea</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Type <code className="bg-white/10 px-1 rounded">/1</code> <code className="bg-white/10 px-1 rounded">/2</code> <code className="bg-white/10 px-1 rounded">/3</code> for sections
+            Use H1/H2/H3 buttons to create sections
           </p>
         </div>
         {/* Save Status */}
@@ -459,39 +424,37 @@ export default function IdeaPage() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-4 md:px-6 py-2 border-b border-border/30 bg-card/20 flex-wrap">
-        {/* Section buttons */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
-              <Plus className="h-3.5 w-3.5" />
-              Section
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => insertHeading(1)} className="gap-2">
-              <Heading1 className="h-4 w-4" />
-              <div>
-                <div className="font-medium">Main Section</div>
-                <div className="text-xs text-muted-foreground">Large heading (H1) · /1</div>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => insertHeading(2)} className="gap-2">
-              <Heading2 className="h-4 w-4" />
-              <div>
-                <div className="font-medium">Sub-Section</div>
-                <div className="text-xs text-muted-foreground">Medium heading (H2) · /2</div>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => insertHeading(3)} className="gap-2">
-              <Heading3 className="h-4 w-4" />
-              <div>
-                <div className="font-medium">Detail Section</div>
-                <div className="text-xs text-muted-foreground">Small heading (H3) · /3</div>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Heading buttons */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => insertHeading(1)}
+          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
+          title="Main Section (H1)"
+        >
+          <Heading1 className="h-4 w-4" />
+          <span className="hidden sm:inline">Section</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => insertHeading(2)}
+          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
+          title="Sub-Section (H2)"
+        >
+          <Heading2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Sub</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => insertHeading(3)}
+          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : ''}`}
+          title="Detail Section (H3)"
+        >
+          <Heading3 className="h-4 w-4" />
+          <span className="hidden sm:inline">Detail</span>
+        </Button>
         
         <div className="w-px h-5 bg-border mx-1" />
         
