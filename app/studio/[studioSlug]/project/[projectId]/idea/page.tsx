@@ -10,9 +10,8 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import { 
-  Loader2, Check, Mic, MicOff,
-  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
-  Heading1, Heading2
+  Loader2, Check, Mic, MicOff, Plus, ChevronRight, ChevronDown,
+  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -268,47 +267,41 @@ export default function IdeaPage() {
 
   const insertSection = () => {
     if (!editor) return;
+    const sectionName = 'Section Name';
     editor.chain()
       .focus()
-      .insertContent('<h1>Section Name</h1><p></p>')
+      .insertContent([
+        { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: sectionName }] },
+        { type: 'paragraph' }
+      ])
       .run();
-    // Select the "Section Name" text for easy editing
+    // Select the section name for easy editing
     setTimeout(() => {
       const { state } = editor;
-      const { doc } = state;
-      let headingPos = 0;
-      doc.descendants((node, pos) => {
-        if (node.type.name === 'heading' && node.textContent === 'Section Name') {
-          headingPos = pos + 1;
-          return false;
-        }
-      });
-      if (headingPos) {
-        editor.chain().setTextSelection({ from: headingPos, to: headingPos + 12 }).run();
-      }
+      const { selection } = state;
+      const from = selection.from - sectionName.length - 1;
+      const to = selection.from - 1;
+      editor.chain().setTextSelection({ from, to }).run();
     }, 10);
   };
 
   const insertSubsection = () => {
     if (!editor) return;
+    const subsectionName = 'Subsection Name';
     editor.chain()
       .focus()
-      .insertContent('<h2>Subsection Name</h2><p></p>')
+      .insertContent([
+        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: subsectionName }] },
+        { type: 'paragraph' }
+      ])
       .run();
-    // Select the "Subsection Name" text for easy editing
+    // Select the subsection name for easy editing
     setTimeout(() => {
       const { state } = editor;
-      const { doc } = state;
-      let headingPos = 0;
-      doc.descendants((node, pos) => {
-        if (node.type.name === 'heading' && node.textContent === 'Subsection Name') {
-          headingPos = pos + 1;
-          return false;
-        }
-      });
-      if (headingPos) {
-        editor.chain().setTextSelection({ from: headingPos, to: headingPos + 15 }).run();
-      }
+      const { selection } = state;
+      const from = selection.from - subsectionName.length - 1;
+      const to = selection.from - 1;
+      editor.chain().setTextSelection({ from, to }).run();
     }, 10);
   };
 
@@ -471,7 +464,7 @@ export default function IdeaPage() {
           className="h-8 px-3 gap-1.5 text-xs"
           title="Add a new section"
         >
-          <Heading1 className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           <span>Section</span>
         </Button>
         <Button
@@ -481,7 +474,7 @@ export default function IdeaPage() {
           className="h-8 px-3 gap-1.5 text-xs"
           title="Add a subsection (nested under current section)"
         >
-          <Heading2 className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           <span>Subsection</span>
         </Button>
         
