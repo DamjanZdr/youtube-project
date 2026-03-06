@@ -12,7 +12,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { 
   Loader2, Check, Mic, MicOff,
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
-  Heading1, Heading2, Heading3
+  Heading1, Heading2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -62,21 +62,19 @@ declare global {
 
 // Default content for new projects
 const DEFAULT_CONTENT = `<h1>Brainstorming</h1>
-<p>Freely dump all your ideas here... topics, angles, random thoughts, inspiration...</p>
-<h1>1. Hook</h1>
+<p>Freely dump all your ideas here...</p>
+<h1>Hook</h1>
 <p>What will grab attention in the first 5-30 seconds?</p>
-<h2>Opening line ideas</h2>
-<p>Write your hook ideas here...</p>
-<h1>2. Value</h1>
-<p>What's the core benefit viewers will get? Why should someone watch until the end?</p>
-<h1>3. Flow</h1>
-<p>How will the video be structured? How do you keep momentum and avoid drop-off?</p>
-<h2>Key points</h2>
-<p>List the main points to cover...</p>
-<h3>Supporting details</h3>
-<p>Add supporting info for each point...</p>
-<h1>4. CTA</h1>
-<p>What specific action do you want viewers to take?</p>`;
+<h2>Opening Ideas</h2>
+<p></p>
+<h1>Value</h1>
+<p>What's the core benefit viewers will get?</p>
+<h1>Flow</h1>
+<p>How will the video be structured?</p>
+<h2>Key Points</h2>
+<p></p>
+<h1>CTA</h1>
+<p>What action do you want viewers to take?</p>`;
 
 // Grammar cleanup for voice-to-text
 function cleanupTranscript(text: string): string {
@@ -268,9 +266,50 @@ export default function IdeaPage() {
     });
   };
 
-  const insertHeading = (level: 1 | 2 | 3) => {
+  const insertSection = () => {
     if (!editor) return;
-    editor.chain().focus().setHeading({ level }).run();
+    editor.chain()
+      .focus()
+      .insertContent('<h1>Section Name</h1><p></p>')
+      .run();
+    // Select the "Section Name" text for easy editing
+    setTimeout(() => {
+      const { state } = editor;
+      const { doc } = state;
+      let headingPos = 0;
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'heading' && node.textContent === 'Section Name') {
+          headingPos = pos + 1;
+          return false;
+        }
+      });
+      if (headingPos) {
+        editor.chain().setTextSelection({ from: headingPos, to: headingPos + 12 }).run();
+      }
+    }, 10);
+  };
+
+  const insertSubsection = () => {
+    if (!editor) return;
+    editor.chain()
+      .focus()
+      .insertContent('<h2>Subsection Name</h2><p></p>')
+      .run();
+    // Select the "Subsection Name" text for easy editing
+    setTimeout(() => {
+      const { state } = editor;
+      const { doc } = state;
+      let headingPos = 0;
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'heading' && node.textContent === 'Subsection Name') {
+          headingPos = pos + 1;
+          return false;
+        }
+      });
+      if (headingPos) {
+        editor.chain().setTextSelection({ from: headingPos, to: headingPos + 15 }).run();
+      }
+    }, 10);
   };
 
   // Initialize speech recognition
@@ -403,7 +442,7 @@ export default function IdeaPage() {
         <div>
           <h2 className="text-base md:text-lg font-semibold">Idea</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Use H1/H2/H3 buttons to create sections
+            Click chevrons to collapse sections
           </p>
         </div>
         {/* Save Status */}
@@ -424,36 +463,26 @@ export default function IdeaPage() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-4 md:px-6 py-2 border-b border-border/30 bg-card/20 flex-wrap">
-        {/* Heading buttons */}
+        {/* Section buttons */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertHeading(1)}
-          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
-          title="Main Section (H1)"
+          onClick={insertSection}
+          className="h-8 px-3 gap-1.5 text-xs"
+          title="Add a new section"
         >
           <Heading1 className="h-4 w-4" />
-          <span className="hidden sm:inline">Section</span>
+          <span>Section</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertHeading(2)}
-          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
-          title="Sub-Section (H2)"
+          onClick={insertSubsection}
+          className="h-8 px-3 gap-1.5 text-xs"
+          title="Add a subsection (nested under current section)"
         >
           <Heading2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Sub</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => insertHeading(3)}
-          className={`h-8 px-2 gap-1 text-xs ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : ''}`}
-          title="Detail Section (H3)"
-        >
-          <Heading3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Detail</span>
+          <span>Subsection</span>
         </Button>
         
         <div className="w-px h-5 bg-border mx-1" />
