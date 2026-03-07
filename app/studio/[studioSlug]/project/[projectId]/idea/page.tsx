@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  Loader2, Check, Mic, MicOff, Plus, ChevronRight, ChevronDown, Trash2
+  Loader2, Check, Mic, MicOff, Plus, ChevronRight, ChevronDown, Trash2, GripVertical
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -244,6 +244,32 @@ export default function IdeaPage() {
     ));
   };
 
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) return;
+    
+    const draggedIndex = sections.findIndex(s => s.id === draggedId);
+    const targetIndex = sections.findIndex(s => s.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const newSections = [...sections];
+    const [removed] = newSections.splice(draggedIndex, 1);
+    newSections.splice(targetIndex, 0, removed);
+    setSections(newSections);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+  };
+
   // Initialize speech recognition
   const initSpeechRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -396,8 +422,13 @@ export default function IdeaPage() {
           {sections.map((section) => (
             <div 
               key={section.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, section.id)}
+              onDragOver={(e) => handleDragOver(e, section.id)}
+              onDragEnd={handleDragEnd}
               className={`
                 rounded-lg border transition-all duration-200
+                ${draggedId === section.id ? 'opacity-50' : ''}
                 ${activeSectionId === section.id 
                   ? 'border-primary/50 bg-card/50 shadow-lg shadow-primary/5' 
                   : 'border-border/50 bg-card/30 hover:border-border'
@@ -406,6 +437,10 @@ export default function IdeaPage() {
             >
               {/* Section Header */}
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
+                <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded transition-colors">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                </div>
+                
                 <button
                   onClick={() => toggleCollapse(section.id)}
                   className="p-1 hover:bg-muted rounded transition-colors"
