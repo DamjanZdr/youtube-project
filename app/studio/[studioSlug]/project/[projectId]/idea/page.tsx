@@ -462,8 +462,9 @@ export default function IdeaPage() {
 
       {/* Floating Voice Input Button */}
       {speechSupported && (
-        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50">
-          <button
+        <div className="fixed bottom-20 md:bottom-8 left-0 right-0 z-50 px-4 md:px-6">
+          <div className="max-w-4xl mx-auto flex justify-center">
+            <button
             data-tutorial="voice-button"
             onClick={toggleListening}
             className={`
@@ -538,6 +539,7 @@ export default function IdeaPage() {
               }}
             />
           </button>
+          </div>
         </div>
       )}
 
