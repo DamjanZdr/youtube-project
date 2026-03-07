@@ -3,18 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
-import Placeholder from "@tiptap/extension-placeholder";
 import { 
-  Loader2, Check, Mic, MicOff, Plus, ChevronRight, ChevronDown,
-  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered
+  Loader2, Check, Mic, MicOff, Plus, ChevronRight, ChevronDown, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 // Speech Recognition types
 interface SpeechRecognitionEvent extends Event {
@@ -59,21 +53,22 @@ declare global {
   }
 }
 
-// Default content for new projects
-const DEFAULT_CONTENT = `<h1>Brainstorming</h1>
-<p>Freely dump all your ideas here...</p>
-<h1>Hook</h1>
-<p>What will grab attention in the first 5-30 seconds?</p>
-<h2>Opening Ideas</h2>
-<p></p>
-<h1>Value</h1>
-<p>What's the core benefit viewers will get?</p>
-<h1>Flow</h1>
-<p>How will the video be structured?</p>
-<h2>Key Points</h2>
-<p></p>
-<h1>CTA</h1>
-<p>What action do you want viewers to take?</p>`;
+// Section type
+interface Section {
+  id: string;
+  title: string;
+  content: string;
+  collapsed: boolean;
+}
+
+// Default sections for new projects
+const DEFAULT_SECTIONS: Section[] = [
+  { id: '1', title: 'Brainstorming', content: 'Freely dump all your ideas here...', collapsed: false },
+  { id: '2', title: 'Hook', content: 'What will grab attention in the first 5-30 seconds?', collapsed: false },
+  { id: '3', title: 'Value', content: 'What\'s the core benefit viewers will get?', collapsed: false },
+  { id: '4', title: 'Flow', content: 'How will the video be structured?', collapsed: false },
+  { id: '5', title: 'CTA', content: 'What action do you want viewers to take?', collapsed: false },
+];
 
 // Grammar cleanup for voice-to-text
 function cleanupTranscript(text: string): string {
@@ -103,6 +98,49 @@ function cleanupTranscript(text: string): string {
   return result;
 }
 
+// Parse legacy HTML content into sections
+function parseLegacyContent(html: string): Section[] {
+  // Try to parse as JSON first (new format)
+  try {
+    const parsed = JSON.parse(html);
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
+      return parsed;
+    }
+  } catch {}
+  
+  // Parse HTML into sections (legacy format)
+  const sections: Section[] = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const elements = doc.body.children;
+  
+  let currentSection: Section | null = null;
+  let sectionId = 1;
+  
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i];
+    if (el.tagName === 'H1') {
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        id: String(sectionId++),
+        title: el.textContent || 'Untitled',
+        content: '',
+        collapsed: false
+      };
+    } else if (currentSection) {
+      currentSection.content += (currentSection.content ? '\n' : '') + el.textContent;
+    }
+  }
+  
+  if (currentSection) {
+    sections.push(currentSection);
+  }
+  
+  return sections.length > 0 ? sections : DEFAULT_SECTIONS;
+}
+
 export default function IdeaPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -111,38 +149,14 @@ export default function IdeaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [sections, setSections] = useState<Section[]>([]);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-      Underline,
-      TextStyle,
-      Color,
-      Placeholder.configure({
-        placeholder: "Start writing your idea...",
-        showOnlyWhenEditable: true,
-        showOnlyCurrent: true,
-      }),
-    ],
-    editorProps: {
-      attributes: {
-        class: "prose prose-invert max-w-none focus:outline-none min-h-[300px]",
-      },
-    },
-    onUpdate: () => {
-      updateCollapseStyles();
-    },
-  });
+  const textareaRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
 
   // Check for speech recognition support
   useEffect(() => {
@@ -153,74 +167,20 @@ export default function IdeaPage() {
   // Load content
   useEffect(() => {
     loadIdea();
-  }, [projectId, editor]);
+  }, [projectId]);
 
   // Auto-save with debounce
   useEffect(() => {
-    if (loading || !editor) return;
+    if (loading) return;
     
     const timer = setTimeout(() => {
       saveIdea();
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [editor?.getHTML()]);
-
-  // Update collapse styles when collapsed sections change
-  const updateCollapseStyles = useCallback(() => {
-    if (!editorContainerRef.current || !editor) return;
-
-    const proseMirror = editorContainerRef.current.querySelector('.ProseMirror');
-    if (!proseMirror) return;
-
-    const headingElements = proseMirror.querySelectorAll('h1, h2, h3');
-    
-    headingElements.forEach((heading) => {
-      const headingId = heading.textContent?.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() || '';
-      const level = parseInt(heading.tagName[1]);
-      const isCollapsed = collapsedSections.has(headingId);
-      
-      // Update chevron
-      let chevron = heading.querySelector('.collapse-chevron') as HTMLElement;
-      if (!chevron) {
-        chevron = document.createElement('span');
-        chevron.className = 'collapse-chevron';
-        chevron.setAttribute('contenteditable', 'false');
-        heading.insertBefore(chevron, heading.firstChild);
-        
-        chevron.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const currentId = heading.textContent?.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() || '';
-          toggleCollapse(currentId);
-        });
-      }
-      
-      chevron.innerHTML = isCollapsed 
-        ? '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>'
-        : '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-      
-      // Hide/show content under this heading
-      let sibling = heading.nextElementSibling;
-      while (sibling) {
-        if (/^H[123]$/.test(sibling.tagName)) {
-          const sibLevel = parseInt(sibling.tagName[1]);
-          if (sibLevel <= level) break; // Stop at same or higher level heading
-        }
-        
-        (sibling as HTMLElement).style.display = isCollapsed ? 'none' : '';
-        sibling = sibling.nextElementSibling;
-      }
-    });
-  }, [collapsedSections, editor]);
-
-  useEffect(() => {
-    const timer = setTimeout(updateCollapseStyles, 50);
-    return () => clearTimeout(timer);
-  }, [updateCollapseStyles, editor?.getHTML()]);
+  }, [sections]);
 
   const loadIdea = async () => {
-    if (!editor) return;
     setLoading(true);
     const { data } = await supabase
       .from("projects")
@@ -229,80 +189,59 @@ export default function IdeaPage() {
       .single();
 
     if (data?.idea_markdown) {
-      editor.commands.setContent(data.idea_markdown);
+      setSections(parseLegacyContent(data.idea_markdown));
     } else {
-      editor.commands.setContent(DEFAULT_CONTENT);
+      setSections(DEFAULT_SECTIONS);
     }
     setLoading(false);
-    setTimeout(updateCollapseStyles, 100);
   };
 
   const saveIdea = async () => {
-    if (!editor) return;
     setSaving(true);
-    
-    // Clean up any injected chevrons before saving
-    const content = editor.getHTML().replace(/<span[^>]*class="collapse-chevron"[^>]*>.*?<\/span>/g, '');
     
     await supabase
       .from("projects")
-      .update({ idea_markdown: content })
+      .update({ idea_markdown: JSON.stringify(sections) })
       .eq("id", projectId);
     
     setLastSaved(new Date());
     setSaving(false);
   };
 
-  const toggleCollapse = (headingId: string) => {
-    setCollapsedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(headingId)) {
-        next.delete(headingId);
-      } else {
-        next.add(headingId);
+  const addSection = () => {
+    const newId = String(Date.now());
+    setSections(prev => [...prev, {
+      id: newId,
+      title: 'New Section',
+      content: '',
+      collapsed: false
+    }]);
+    // Focus the new section's title after render
+    setTimeout(() => {
+      const input = document.querySelector(`[data-section-title="${newId}"]`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
       }
-      return next;
-    });
+    }, 50);
   };
 
-  const insertSection = () => {
-    if (!editor) return;
-    const sectionName = 'Section Name';
-    editor.chain()
-      .focus()
-      .insertContent([
-        { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: sectionName }] },
-        { type: 'paragraph' }
-      ])
-      .run();
-    // Select the section name for easy editing
-    setTimeout(() => {
-      const { state } = editor;
-      const { selection } = state;
-      const from = selection.from - sectionName.length - 1;
-      const to = selection.from - 1;
-      editor.chain().setTextSelection({ from, to }).run();
-    }, 10);
+  const updateSection = (id: string, updates: Partial<Section>) => {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   };
 
-  const insertSubsection = () => {
-    if (!editor) return;
-    const subsectionName = 'Subsection Name';
-    editor.chain()
-      .focus()
-      .insertContent([
-        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: subsectionName }] },
-        { type: 'paragraph' }
-      ])
-      .run();
-    // Select the subsection name for easy editing
-    setTimeout(() => {
-      const { state } = editor;
-      const { selection } = state;
-      const from = selection.from - subsectionName.length - 1;
-      const to = selection.from - 1;
-      editor.chain().setTextSelection({ from, to }).run();
-    }, 10);
+  const deleteSection = (id: string) => {
+    if (sections.length <= 1) {
+      toast.error("You need at least one section");
+      return;
+    }
+    setSections(prev => prev.filter(s => s.id !== id));
+  };
+
+  const toggleCollapse = (id: string) => {
+    setSections(prev => prev.map(s => 
+      s.id === id ? { ...s, collapsed: !s.collapsed } : s
+    ));
   };
 
   // Initialize speech recognition
@@ -317,47 +256,21 @@ export default function IdeaPage() {
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = "";
-      let interimTranscript = "";
       
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           finalTranscript += result[0].transcript;
-        } else {
-          interimTranscript += result[0].transcript;
         }
       }
 
-      if (editor) {
-        const { state } = editor;
-        let interimPos: { from: number; to: number } | null = null;
-        
-        state.doc.descendants((node: any, pos: number) => {
-          if (node.marks?.some((m: any) => m.type.name === 'textStyle' && m.attrs?.color === '#888888')) {
-            interimPos = { from: pos, to: pos + node.nodeSize };
-            return false;
-          }
-        });
-        
-        if (interimPos) {
-          editor.chain().focus().deleteRange(interimPos).run();
-        }
-        
-        if (finalTranscript) {
-          const cleanedText = cleanupTranscript(finalTranscript);
-          editor.commands.insertContent(cleanedText + " ");
-        }
-        
-        if (interimTranscript) {
-          editor.commands.insertContent({
-            type: 'text',
-            text: interimTranscript,
-            marks: [
-              { type: 'textStyle', attrs: { color: '#888888' } },
-              { type: 'italic' }
-            ]
-          });
-        }
+      if (finalTranscript && activeSectionId) {
+        const cleanedText = cleanupTranscript(finalTranscript);
+        setSections(prev => prev.map(s => 
+          s.id === activeSectionId 
+            ? { ...s, content: s.content + (s.content ? ' ' : '') + cleanedText }
+            : s
+        ));
       }
     };
 
@@ -382,11 +295,16 @@ export default function IdeaPage() {
     };
 
     return recognition;
-  }, [isListening, editor]);
+  }, [isListening, activeSectionId]);
 
   const toggleListening = useCallback(() => {
     if (!speechSupported) {
       toast.error("Speech recognition not supported. Try Chrome or Edge.");
+      return;
+    }
+
+    if (!activeSectionId) {
+      toast.error("Click on a section first to dictate into it");
       return;
     }
 
@@ -403,13 +321,12 @@ export default function IdeaPage() {
         try {
           recognition.start();
           setIsListening(true);
-          editor?.commands.focus('end');
         } catch (e) {
           toast.error("Failed to start voice input");
         }
       }
     }
-  }, [isListening, speechSupported, initSpeechRecognition, editor]);
+  }, [isListening, speechSupported, initSpeechRecognition, activeSectionId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -420,7 +337,13 @@ export default function IdeaPage() {
     };
   }, []);
 
-  if (loading || !editor) {
+  // Auto-resize textareas
+  const autoResize = (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.max(80, textarea.scrollHeight) + 'px';
+  };
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -435,7 +358,7 @@ export default function IdeaPage() {
         <div>
           <h2 className="text-base md:text-lg font-semibold">Idea</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Click chevrons to collapse sections
+            Organize your thoughts in collapsible sections
           </p>
         </div>
         {/* Save Status */}
@@ -455,87 +378,85 @@ export default function IdeaPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1 px-4 md:px-6 py-2 border-b border-border/30 bg-card/20 flex-wrap">
-        {/* Section buttons */}
+      <div className="flex items-center gap-2 px-4 md:px-6 py-2 border-b border-border/30 bg-card/20">
         <Button
           variant="ghost"
           size="sm"
-          onClick={insertSection}
+          onClick={addSection}
           className="h-8 px-3 gap-1.5 text-xs"
-          title="Add a new section"
         >
           <Plus className="h-3.5 w-3.5" />
-          <span>Section</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={insertSubsection}
-          className="h-8 px-3 gap-1.5 text-xs"
-          title="Add a subsection (nested under current section)"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>Subsection</span>
-        </Button>
-        
-        <div className="w-px h-5 bg-border mx-1" />
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('bold') ? 'bg-muted' : ''}`}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('italic') ? 'bg-muted' : ''}`}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('underline') ? 'bg-muted' : ''}`}
-          title="Underline (Ctrl+U)"
-        >
-          <UnderlineIcon className="h-4 w-4" />
-        </Button>
-        
-        <div className="w-px h-5 bg-border mx-1" />
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('bulletList') ? 'bg-muted' : ''}`}
-          title="Bullet List"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`h-8 w-8 p-0 ${editor.isActive('orderedList') ? 'bg-muted' : ''}`}
-          title="Numbered List"
-        >
-          <ListOrdered className="h-4 w-4" />
+          <span>Add Section</span>
         </Button>
       </div>
 
-      {/* Editor */}
+      {/* Sections */}
       <div data-tutorial="idea-editor" className="flex-1 overflow-auto pb-32">
-        <div className="max-w-4xl mx-auto py-4 md:py-6 px-4 md:px-6">
-          <div ref={editorContainerRef} className="idea-editor">
-            <EditorContent editor={editor} />
-          </div>
+        <div className="max-w-4xl mx-auto py-4 md:py-6 px-4 md:px-6 space-y-3">
+          {sections.map((section) => (
+            <div 
+              key={section.id}
+              className={`
+                rounded-lg border transition-all duration-200
+                ${activeSectionId === section.id 
+                  ? 'border-primary/50 bg-card/50 shadow-lg shadow-primary/5' 
+                  : 'border-border/50 bg-card/30 hover:border-border'
+                }
+              `}
+            >
+              {/* Section Header */}
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
+                <button
+                  onClick={() => toggleCollapse(section.id)}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                >
+                  {section.collapsed ? (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+                
+                <Input
+                  data-section-title={section.id}
+                  value={section.title}
+                  onChange={(e) => updateSection(section.id, { title: e.target.value })}
+                  className="flex-1 h-7 px-2 text-sm font-medium bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  placeholder="Section title..."
+                />
+                
+                <button
+                  onClick={() => deleteSection(section.id)}
+                  className="p-1 hover:bg-destructive/20 hover:text-destructive rounded transition-colors opacity-50 hover:opacity-100"
+                  title="Delete section"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              
+              {/* Section Content */}
+              {!section.collapsed && (
+                <div className="p-3">
+                  <textarea
+                    ref={(el) => {
+                      if (el) {
+                        textareaRefs.current.set(section.id, el);
+                        autoResize(el);
+                      }
+                    }}
+                    value={section.content}
+                    onChange={(e) => {
+                      updateSection(section.id, { content: e.target.value });
+                      autoResize(e.target);
+                    }}
+                    onFocus={() => setActiveSectionId(section.id)}
+                    className="w-full min-h-[80px] bg-transparent border-0 resize-none text-sm text-foreground/90 placeholder:text-muted-foreground/50 focus:outline-none"
+                    placeholder="Write your ideas here..."
+                  />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -621,89 +542,6 @@ export default function IdeaPage() {
       )}
 
       <style jsx global>{`
-        .idea-editor .ProseMirror {
-          outline: none;
-        }
-        
-        .idea-editor .ProseMirror h1,
-        .idea-editor .ProseMirror h2,
-        .idea-editor .ProseMirror h3 {
-          position: relative;
-          padding-left: 1.75rem;
-        }
-        
-        .idea-editor .ProseMirror h1 { 
-          font-size: 1.5rem; 
-          font-weight: 700; 
-          margin-top: 2rem; 
-          margin-bottom: 0.75rem;
-        }
-        .idea-editor .ProseMirror h2 { 
-          font-size: 1.25rem; 
-          font-weight: 600; 
-          margin-top: 1.5rem; 
-          margin-bottom: 0.5rem;
-          color: rgba(255,255,255,0.9);
-        }
-        .idea-editor .ProseMirror h3 { 
-          font-size: 1.1rem; 
-          font-weight: 500; 
-          margin-top: 1rem; 
-          margin-bottom: 0.5rem;
-          color: rgba(255,255,255,0.8);
-        }
-        
-        .idea-editor .ProseMirror > h1:first-child,
-        .idea-editor .ProseMirror > h2:first-child,
-        .idea-editor .ProseMirror > h3:first-child {
-          margin-top: 0;
-        }
-        
-        .idea-editor .collapse-chevron {
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          cursor: pointer;
-          opacity: 0.4;
-          transition: opacity 0.2s, background 0.2s;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 1.25rem;
-          height: 1.25rem;
-          border-radius: 0.25rem;
-          user-select: none;
-        }
-        
-        .idea-editor .collapse-chevron:hover {
-          opacity: 1;
-          background: rgba(255,255,255,0.1);
-        }
-        
-        .idea-editor .ProseMirror p { 
-          margin: 0.5rem 0;
-          padding-left: 1.75rem;
-        }
-        
-        .idea-editor .ProseMirror ul,
-        .idea-editor .ProseMirror ol { 
-          margin: 0.5rem 0;
-          padding-left: 3rem;
-        }
-        
-        .idea-editor .ProseMirror li {
-          margin: 0.25rem 0;
-        }
-        
-        .idea-editor .ProseMirror p.is-editor-empty:first-child::before {
-          color: rgba(255, 255, 255, 0.3);
-          content: attr(data-placeholder);
-          float: left;
-          height: 0;
-          pointer-events: none;
-        }
-        
         @keyframes shine {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
