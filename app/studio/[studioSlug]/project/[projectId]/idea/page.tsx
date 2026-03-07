@@ -173,12 +173,18 @@ export default function IdeaPage() {
   useEffect(() => {
     if (loading) return;
     
-    const timer = setTimeout(() => {
-      saveIdea();
+    const timer = setTimeout(async () => {
+      setSaving(true);
+      await supabase
+        .from("projects")
+        .update({ idea_markdown: JSON.stringify(sections) })
+        .eq("id", projectId);
+      setLastSaved(new Date());
+      setSaving(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [sections]);
+  }, [sections, loading, projectId]);
 
   const loadIdea = async () => {
     setLoading(true);
@@ -194,18 +200,6 @@ export default function IdeaPage() {
       setSections(DEFAULT_SECTIONS);
     }
     setLoading(false);
-  };
-
-  const saveIdea = async () => {
-    setSaving(true);
-    
-    await supabase
-      .from("projects")
-      .update({ idea_markdown: JSON.stringify(sections) })
-      .eq("id", projectId);
-    
-    setLastSaved(new Date());
-    setSaving(false);
   };
 
   const addSection = () => {
@@ -378,7 +372,7 @@ export default function IdeaPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 md:px-6 py-3 border-b border-border/50 bg-card/30">
         <div>
@@ -497,8 +491,7 @@ export default function IdeaPage() {
 
       {/* Floating Voice Input Button */}
       {speechSupported && (
-        <div className="fixed bottom-20 md:bottom-8 left-0 right-0 z-50 px-4 md:px-6">
-          <div className="max-w-4xl mx-auto flex justify-center">
+        <div className="absolute bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50">
             <button
             data-tutorial="voice-button"
             onClick={toggleListening}
@@ -574,7 +567,6 @@ export default function IdeaPage() {
               }}
             />
           </button>
-          </div>
         </div>
       )}
 
