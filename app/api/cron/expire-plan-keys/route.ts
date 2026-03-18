@@ -432,9 +432,113 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ALSO check for subscriptions that were gifted directly (not via plan_keys)
+  // These have source='key' and current_period_end in the past but no plan_key record
+  const { data: expiredDirectGifts } = await supabase
+    .from("subscriptions")
+    .select("*, organizations(id, name, slug, owner_id)")
+    .eq("source", "key")
+    .eq("status", "active")
+    .lt("current_period_end", now.toISOString())
+    .not("current_period_end", "is", null);
+
+  for (const sub of expiredDirectGifts || []) {
+    try {
+      const org = sub.organizations as any;
+      
+      // Get owner email
+      let ownerEmail: string | null = null;
+      if (org?.owner_id) {
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", org.owner_id)
+          .single();
+        ownerEmail = ownerProfile?.email || null;
+      }
+
+      // Downgrade to free
+      await supabase
+        .from("subscriptions")
+        .update({
+          plan: "free",
+          source: null,
+          key_id: null,
+          status: "active",
+          current_period_start: now.toISOString(),
+          current_period_end: null,
+        })
+        .eq("id", sub.id);
+
+      // Send notification email
+      if (ownerEmail && process.env.RESEND_API_KEY && org) {
+        const resend = getResend();
+        try {
+          if (resend) await resend.emails.send({
+            from: "Blueprint <noreply@myblueprint.studio>",
+            to: ownerEmail,
+            subject: `Your Gifted Plan Has Expired`,
+            html: `
+              <!DOCTYPE html>
+              <html>
+                <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+                <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;"><tr><td align="center" style="padding: 40px 20px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                    <tr><td style="padding: 40px 32px;">
+                      <div style="text-align: center; margin-bottom: 32px;">
+                        <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #18181b;">Your Gift Has Expired</h1>
+                      </div>
+                      <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Your gifted plan for <strong style="color: #18181b;">${org.name}</strong> has expired. You've been moved to the Free tier.
+                      </p>
+                      <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 0 0 28px 0;">
+                        Want to keep your premium features? Upgrade to a paid plan today!
+                      </p>
+                      <div style="text-align: center; margin-bottom: 24px;">
+                        <a href="${appUrl}/studio/${org.slug}/settings?tab=billing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                          View Plans →
+                        </a>
+                      </div>
+                      <div style="border-top: 1px solid #d4d4d8; padding-top: 24px; text-align: center;">
+                        <p style="color: #71717a; font-size: 12px; margin: 0;">© Blueprint Studio</p>
+                      </div>
+                    </td></tr>
+                  </table></td></tr></table>
+                </body>
+              </html>
+            `,
+          });
+        } catch (emailError) {
+          console.error("Failed to send direct gift expiry email:", emailError);
+        }
+      }
+
+      // Log billing event
+      await supabase.from("billing_events").insert({
+        organization_id: sub.organization_id,
+        event_type: "gift_expired",
+        previous_plan: sub.plan,
+        new_plan: "free",
+        source: "key",
+        metadata: { direct_gift: true }
+      });
+
+      processed++;
+      results.push({
+        org_id: sub.organization_id,
+        action: "direct_gift_expired",
+        previous_plan: sub.plan,
+        new_plan: "free",
+      });
+
+    } catch (err) {
+      console.error(`Error processing direct gift for org ${sub.organization_id}:`, err);
+    }
+  }
+
   return NextResponse.json({ 
     processed, 
-    total: expiredKeys?.length || 0,
+    total: (expiredKeys?.length || 0) + (expiredDirectGifts?.length || 0),
     results 
   });
 }
