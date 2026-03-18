@@ -23,24 +23,26 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     redirect("/auth/login");
   }
 
-  // Fetch user profile (including admin status for silent view)
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, accept_invites, is_admin")
-    .eq("id", user.id)
-    .single();
+  // PARALLEL FETCH: Profile + Studio data at the same time
+  const [profileResult, studioResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url, accept_invites, is_admin")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("organizations")
+      .select("id, name, slug, logo_url, owner_id, status")
+      .eq("slug", studioSlug)
+      .single()
+  ]);
 
+  const profile = profileResult.data;
+  const studio = studioResult.data;
   const isAdmin = profile?.is_admin === true;
 
-  // Fetch studio data including status
-  const { data: studio, error } = await supabase
-    .from("organizations")
-    .select("id, name, slug, logo_url, owner_id, status")
-    .eq("slug", studioSlug)
-    .single();
-
-  if (error || !studio) {
-    console.error("Studio not found:", error);
+  if (studioResult.error || !studio) {
+    console.error("Studio not found:", studioResult.error);
     notFound();
   }
 
@@ -60,15 +62,7 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     }
   }
 
-  // Fetch subscription data for sidebar promo
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan, source, current_period_end, status")
-    .eq("organization_id", studio.id)
-    .maybeSingle();
-
   // If studio is pending (awaiting payment), show minimal layout
-  // Only checkout routes will render meaningfully
   if (studio.status === 'pending') {
     return (
       <PendingStudioLayout 
@@ -81,16 +75,23 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
     );
   }
 
-  // Fetch tutorial progress
-  const { data: memberData } = await supabase
-    .from("organization_members")
-    .select("tutorial_step, tutorial_completed_at")
-    .eq("organization_id", studio.id)
-    .eq("user_id", user.id)
-    .single();
+  // PARALLEL FETCH: Subscription + Tutorial progress at the same time
+  const [subscriptionResult, memberResult] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("plan, source, current_period_end, status")
+      .eq("organization_id", studio.id)
+      .maybeSingle(),
+    supabase
+      .from("organization_members")
+      .select("tutorial_step, tutorial_completed_at")
+      .eq("organization_id", studio.id)
+      .eq("user_id", user.id)
+      .single()
+  ]);
 
-  // Tutorial step: null = never started (show welcome), number = current step
-  // If tutorial_completed_at is set, user has dismissed/completed it before
+  const subscription = subscriptionResult.data;
+  const memberData = memberResult.data;
   const tutorialStep = memberData?.tutorial_step ?? null;
   const tutorialCompletedAt = memberData?.tutorial_completed_at ?? null;
 

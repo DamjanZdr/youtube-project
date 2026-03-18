@@ -15,20 +15,23 @@ export default async function Home() {
   let isAdmin = false;
   let isPartner = false;
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
-    isAdmin = profile?.is_admin === true;
-
-    const { data: partner } = await supabase
-      .from("partners")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .maybeSingle();
-    isPartner = !!partner;
+    // PARALLEL FETCH: Profile + Partner check at the same time
+    const [profileResult, partnerResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("partners")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle()
+    ]);
+    
+    isAdmin = profileResult.data?.is_admin === true;
+    isPartner = !!partnerResult.data;
   }
 
   return (

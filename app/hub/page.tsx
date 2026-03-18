@@ -88,26 +88,42 @@ export default function HubPage() {
       return;
     }
 
-    // Get user profile with invite preference and display info
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, avatar_url, accept_invites, role, is_admin")
-      .eq("id", currentUser.id)
-      .single();
-
-    if (profile) {
-      setUser(profile);
-      setAcceptInvites(profile.accept_invites ?? true);
-      setIsAdmin(profile.is_admin === true || profile.role === "admin");
-      
-      // Check if user is an active partner
-      const { data: partnerRecord } = await supabase
+    // PARALLEL FETCH: Profile + Partner check + Studios at the same time
+    const [profileResult, partnerResult, activeMembersResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, accept_invites, role, is_admin")
+        .eq("id", currentUser.id)
+        .single(),
+      supabase
         .from("partners")
         .select("id")
         .eq("user_id", currentUser.id)
         .eq("is_active", true)
-        .single();
-      setIsPartner(!!partnerRecord);
+        .single(),
+      supabase
+        .from("organization_members")
+        .select(`
+          organization_id,
+          organizations!inner (
+            id,
+            name,
+            slug,
+            logo_url,
+            status,
+            checkout_plan
+          )
+        `)
+        .eq("user_id", currentUser.id)
+        .eq("status", "active")
+    ]);
+
+    const profile = profileResult.data;
+    if (profile) {
+      setUser(profile);
+      setAcceptInvites(profile.accept_invites ?? true);
+      setIsAdmin(profile.is_admin === true || profile.role === "admin");
+      setIsPartner(!!partnerResult.data);
     } else {
       // Fallback to auth user if profile not found
       setUser({
@@ -116,47 +132,29 @@ export default function HubPage() {
       });
     }
 
-    // Get active studios
-    const { data: activeMembers } = await supabase
-      .from("organization_members")
-      .select(`
-        organization_id,
-        organizations!inner (
-          id,
-          name,
-          slug,
-          logo_url,
-          status,
-          checkout_plan
-        )
-      `)
-      .eq("user_id", currentUser.id)
-      .eq("status", "active");
-
+    const activeMembers = activeMembersResult.data;
     if (activeMembers) {
       const studioData = await Promise.all(
         activeMembers.map(async (member: any) => {
           const org = member.organizations;
           
-          // Get member count
-          const { count: memberCount } = await supabase
-            .from("organization_members")
-            .select("*", { count: "exact", head: true })
-            .eq("organization_id", org.id)
-            .eq("status", "active");
-
-          // Get project count
-          const { count: projectCount } = await supabase
-            .from("projects")
-            .select("*", { count: "exact", head: true })
-            .eq("organization_id", org.id);
-
-          // Get subscription plan
-          const { data: subscription } = await supabase
-            .from("subscriptions")
-            .select("plan")
-            .eq("organization_id", org.id)
-            .single();
+          // PARALLEL FETCH: All studio stats at once
+          const [memberCountResult, projectCountResult, subscriptionResult] = await Promise.all([
+            supabase
+              .from("organization_members")
+              .select("*", { count: "exact", head: true })
+              .eq("organization_id", org.id)
+              .eq("status", "active"),
+            supabase
+              .from("projects")
+              .select("*", { count: "exact", head: true })
+              .eq("organization_id", org.id),
+            supabase
+              .from("subscriptions")
+              .select("plan")
+              .eq("organization_id", org.id)
+              .single()
+          ]);
 
           // Subscriber count disabled while YouTube connection is off
           const subscriberCount = 0;
@@ -167,10 +165,10 @@ export default function HubPage() {
             slug: org.slug,
             logo_url: org.logo_url,
             status: org.status || 'active',
-            memberCount: memberCount || 1,
-            projectCount: projectCount || 0,
+            memberCount: memberCountResult.count || 1,
+            projectCount: projectCountResult.count || 0,
             subscriberCount,
-            plan: subscription?.plan || 'free',
+            plan: subscriptionResult.data?.plan || 'free',
             checkout_plan: org.checkout_plan,
           };
         })
