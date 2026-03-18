@@ -16,20 +16,38 @@ import {
   Mail,
   BarChart,
   Handshake,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+// Main navigation items
+const mainNavItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/studios", label: "Studios", icon: Building2 },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/admin/keys", label: "Keys", icon: Key },
   { href: "/admin/partners", label: "Partners", icon: Handshake },
-  { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon },
-  { href: "/admin/waitlist", label: "Waitlist", icon: Mail },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart },
+];
+
+// Legacy items (greyed out)
+const legacyNavItems = [
+  { href: "/admin/waitlist", label: "Waitlist", icon: Mail, legacy: true },
+];
+
+// All items for mobile nav
+const allNavItems = [
+  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon, highlight: true },
+  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/studios", label: "Studios", icon: Building2 },
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/keys", label: "Keys", icon: Key },
+  { href: "/admin/partners", label: "Partners", icon: Handshake },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart },
+  { href: "/admin/waitlist", label: "Waitlist", icon: Mail, legacy: true },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -100,9 +118,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile Navigation Tabs */}
       <nav className="md:hidden flex overflow-x-auto hide-scrollbar border-b border-white/10 px-2">
-        {navItems.map((item) => {
+        {allNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
+          const isLegacy = 'legacy' in item && item.legacy;
+          const isHighlight = 'highlight' in item && item.highlight;
           return (
             <Link
               key={item.href}
@@ -111,7 +131,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 "flex items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap border-b-2 transition-colors shrink-0",
                 isActive 
                   ? "border-primary text-white" 
-                  : "border-transparent text-muted-foreground hover:text-white"
+                  : "border-transparent text-muted-foreground hover:text-white",
+                isLegacy && "opacity-50",
+                isHighlight && !isActive && "text-orange-400"
               )}
             >
               <Icon className="w-4 h-4" />
@@ -124,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-white/10 p-4 flex-col h-full shrink-0">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8 px-2">
+        <div className="flex items-center gap-3 mb-6 px-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
             <Shield className="w-5 h-5 text-white" />
           </div>
@@ -134,9 +156,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Support Tickets - Highlighted Section */}
+        <div className="mb-4">
+          <Link
+            href="/admin/tickets"
+            className={cn(
+              "flex items-center gap-3 px-3 py-3 rounded-lg transition-colors border",
+              pathname === "/admin/tickets"
+                ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                : "bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20"
+            )}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+              <TicketIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <span className="font-medium">Support Tickets</span>
+              <p className="text-xs opacity-70">User support requests</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Main Navigation */}
         <nav className="flex-1 space-y-1">
-          {navItems.map((item) => {
+          {mainNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -155,6 +198,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
+          
+          {/* Legacy Section */}
+          <div className="pt-2 mt-2 border-t border-white/5">
+            <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/50">Legacy</p>
+            {legacyNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors opacity-50",
+                    isActive 
+                      ? "bg-white/10 text-white" 
+                      : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         {/* Footer */}

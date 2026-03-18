@@ -21,7 +21,10 @@ import {
   AlertTriangle,
   Loader2,
   Trash2,
-  UserPlus
+  UserPlus,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
@@ -48,6 +51,8 @@ interface PlanKey {
 }
 
 type KeyStatus = "available" | "sent" | "active" | "expired" | "deactivated";
+type SortField = "key" | "plan" | "created_at" | "redeemed_at" | "expires_at";
+type SortDirection = "asc" | "desc";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -87,6 +92,10 @@ export default function AdminKeysPage() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<"all" | "available" | "sent" | "active" | "expired" | "deactivated">("all");
+
+  // Sorting state - default to created (newest first)
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Selection state
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -151,7 +160,7 @@ export default function AdminKeysPage() {
 
   useEffect(() => {
     loadKeys();
-  }, [page, search, filter]);
+  }, [page, search, filter, sortField, sortDirection]);
 
   // Clear selection when changing pages/filters
   useEffect(() => {
@@ -168,6 +177,8 @@ export default function AdminKeysPage() {
         limit: ITEMS_PER_PAGE.toString(),
         filter,
         search,
+        sortField,
+        sortDirection,
       });
       
       const response = await fetch(`/api/admin/keys?${params}`);
@@ -185,6 +196,38 @@ export default function AdminKeysPage() {
 
     setLoading(false);
   }
+
+  // Handle column sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setPage(0);
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <th 
+      className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-white transition-colors select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </th>
+  );
 
   async function handleGenerateKeys() {
     setGenerating(true);
@@ -539,13 +582,13 @@ export default function AdminKeysPage() {
                   className="rounded border-white/20 bg-white/5"
                 />
               </th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Key</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
+              <SortableHeader field="key">Key</SortableHeader>
+              <SortableHeader field="plan">Plan</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Duration</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Sent To / Redeemed By</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Created</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Activated</th>
+              <SortableHeader field="created_at">Created</SortableHeader>
+              <SortableHeader field="redeemed_at">Activated</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>

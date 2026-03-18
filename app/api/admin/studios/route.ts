@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "0");
   const limit = parseInt(searchParams.get("limit") || "20");
   const search = searchParams.get("search") || "";
+  const sortField = searchParams.get("sortField") || "last_activity_at";
+  const sortDirection = searchParams.get("sortDirection") || "desc";
 
   // Use admin client to bypass RLS
   const adminClient = createAdminClient();
@@ -34,6 +36,15 @@ export async function GET(req: NextRequest) {
     countQuery = countQuery.or(`name.ilike.%${search}%,slug.ilike.%${search}%`);
   }
   const { count } = await countQuery;
+
+  // Map field names
+  const fieldMap: Record<string, string> = {
+    lastActivity: "last_activity_at",
+    members: "created_at", // Can't sort by computed field, fallback
+    projects: "created_at", // Can't sort by computed field, fallback
+  };
+  const dbField = fieldMap[sortField] || sortField;
+  const ascending = sortDirection === "asc";
 
   // Get studios/organizations
   let query = adminClient
@@ -47,7 +58,7 @@ export async function GET(req: NextRequest) {
       created_at,
       last_activity_at
     `)
-    .order("created_at", { ascending: false })
+    .order(dbField, { ascending, nullsFirst: false })
     .range(page * limit, (page + 1) * limit - 1);
 
   if (search) {

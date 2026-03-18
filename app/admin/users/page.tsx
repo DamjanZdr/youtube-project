@@ -44,7 +44,10 @@ import {
   ArrowDownCircle,
   XCircle,
   CheckCircle,
-  Globe
+  Globe,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -84,12 +87,19 @@ interface OrgWithBilling {
 
 const ITEMS_PER_PAGE = 20;
 
+type SortField = "full_name" | "email" | "created_at" | "last_active_at" | "country";
+type SortDirection = "asc" | "desc";
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Sorting state - default to last active (newest first)
+  const [sortField, setSortField] = useState<SortField>("last_active_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   
   // Send Key Dialog
   const [sendKeyOpen, setSendKeyOpen] = useState(false);
@@ -116,6 +126,8 @@ export default function AdminUsersPage() {
           page: page.toString(),
           limit: ITEMS_PER_PAGE.toString(),
           search,
+          sortField,
+          sortDirection,
         });
         
         const response = await fetch(`/api/admin/users?${params}`);
@@ -134,9 +146,43 @@ export default function AdminUsersPage() {
     }
 
     loadUsers();
-  }, [page, search]);
+  }, [page, search, sortField, sortDirection]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  // Handle column sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New field, default to desc
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setPage(0); // Reset to first page when sorting changes
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <th 
+      className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-white transition-colors select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </th>
+  );
 
   // Load user details with billing history
   const loadUserDetails = async (user: User) => {
@@ -311,12 +357,12 @@ export default function AdminUsersPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">User</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
+              <SortableHeader field="full_name">User</SortableHeader>
+              <SortableHeader field="email">Email</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Studios</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Location</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Joined</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Last Active</th>
+              <SortableHeader field="country">Location</SortableHeader>
+              <SortableHeader field="created_at">Joined</SortableHeader>
+              <SortableHeader field="last_active_at">Last Active</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>

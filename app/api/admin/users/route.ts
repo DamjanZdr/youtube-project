@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "0");
   const limit = parseInt(searchParams.get("limit") || "20");
   const search = searchParams.get("search") || "";
+  const sortField = searchParams.get("sortField") || "last_active_at";
+  const sortDirection = searchParams.get("sortDirection") || "desc";
 
   // Use admin client to bypass RLS
   const adminClient = createAdminClient();
@@ -34,6 +36,15 @@ export async function GET(req: NextRequest) {
     countQuery = countQuery.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
   }
   const { count } = await countQuery;
+
+  // Map field names that might need adjustment
+  const fieldMap: Record<string, string> = {
+    name: "full_name",
+    joined: "created_at",
+    lastActive: "last_active_at",
+  };
+  const dbField = fieldMap[sortField] || sortField;
+  const ascending = sortDirection === "asc";
 
   // Get users
   let query = adminClient
@@ -48,7 +59,7 @@ export async function GET(req: NextRequest) {
       country,
       city
     `)
-    .order("created_at", { ascending: false })
+    .order(dbField, { ascending, nullsFirst: false })
     .range(page * limit, (page + 1) * limit - 1);
 
   if (search) {

@@ -25,9 +25,18 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
   const filter = searchParams.get("filter") || "all";
   const search = searchParams.get("search") || "";
+  const sortField = searchParams.get("sortField") || "created_at";
+  const sortDirection = searchParams.get("sortDirection") || "desc";
 
   // Use admin client to bypass RLS
   const adminClient = createAdminClient();
+
+  // Map field names
+  const fieldMap: Record<string, string> = {
+    status: "created_at", // Can't sort by computed field, fallback
+  };
+  const dbField = fieldMap[sortField] || sortField;
+  const ascending = sortDirection === "asc";
 
   // Build query
   let countQuery = adminClient.from("plan_keys").select("*", { count: "exact", head: true });
@@ -48,7 +57,7 @@ export async function GET(req: NextRequest) {
       expires_at,
       deactivated_at
     `)
-    .order("created_at", { ascending: false })
+    .order(dbField, { ascending, nullsFirst: false })
     .range(page * limit, (page + 1) * limit - 1);
 
   // Filter logic

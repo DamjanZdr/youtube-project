@@ -11,7 +11,10 @@ import {
   ChevronRight,
   CreditCard,
   ExternalLink,
-  Key
+  Key,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -30,6 +33,9 @@ interface Subscription {
 }
 
 const ITEMS_PER_PAGE = 20;
+
+type SortField = "plan" | "status" | "source" | "current_period_end" | "created_at";
+type SortDirection = "asc" | "desc";
 
 const planColors: Record<string, string> = {
   free: "bg-zinc-500/20 text-zinc-300",
@@ -52,6 +58,10 @@ export default function AdminSubscriptionsPage() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [planFilter, setPlanFilter] = useState<string>("all");
+  
+  // Sorting state - default to period end (earliest first)
+  const [sortField, setSortField] = useState<SortField>("current_period_end");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   useEffect(() => {
     async function loadSubscriptions() {
@@ -74,7 +84,7 @@ export default function AdminSubscriptionsPage() {
           cancel_at_period_end,
           stripe_subscription_id
         `)
-        .order("created_at", { ascending: false })
+        .order(sortField, { ascending: sortDirection === "asc", nullsFirst: false })
         .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
       if (planFilter !== "all") {
@@ -113,9 +123,42 @@ export default function AdminSubscriptionsPage() {
     }
 
     loadSubscriptions();
-  }, [page, search, planFilter]);
+  }, [page, search, planFilter, sortField, sortDirection]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  // Handle column sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      // Period defaults to asc (earliest first), others default to desc
+      setSortDirection(field === "current_period_end" ? "asc" : "desc");
+    }
+    setPage(0);
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <th 
+      className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-white transition-colors select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </th>
+  );
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -166,10 +209,10 @@ export default function AdminSubscriptionsPage() {
           <thead>
             <tr className="border-b border-white/10">
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Studio</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Source</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Period</th>
+              <SortableHeader field="plan">Plan</SortableHeader>
+              <SortableHeader field="status">Status</SortableHeader>
+              <SortableHeader field="source">Source</SortableHeader>
+              <SortableHeader field="current_period_end">Period End</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>

@@ -46,7 +46,10 @@ import {
   ArrowDownCircle,
   XCircle,
   CheckCircle,
-  CreditCard
+  CreditCard,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -88,6 +91,9 @@ interface BillingEvent {
 
 const ITEMS_PER_PAGE = 20;
 
+type SortField = "name" | "created_at" | "last_activity_at" | "member_count" | "project_count";
+type SortDirection = "asc" | "desc";
+
 const planColors: Record<string, string> = {
   free: "bg-zinc-500/20 text-zinc-300",
   creator: "bg-blue-500/20 text-blue-300",
@@ -101,6 +107,10 @@ export default function AdminStudiosPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Sorting state - default to last activity (newest first)
+  const [sortField, setSortField] = useState<SortField>("last_activity_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   
   // Send Key Dialog
   const [sendKeyOpen, setSendKeyOpen] = useState(false);
@@ -134,6 +144,8 @@ export default function AdminStudiosPage() {
           page: page.toString(),
           limit: ITEMS_PER_PAGE.toString(),
           search,
+          sortField,
+          sortDirection,
         });
         
         const response = await fetch(`/api/admin/studios?${params}`);
@@ -161,9 +173,41 @@ export default function AdminStudiosPage() {
     }
 
     loadStudios();
-  }, [page, search]);
+  }, [page, search, sortField, sortDirection]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  // Handle column sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setPage(0);
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <th 
+      className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-white transition-colors select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </th>
+  );
 
   // Load studio details with billing history
   const loadStudioDetails = async (studio: Studio) => {
@@ -357,12 +401,12 @@ export default function AdminStudiosPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Studio</th>
+              <SortableHeader field="name">Studio</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Owner</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Plan</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Members</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Projects</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Last Active</th>
+              <SortableHeader field="member_count">Members</SortableHeader>
+              <SortableHeader field="project_count">Projects</SortableHeader>
+              <SortableHeader field="last_activity_at">Last Active</SortableHeader>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>
