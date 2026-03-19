@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 // Main navigation items
 const mainNavItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/tickets", label: "Support Tickets", icon: TicketIcon, highlight: true },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/studios", label: "Studios", icon: Building2 },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
@@ -156,32 +157,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Support Tickets - Highlighted Section */}
-        <div className="mb-4">
-          <Link
-            href="/admin/tickets"
-            className={cn(
-              "flex items-center gap-3 px-3 py-3 rounded-lg transition-colors border",
-              pathname === "/admin/tickets"
-                ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                : "bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20"
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-              <TicketIcon className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className="font-medium">Support Tickets</span>
-              <p className="text-xs opacity-70">User support requests</p>
-            </div>
-          </Link>
-        </div>
-
         {/* Main Navigation */}
         <nav className="flex-1 space-y-1">
           {mainNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const isHighlight = 'highlight' in item && item.highlight;
             return (
               <Link
                 key={item.href}
@@ -190,7 +171,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
                   isActive 
                     ? "bg-white/10 text-white" 
-                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-white",
+                  isHighlight && !isActive && "text-orange-400 hover:text-orange-300"
                 )}
               >
                 <Icon className="w-5 h-5" />
