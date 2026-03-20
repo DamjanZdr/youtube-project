@@ -13,7 +13,9 @@ import {
   Activity,
   FolderOpen,
   CalendarDays,
-  ChevronDown
+  ChevronDown,
+  Clock,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { toast } from "sonner";
 
 type DatePreset = "7d" | "30d" | "month" | "custom" | "lifetime";
 
@@ -87,6 +90,7 @@ function getMonthOptions() {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>(defaultStats);
   const [loading, setLoading] = useState(true);
+  const [expiring, setExpiring] = useState(false);
   
   // Date range state
   const [preset, setPreset] = useState<DatePreset>("7d");
@@ -139,6 +143,33 @@ export default function AdminDashboard() {
 
     loadStats();
   }, [dateRange]);
+
+  // Handle manual plan expiration
+  async function handleExpirePlans() {
+    setExpiring(true);
+    try {
+      const response = await fetch("/api/admin/expire-plans", { method: "POST" });
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.processed > 0) {
+          toast.success(`Expired ${data.processed} gifted plan(s)`);
+        } else {
+          toast.info("No expired plans found to process");
+        }
+        // Reload stats after expiring
+        const statsResponse = await fetch("/api/admin/stats");
+        if (statsResponse.ok) {
+          setStats(await statsResponse.json());
+        }
+      } else {
+        toast.error(data.error || "Failed to expire plans");
+      }
+    } catch (error) {
+      toast.error("Failed to expire plans");
+    }
+    setExpiring(false);
+  }
 
   // Get label for current selection
   const getDateLabel = () => {
@@ -425,7 +456,7 @@ export default function AdminDashboard() {
           {/* Quick Actions */}
           <div className="glass-card p-4 md:p-5">
             <h3 className="font-semibold text-sm md:text-base mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <a 
                 href="/admin/keys" 
                 className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
@@ -453,6 +484,20 @@ export default function AdminDashboard() {
                   <span>View Users</span>
                 </div>
               </a>
+              <button 
+                onClick={handleExpirePlans}
+                disabled={expiring}
+                className="p-3 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 transition-colors text-left border border-orange-500/20 disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  {expiring ? (
+                    <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-orange-400" />
+                  )}
+                  <span className="text-orange-400">{expiring ? "Processing..." : "Expire Plans"}</span>
+                </div>
+              </button>
             </div>
           </div>
         </>
