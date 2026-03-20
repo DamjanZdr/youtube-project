@@ -1,7 +1,7 @@
 // Cron job to handle expired plan keys
-// Runs every hour to process gifted plans that have expired
+// Runs daily at midnight UTC to process gifted plans that have expired
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { getStripe, createCheckoutSession } from "@/lib/stripe";
 import { plans } from "@/config/subscriptions";
@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  // Use admin client to bypass RLS - cron jobs have no user session
+  const supabase = createAdminClient();
   const now = new Date();
 
   // Find all expired, unprocessed plan keys
