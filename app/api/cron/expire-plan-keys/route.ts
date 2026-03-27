@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const now = new Date();
 
+  console.log(`[Cron] Starting expire-plan-keys at ${now.toISOString()}`);
+
   // Find all expired, unprocessed plan keys
   const { data: expiredKeys, error } = await supabase
     .from("plan_keys")
@@ -44,54 +46,64 @@ export async function GET(req: NextRequest) {
     .is("processed_at", null);
 
   if (error) {
+    console.error("[Cron] Error fetching expired keys:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  console.log(`[Cron] Found ${expiredKeys?.length || 0} expired plan keys to process`);
 
   let processed = 0;
   const results: any[] = [];
 
   for (const key of expiredKeys || []) {
-    // Get the org's subscription
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("organization_id", key.redeemed_org_id)
-      .single();
-    if (!sub) continue;
-
-    // Only process if this key is currently active on the subscription
-    if (sub.key_id !== key.id || sub.source !== "key") {
-      // Key was already replaced by another key or Stripe, just mark as processed
-      await supabase
-        .from("plan_keys")
-        .update({ processed_at: now.toISOString() })
-        .eq("id", key.id);
-      continue;
-    }
-
-    // Get organization details for email
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("id, name, slug, owner_id")
-      .eq("id", key.redeemed_org_id)
-      .single();
+    console.log(`[Cron] Processing plan_key ${key.id} for org ${key.redeemed_org_id}`);
     
-    // Get owner email
-    let ownerEmail: string | null = null;
-    if (org?.owner_id) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", org.owner_id)
-        .single();
-      ownerEmail = profile?.email || null;
-    }
-
-    let action = "downgraded_to_free";
-    let newPlan = "free";
-    let emailSent = false;
-
     try {
+      // Get the org's subscription
+      const { data: sub, error: subError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("organization_id", key.redeemed_org_id)
+        .single();
+      
+      if (subError || !sub) {
+        console.log(`[Cron] No subscription found for org ${key.redeemed_org_id}, skipping`);
+        continue;
+      }
+
+      // Only process if this key is currently active on the subscription
+      if (sub.key_id !== key.id || sub.source !== "key") {
+        // Key was already replaced by another key or Stripe, just mark as processed
+        console.log(`[Cron] Key ${key.id} not active on subscription (key_id=${sub.key_id}, source=${sub.source}), marking as processed`);
+        await supabase
+          .from("plan_keys")
+          .update({ processed_at: now.toISOString() })
+          .eq("id", key.id);
+        continue;
+      }
+
+      // Get organization details for email
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("id, name, slug, owner_id")
+        .eq("id", key.redeemed_org_id)
+        .single();
+      
+      // Get owner email
+      let ownerEmail: string | null = null;
+      if (org?.owner_id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", org.owner_id)
+          .single();
+        ownerEmail = profile?.email || null;
+      }
+
+      let action = "downgraded_to_free";
+      let newPlan = "free";
+      let emailSent = false;
+
       // Case 1: User has a pending plan scheduled - create checkout session
       if (sub.pending_plan && sub.pending_plan !== "free") {
         const pendingPlanConfig = plans.find(p => p.id === sub.pending_plan);
@@ -317,7 +329,7 @@ export async function GET(req: NextRequest) {
       
       // Case 3: No pending plan, no previous subscription - downgrade to free
       if (action === "downgraded_to_free" || action === "stripe_resume_failed_downgraded_to_free") {
-        await supabase
+        const { error: downgradeError } = await supabase
           .from("subscriptions")
           .update({
             plan: "free",
@@ -332,6 +344,11 @@ export async function GET(req: NextRequest) {
             current_period_end: null,
           })
           .eq("id", sub.id);
+        
+        if (downgradeError) {
+          console.error(`[Cron] Failed to downgrade subscription ${sub.id}:`, downgradeError);
+          throw downgradeError; // Don't mark key as processed if downgrade failed
+        }
         
         // Send notification email
         if (ownerEmail && process.env.RESEND_API_KEY && org) {
@@ -435,7 +452,8 @@ export async function GET(req: NextRequest) {
 
   // ALSO check for subscriptions that were gifted directly (not via plan_keys)
   // These have source='key' and current_period_end in the past but no plan_key record
-  const { data: expiredDirectGifts } = await supabase
+  console.log("[Cron] Checking for expired direct gift subscriptions...");
+  const { data: expiredDirectGifts, error: directGiftsError } = await supabase
     .from("subscriptions")
     .select("*, organizations(id, name, slug, owner_id)")
     .eq("source", "key")
@@ -443,7 +461,14 @@ export async function GET(req: NextRequest) {
     .lt("current_period_end", now.toISOString())
     .not("current_period_end", "is", null);
 
+  if (directGiftsError) {
+    console.error("[Cron] Error fetching expired direct gifts:", directGiftsError);
+  }
+
+  console.log(`[Cron] Found ${expiredDirectGifts?.length || 0} expired direct gift subscriptions`);
+
   for (const sub of expiredDirectGifts || []) {
+    console.log(`[Cron] Processing expired subscription ${sub.id} for org ${sub.organization_id}`);
     try {
       const org = sub.organizations as any;
       
@@ -459,7 +484,7 @@ export async function GET(req: NextRequest) {
       }
 
       // Downgrade to free
-      await supabase
+      const { error: updateError } = await supabase
         .from("subscriptions")
         .update({
           plan: "free",
@@ -470,6 +495,11 @@ export async function GET(req: NextRequest) {
           current_period_end: null,
         })
         .eq("id", sub.id);
+
+      if (updateError) {
+        console.error(`Failed to downgrade subscription ${sub.id}:`, updateError);
+        throw updateError;
+      }
 
       // Send notification email
       if (ownerEmail && process.env.RESEND_API_KEY && org) {
@@ -536,6 +566,8 @@ export async function GET(req: NextRequest) {
       console.error(`Error processing direct gift for org ${sub.organization_id}:`, err);
     }
   }
+
+  console.log(`[Cron] Completed. Processed ${processed} subscriptions. Keys: ${expiredKeys?.length || 0}, DirectGifts: ${expiredDirectGifts?.length || 0}`);
 
   return NextResponse.json({ 
     processed, 

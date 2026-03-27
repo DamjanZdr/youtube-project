@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { 
   Search,
   Calendar,
@@ -14,9 +15,12 @@ import {
   Key,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Clock,
+  Loader2
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { toast } from "sonner";
 
 interface Subscription {
   id: string;
@@ -58,10 +62,39 @@ export default function AdminSubscriptionsPage() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [planFilter, setPlanFilter] = useState<string>("all");
+  const [expiringPlans, setExpiringPlans] = useState(false);
   
   // Sorting state - default to period end (earliest first)
   const [sortField, setSortField] = useState<SortField>("current_period_end");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Function to expire overdue gifted plans
+  const handleExpireOverduePlans = async () => {
+    setExpiringPlans(true);
+    try {
+      const response = await fetch("/api/admin/expire-plans", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to expire plans");
+      }
+      
+      if (data.processed > 0) {
+        toast.success(`Expired ${data.processed} overdue plan(s)`);
+        // Reload the page to show updated data
+        window.location.reload();
+      } else {
+        toast.info("No overdue plans found to expire");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to expire plans");
+    } finally {
+      setExpiringPlans(false);
+    }
+  };
 
   useEffect(() => {
     async function loadSubscriptions() {
@@ -162,11 +195,26 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Subscriptions</h1>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
-          View and manage all subscriptions
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">Subscriptions</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            View and manage all subscriptions
+          </p>
+        </div>
+        <Button
+          onClick={handleExpireOverduePlans}
+          disabled={expiringPlans}
+          variant="outline"
+          className="gap-2"
+        >
+          {expiringPlans ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Clock className="w-4 h-4" />
+          )}
+          Expire Overdue Plans
+        </Button>
       </div>
 
       {/* Filters */}
